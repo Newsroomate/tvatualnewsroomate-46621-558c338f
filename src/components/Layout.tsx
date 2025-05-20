@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
@@ -54,8 +53,10 @@ const Layout = () => {
 
   const handleCloseEditPanel = () => {
     setIsEditPanelOpen(false);
-    // Atualizar a lista de matérias após edição
-    queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
+    setSelectedItem(null);
+    
+    // No need to explicitly invalidate queries here anymore
+    // The real-time subscription will handle updates automatically
   };
 
   const handleToggleRundown = async () => {

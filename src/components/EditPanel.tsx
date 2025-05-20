@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -52,8 +51,17 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
     
     setIsSaving(true);
     try {
-      await updateMateria(item.id, formData);
+      // Update the materia in the database
+      const updatedMateria = await updateMateria(item.id, formData);
+      
+      // Close the edit panel - the real-time listener will update the UI
       onClose();
+      
+      // Show success toast
+      toast({
+        title: "Matéria atualizada",
+        description: "As alterações foram salvas com sucesso.",
+      });
     } catch (error) {
       console.error("Erro ao salvar matéria:", error);
       toast({
