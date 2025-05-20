@@ -8,7 +8,6 @@ import {
   deleteMateria,
   updateMateria
 } from "@/services/api";
-import { supabase } from "@/integrations/supabase/client";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { fetchTelejornais } from "@/services/api";
 import { DragDropContext } from "@hello-pangea/dnd";
@@ -25,9 +24,10 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
-import { findHighestPageNumber, processUpdatedMateria, calculateBlockTotalTime } from "./utils";
+import { findHighestPageNumber, calculateBlockTotalTime } from "./utils";
 import { NewsBlock } from "./NewsBlock";
 import { useAuth } from "@/context/AuthContext";
+import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -42,7 +42,6 @@ export const NewsSchedule = ({
   currentTelejornal, 
   onOpenRundown 
 }: NewsScheduleProps) => {
-  const [blocks, setBlocks] = useState<(Bloco & { items: Materia[], totalTime: number })[]>([]);
   const [totalJournalTime, setTotalJournalTime] = useState(0);
   const [newItemBlock, setNewItemBlock] = useState<string | null>(null);
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
@@ -56,6 +55,13 @@ export const NewsSchedule = ({
   
   // Track if a block creation is in progress to prevent multiple attempts
   const blockCreationInProgress = useRef(false);
+
+  // Use our new custom hook for realtime updates
+  const { blocks, setBlocks } = useRealtimeMaterias({
+    selectedJournal,
+    newItemBlock,
+    materiaToDelete
+  });
 
   // Fetch telejornais
   const telejornaisQuery = useQuery({
@@ -105,7 +111,7 @@ export const NewsSchedule = ({
     };
     
     loadBlocos();
-  }, [blocosQuery.data, selectedJournal]);
+  }, [blocosQuery.data, selectedJournal, setBlocks]);
 
   // Handle auto-creation of first block, separated from the blocks data processing effect
   useEffect(() => {
@@ -151,123 +157,14 @@ export const NewsSchedule = ({
     };
     
     createInitialBlock();
-  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted]);
+  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, toast]);
 
   // Recalculate total journal time when blocks change
   useEffect(() => {
     const total = blocks.reduce((sum, block) => sum + block.totalTime, 0);
     setTotalJournalTime(total);
   }, [blocks]);
-  
-  // Setup realtime subscription for materias updates
-  useEffect(() => {
-    if (!selectedJournal) return;
-    
-    console.log('Setting up realtime subscription for materias table');
-    
-    const handleMateriaUpdate = (updatedMateria: Materia) => {
-      console.log('Processing materia update:', updatedMateria);
-      
-      setBlocks(currentBlocks => {
-        // Create new blocks array to ensure React detects the state change
-        return currentBlocks.map(block => {
-          // Find the block that contains this materia
-          if (block.id === updatedMateria.bloco_id) {
-            // Find if the materia already exists in this block
-            const itemExists = block.items.some(item => item.id === updatedMateria.id);
-            
-            let updatedItems;
-            if (itemExists) {
-              // Update the existing materia
-              updatedItems = block.items.map(item => 
-                item.id === updatedMateria.id 
-                  ? processUpdatedMateria(updatedMateria)
-                  : item
-              );
-            } else {
-              // This is a new materia for this block
-              updatedItems = [...block.items, processUpdatedMateria(updatedMateria)];
-            }
-            
-            // Calculate new total time
-            const totalTime = calculateBlockTotalTime(updatedItems);
-            
-            // Return updated block
-            return {
-              ...block,
-              items: updatedItems,
-              totalTime
-            };
-          }
-          return block;
-        });
-      });
-    };
-    
-    // Subscribe to all materias changes related to the current telejornal's blocks
-    const channel = supabase
-      .channel('public:materias-changes')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'materias',
-      }, (payload) => {
-        console.log('Materia updated via realtime:', payload);
-        const updatedMateria = payload.new as Materia;
-        handleMateriaUpdate(updatedMateria);
-      })
-      .on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'materias'
-      }, (payload) => {
-        console.log('Materia inserted:', payload);
-        const newMateria = payload.new as Materia;
-        
-        // Only process if this was not triggered by the current client
-        // (avoids duplicate items when we're the ones who created it)
-        if (newItemBlock !== newMateria.bloco_id) {
-          handleMateriaUpdate(newMateria);
-        }
-      })
-      .on('postgres_changes', {
-        event: 'DELETE',
-        schema: 'public',
-        table: 'materias'
-      }, (payload) => {
-        console.log('Materia deleted:', payload);
-        const deletedMateria = payload.old as Materia;
-        
-        // Only process if this was not triggered by the current client
-        if (!materiaToDelete || materiaToDelete.id !== deletedMateria.id) {
-          setBlocks(currentBlocks => 
-            currentBlocks.map(block => {
-              if (block.id === deletedMateria.bloco_id) {
-                const updatedItems = block.items.filter(item => item.id !== deletedMateria.id);
-                const totalTime = calculateBlockTotalTime(updatedItems);
-                
-                return {
-                  ...block,
-                  items: updatedItems,
-                  totalTime
-                };
-              }
-              return block;
-            })
-          );
-        }
-      })
-      .subscribe((status) => {
-        console.log('Realtime subscription status for materias:', status);
-      });
-    
-    // Clean up subscription on unmount or when selectedJournal changes
-    return () => {
-      console.log('Cleaning up realtime subscription');
-      supabase.removeChannel(channel);
-    };
-  }, [selectedJournal, newItemBlock, materiaToDelete]);
-  
+
   // Function to handle adding the first block specifically
   const handleAddFirstBlock = async () => {
     if (!selectedJournal || !currentTelejornal?.espelho_aberto) {
