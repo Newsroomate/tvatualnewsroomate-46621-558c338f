@@ -1,14 +1,10 @@
 
+import { Bloco, Materia, Telejornal } from "@/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Lock } from "lucide-react";
-import { Telejornal, Bloco, Materia } from "@/types";
 import { NewsBlock } from "./NewsBlock";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { useAuth } from "@/context/AuthContext";
+import { canModifyMaterias } from "@/utils/permission";
 
 interface ScheduleContentProps {
   selectedJournal: string | null;
@@ -37,8 +33,12 @@ export const ScheduleContent = ({
   onAddBlock,
   onAddItem,
   onEditItem,
-  onDeleteItem,
+  onDeleteItem
 }: ScheduleContentProps) => {
+  const { profile } = useAuth();
+  const canModify = canModifyMaterias(profile);
+
+  // If no journal selected
   if (!selectedJournal) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -47,6 +47,7 @@ export const ScheduleContent = ({
     );
   }
 
+  // If loading
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -55,6 +56,7 @@ export const ScheduleContent = ({
     );
   }
 
+  // If espelho is closed
   if (!currentTelejornal?.espelho_aberto) {
     return (
       <div className="flex flex-col items-center justify-center h-32 gap-3">
@@ -69,6 +71,7 @@ export const ScheduleContent = ({
     );
   }
 
+  // Creating first block
   if (blocks.length === 0 && isCreatingFirstBlock) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -77,6 +80,7 @@ export const ScheduleContent = ({
     );
   }
 
+  // No blocks
   if (blocks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-32 gap-3">
@@ -88,9 +92,9 @@ export const ScheduleContent = ({
     );
   }
 
+  // Render blocks
   return (
     <>
-      {/* Blocks */}
       {blocks.map((block) => (
         <NewsBlock
           key={block.id}
@@ -104,8 +108,8 @@ export const ScheduleContent = ({
       ))}
 
       {/* Button to add new block */}
-      {selectedJournal && currentTelejornal?.espelho_aberto && blocks.length > 0 && (
-        <div className="flex justify-center">
+      <div className="flex justify-center">
+        {currentTelejornal?.espelho_aberto && canModify ? (
           <Button 
             variant="outline"
             onClick={onAddBlock}
@@ -113,32 +117,16 @@ export const ScheduleContent = ({
             <PlusCircle className="h-4 w-4 mr-2" />
             Adicionar Novo Bloco
           </Button>
-        </div>
-      )}
-      
-      {/* Button to add new block - disabled version with tooltip */}
-      {selectedJournal && !currentTelejornal?.espelho_aberto && (
-        <div className="flex justify-center">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Button 
-                    variant="outline"
-                    disabled={true}
-                  >
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Adicionar Novo Bloco
-                  </Button>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                Abra o espelho para adicionar blocos
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      )}
+        ) : (
+          <Button 
+            variant="outline"
+            disabled={true}
+          >
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Adicionar Novo Bloco
+          </Button>
+        )}
+      </div>
     </>
   );
 };

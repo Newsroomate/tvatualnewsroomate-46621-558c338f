@@ -23,10 +23,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { findHighestPageNumber } from "./utils";
+import { NewsBlock } from "./NewsBlock";
+import { useAuth } from "@/context/AuthContext";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -51,6 +53,7 @@ export const NewsSchedule = ({
   const [isCreatingFirstBlock, setIsCreatingFirstBlock] = useState(false);
   const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
   const { toast } = useToast();
+  const { profile } = useAuth();
   
   // Track if a block creation is in progress to prevent multiple attempts
   const blockCreationInProgress = useRef(false);
