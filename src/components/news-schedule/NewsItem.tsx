@@ -18,7 +18,7 @@ interface NewsItemProps {
   snapshot: any;
   isEspelhoOpen: boolean;
   onDoubleClick: (item: Materia) => void;
-  canModify?: boolean; // Added missing prop
+  canModify?: boolean;
 }
 
 export const NewsItem = ({ 
@@ -29,11 +29,11 @@ export const NewsItem = ({
   snapshot,
   isEspelhoOpen,
   onDoubleClick,
-  canModify = true // Default to true if not specified
+  canModify = true
 }: NewsItemProps) => {
   // Status color classes
   const getStatusClass = (status: string): string => {
-    switch (status.toLowerCase()) {
+    switch (status?.toLowerCase()) {
       case 'published': return 'bg-green-100 text-green-800';
       case 'draft': return 'bg-gray-100 text-gray-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
@@ -42,6 +42,11 @@ export const NewsItem = ({
     }
   };
 
+  // Ensure we have valid data for display
+  const displayRetranca = item.retranca || "Sem título";
+  const displayStatus = item.status || "draft";
+  const displayDuracao = item.duracao || 0;
+  
   return (
     <tr 
       ref={provided.innerRef}
@@ -53,12 +58,12 @@ export const NewsItem = ({
       onDoubleClick={() => onDoubleClick(item)}
     >
       <td className="py-2 px-4">{item.pagina}</td>
-      <td className="py-2 px-4 font-medium">{item.retranca}</td>
-      <td className="py-2 px-4 font-mono text-xs">{item.clip}</td>
-      <td className="py-2 px-4">{formatTime(item.duracao)}</td>
+      <td className="py-2 px-4 font-medium">{displayRetranca}</td>
+      <td className="py-2 px-4 font-mono text-xs">{item.clip || ''}</td>
+      <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
       <td className="py-2 px-4">
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(item.status || '')}`}>
-          {item.status}
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(displayStatus)}`}>
+          {displayStatus}
         </span>
       </td>
       <td className="py-2 px-4">{item.reporter || '-'}</td>

@@ -9,7 +9,7 @@ interface BlockContentProps {
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
   isEspelhoOpen: boolean;
-  canModifyItems?: boolean; // Added missing prop
+  canModifyItems?: boolean;
 }
 
 export const BlockContent = ({ 
@@ -18,7 +18,7 @@ export const BlockContent = ({
   onEditItem, 
   onDeleteItem,
   isEspelhoOpen,
-  canModifyItems = true // Default to true if not specified
+  canModifyItems = true
 }: BlockContentProps) => {
   return (
     <div className="overflow-x-auto">

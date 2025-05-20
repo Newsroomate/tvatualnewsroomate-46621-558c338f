@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
@@ -11,7 +12,14 @@ import { useAuth } from "@/context/AuthContext";
 import { canCreateEspelhos } from "@/utils/permission";
 
 // Cria um cliente de query para o React Query
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Increase stale time to reduce unnecessary refetches
+      staleTime: 1000 * 60, // 1 minute
+    },
+  },
+});
 
 const Layout = () => {
   const [selectedJournal, setSelectedJournal] = useState<string | null>(null);
@@ -55,8 +63,9 @@ const Layout = () => {
     setIsEditPanelOpen(false);
     setSelectedItem(null);
     
-    // No need to explicitly invalidate queries here anymore
+    // No need to explicitly invalidate queries here
     // The real-time subscription will handle updates automatically
+    console.log("Edit panel closed - UI will update via Realtime subscription");
   };
 
   const handleToggleRundown = async () => {

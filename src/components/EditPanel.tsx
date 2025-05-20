@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -23,6 +24,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   // Inicializa os dados do formulário quando o item muda
   useEffect(() => {
     if (item) {
+      console.log("Initializing form data with item:", item);
       setFormData({
         retranca: item.retranca,
         clip: item.clip,
@@ -31,7 +33,11 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         status: item.status,
         cabeca: item.cabeca || '',
         texto: item.texto || '',
-        local_gravacao: item.local_gravacao || ''
+        local_gravacao: item.local_gravacao || '',
+        pagina: item.pagina,
+        bloco_id: item.bloco_id,
+        ordem: item.ordem,
+        tags: item.tags
       });
     }
   }, [item]);
@@ -51,17 +57,19 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
     
     setIsSaving(true);
     try {
-      // Update the materia in the database
-      const updatedMateria = await updateMateria(item.id, formData);
+      console.log("Saving updated materia:", { id: item.id, ...formData });
       
-      // Close the edit panel - the real-time listener will update the UI
-      onClose();
+      // Update the materia in the database
+      await updateMateria(item.id, formData);
       
       // Show success toast
       toast({
         title: "Matéria atualizada",
         description: "As alterações foram salvas com sucesso.",
       });
+      
+      // Close the edit panel - the real-time listener will update the UI
+      onClose();
     } catch (error) {
       console.error("Erro ao salvar matéria:", error);
       toast({
@@ -169,6 +177,15 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
                 <option value="urgent">Urgente</option>
               </select>
             </div>
+          </div>
+          
+          <div className="space-y-1.5">
+            <Label htmlFor="pagina">Página</Label>
+            <Input 
+              id="pagina" 
+              value={formData.pagina || ''}
+              onChange={handleInputChange}
+            />
           </div>
           
           <div className="space-y-1.5">

@@ -14,15 +14,6 @@ interface NewsBlockProps {
   isEspelhoOpen: boolean;
 }
 
-interface BlockContentProps {
-  blockId: string;
-  items: Materia[];
-  onEditItem: (item: Materia) => void;
-  onDeleteItem: (item: Materia) => void;
-  isEspelhoOpen: boolean;
-  canModifyItems?: boolean; // Add the missing property
-}
-
 export const NewsBlock = ({
   block,
   newItemBlock,

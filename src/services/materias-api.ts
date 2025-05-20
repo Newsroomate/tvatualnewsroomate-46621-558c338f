@@ -26,18 +26,23 @@ export const fetchMateriasByBloco = async (blocoId: string) => {
     throw error;
   }
 
-  // Add type assertion to handle database vs. interface mismatch
+  // Map database fields to our application model
   return data.map(item => ({
     ...item,
-    // Map retranca to titulo and vice versa if needed
+    // Map retranca to titulo for UI consistency
     titulo: item.retranca || "Sem título"
   })) as Materia[];
 };
 
 export const createMateria = async (materia: MateriaCreateInput) => {
+  // Remove any titulo field if it exists, as it's not in the database schema
+  const materiaToCreate = { ...materia };
+  // @ts-ignore - Remove titulo property if it exists
+  delete materiaToCreate.titulo;
+
   const { data, error } = await supabase
     .from('materias')
-    .insert(materia)
+    .insert(materiaToCreate)
     .select()
     .single();
 
@@ -49,7 +54,7 @@ export const createMateria = async (materia: MateriaCreateInput) => {
 
   toastService.success("Matéria criada", `${materia.retranca} foi adicionada com sucesso`);
 
-  // Add type assertion with the necessary field
+  // Map database response to our application model
   return {
     ...data,
     titulo: data.retranca || "Sem título"
@@ -57,9 +62,18 @@ export const createMateria = async (materia: MateriaCreateInput) => {
 };
 
 export const updateMateria = async (id: string, updates: Partial<Materia>) => {
+  // Create a copy of the updates object to avoid modifying the original
+  const updatesToSend = { ...updates };
+  
+  // Remove any 'titulo' field from updates as it doesn't exist in the database
+  // @ts-ignore - Remove titulo property if it exists
+  delete updatesToSend.titulo;
+  
+  console.log('Sending updates to database:', updatesToSend);
+
   const { data, error } = await supabase
     .from('materias')
-    .update(updates)
+    .update(updatesToSend)
     .eq('id', id)
     .select()
     .single();
@@ -72,11 +86,15 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
 
   toastService.success("Matéria atualizada", `Alterações salvas com sucesso`);
 
-  // Add type assertion with the necessary field
-  return {
+  // Map database response to our application model
+  const updatedMateria = {
     ...data,
     titulo: data.retranca || "Sem título"
   } as Materia;
+  
+  console.log('Matéria atualizada:', updatedMateria);
+  
+  return updatedMateria;
 };
 
 export const deleteMateria = async (id: string) => {
