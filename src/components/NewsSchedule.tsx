@@ -46,7 +46,6 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [materiaToDelete, setMateriaToDelete] = useState<Materia | null>(null);
   const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
-  const [blocksCreatedMap, setBlocksCreatedMap] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   // Fetch telejornais
@@ -87,31 +86,13 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
         
         setBlocks(blocosComItems);
         
-        // Only create initial block if:
-        // 1. No blocks exist for this telejornal
-        // 2. Espelho is open for this telejornal
-        // 3. We haven't already tried creating a block for this telejornal in this session
-        if (
-          blocosComItems.length === 0 && 
-          currentTelejornal?.espelho_aberto && 
-          !blocksCreatedMap[selectedJournal]
-        ) {
+        // Auto-create first block when no blocks exist and espelho is open
+        if (blocosComItems.length === 0 && currentTelejornal?.espelho_aberto) {
           try {
             await handleAddFirstBlock();
-            // Mark that we've tried creating a block for this telejornal
-            setBlocksCreatedMap(prev => ({
-              ...prev,
-              [selectedJournal]: true
-            }));
           } catch (error) {
             console.error("Erro ao criar o bloco inicial:", error);
           }
-        } else if (blocosComItems.length > 0 && !blocksCreatedMap[selectedJournal]) {
-          // If blocks already exist, mark this journal as already having blocks
-          setBlocksCreatedMap(prev => ({
-            ...prev,
-            [selectedJournal]: true
-          }));
         }
       }
     };

@@ -145,6 +145,7 @@ export type Database = {
       telejornais: {
         Row: {
           created_at: string | null
+          espelho_aberto: boolean | null
           horario: string | null
           id: string
           nome: string
@@ -152,6 +153,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          espelho_aberto?: boolean | null
           horario?: string | null
           id?: string
           nome: string
@@ -159,6 +161,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          espelho_aberto?: boolean | null
           horario?: string | null
           id?: string
           nome?: string
