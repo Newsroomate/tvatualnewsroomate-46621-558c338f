@@ -1,5 +1,4 @@
 
-
 export interface Telejornal {
   id: string;
   nome: string;
@@ -65,6 +64,11 @@ export interface MateriaCreateInput {
   bloco_id: string;
   retranca: string;
   ordem: number;
+  pagina?: string;
+  clip?: string;
+  duracao?: number;
+  status?: "draft" | "pending" | "published" | "urgent";
+  reporter?: string;
 }
 
 // Required fields for Pauta creation (based on Supabase schema)

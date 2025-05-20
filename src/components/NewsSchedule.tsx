@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Trash2, ArrowDownUp, Lock } from "lucide-react";
@@ -46,7 +46,12 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [materiaToDelete, setMateriaToDelete] = useState<Materia | null>(null);
   const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
+  const [isCreatingFirstBlock, setIsCreatingFirstBlock] = useState(false);
+  const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
   const { toast } = useToast();
+  
+  // Track if a block creation is in progress to prevent multiple attempts
+  const blockCreationInProgress = useRef(false);
 
   // Fetch telejornais
   const telejornaisQuery = useQuery({
@@ -70,8 +75,10 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
 
   // Process blocks data when it changes
   useEffect(() => {
+    if (!blocosQuery.data || !selectedJournal) return;
+    
     const loadBlocos = async () => {
-      if (blocosQuery.data && selectedJournal) {
+      try {
         const blocosComItems = await Promise.all(
           blocosQuery.data.map(async (bloco) => {
             const materias = await fetchMateriasByBloco(bloco.id);
@@ -86,19 +93,61 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
         
         setBlocks(blocosComItems);
         
-        // Auto-create first block when no blocks exist and espelho is open
-        if (blocosComItems.length === 0 && currentTelejornal?.espelho_aberto) {
-          try {
-            await handleAddFirstBlock();
-          } catch (error) {
-            console.error("Erro ao criar o bloco inicial:", error);
-          }
-        }
+        // Reset the flag since we've processed the data
+        setBlockCreationAttempted(true);
+      } catch (error) {
+        console.error("Erro ao carregar blocos e matérias:", error);
       }
     };
     
     loadBlocos();
-  }, [blocosQuery.data, selectedJournal, currentTelejornal]);
+  }, [blocosQuery.data, selectedJournal]);
+
+  // Handle auto-creation of first block, separated from the blocks data processing effect
+  useEffect(() => {
+    // Skip if no telejornal selected, espelho is not open, or we're already creating a block
+    if (!selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
+      return;
+    }
+    
+    // Skip if we don't have the blocks data yet or if we've already checked
+    if (!blocosQuery.data || !blockCreationAttempted) {
+      return;
+    }
+
+    const createInitialBlock = async () => {
+      // Only create a block if there are no blocks and we haven't already tried
+      if (blocosQuery.data.length === 0 && !blockCreationInProgress.current) {
+        setIsCreatingFirstBlock(true);
+        blockCreationInProgress.current = true;
+        
+        console.log("Attempting to create initial block for telejornal:", selectedJournal);
+        
+        try {
+          await handleAddFirstBlock();
+        } catch (error) {
+          console.error("Erro ao criar o bloco inicial:", error);
+          // If the error is about a duplicate, we can ignore it - the block exists
+          if (error instanceof Error && error.message.includes("duplicate key value")) {
+            console.log("Block already exists, refreshing data...");
+            // Force a refresh of blocks query
+            blocosQuery.refetch();
+          } else {
+            toast({
+              title: "Erro ao criar bloco inicial",
+              description: "Ocorreu um erro ao criar o primeiro bloco. Por favor, tente novamente.",
+              variant: "destructive"
+            });
+          }
+        } finally {
+          blockCreationInProgress.current = false;
+          setIsCreatingFirstBlock(false);
+        }
+      }
+    };
+    
+    createInitialBlock();
+  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted]);
 
   // Recalculate total journal time when blocks change
   useEffect(() => {
@@ -122,16 +171,27 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
 
   // Function to handle adding the first block specifically
   const handleAddFirstBlock = async () => {
-    if (!selectedJournal || !currentTelejornal?.espelho_aberto) return;
+    if (!selectedJournal || !currentTelejornal?.espelho_aberto) {
+      console.log("Cannot create first block - journal not selected or espelho not open");
+      return;
+    }
     
     try {
-      // Check if blocks already exist for this journal to avoid duplicates
+      // Double check to make sure we don't have blocks already
       const existingBlocks = await fetchBlocosByTelejornal(selectedJournal);
-      if (existingBlocks.length > 0) {
+      
+      console.log(`Checking for existing blocks for telejornal ${selectedJournal}:`, existingBlocks);
+      
+      // If blocks already exist, just return without creating a new one
+      if (existingBlocks && existingBlocks.length > 0) {
         console.log("Blocks already exist for this journal, skipping creation");
+        setBlocks(blocks => blocks.length ? blocks : existingBlocks.map(b => ({ ...b, items: [], totalTime: 0 })));
         return;
       }
       
+      console.log("No existing blocks found, creating first block");
+      
+      // Create the new block
       const novoBlocoInput = {
         telejornal_id: selectedJournal,
         nome: "Bloco 1",
@@ -139,6 +199,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
       };
       
       const novoBloco = await createBloco(novoBlocoInput);
+      console.log("First block created successfully:", novoBloco);
       
       // Immediately update the UI
       setBlocks([{ 
@@ -147,17 +208,26 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
         totalTime: 0
       }]);
       
+      // Force refresh the blocks query
+      blocosQuery.refetch();
+      
       return novoBloco;
     } catch (error) {
       console.error("Erro ao adicionar bloco inicial:", error);
-      // Don't show toast for duplicate error, as this is expected in some cases
-      if (!(error instanceof Error && error.message.includes("duplicate key value"))) {
+      
+      // If the error is a duplicate key error, we can try to fetch the blocks again
+      if (error instanceof Error && error.message.includes("duplicate key value")) {
+        console.log("Duplicate error detected, attempting to refetch blocks");
+        blocosQuery.refetch();
+      } else {
+        // For other errors, show a toast
         toast({
           title: "Erro",
           description: "Não foi possível adicionar o bloco inicial",
           variant: "destructive"
         });
       }
+      
       throw error;
     }
   };
@@ -184,6 +254,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
       };
       
       const novoBloco = await createBloco(novoBlocoInput);
+      console.log(`New block created: ${novoBloco.nome} with order ${novoBloco.ordem}`);
       
       // Update UI
       setBlocks([...blocks, { 
@@ -193,6 +264,38 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
       }]);
     } catch (error) {
       console.error("Erro ao adicionar bloco:", error);
+      
+      // If it's a duplicate key error, try to use a different order number
+      if (error instanceof Error && error.message.includes("duplicate key value")) {
+        console.log("Duplicate block order detected, trying with a different order");
+        
+        try {
+          // Find the highest order number and add 1
+          const highestOrder = blocks.reduce((max, block) => 
+            block.ordem > max ? block.ordem : max, 0);
+          
+          const novoBlocoInput = {
+            telejornal_id: selectedJournal,
+            nome: `Bloco ${highestOrder + 1}`,
+            ordem: highestOrder + 1
+          };
+          
+          const novoBloco = await createBloco(novoBlocoInput);
+          console.log(`New block created with adjusted order: ${novoBloco.nome} with order ${novoBloco.ordem}`);
+          
+          // Update UI
+          setBlocks([...blocks, { 
+            ...novoBloco, 
+            items: [],
+            totalTime: 0
+          }]);
+          
+          return;
+        } catch (retryError) {
+          console.error("Erro ao tentar criar bloco com ordem diferente:", retryError);
+        }
+      }
+      
       toast({
         title: "Erro",
         description: "Não foi possível adicionar o bloco",
@@ -538,9 +641,16 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
                 Abrir Espelho Agora
               </Button>
             </div>
-          ) : blocks.length === 0 ? (
+          ) : blocks.length === 0 && isCreatingFirstBlock ? (
             <div className="flex items-center justify-center h-32">
+              <p className="text-gray-500">Criando bloco inicial...</p>
+            </div>
+          ) : blocks.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-32 gap-3">
               <p className="text-gray-500">Nenhum bloco encontrado</p>
+              <Button onClick={handleAddFirstBlock} variant="default">
+                Adicionar Bloco Inicial
+              </Button>
             </div>
           ) : (
             blocks.map((block) => (
@@ -693,7 +803,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, o
           )}
 
           {/* Button to add new block */}
-          {selectedJournal && currentTelejornal?.espelho_aberto && (
+          {selectedJournal && currentTelejornal?.espelho_aberto && blocks.length > 0 && (
             <div className="flex justify-center">
               <Button 
                 variant="outline"
