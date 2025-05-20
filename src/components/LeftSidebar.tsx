@@ -11,6 +11,7 @@ import { EditTelejornalDialog } from "./EditTelejornalDialog";
 import { EditPautaDialog } from "./EditPautaDialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LeftSidebarProps {
   selectedJournal: string | null;
@@ -38,6 +39,28 @@ export const LeftSidebar = ({
 
   useEffect(() => {
     loadData();
+
+    // Configurando a inscrição para ouvir atualizações em tempo real da tabela telejornais
+    const telejornaisChannel = supabase
+      .channel('telejornais-changes')
+      .on(
+        'postgres_changes',
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'telejornais' 
+        },
+        (payload) => {
+          console.log('Telejornal atualizado:', payload);
+          // Recarregar a lista de telejornais quando houver uma atualização
+          loadData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(telejornaisChannel);
+    };
   }, []);
 
   const loadData = async () => {

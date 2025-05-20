@@ -83,3 +83,11 @@ export interface TelejornalCreateInput {
   nome: string;
   horario?: string;
 }
+
+// Interface para o diálogo de confirmação ao fechar o espelho
+export interface CloseRundownDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onConfirm: () => void;
+  telejornalNome?: string;
+}

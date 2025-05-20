@@ -69,6 +69,9 @@ export const createTelejornal = async (telejornal: TelejornalCreateInput) => {
 };
 
 export const updateTelejornal = async (id: string, updates: Partial<Telejornal>) => {
+  // Habilitamos o suporte a realtime para atualizações de telejornais
+  await supabase.rpc('enable_realtime_for_table', { table_name: 'telejornais' });
+  
   const { data, error } = await supabase
     .from('telejornais')
     .update(updates)
@@ -86,8 +89,12 @@ export const updateTelejornal = async (id: string, updates: Partial<Telejornal>)
     throw error;
   }
 
+  const actionMsg = updates.espelho_aberto !== undefined 
+    ? (updates.espelho_aberto ? "Espelho aberto" : "Espelho fechado")
+    : "Telejornal atualizado";
+
   toast({
-    title: "Telejornal atualizado",
+    title: actionMsg,
     description: `${updates.nome || 'Telejornal'} foi atualizado com sucesso`,
   });
 
