@@ -1,0 +1,191 @@
+
+import { supabase } from "@/integrations/supabase/client";
+import { Telejornal, Bloco, Materia, Pauta } from "@/types";
+import { toast } from "@/hooks/use-toast";
+
+// Telejornais
+export const fetchTelejornais = async () => {
+  const { data, error } = await supabase
+    .from('telejornais')
+    .select('*')
+    .order('horario');
+
+  if (error) {
+    console.error('Erro ao buscar telejornais:', error);
+    throw error;
+  }
+
+  return data as Telejornal[];
+};
+
+// Blocos
+export const fetchBlocosByTelejornal = async (telejornalId: string) => {
+  const { data, error } = await supabase
+    .from('blocos')
+    .select('*')
+    .eq('telejornal_id', telejornalId)
+    .order('ordem');
+
+  if (error) {
+    console.error('Erro ao buscar blocos:', error);
+    throw error;
+  }
+
+  return data as Bloco[];
+};
+
+export const createBloco = async (bloco: Partial<Bloco>) => {
+  const { data, error } = await supabase
+    .from('blocos')
+    .insert(bloco)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao criar bloco:', error);
+    toast({
+      title: "Erro ao criar bloco",
+      description: error.message,
+      variant: "destructive",
+    });
+    throw error;
+  }
+
+  toast({
+    title: "Bloco criado",
+    description: `${bloco.nome} foi adicionado com sucesso`,
+  });
+
+  return data as Bloco;
+};
+
+// Matérias
+export const fetchMateriasByBloco = async (blocoId: string) => {
+  const { data, error } = await supabase
+    .from('materias')
+    .select('*')
+    .eq('bloco_id', blocoId)
+    .order('ordem');
+
+  if (error) {
+    console.error('Erro ao buscar matérias:', error);
+    throw error;
+  }
+
+  return data as Materia[];
+};
+
+export const createMateria = async (materia: Partial<Materia>) => {
+  const { data, error } = await supabase
+    .from('materias')
+    .insert(materia)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao criar matéria:', error);
+    toast({
+      title: "Erro ao criar matéria",
+      description: error.message,
+      variant: "destructive",
+    });
+    throw error;
+  }
+
+  toast({
+    title: "Matéria criada",
+    description: `${materia.retranca} foi adicionada com sucesso`,
+  });
+
+  return data as Materia;
+};
+
+export const updateMateria = async (id: string, updates: Partial<Materia>) => {
+  const { data, error } = await supabase
+    .from('materias')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao atualizar matéria:', error);
+    toast({
+      title: "Erro ao atualizar matéria",
+      description: error.message,
+      variant: "destructive",
+    });
+    throw error;
+  }
+
+  toast({
+    title: "Matéria atualizada",
+    description: `Alterações salvas com sucesso`,
+  });
+
+  return data as Materia;
+};
+
+export const deleteMateria = async (id: string) => {
+  const { error } = await supabase
+    .from('materias')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Erro ao excluir matéria:', error);
+    toast({
+      title: "Erro ao excluir matéria",
+      description: error.message,
+      variant: "destructive",
+    });
+    throw error;
+  }
+
+  toast({
+    title: "Matéria excluída",
+    description: `A matéria foi removida com sucesso`,
+  });
+
+  return true;
+};
+
+// Pautas
+export const fetchPautas = async () => {
+  const { data, error } = await supabase
+    .from('pautas')
+    .select('*')
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    console.error('Erro ao buscar pautas:', error);
+    throw error;
+  }
+
+  return data as Pauta[];
+};
+
+export const createPauta = async (pauta: Partial<Pauta>) => {
+  const { data, error } = await supabase
+    .from('pautas')
+    .insert(pauta)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao criar pauta:', error);
+    toast({
+      title: "Erro ao criar pauta",
+      description: error.message,
+      variant: "destructive",
+    });
+    throw error;
+  }
+
+  toast({
+    title: "Pauta criada",
+    description: `${pauta.titulo} foi adicionada com sucesso`,
+  });
+
+  return data as Pauta;
+};

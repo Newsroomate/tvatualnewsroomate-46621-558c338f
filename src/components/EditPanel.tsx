@@ -1,27 +1,76 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Materia } from "@/types";
+import { updateMateria } from "@/services/api";
+import { useToast } from "@/hooks/use-toast";
 
 interface EditPanelProps {
   isOpen: boolean;
   onClose: () => void;
-  item: any | null;
+  item: Materia | null;
 }
 
 export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const [activeTab, setActiveTab] = useState("editor");
+  const [formData, setFormData] = useState<Partial<Materia>>({});
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  // Inicializa os dados do formulário quando o item muda
+  useEffect(() => {
+    if (item) {
+      setFormData({
+        retranca: item.retranca,
+        clip: item.clip,
+        duracao: item.duracao,
+        reporter: item.reporter,
+        status: item.status,
+        cabeca: item.cabeca || '',
+        texto: item.texto || '',
+        local_gravacao: item.local_gravacao || ''
+      });
+    }
+  }, [item]);
 
   if (!isOpen || !item) return null;
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { id, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [id]: id === 'duracao' ? parseInt(value) || 0 : value
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!item) return;
+    
+    setIsSaving(true);
+    try {
+      await updateMateria(item.id, formData);
+      onClose();
+    } catch (error) {
+      console.error("Erro ao salvar matéria:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar as alterações.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   return (
     <div className="fixed top-0 right-0 w-[400px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20 overflow-y-auto">
       {/* Header */}
       <div className="bg-primary text-primary-foreground p-4 flex justify-between items-center sticky top-0 z-10">
-        <h3 className="font-medium">Editar: {item.title}</h3>
+        <h3 className="font-medium">Editar: {item.retranca}</h3>
         <Button variant="ghost" size="sm" onClick={onClose}>
           Fechar
         </Button>
@@ -39,39 +88,73 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         {/* Editor Tab Content */}
         <TabsContent value="editor" className="p-4 space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="title">Retranca</Label>
-            <Input id="title" defaultValue={item.title} />
+            <Label htmlFor="retranca">Retranca</Label>
+            <Input 
+              id="retranca" 
+              value={formData.retranca || ''} 
+              onChange={handleInputChange}
+            />
           </div>
           
           <div className="space-y-1.5">
-            <Label htmlFor="headline">Cabeça (Teleprompter)</Label>
-            <Textarea id="headline" rows={3} defaultValue="Texto da cabeça do VT que será lido pelo apresentador." />
+            <Label htmlFor="cabeca">Cabeça (Teleprompter)</Label>
+            <Textarea 
+              id="cabeca" 
+              rows={3} 
+              value={formData.cabeca || ''} 
+              onChange={handleInputChange} 
+              placeholder="Texto da cabeça do VT que será lido pelo apresentador."
+            />
           </div>
           
           <div className="space-y-1.5">
-            <Label htmlFor="body">Corpo da Matéria</Label>
-            <Textarea id="body" rows={10} defaultValue="Texto completo da matéria que será exibido no teleprompter." />
+            <Label htmlFor="texto">Corpo da Matéria</Label>
+            <Textarea 
+              id="texto" 
+              rows={10} 
+              value={formData.texto || ''} 
+              onChange={handleInputChange} 
+              placeholder="Texto completo da matéria que será exibido no teleprompter."
+            />
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="clip">Clipe</Label>
-              <Input id="clip" defaultValue={item.clip} />
+              <Input 
+                id="clip" 
+                value={formData.clip || ''} 
+                onChange={handleInputChange}
+              />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="duration">Duração (segundos)</Label>
-              <Input id="duration" type="number" defaultValue={item.duration} />
+              <Label htmlFor="duracao">Duração (segundos)</Label>
+              <Input 
+                id="duracao" 
+                type="number" 
+                value={formData.duracao || 0} 
+                onChange={handleInputChange}
+              />
             </div>
           </div>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="reporter">Repórter</Label>
-              <Input id="reporter" defaultValue={item.reporter || ''} />
+              <Input 
+                id="reporter" 
+                value={formData.reporter || ''} 
+                onChange={handleInputChange}
+              />
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="status">Status</Label>
-              <select id="status" className="w-full border border-gray-200 rounded-md p-2" defaultValue={item.status}>
+              <select 
+                id="status" 
+                className="w-full border border-gray-200 rounded-md p-2" 
+                value={formData.status || 'draft'} 
+                onChange={handleInputChange}
+              >
                 <option value="draft">Rascunho</option>
                 <option value="pending">Pendente</option>
                 <option value="published">Publicado</option>
@@ -82,12 +165,25 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
           
           <div className="space-y-1.5">
             <Label htmlFor="tags">Tags SEO</Label>
-            <Input id="tags" placeholder="Separe as tags por vírgulas" />
+            <Input 
+              id="tags" 
+              placeholder="Separe as tags por vírgulas"
+              value={formData.tags?.join(', ') || ''} 
+              onChange={(e) => {
+                const tagsArray = e.target.value.split(',').map(tag => tag.trim());
+                setFormData(prev => ({ ...prev, tags: tagsArray }));
+              }}
+            />
           </div>
           
           <div className="space-y-1.5">
-            <Label htmlFor="location">Local de Gravação</Label>
-            <Input id="location" placeholder="Ex: Centro da Cidade" />
+            <Label htmlFor="local_gravacao">Local de Gravação</Label>
+            <Input 
+              id="local_gravacao" 
+              placeholder="Ex: Centro da Cidade" 
+              value={formData.local_gravacao || ''}
+              onChange={handleInputChange}
+            />
           </div>
           
           <div className="space-y-1.5">
@@ -100,33 +196,28 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
           
           <div className="pt-4 flex justify-end space-x-2">
             <Button variant="outline" onClick={onClose}>Cancelar</Button>
-            <Button>Salvar</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? 'Salvando...' : 'Salvar'}
+            </Button>
           </div>
         </TabsContent>
         
         {/* Teleprompter Tab Content */}
-        <TabsContent value="teleprompter" className="h-[calc(100vh-116px)]">
-          <div className="teleprompter-text">
-            <p className="mb-6"><strong>CABEÇA:</strong></p>
-            <p className="mb-10">
-              Texto da cabeça do VT que será lido pelo apresentador. Este texto precisa ser claro e direto,
-              preparando o telespectador para a matéria que virá em seguida.
-            </p>
+        <TabsContent value="teleprompter" className="p-4">
+          <div className="teleprompter-text bg-black text-white p-6 rounded-md text-2xl space-y-8">
+            <div className="mb-8">
+              <h3 className="text-xl text-yellow-400 mb-3">CABEÇA:</h3>
+              <p className="leading-relaxed">
+                {formData.cabeca || "Nenhum texto de cabeça definido."}
+              </p>
+            </div>
             
-            <p className="mb-6"><strong>OFF:</strong></p>
-            <p className="mb-6">
-              Texto completo da matéria que será exibido no teleprompter. Neste texto, o repórter descreve
-              os detalhes da reportagem enquanto as imagens são exibidas.
-            </p>
-            
-            <p className="mb-6">
-              O teleprompter mostra o texto em fonte grande e clara para facilitar a leitura pelo apresentador
-              ou repórter durante a gravação ou transmissão ao vivo.
-            </p>
-            
-            <p>
-              Esta visualização simula como o texto aparecerá no teleprompter durante o programa.
-            </p>
+            <div>
+              <h3 className="text-xl text-yellow-400 mb-3">OFF:</h3>
+              <p className="leading-relaxed">
+                {formData.texto || "Nenhum texto de corpo definido."}
+              </p>
+            </div>
           </div>
         </TabsContent>
       </Tabs>

@@ -9,7 +9,163 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      blocos: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+          ordem: number
+          telejornal_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+          ordem: number
+          telejornal_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          telejornal_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocos_telejornal_id_fkey"
+            columns: ["telejornal_id"]
+            isOneToOne: false
+            referencedRelation: "telejornais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materias: {
+        Row: {
+          bloco_id: string | null
+          cabeca: string | null
+          clip: string | null
+          created_at: string | null
+          duracao: number | null
+          equipamento: string | null
+          horario_exibicao: string | null
+          id: string
+          local_gravacao: string | null
+          ordem: number
+          pagina: string | null
+          reporter: string | null
+          retranca: string
+          status: string | null
+          tags: string[] | null
+          texto: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bloco_id?: string | null
+          cabeca?: string | null
+          clip?: string | null
+          created_at?: string | null
+          duracao?: number | null
+          equipamento?: string | null
+          horario_exibicao?: string | null
+          id?: string
+          local_gravacao?: string | null
+          ordem: number
+          pagina?: string | null
+          reporter?: string | null
+          retranca: string
+          status?: string | null
+          tags?: string[] | null
+          texto?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bloco_id?: string | null
+          cabeca?: string | null
+          clip?: string | null
+          created_at?: string | null
+          duracao?: number | null
+          equipamento?: string | null
+          horario_exibicao?: string | null
+          id?: string
+          local_gravacao?: string | null
+          ordem?: number
+          pagina?: string | null
+          reporter?: string | null
+          retranca?: string
+          status?: string | null
+          tags?: string[] | null
+          texto?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materias_bloco_id_fkey"
+            columns: ["bloco_id"]
+            isOneToOne: false
+            referencedRelation: "blocos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pautas: {
+        Row: {
+          created_at: string | null
+          data_cobertura: string | null
+          descricao: string | null
+          id: string
+          status: string | null
+          titulo: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_cobertura?: string | null
+          descricao?: string | null
+          id?: string
+          status?: string | null
+          titulo: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_cobertura?: string | null
+          descricao?: string | null
+          id?: string
+          status?: string | null
+          titulo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      telejornais: {
+        Row: {
+          created_at: string | null
+          horario: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          horario?: string | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          horario?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
