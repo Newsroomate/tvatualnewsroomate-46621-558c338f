@@ -1,4 +1,3 @@
-
 export interface Telejornal {
   id: string;
   nome: string;
