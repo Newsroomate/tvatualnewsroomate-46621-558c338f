@@ -10,7 +10,7 @@ interface EnableRealtimeParams {
 export const enableRealtimeForTable = async (tableName: string) => {
   try {
     // Using a properly typed RPC call to enable Realtime for a specific table
-    await supabase.rpc<null>('enable_realtime_for_table', { table_name: tableName } as EnableRealtimeParams);
+    await supabase.rpc('enable_realtime_for_table', { table_name: tableName } as EnableRealtimeParams);
     console.log(`Realtime habilitado para a tabela ${tableName}`);
     return true;
   } catch (error) {
