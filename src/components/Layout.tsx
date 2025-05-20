@@ -4,10 +4,12 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
 import { NewsSchedule } from "./NewsSchedule";
 import { EditPanel } from "./EditPanel";
-import { Materia, Telejornal } from "@/types";
+import { Materia, Telejornal } from "@/types/index";
 import { updateTelejornal, fetchTelejornal } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { CloseRundownDialog } from "./CloseRundownDialog";
+import { useAuth } from "@/context/AuthContext";
+import { canCreateEspelhos } from "@/utils/permission";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient();
@@ -19,6 +21,7 @@ const Layout = () => {
   const [currentTelejornal, setCurrentTelejornal] = useState<Telejornal | null>(null);
   const [isCloseRundownDialogOpen, setIsCloseRundownDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   const handleSelectJournal = (journalId: string) => {
     setSelectedJournal(journalId);
@@ -57,6 +60,16 @@ const Layout = () => {
 
   const handleToggleRundown = async () => {
     if (!selectedJournal || !currentTelejornal) return;
+    
+    // Verificar permissões para abrir/fechar espelho
+    if (!canCreateEspelhos(profile)) {
+      toast({
+        title: "Permissão negada",
+        description: "Você não tem permissão para abrir ou fechar espelhos.",
+        variant: "destructive"
+      });
+      return;
+    }
     
     // Se o espelho está aberto e o usuário deseja fechá-lo, mostrar diálogo de confirmação
     if (currentTelejornal.espelho_aberto) {
@@ -172,16 +185,18 @@ const Layout = () => {
                 )}
               </div>
               
-              <button 
-                onClick={handleToggleRundown}
-                className={`px-4 py-1 rounded-md text-xs font-medium ${
-                  currentTelejornal?.espelho_aberto 
-                    ? "bg-red-100 text-red-700 hover:bg-red-200"
-                    : "bg-green-100 text-green-700 hover:bg-green-200"
-                }`}
-              >
-                {currentTelejornal?.espelho_aberto ? "Fechar Espelho" : "Abrir Espelho"}
-              </button>
+              {canCreateEspelhos(profile) && (
+                <button 
+                  onClick={handleToggleRundown}
+                  className={`px-4 py-1 rounded-md text-xs font-medium ${
+                    currentTelejornal?.espelho_aberto 
+                      ? "bg-red-100 text-red-700 hover:bg-red-200"
+                      : "bg-green-100 text-green-700 hover:bg-green-200"
+                  }`}
+                >
+                  {currentTelejornal?.espelho_aberto ? "Fechar Espelho" : "Abrir Espelho"}
+                </button>
+              )}
             </div>
           )}
           

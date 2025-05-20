@@ -2,6 +2,8 @@
 import { Bloco, Materia } from "@/types";
 import { BlockHeader } from "./BlockHeader";
 import { BlockContent } from "./BlockContent";
+import { useAuth } from "@/context/AuthContext";
+import { canModifyMaterias } from "@/utils/permission";
 
 interface NewsBlockProps {
   block: Bloco & { items: Materia[], totalTime: number };
@@ -20,6 +22,9 @@ export const NewsBlock = ({
   onDeleteItem,
   isEspelhoOpen
 }: NewsBlockProps) => {
+  const { profile } = useAuth();
+  const canModify = canModifyMaterias(profile);
+  
   return (
     <div key={block.id} className="border border-gray-200 rounded-lg shadow-sm">
       <BlockHeader
@@ -29,6 +34,7 @@ export const NewsBlock = ({
         newItemBlock={newItemBlock}
         blockId={block.id}
         isEspelhoOpen={isEspelhoOpen}
+        canAddItem={canModify}
       />
       <BlockContent
         blockId={block.id}
@@ -36,6 +42,7 @@ export const NewsBlock = ({
         onEditItem={onEditItem}
         onDeleteItem={onDeleteItem}
         isEspelhoOpen={isEspelhoOpen}
+        canModifyItems={canModify}
       />
     </div>
   );

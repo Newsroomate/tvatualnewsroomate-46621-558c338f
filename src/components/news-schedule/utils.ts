@@ -17,3 +17,24 @@ export const findHighestPageNumber = (blocks: any[]): number => {
   });
   return highestPage;
 };
+
+// Role translation helper
+export const translateRole = (role: string): string => {
+  const roleMap: Record<string, string> = {
+    'editor_chefe': 'Editor-chefe',
+    'editor': 'Editor',
+    'reporter': 'Repórter',
+    'produtor': 'Produtor'
+  };
+  
+  return roleMap[role] || role;
+};
+
+// Format date to Brazilian format
+export const formatBrazilianDate = (date: Date): string => {
+  return date.toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
