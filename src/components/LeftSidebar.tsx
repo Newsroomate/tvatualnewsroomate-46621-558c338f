@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit2, Trash2, FileText } from "lucide-react";
 import { fetchTelejornais, fetchPautas, deleteTelejornal, deletePauta, fetchTelejornal } from "@/services/api";
 import { Telejornal, Pauta } from "@/types";
-import { GeneralScheduleModal } from "./GeneralScheduleModal";
+import { GeneralScheduleModal } from "./general-schedule";
 import { PautaModal } from "./PautaModal";
 import { TelejornalModal } from "./TelejornalModal";
 import { EditTelejornalDialog } from "./EditTelejornalDialog";
