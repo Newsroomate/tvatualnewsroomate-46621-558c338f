@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Trash2, ArrowDownUp } from "lucide-react";
+import { PlusCircle, Trash2, ArrowDownUp, Lock } from "lucide-react";
 import { 
   fetchBlocosByTelejornal, 
   fetchMateriasByBloco, 
@@ -23,13 +24,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useToast } from "@/components/ui/use-toast";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
   onEditItem: (item: Materia) => void;
+  isRundownOpen: boolean;
+  onOpenRundown: () => void;
 }
 
-export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps) => {
+export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpenRundown }: NewsScheduleProps) => {
   const [blocks, setBlocks] = useState<(Bloco & { items: Materia[], totalTime: number })[]>([]);
   const [totalJournalTime, setTotalJournalTime] = useState(0);
   const [newItemBlock, setNewItemBlock] = useState<string | null>(null);
@@ -38,6 +48,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [materiaToDelete, setMateriaToDelete] = useState<Materia | null>(null);
   const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
+  const { toast } = useToast();
 
   // Fetch telejornais
   const telejornaisQuery = useQuery({
@@ -81,15 +92,15 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
         
         setBlocks(blocosComItems);
         
-        // Automatically create Block 1 if no blocks exist
-        if (blocosComItems.length === 0 && selectedJournal) {
+        // Automatically create Block 1 if no blocks exist and rundown is open
+        if (blocosComItems.length === 0 && selectedJournal && isRundownOpen) {
           handleAddBlock();
         }
       }
     };
     
     loadBlocos();
-  }, [blocosQuery.data, selectedJournal]);
+  }, [blocosQuery.data, selectedJournal, isRundownOpen]);
 
   // Update current journal when selectedJournal changes
   useEffect(() => {
@@ -126,6 +137,16 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
   const handleAddBlock = async () => {
     if (!selectedJournal) return;
     
+    // Can't add blocks if rundown is not open
+    if (!isRundownOpen) {
+      toast({
+        title: "Espelho fechado",
+        description: "Você precisa abrir o espelho para adicionar blocos.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     try {
       const nextOrder = blocks.length + 1;
       const novoBlocoInput = {
@@ -144,10 +165,25 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
       }]);
     } catch (error) {
       console.error("Erro ao adicionar bloco:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível adicionar o bloco",
+        variant: "destructive"
+      });
     }
   };
 
   const handleAddItem = async (blocoId: string) => {
+    // Can't add items if rundown is not open
+    if (!isRundownOpen) {
+      toast({
+        title: "Espelho fechado",
+        description: "Você precisa abrir o espelho para adicionar matérias.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setNewItemBlock(blocoId);
     
     try {
@@ -187,10 +223,25 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
     } catch (error) {
       console.error("Erro ao adicionar matéria:", error);
       setNewItemBlock(null);
+      toast({
+        title: "Erro",
+        description: "Não foi possível adicionar a matéria",
+        variant: "destructive"
+      });
     }
   };
 
   const handleDeleteMateria = (item: Materia) => {
+    // Can't delete items if rundown is not open
+    if (!isRundownOpen) {
+      toast({
+        title: "Espelho fechado",
+        description: "Você precisa abrir o espelho para excluir matérias.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setMateriaToDelete(item);
     setDeleteConfirmOpen(true);
   };
@@ -218,10 +269,24 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
       setMateriaToDelete(null);
     } catch (error) {
       console.error("Erro ao excluir matéria:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir a matéria",
+        variant: "destructive"
+      });
     }
   };
 
   const handleDragEnd = async (result: any) => {
+    if (!isRundownOpen) {
+      toast({
+        title: "Espelho fechado",
+        description: "Você precisa abrir o espelho para reordenar matérias.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     const { source, destination } = result;
     
     // Dropped outside the list or no movement
@@ -302,6 +367,16 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
   };
 
   const handleRenumberItems = async () => {
+    // Can't renumber if rundown is not open
+    if (!isRundownOpen) {
+      toast({
+        title: "Espelho fechado",
+        description: "Você precisa abrir o espelho para reorganizar a numeração.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setRenumberConfirmOpen(true);
   };
 
@@ -333,8 +408,18 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
       // Update blocks state to trigger re-render
       setBlocks([...blocks]);
       setRenumberConfirmOpen(false);
+      
+      toast({
+        title: "Numeração reorganizada",
+        description: "A numeração das matérias foi reorganizada com sucesso.",
+      });
     } catch (error) {
       console.error("Error renumbering items:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível reorganizar a numeração",
+        variant: "destructive"
+      });
     }
   };
 
@@ -378,15 +463,27 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
           </p>
         </div>
         <div className="flex gap-4 items-center">
-          <Button 
-            onClick={handleRenumberItems}
-            variant="secondary"
-            size="sm"
-            className="flex items-center gap-1"
-          >
-            <ArrowDownUp className="h-4 w-4" />
-            Reorganizar Numeração
-          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  onClick={handleRenumberItems}
+                  variant="secondary"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  disabled={!isRundownOpen || blocks.length === 0}
+                >
+                  <ArrowDownUp className="h-4 w-4" />
+                  Reorganizar Numeração
+                </Button>
+              </TooltipTrigger>
+              {!isRundownOpen && (
+                <TooltipContent>
+                  Abra o espelho para reorganizar a numeração
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
           <div className="text-right">
             <p className="text-sm font-medium">Tempo Total:</p>
             <p className="text-lg font-bold">{formatTime(totalJournalTime)}</p>
@@ -397,9 +494,23 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
       {/* Main area with blocks */}
       <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {isLoading ? (
+          {!selectedJournal ? (
+            <div className="flex items-center justify-center h-32">
+              <p className="text-gray-500">Selecione um telejornal no painel esquerdo</p>
+            </div>
+          ) : isLoading ? (
             <div className="flex items-center justify-center h-32">
               <p className="text-gray-500">Carregando espelho...</p>
+            </div>
+          ) : !isRundownOpen ? (
+            <div className="flex flex-col items-center justify-center h-32 gap-3">
+              <div className="flex items-center text-gray-500">
+                <Lock className="h-5 w-5 mr-2" />
+                <p>O espelho está fechado. Abra o espelho para adicionar e editar matérias.</p>
+              </div>
+              <Button onClick={onOpenRundown} variant="default">
+                Abrir Espelho Agora
+              </Button>
             </div>
           ) : blocks.length === 0 ? (
             <div className="flex items-center justify-center h-32">
@@ -415,14 +526,27 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
                     <span className="text-sm font-medium">
                       Tempo: {formatTime(block.totalTime)}
                     </span>
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      onClick={() => handleAddItem(block.id)}
-                      disabled={newItemBlock === block.id}
-                    >
-                      <PlusCircle className="h-4 w-4 mr-1" /> Nova Matéria
-                    </Button>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div>
+                            <Button 
+                              size="sm" 
+                              variant="ghost"
+                              onClick={() => handleAddItem(block.id)}
+                              disabled={newItemBlock === block.id || !isRundownOpen}
+                            >
+                              <PlusCircle className="h-4 w-4 mr-1" /> Nova Matéria
+                            </Button>
+                          </div>
+                        </TooltipTrigger>
+                        {!isRundownOpen && (
+                          <TooltipContent>
+                            Abra o espelho para adicionar matérias
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
                 </div>
 
@@ -459,6 +583,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
                                   key={item.id}
                                   draggableId={item.id}
                                   index={index}
+                                  isDragDisabled={!isRundownOpen}
                                 >
                                   {(provided, snapshot) => (
                                     <tr 
@@ -483,17 +608,46 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
                                       <td className="py-2 px-4">{item.reporter || '-'}</td>
                                       <td className="py-2 px-4">
                                         <div className="flex gap-1">
-                                          <Button size="sm" variant="ghost" onClick={() => handleEditButtonClick(item)}>
-                                            Editar
-                                          </Button>
-                                          <Button 
-                                            size="sm" 
-                                            variant="ghost" 
-                                            className="text-red-600 hover:text-red-800"
-                                            onClick={() => handleDeleteMateria(item)}
-                                          >
-                                            <Trash2 className="h-4 w-4" />
-                                          </Button>
+                                          <TooltipProvider>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button 
+                                                  size="sm" 
+                                                  variant="ghost" 
+                                                  onClick={() => handleEditButtonClick(item)}
+                                                  disabled={!isRundownOpen}
+                                                >
+                                                  Editar
+                                                </Button>
+                                              </TooltipTrigger>
+                                              {!isRundownOpen && (
+                                                <TooltipContent>
+                                                  Abra o espelho para editar
+                                                </TooltipContent>
+                                              )}
+                                            </Tooltip>
+                                          </TooltipProvider>
+                                          
+                                          <TooltipProvider>
+                                            <Tooltip>
+                                              <TooltipTrigger asChild>
+                                                <Button 
+                                                  size="sm" 
+                                                  variant="ghost" 
+                                                  className="text-red-600 hover:text-red-800"
+                                                  onClick={() => handleDeleteMateria(item)}
+                                                  disabled={!isRundownOpen}
+                                                >
+                                                  <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                              </TooltipTrigger>
+                                              {!isRundownOpen && (
+                                                <TooltipContent>
+                                                  Abra o espelho para excluir
+                                                </TooltipContent>
+                                              )}
+                                            </Tooltip>
+                                          </TooltipProvider>
                                         </div>
                                       </td>
                                     </tr>
@@ -513,7 +667,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
           )}
 
           {/* Button to add new block */}
-          {selectedJournal && (
+          {selectedJournal && isRundownOpen && (
             <div className="flex justify-center">
               <Button 
                 variant="outline"
@@ -522,6 +676,30 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
                 <PlusCircle className="h-4 w-4 mr-2" />
                 Adicionar Novo Bloco
               </Button>
+            </div>
+          )}
+          
+          {/* Button to add new block - disabled version with tooltip */}
+          {selectedJournal && !isRundownOpen && (
+            <div className="flex justify-center">
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div>
+                      <Button 
+                        variant="outline"
+                        disabled={true}
+                      >
+                        <PlusCircle className="h-4 w-4 mr-2" />
+                        Adicionar Novo Bloco
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    Abra o espelho para adicionar blocos
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           )}
         </div>

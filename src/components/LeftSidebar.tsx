@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit2, Trash2 } from "lucide-react";
-import { fetchTelejornais, fetchPautas, deleteTelejornal, deletePauta } from "@/services/api";
+import { PlusCircle, Edit2, Trash2, FileText } from "lucide-react";
+import { fetchTelejornais, fetchPautas, deleteTelejornal, deletePauta, fetchTelejornal } from "@/services/api";
 import { Telejornal, Pauta } from "@/types";
 import { GeneralScheduleModal } from "./GeneralScheduleModal";
 import { PautaModal } from "./PautaModal";
@@ -18,6 +19,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { 
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface LeftSidebarProps {
   selectedJournal: string | null;
@@ -134,6 +141,11 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
     }
   };
 
+  const handleSelectTelejornal = async (journalId: string) => {
+    if (journalId === selectedJournal) return;
+    onSelectJournal(journalId);
+  };
+
   return (
     <div className="w-64 bg-gray-100 h-full border-r border-gray-200 flex flex-col">
       <div className="p-4 bg-primary text-primary-foreground">
@@ -163,10 +175,20 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
                 <li key={jornal.id} className="relative group">
                   <Button
                     variant={selectedJournal === jornal.id ? "secondary" : "ghost"}
-                    className="w-full justify-start text-left pr-16"
-                    onClick={() => onSelectJournal(jornal.id)}
+                    className={`w-full justify-start text-left pr-16 ${jornal.is_open ? 'border-l-4 border-green-500 pl-3' : ''}`}
+                    onClick={() => handleSelectTelejornal(jornal.id)}
                   >
-                    {jornal.nome}
+                    <span className="truncate">{jornal.nome}</span>
+                    {jornal.is_open && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="ml-2 h-2 w-2 rounded-full bg-green-500" />
+                          </TooltipTrigger>
+                          <TooltipContent>Espelho aberto</TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
                   </Button>
                   <div className="absolute top-1 right-1 hidden group-hover:flex space-x-1">
                     <Button 
@@ -258,7 +280,8 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
           className="w-full"
           onClick={handleOpenGeneralSchedule}
         >
-          Abrir Espelho Geral
+          <FileText className="h-4 w-4 mr-2" />
+          Espelho Geral
         </Button>
       </div>
 
