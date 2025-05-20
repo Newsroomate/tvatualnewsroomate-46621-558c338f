@@ -1,11 +1,23 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
-import { fetchTelejornais, fetchPautas } from "@/services/api";
+import { PlusCircle, Edit2, Trash2 } from "lucide-react";
+import { fetchTelejornais, fetchPautas, deleteTelejornal, deletePauta } from "@/services/api";
 import { Telejornal, Pauta } from "@/types";
 import { GeneralScheduleModal } from "./GeneralScheduleModal";
 import { PautaModal } from "./PautaModal";
+import { EditTelejornalDialog } from "./EditTelejornalDialog";
+import { EditPautaDialog } from "./EditPautaDialog";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface LeftSidebarProps {
   selectedJournal: string | null;
@@ -18,7 +30,15 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   const [pautas, setPautas] = useState<Pauta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-
+  
+  // Edit dialog states
+  const [editingTelejornal, setEditingTelejornal] = useState<Telejornal | null>(null);
+  const [editingPauta, setEditingPauta] = useState<Pauta | null>(null);
+  
+  // Delete confirmation dialog states
+  const [deletingTelejornal, setDeletingTelejornal] = useState<Telejornal | null>(null);
+  const [deletingPauta, setDeletingPauta] = useState<Pauta | null>(null);
+  
   useEffect(() => {
     loadData();
   }, []);
@@ -52,6 +72,62 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
   const handleOpenPautaModal = () => {
     setIsPautaModalOpen(true);
   };
+  
+  const handleEditTelejornal = (telejornal: Telejornal, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingTelejornal(telejornal);
+  };
+  
+  const handleDeleteTelejornal = (telejornal: Telejornal, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeletingTelejornal(telejornal);
+  };
+  
+  const confirmDeleteTelejornal = async () => {
+    if (!deletingTelejornal) return;
+    
+    try {
+      await deleteTelejornal(deletingTelejornal.id);
+      loadData();
+      
+      // If the deleted telejornal was selected, select the first one in the list
+      if (selectedJournal === deletingTelejornal.id) {
+        const remainingTelejornais = telejornais.filter(tj => tj.id !== deletingTelejornal.id);
+        if (remainingTelejornais.length > 0) {
+          onSelectJournal(remainingTelejornais[0].id);
+        } else {
+          onSelectJournal("");
+        }
+      }
+    } catch (error) {
+      console.error("Erro ao excluir telejornal:", error);
+    } finally {
+      setDeletingTelejornal(null);
+    }
+  };
+  
+  const handleEditPauta = (pauta: Pauta, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setEditingPauta(pauta);
+  };
+  
+  const handleDeletePauta = (pauta: Pauta, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDeletingPauta(pauta);
+  };
+  
+  const confirmDeletePauta = async () => {
+    if (!deletingPauta) return;
+    
+    try {
+      await deletePauta(deletingPauta.id);
+      loadData();
+    } catch (error) {
+      console.error("Erro ao excluir pauta:", error);
+    } finally {
+      setDeletingPauta(null);
+    }
+  };
 
   return (
     <div className="w-64 bg-gray-100 h-full border-r border-gray-200 flex flex-col">
@@ -68,14 +144,34 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
           ) : (
             <ul className="space-y-1">
               {telejornais.map((jornal) => (
-                <li key={jornal.id}>
+                <li key={jornal.id} className="relative group">
                   <Button
                     variant={selectedJournal === jornal.id ? "secondary" : "ghost"}
-                    className="w-full justify-start text-left"
+                    className="w-full justify-start text-left pr-16"
                     onClick={() => onSelectJournal(jornal.id)}
                   >
                     {jornal.nome}
                   </Button>
+                  <div className="absolute top-1 right-1 hidden group-hover:flex space-x-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7" 
+                      onClick={(e) => handleEditTelejornal(jornal, e)}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                      <span className="sr-only">Editar</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 text-red-500 hover:text-red-700" 
+                      onClick={(e) => handleDeleteTelejornal(jornal, e)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Excluir</span>
+                    </Button>
+                  </div>
                 </li>
               ))}
             </ul>
@@ -102,13 +198,33 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
           ) : (
             <ul className="space-y-1">
               {pautas.map((pauta) => (
-                <li key={pauta.id}>
+                <li key={pauta.id} className="relative group">
                   <Button
                     variant="ghost"
-                    className="w-full justify-start text-left"
+                    className="w-full justify-start text-left pr-16"
                   >
                     {pauta.titulo}
                   </Button>
+                  <div className="absolute top-1 right-1 hidden group-hover:flex space-x-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7" 
+                      onClick={(e) => handleEditPauta(pauta, e)}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                      <span className="sr-only">Editar</span>
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 text-red-500 hover:text-red-700" 
+                      onClick={(e) => handleDeletePauta(pauta, e)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      <span className="sr-only">Excluir</span>
+                    </Button>
+                  </div>
                 </li>
               ))}
               {pautas.length === 0 && (
@@ -130,7 +246,7 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
         </Button>
       </div>
 
-      {/* Modals */}
+      {/* Modals & Dialogs */}
       <GeneralScheduleModal 
         isOpen={isGeneralScheduleOpen}
         onClose={() => setIsGeneralScheduleOpen(false)}
@@ -141,6 +257,82 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
         onClose={() => setIsPautaModalOpen(false)}
         onPautaCreated={loadData}
       />
+      
+      {/* Edit Telejornal Dialog */}
+      {editingTelejornal && (
+        <EditTelejornalDialog
+          isOpen={!!editingTelejornal}
+          onClose={() => setEditingTelejornal(null)}
+          telejornal={editingTelejornal}
+          onTelejornalUpdated={loadData}
+        />
+      )}
+      
+      {/* Edit Pauta Dialog */}
+      {editingPauta && (
+        <EditPautaDialog
+          isOpen={!!editingPauta}
+          onClose={() => setEditingPauta(null)}
+          pauta={editingPauta}
+          onPautaUpdated={loadData}
+        />
+      )}
+      
+      {/* Delete Telejornal Confirmation */}
+      <AlertDialog 
+        open={!!deletingTelejornal} 
+        onOpenChange={() => setDeletingTelejornal(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este telejornal?
+              <br />
+              <strong className="text-destructive">{deletingTelejornal?.nome}</strong>
+              <br />
+              Esta ação não pode ser desfeita e excluirá todos os blocos e matérias associados a este telejornal.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteTelejornal}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      {/* Delete Pauta Confirmation */}
+      <AlertDialog 
+        open={!!deletingPauta} 
+        onOpenChange={() => setDeletingPauta(null)}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta pauta?
+              <br />
+              <strong className="text-destructive">{deletingPauta?.titulo}</strong>
+              <br />
+              Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeletePauta}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

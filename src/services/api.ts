@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Telejornal, Bloco, Materia, Pauta, BlocoCreateInput, MateriaCreateInput, PautaCreateInput } from "@/types";
 import { toast } from "@/hooks/use-toast";
@@ -16,6 +15,78 @@ export const fetchTelejornais = async () => {
   }
 
   return data as Telejornal[];
+};
+
+export const updateTelejornal = async (id: string, updates: { nome: string }) => {
+  const { data, error } = await supabase
+    .from('telejornais')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao atualizar telejornal:', error);
+    toast({
+      title: "Erro ao atualizar telejornal",
+      description: error.message,
+      variant: "destructive",
+    });
+    throw error;
+  }
+
+  toast({
+    title: "Telejornal atualizado",
+    description: `${updates.nome} foi atualizado com sucesso`,
+  });
+
+  return data as Telejornal;
+};
+
+export const deleteTelejornal = async (id: string) => {
+  // First, delete all related materias in blocos of this telejornal
+  const { data: blocos } = await supabase
+    .from('blocos')
+    .select('id')
+    .eq('telejornal_id', id);
+  
+  if (blocos && blocos.length > 0) {
+    for (const bloco of blocos) {
+      await supabase
+        .from('materias')
+        .delete()
+        .eq('bloco_id', bloco.id);
+    }
+    
+    // Now delete all blocos
+    await supabase
+      .from('blocos')
+      .delete()
+      .eq('telejornal_id', id);
+  }
+  
+  // Finally delete the telejornal
+  const { error } = await supabase
+    .from('telejornais')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Erro ao excluir telejornal:', error);
+    toast({
+      title: "Erro ao excluir telejornal",
+      description: error.message,
+      variant: "destructive",
+    });
+    throw error;
+  }
+
+  toast({
+    title: "Telejornal excluído",
+    description: "O telejornal foi removido com sucesso",
+  });
+
+  return true;
 };
 
 // Blocos
@@ -188,4 +259,54 @@ export const createPauta = async (pauta: PautaCreateInput) => {
   });
 
   return data as Pauta;
+};
+
+export const updatePauta = async (id: string, updates: { titulo: string }) => {
+  const { data, error } = await supabase
+    .from('pautas')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao atualizar pauta:', error);
+    toast({
+      title: "Erro ao atualizar pauta",
+      description: error.message,
+      variant: "destructive",
+    });
+    throw error;
+  }
+
+  toast({
+    title: "Pauta atualizada",
+    description: `${updates.titulo} foi atualizada com sucesso`,
+  });
+
+  return data as Pauta;
+};
+
+export const deletePauta = async (id: string) => {
+  const { error } = await supabase
+    .from('pautas')
+    .delete()
+    .eq('id', id);
+
+  if (error) {
+    console.error('Erro ao excluir pauta:', error);
+    toast({
+      title: "Erro ao excluir pauta",
+      description: error.message,
+      variant: "destructive",
+    });
+    throw error;
+  }
+
+  toast({
+    title: "Pauta excluída",
+    description: "A pauta foi removida com sucesso",
+  });
+
+  return true;
 };
