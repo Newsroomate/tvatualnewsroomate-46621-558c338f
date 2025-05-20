@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit2, Trash2 } from "lucide-react";
@@ -6,6 +5,7 @@ import { fetchTelejornais, fetchPautas, deleteTelejornal, deletePauta } from "@/
 import { Telejornal, Pauta } from "@/types";
 import { GeneralScheduleModal } from "./GeneralScheduleModal";
 import { PautaModal } from "./PautaModal";
+import { TelejornalModal } from "./TelejornalModal";
 import { EditTelejornalDialog } from "./EditTelejornalDialog";
 import { EditPautaDialog } from "./EditPautaDialog";
 import { 
@@ -27,6 +27,7 @@ interface LeftSidebarProps {
 export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarProps) => {
   const [isGeneralScheduleOpen, setIsGeneralScheduleOpen] = useState(false);
   const [isPautaModalOpen, setIsPautaModalOpen] = useState(false);
+  const [isTelejornalModalOpen, setIsTelejornalModalOpen] = useState(false);
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   const [pautas, setPautas] = useState<Pauta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -71,6 +72,10 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
 
   const handleOpenPautaModal = () => {
     setIsPautaModalOpen(true);
+  };
+  
+  const handleOpenTelejornalModal = () => {
+    setIsTelejornalModalOpen(true);
   };
   
   const handleEditTelejornal = (telejornal: Telejornal, e: React.MouseEvent) => {
@@ -138,7 +143,18 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
       <div className="flex-1 overflow-y-auto">
         {/* Telejornais Section */}
         <div className="p-4">
-          <h3 className="text-sm font-semibold uppercase text-gray-500 mb-2">Telejornais</h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-sm font-semibold uppercase text-gray-500">Telejornais</h3>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-8 w-8 p-0" 
+              onClick={handleOpenTelejornalModal}
+            >
+              <PlusCircle className="h-4 w-4" />
+              <span className="sr-only">Adicionar Telejornal</span>
+            </Button>
+          </div>
           {isLoading ? (
             <p className="text-sm text-gray-500">Carregando...</p>
           ) : (
@@ -256,6 +272,12 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
         isOpen={isPautaModalOpen}
         onClose={() => setIsPautaModalOpen(false)}
         onPautaCreated={loadData}
+      />
+      
+      <TelejornalModal
+        isOpen={isTelejornalModalOpen}
+        onClose={() => setIsTelejornalModalOpen(false)}
+        onTelejornalCreated={loadData}
       />
       
       {/* Edit Telejornal Dialog */}

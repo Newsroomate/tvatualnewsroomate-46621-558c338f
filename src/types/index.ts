@@ -71,3 +71,9 @@ export interface PautaCreateInput {
   descricao?: string;
   status?: string;
 }
+
+// Required fields for Telejornal creation (based on Supabase schema)
+export interface TelejornalCreateInput {
+  nome: string;
+  horario?: string;
+}

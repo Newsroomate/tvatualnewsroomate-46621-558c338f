@@ -17,6 +17,36 @@ export const fetchTelejornais = async () => {
   return data as Telejornal[];
 };
 
+export interface TelejornalCreateInput {
+  nome: string;
+  horario?: string;
+}
+
+export const createTelejornal = async (telejornal: TelejornalCreateInput) => {
+  const { data, error } = await supabase
+    .from('telejornais')
+    .insert(telejornal)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao criar telejornal:', error);
+    toast({
+      title: "Erro ao criar telejornal",
+      description: error.message,
+      variant: "destructive",
+    });
+    throw error;
+  }
+
+  toast({
+    title: "Telejornal criado",
+    description: `${telejornal.nome} foi adicionado com sucesso`,
+  });
+
+  return data as Telejornal;
+};
+
 export const updateTelejornal = async (id: string, updates: { nome: string }) => {
   const { data, error } = await supabase
     .from('telejornais')
