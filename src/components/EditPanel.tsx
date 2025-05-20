@@ -68,7 +68,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         description: "As alterações foram salvas com sucesso.",
       });
       
-      // Close the edit panel - the real-time listener will update the UI
+      // Close the edit panel immediately after saving
       onClose();
     } catch (error) {
       console.error("Erro ao salvar matéria:", error);

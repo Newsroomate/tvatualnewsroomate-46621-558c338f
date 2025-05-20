@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -162,6 +163,52 @@ export const NewsSchedule = ({
     
     console.log('Setting up realtime subscription for materias table');
     
+    const handleMateriaUpdate = (updatedMateria: Materia) => {
+      console.log('Processing materia update:', updatedMateria);
+      
+      setBlocks(currentBlocks => {
+        // Create new blocks array to ensure React detects the state change
+        return currentBlocks.map(block => {
+          // Find the block that contains this materia
+          if (block.id === updatedMateria.bloco_id) {
+            // Find if the materia already exists in this block
+            const itemExists = block.items.some(item => item.id === updatedMateria.id);
+            
+            let updatedItems;
+            if (itemExists) {
+              // Update the existing materia
+              updatedItems = block.items.map(item => 
+                item.id === updatedMateria.id 
+                  ? { 
+                      ...updatedMateria,
+                      // Make sure we have a titulo property for UI consistency
+                      titulo: updatedMateria.retranca || "Sem título" 
+                    } 
+                  : item
+              );
+            } else {
+              // This is a new materia for this block
+              updatedItems = [...block.items, { 
+                ...updatedMateria, 
+                titulo: updatedMateria.retranca || "Sem título" 
+              }];
+            }
+            
+            // Calculate new total time
+            const totalTime = updatedItems.reduce((sum, item) => sum + item.duracao, 0);
+            
+            // Return updated block
+            return {
+              ...block,
+              items: updatedItems,
+              totalTime
+            };
+          }
+          return block;
+        });
+      });
+    };
+    
     // Subscribe to all materias changes related to the current telejornal's blocks
     const channel = supabase
       .channel('public:materias-changes')
@@ -170,30 +217,9 @@ export const NewsSchedule = ({
         schema: 'public',
         table: 'materias',
       }, (payload) => {
-        console.log('Materia updated:', payload);
+        console.log('Materia updated via realtime:', payload);
         const updatedMateria = payload.new as Materia;
-        
-        // Update the UI with the new materia data
-        setBlocks(currentBlocks => 
-          currentBlocks.map(block => {
-            if (block.id === updatedMateria.bloco_id) {
-              // Find and update the specific materia in this block
-              const updatedItems = block.items.map(item => 
-                item.id === updatedMateria.id ? { ...updatedMateria, titulo: updatedMateria.retranca || "Sem título" } : item
-              );
-              
-              // Recalculate block's total time
-              const totalTime = updatedItems.reduce((sum, item) => sum + item.duracao, 0);
-              
-              return {
-                ...block,
-                items: updatedItems,
-                totalTime
-              };
-            }
-            return block;
-          })
-        );
+        handleMateriaUpdate(updatedMateria);
       })
       .on('postgres_changes', {
         event: 'INSERT',
@@ -206,24 +232,7 @@ export const NewsSchedule = ({
         // Only process if this was not triggered by the current client
         // (avoids duplicate items when we're the ones who created it)
         if (newItemBlock !== newMateria.bloco_id) {
-          setBlocks(currentBlocks => 
-            currentBlocks.map(block => {
-              if (block.id === newMateria.bloco_id) {
-                // Check if we already have this item to avoid duplicates
-                if (!block.items.some(item => item.id === newMateria.id)) {
-                  const updatedItems = [...block.items, { ...newMateria, titulo: newMateria.retranca || "Sem título" }];
-                  const totalTime = updatedItems.reduce((sum, item) => sum + item.duracao, 0);
-                  
-                  return {
-                    ...block,
-                    items: updatedItems,
-                    totalTime
-                  };
-                }
-              }
-              return block;
-            })
-          );
+          handleMateriaUpdate(newMateria);
         }
       })
       .on('postgres_changes', {
@@ -235,7 +244,6 @@ export const NewsSchedule = ({
         const deletedMateria = payload.old as Materia;
         
         // Only process if this was not triggered by the current client
-        // (avoids processing items we've already removed from the UI)
         if (!materiaToDelete || materiaToDelete.id !== deletedMateria.id) {
           setBlocks(currentBlocks => 
             currentBlocks.map(block => {
@@ -254,14 +262,16 @@ export const NewsSchedule = ({
           );
         }
       })
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status for materias:', status);
+      });
     
     // Clean up subscription on unmount or when selectedJournal changes
     return () => {
       console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
-  }, [selectedJournal]);
+  }, [selectedJournal, newItemBlock, materiaToDelete]);
   
   // Function to handle adding the first block specifically
   const handleAddFirstBlock = async () => {
