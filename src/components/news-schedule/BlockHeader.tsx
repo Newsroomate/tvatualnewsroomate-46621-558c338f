@@ -16,6 +16,7 @@ interface BlockHeaderProps {
   newItemBlock: string | null;
   blockId: string;
   isEspelhoOpen: boolean;
+  canAddItem?: boolean; // Added missing prop
 }
 
 export const BlockHeader = ({ 
@@ -24,7 +25,8 @@ export const BlockHeader = ({
   onAddItem, 
   newItemBlock, 
   blockId,
-  isEspelhoOpen
+  isEspelhoOpen,
+  canAddItem = true // Default to true if not specified
 }: BlockHeaderProps) => {
   return (
     <div className="bg-muted p-3 rounded-t-lg flex justify-between items-center">
@@ -41,7 +43,7 @@ export const BlockHeader = ({
                   size="sm" 
                   variant="ghost"
                   onClick={onAddItem}
-                  disabled={newItemBlock === blockId || !isEspelhoOpen}
+                  disabled={(newItemBlock === blockId || !isEspelhoOpen || !canAddItem)}
                 >
                   <PlusCircle className="h-4 w-4 mr-1" /> Nova Matéria
                 </Button>
@@ -50,6 +52,11 @@ export const BlockHeader = ({
             {!isEspelhoOpen && (
               <TooltipContent>
                 Abra o espelho para adicionar matérias
+              </TooltipContent>
+            )}
+            {!canAddItem && isEspelhoOpen && (
+              <TooltipContent>
+                Sem permissão para adicionar matérias
               </TooltipContent>
             )}
           </Tooltip>

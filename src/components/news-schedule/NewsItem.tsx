@@ -18,6 +18,7 @@ interface NewsItemProps {
   snapshot: any;
   isEspelhoOpen: boolean;
   onDoubleClick: (item: Materia) => void;
+  canModify?: boolean; // Added missing prop
 }
 
 export const NewsItem = ({ 
@@ -27,7 +28,8 @@ export const NewsItem = ({
   provided, 
   snapshot,
   isEspelhoOpen,
-  onDoubleClick
+  onDoubleClick,
+  canModify = true // Default to true if not specified
 }: NewsItemProps) => {
   // Status color classes
   const getStatusClass = (status: string): string => {
@@ -55,7 +57,7 @@ export const NewsItem = ({
       <td className="py-2 px-4 font-mono text-xs">{item.clip}</td>
       <td className="py-2 px-4">{formatTime(item.duracao)}</td>
       <td className="py-2 px-4">
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(item.status)}`}>
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(item.status || '')}`}>
           {item.status}
         </span>
       </td>
@@ -69,7 +71,7 @@ export const NewsItem = ({
                   size="sm" 
                   variant="ghost" 
                   onClick={() => onEdit(item)}
-                  disabled={!isEspelhoOpen}
+                  disabled={!isEspelhoOpen || !canModify}
                 >
                   Editar
                 </Button>
@@ -77,6 +79,11 @@ export const NewsItem = ({
               {!isEspelhoOpen && (
                 <TooltipContent>
                   Abra o espelho para editar
+                </TooltipContent>
+              )}
+              {!canModify && isEspelhoOpen && (
+                <TooltipContent>
+                  Sem permissão para editar
                 </TooltipContent>
               )}
             </Tooltip>
@@ -90,7 +97,7 @@ export const NewsItem = ({
                   variant="ghost" 
                   className="text-red-600 hover:text-red-800"
                   onClick={() => onDelete(item)}
-                  disabled={!isEspelhoOpen}
+                  disabled={!isEspelhoOpen || !canModify}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -98,6 +105,11 @@ export const NewsItem = ({
               {!isEspelhoOpen && (
                 <TooltipContent>
                   Abra o espelho para excluir
+                </TooltipContent>
+              )}
+              {!canModify && isEspelhoOpen && (
+                <TooltipContent>
+                  Sem permissão para excluir
                 </TooltipContent>
               )}
             </Tooltip>

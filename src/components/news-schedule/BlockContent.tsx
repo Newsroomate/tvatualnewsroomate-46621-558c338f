@@ -9,6 +9,7 @@ interface BlockContentProps {
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
   isEspelhoOpen: boolean;
+  canModifyItems?: boolean; // Added missing prop
 }
 
 export const BlockContent = ({ 
@@ -16,7 +17,8 @@ export const BlockContent = ({
   items, 
   onEditItem, 
   onDeleteItem,
-  isEspelhoOpen
+  isEspelhoOpen,
+  canModifyItems = true // Default to true if not specified
 }: BlockContentProps) => {
   return (
     <div className="overflow-x-auto">
@@ -62,6 +64,7 @@ export const BlockContent = ({
                           snapshot={snapshot}
                           isEspelhoOpen={isEspelhoOpen}
                           onDoubleClick={onEditItem}
+                          canModify={canModifyItems}
                         />
                       )}
                     </Draggable>
