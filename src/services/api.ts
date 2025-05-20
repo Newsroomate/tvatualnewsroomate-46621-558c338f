@@ -17,6 +17,21 @@ export const fetchTelejornais = async () => {
   return data as Telejornal[];
 };
 
+export const fetchTelejornal = async (id: string) => {
+  const { data, error } = await supabase
+    .from('telejornais')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('Erro ao buscar telejornal:', error);
+    throw error;
+  }
+
+  return data as Telejornal;
+};
+
 export interface TelejornalCreateInput {
   nome: string;
   horario?: string;
