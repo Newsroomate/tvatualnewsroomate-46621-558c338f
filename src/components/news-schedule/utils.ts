@@ -32,3 +32,18 @@ export const getStatusClass = (status: string): string => {
     default: return 'bg-gray-100 text-gray-800';
   }
 };
+
+// Process updated materia for UI updates - this is used in the realtime subscription handlers
+export const processUpdatedMateria = (updatedMateria: Materia): Materia => {
+  console.log('Processing materia update for UI:', updatedMateria);
+  return {
+    ...updatedMateria,
+    // Make sure we have a titulo property for UI consistency
+    titulo: updatedMateria.retranca || "Sem título" 
+  };
+};
+
+// Helper to calculate total time for a block
+export const calculateBlockTotalTime = (items: Materia[]): number => {
+  return items.reduce((sum, item) => sum + (item.duracao || 0), 0);
+};

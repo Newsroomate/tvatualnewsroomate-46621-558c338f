@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
-import { NewsSchedule } from "./NewsSchedule";
+import { NewsSchedule } from "./news-schedule/NewsSchedule";
 import { EditPanel } from "./EditPanel";
 import { Materia, Telejornal } from "@/types/index";
 import { updateTelejornal, fetchTelejornal } from "@/services/api";
@@ -63,9 +63,14 @@ const Layout = () => {
     setIsEditPanelOpen(false);
     setSelectedItem(null);
     
-    // No need to explicitly invalidate queries here
-    // The real-time subscription will handle updates automatically
-    console.log("Edit panel closed - UI will update via Realtime subscription");
+    // Explicitly invalidate queries to force a refresh of the data
+    // This ensures that even if realtime updates fail, we still get fresh data
+    if (selectedJournal) {
+      console.log("Explicitly invalidating queries to refresh data");
+      queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
+    }
+    
+    console.log("Edit panel closed - UI will update via Realtime subscription and explicit query invalidation");
   };
 
   const handleToggleRundown = async () => {

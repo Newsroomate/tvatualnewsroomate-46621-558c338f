@@ -60,7 +60,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
       console.log("Saving updated materia:", { id: item.id, ...formData });
       
       // Update the materia in the database
-      await updateMateria(item.id, formData);
+      const updatedMateria = await updateMateria(item.id, formData);
       
       // Show success toast
       toast({
@@ -68,7 +68,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         description: "As alterações foram salvas com sucesso.",
       });
       
-      // Close the edit panel immediately after saving
+      // Force close the edit panel immediately after saving
       onClose();
     } catch (error) {
       console.error("Erro ao salvar matéria:", error);

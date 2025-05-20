@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -26,7 +25,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
-import { findHighestPageNumber } from "./utils";
+import { findHighestPageNumber, processUpdatedMateria, calculateBlockTotalTime } from "./utils";
 import { NewsBlock } from "./NewsBlock";
 import { useAuth } from "@/context/AuthContext";
 
@@ -182,23 +181,16 @@ export const NewsSchedule = ({
               // Update the existing materia
               updatedItems = block.items.map(item => 
                 item.id === updatedMateria.id 
-                  ? { 
-                      ...updatedMateria,
-                      // Make sure we have a titulo property for UI consistency
-                      titulo: updatedMateria.retranca || "Sem título" 
-                    } 
+                  ? processUpdatedMateria(updatedMateria)
                   : item
               );
             } else {
               // This is a new materia for this block
-              updatedItems = [...block.items, { 
-                ...updatedMateria, 
-                titulo: updatedMateria.retranca || "Sem título" 
-              }];
+              updatedItems = [...block.items, processUpdatedMateria(updatedMateria)];
             }
             
             // Calculate new total time
-            const totalTime = updatedItems.reduce((sum, item) => sum + item.duracao, 0);
+            const totalTime = calculateBlockTotalTime(updatedItems);
             
             // Return updated block
             return {
@@ -252,7 +244,7 @@ export const NewsSchedule = ({
             currentBlocks.map(block => {
               if (block.id === deletedMateria.bloco_id) {
                 const updatedItems = block.items.filter(item => item.id !== deletedMateria.id);
-                const totalTime = updatedItems.reduce((sum, item) => sum + item.duracao, 0);
+                const totalTime = calculateBlockTotalTime(updatedItems);
                 
                 return {
                   ...block,
