@@ -38,9 +38,15 @@ export interface TelejornalCreateInput {
 }
 
 export const createTelejornal = async (telejornal: TelejornalCreateInput) => {
+  // Ao criar um novo telejornal, o espelho começa fechado
+  const telejornalWithDefaults = {
+    ...telejornal,
+    espelho_aberto: false
+  };
+  
   const { data, error } = await supabase
     .from('telejornais')
-    .insert(telejornal)
+    .insert(telejornalWithDefaults)
     .select()
     .single();
 
@@ -63,15 +69,9 @@ export const createTelejornal = async (telejornal: TelejornalCreateInput) => {
 };
 
 export const updateTelejornal = async (id: string, updates: Partial<Telejornal>) => {
-  // Remova campos que não existem na tabela telejornais
-  const { is_open, open_date, ...validUpdates } = updates;
-  
-  // Registre nos logs para debugging
-  console.log('Atualizando telejornal, campos disponíveis:', validUpdates);
-  
   const { data, error } = await supabase
     .from('telejornais')
-    .update(validUpdates)
+    .update(updates)
     .eq('id', id)
     .select()
     .single();
@@ -88,15 +88,10 @@ export const updateTelejornal = async (id: string, updates: Partial<Telejornal>)
 
   toast({
     title: "Telejornal atualizado",
-    description: `${validUpdates.nome || 'Telejornal'} foi atualizado com sucesso`,
+    description: `${updates.nome || 'Telejornal'} foi atualizado com sucesso`,
   });
 
-  // Simulamos os campos is_open e open_date para não quebrar o código existente
-  return {
-    ...data,
-    is_open: is_open || false,
-    open_date: open_date || null
-  } as Telejornal;
+  return data as Telejornal;
 };
 
 export const deleteTelejornal = async (id: string) => {

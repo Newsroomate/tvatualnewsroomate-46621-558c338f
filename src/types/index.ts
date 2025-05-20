@@ -3,8 +3,7 @@ export interface Telejornal {
   id: string;
   nome: string;
   horario: string;
-  is_open?: boolean;
-  open_date?: string;
+  espelho_aberto?: boolean;
   created_at?: string;
   updated_at?: string;
 }

@@ -34,20 +34,19 @@ import {
 interface NewsScheduleProps {
   selectedJournal: string | null;
   onEditItem: (item: Materia) => void;
-  isRundownOpen: boolean;
+  currentTelejornal: Telejornal | null;
   onOpenRundown: () => void;
 }
 
-export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpenRundown }: NewsScheduleProps) => {
+export const NewsSchedule = ({ selectedJournal, onEditItem, currentTelejornal, onOpenRundown }: NewsScheduleProps) => {
   const [blocks, setBlocks] = useState<(Bloco & { items: Materia[], totalTime: number })[]>([]);
   const [totalJournalTime, setTotalJournalTime] = useState(0);
   const [newItemBlock, setNewItemBlock] = useState<string | null>(null);
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
-  const [currentTelejornal, setCurrentTelejornal] = useState<Telejornal | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [materiaToDelete, setMateriaToDelete] = useState<Materia | null>(null);
   const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
-  const [isInitialBlockCreated, setIsInitialBlockCreated] = useState<Record<string, boolean>>({});
+  const [blocksCreatedMap, setBlocksCreatedMap] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   // Fetch telejornais
@@ -60,12 +59,8 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
   useEffect(() => {
     if (telejornaisQuery.data) {
       setTelejornais(telejornaisQuery.data);
-      const journal = telejornaisQuery.data.find(j => j.id === selectedJournal);
-      if (journal) {
-        setCurrentTelejornal(journal);
-      }
     }
-  }, [telejornaisQuery.data, selectedJournal]);
+  }, [telejornaisQuery.data]);
 
   // Fetch blocks for the selected journal
   const blocosQuery = useQuery({
@@ -92,21 +87,28 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
         
         setBlocks(blocosComItems);
         
-        // Only create Block 1 if no blocks exist, rundown is open, AND we haven't tried to create a block for this journal yet
-        if (blocosComItems.length === 0 && isRundownOpen && !isInitialBlockCreated[selectedJournal]) {
+        // Only create initial block if:
+        // 1. No blocks exist for this telejornal
+        // 2. Espelho is open for this telejornal
+        // 3. We haven't already tried creating a block for this telejornal in this session
+        if (
+          blocosComItems.length === 0 && 
+          currentTelejornal?.espelho_aberto && 
+          !blocksCreatedMap[selectedJournal]
+        ) {
           try {
             await handleAddFirstBlock();
-            // Mark this journal as having its initial block created
-            setIsInitialBlockCreated(prev => ({
+            // Mark that we've tried creating a block for this telejornal
+            setBlocksCreatedMap(prev => ({
               ...prev,
               [selectedJournal]: true
             }));
           } catch (error) {
             console.error("Erro ao criar o bloco inicial:", error);
           }
-        } else if (blocosComItems.length > 0 && !isInitialBlockCreated[selectedJournal]) {
-          // If blocks already exist, mark this journal as having its blocks already set up
-          setIsInitialBlockCreated(prev => ({
+        } else if (blocosComItems.length > 0 && !blocksCreatedMap[selectedJournal]) {
+          // If blocks already exist, mark this journal as already having blocks
+          setBlocksCreatedMap(prev => ({
             ...prev,
             [selectedJournal]: true
           }));
@@ -115,19 +117,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
     };
     
     loadBlocos();
-  }, [blocosQuery.data, selectedJournal, isRundownOpen]);
-
-  // Update current journal when selectedJournal changes
-  useEffect(() => {
-    if (selectedJournal && telejornais.length > 0) {
-      const journal = telejornais.find(j => j.id === selectedJournal);
-      if (journal) {
-        setCurrentTelejornal(journal);
-      }
-    } else {
-      setCurrentTelejornal(null);
-    }
-  }, [selectedJournal, telejornais]);
+  }, [blocosQuery.data, selectedJournal, currentTelejornal]);
 
   // Recalculate total journal time when blocks change
   useEffect(() => {
@@ -149,9 +139,9 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
     return highestPage;
   };
 
-  // New function to handle adding the first block specifically
+  // Function to handle adding the first block specifically
   const handleAddFirstBlock = async () => {
-    if (!selectedJournal || !isRundownOpen) return;
+    if (!selectedJournal || !currentTelejornal?.espelho_aberto) return;
     
     try {
       // Check if blocks already exist for this journal to avoid duplicates
@@ -194,8 +184,8 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
   const handleAddBlock = async () => {
     if (!selectedJournal) return;
     
-    // Can't add blocks if rundown is not open
-    if (!isRundownOpen) {
+    // Can't add blocks if espelho is not open
+    if (!currentTelejornal?.espelho_aberto) {
       toast({
         title: "Espelho fechado",
         description: "Você precisa abrir o espelho para adicionar blocos.",
@@ -231,8 +221,8 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
   };
 
   const handleAddItem = async (blocoId: string) => {
-    // Can't add items if rundown is not open
-    if (!isRundownOpen) {
+    // Can't add items if espelho is not open
+    if (!currentTelejornal?.espelho_aberto) {
       toast({
         title: "Espelho fechado",
         description: "Você precisa abrir o espelho para adicionar matérias.",
@@ -289,8 +279,8 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
   };
 
   const handleDeleteMateria = (item: Materia) => {
-    // Can't delete items if rundown is not open
-    if (!isRundownOpen) {
+    // Can't delete items if espelho is not open
+    if (!currentTelejornal?.espelho_aberto) {
       toast({
         title: "Espelho fechado",
         description: "Você precisa abrir o espelho para excluir matérias.",
@@ -335,7 +325,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
   };
 
   const handleDragEnd = async (result: any) => {
-    if (!isRundownOpen) {
+    if (!currentTelejornal?.espelho_aberto) {
       toast({
         title: "Espelho fechado",
         description: "Você precisa abrir o espelho para reordenar matérias.",
@@ -418,14 +408,12 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
       await updateMateria(movedItem.id, updatedItem);
     } catch (error) {
       console.error("Error updating item position:", error);
-      // Revert to original state if update fails
-      // (You could implement this by keeping the previous state)
     }
   };
 
   const handleRenumberItems = async () => {
-    // Can't renumber if rundown is not open
-    if (!isRundownOpen) {
+    // Can't renumber if espelho is not open
+    if (!currentTelejornal?.espelho_aberto) {
       toast({
         title: "Espelho fechado",
         description: "Você precisa abrir o espelho para reorganizar a numeração.",
@@ -528,13 +516,13 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
                   variant="secondary"
                   size="sm"
                   className="flex items-center gap-1"
-                  disabled={!isRundownOpen || blocks.length === 0}
+                  disabled={!currentTelejornal?.espelho_aberto || blocks.length === 0}
                 >
                   <ArrowDownUp className="h-4 w-4" />
                   Reorganizar Numeração
                 </Button>
               </TooltipTrigger>
-              {!isRundownOpen && (
+              {!currentTelejornal?.espelho_aberto && (
                 <TooltipContent>
                   Abra o espelho para reorganizar a numeração
                 </TooltipContent>
@@ -559,7 +547,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
             <div className="flex items-center justify-center h-32">
               <p className="text-gray-500">Carregando espelho...</p>
             </div>
-          ) : !isRundownOpen ? (
+          ) : !currentTelejornal?.espelho_aberto ? (
             <div className="flex flex-col items-center justify-center h-32 gap-3">
               <div className="flex items-center text-gray-500">
                 <Lock className="h-5 w-5 mr-2" />
@@ -591,13 +579,13 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
                               size="sm" 
                               variant="ghost"
                               onClick={() => handleAddItem(block.id)}
-                              disabled={newItemBlock === block.id || !isRundownOpen}
+                              disabled={newItemBlock === block.id || !currentTelejornal?.espelho_aberto}
                             >
                               <PlusCircle className="h-4 w-4 mr-1" /> Nova Matéria
                             </Button>
                           </div>
                         </TooltipTrigger>
-                        {!isRundownOpen && (
+                        {!currentTelejornal?.espelho_aberto && (
                           <TooltipContent>
                             Abra o espelho para adicionar matérias
                           </TooltipContent>
@@ -640,7 +628,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
                                   key={item.id}
                                   draggableId={item.id}
                                   index={index}
-                                  isDragDisabled={!isRundownOpen}
+                                  isDragDisabled={!currentTelejornal?.espelho_aberto}
                                 >
                                   {(provided, snapshot) => (
                                     <tr 
@@ -672,12 +660,12 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
                                                   size="sm" 
                                                   variant="ghost" 
                                                   onClick={() => handleEditButtonClick(item)}
-                                                  disabled={!isRundownOpen}
+                                                  disabled={!currentTelejornal?.espelho_aberto}
                                                 >
                                                   Editar
                                                 </Button>
                                               </TooltipTrigger>
-                                              {!isRundownOpen && (
+                                              {!currentTelejornal?.espelho_aberto && (
                                                 <TooltipContent>
                                                   Abra o espelho para editar
                                                 </TooltipContent>
@@ -693,12 +681,12 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
                                                   variant="ghost" 
                                                   className="text-red-600 hover:text-red-800"
                                                   onClick={() => handleDeleteMateria(item)}
-                                                  disabled={!isRundownOpen}
+                                                  disabled={!currentTelejornal?.espelho_aberto}
                                                 >
                                                   <Trash2 className="h-4 w-4" />
                                                 </Button>
                                               </TooltipTrigger>
-                                              {!isRundownOpen && (
+                                              {!currentTelejornal?.espelho_aberto && (
                                                 <TooltipContent>
                                                   Abra o espelho para excluir
                                                 </TooltipContent>
@@ -724,7 +712,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
           )}
 
           {/* Button to add new block */}
-          {selectedJournal && isRundownOpen && (
+          {selectedJournal && currentTelejornal?.espelho_aberto && (
             <div className="flex justify-center">
               <Button 
                 variant="outline"
@@ -737,7 +725,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
           )}
           
           {/* Button to add new block - disabled version with tooltip */}
-          {selectedJournal && !isRundownOpen && (
+          {selectedJournal && !currentTelejornal?.espelho_aberto && (
             <div className="flex justify-center">
               <TooltipProvider>
                 <Tooltip>

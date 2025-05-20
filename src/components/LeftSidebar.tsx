@@ -175,11 +175,11 @@ export const LeftSidebar = ({ selectedJournal, onSelectJournal }: LeftSidebarPro
                 <li key={jornal.id} className="relative group">
                   <Button
                     variant={selectedJournal === jornal.id ? "secondary" : "ghost"}
-                    className={`w-full justify-start text-left pr-16 ${jornal.is_open ? 'border-l-4 border-green-500 pl-3' : ''}`}
+                    className={`w-full justify-start text-left pr-16 ${jornal.espelho_aberto ? 'border-l-4 border-green-500 pl-3' : ''}`}
                     onClick={() => handleSelectTelejornal(jornal.id)}
                   >
                     <span className="truncate">{jornal.nome}</span>
-                    {jornal.is_open && (
+                    {jornal.espelho_aberto && (
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>

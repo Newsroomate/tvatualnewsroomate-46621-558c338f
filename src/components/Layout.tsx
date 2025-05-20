@@ -16,7 +16,6 @@ const Layout = () => {
   const [selectedItem, setSelectedItem] = useState<Materia | null>(null);
   const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
   const [currentTelejornal, setCurrentTelejornal] = useState<Telejornal | null>(null);
-  const [isRundownOpen, setIsRundownOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSelectJournal = (journalId: string) => {
@@ -28,13 +27,6 @@ const Layout = () => {
     if (journalId) {
       fetchTelejornal(journalId).then(journal => {
         setCurrentTelejornal(journal);
-        // Mantemos o estado do espelho de acordo com o status armazenado no objeto do telejornal
-        // Não resetamos mais o isRundownOpen automáticamente ao trocar de jornal
-        
-        // Verificamos se este jornal tem um estado de espelho já definido
-        if (journal.is_open !== undefined) {
-          setIsRundownOpen(!!journal.is_open);
-        }
       });
     } else {
       setCurrentTelejornal(null);
@@ -42,7 +34,7 @@ const Layout = () => {
   };
 
   const handleEditItem = (item: Materia) => {
-    if (!isRundownOpen) {
+    if (!currentTelejornal?.espelho_aberto) {
       toast({
         title: "Espelho fechado",
         description: "Você precisa abrir o espelho para editar matérias.",
@@ -65,32 +57,27 @@ const Layout = () => {
     if (!selectedJournal || !currentTelejornal) return;
     
     try {
-      // Aqui vamos simular o estado do espelho apenas na memória
-      // já que não temos as colunas no banco de dados
-      const newIsRundownOpen = !isRundownOpen;
-      const newOpenDate = newIsRundownOpen ? new Date().toISOString() : undefined;
+      // Inverter o estado atual do espelho para este telejornal específico
+      const novoEstadoEspelho = !currentTelejornal.espelho_aberto;
       
-      // Atualizamos o telejornal (esta função foi modificada para ignorar os campos inexistentes)
+      // Atualizar o telejornal no banco de dados
       await updateTelejornal(selectedJournal, {
         ...currentTelejornal,
-        is_open: newIsRundownOpen,
-        open_date: newOpenDate
+        espelho_aberto: novoEstadoEspelho
       });
       
-      // Atualizamos os estados locais
-      setIsRundownOpen(newIsRundownOpen);
+      // Atualizar o estado local
       setCurrentTelejornal({
         ...currentTelejornal,
-        is_open: newIsRundownOpen,
-        open_date: newOpenDate
+        espelho_aberto: novoEstadoEspelho
       });
       
       toast({
-        title: newIsRundownOpen ? "Espelho aberto" : "Espelho fechado",
-        description: newIsRundownOpen 
+        title: novoEstadoEspelho ? "Espelho aberto" : "Espelho fechado",
+        description: novoEstadoEspelho 
           ? `Espelho de ${currentTelejornal.nome} aberto com sucesso` 
           : `Espelho de ${currentTelejornal.nome} fechado`,
-        variant: newIsRundownOpen ? "default" : "destructive"
+        variant: novoEstadoEspelho ? "default" : "destructive"
       });
       
       // Refresh data
@@ -123,13 +110,13 @@ const Layout = () => {
                 {currentTelejornal && (
                   <div className="text-sm">
                     <span className="font-medium">
-                      Espelho {isRundownOpen ? (
+                      Espelho {currentTelejornal.espelho_aberto ? (
                         <span className="text-green-600">ABERTO</span>
                       ) : (
                         <span className="text-red-600">FECHADO</span>
                       )}:
                     </span> {' '}
-                    {currentTelejornal.nome} {isRundownOpen && (
+                    {currentTelejornal.nome} {currentTelejornal.espelho_aberto && (
                       <>- ({new Date().toLocaleDateString('pt-BR')})</>
                     )}
                   </div>
@@ -144,12 +131,12 @@ const Layout = () => {
               <button 
                 onClick={handleToggleRundown}
                 className={`px-4 py-1 rounded-md text-xs font-medium ${
-                  isRundownOpen 
+                  currentTelejornal?.espelho_aberto 
                     ? "bg-red-100 text-red-700 hover:bg-red-200"
                     : "bg-green-100 text-green-700 hover:bg-green-200"
                 }`}
               >
-                {isRundownOpen ? "Fechar Espelho" : "Abrir Espelho"}
+                {currentTelejornal?.espelho_aberto ? "Fechar Espelho" : "Abrir Espelho"}
               </button>
             </div>
           )}
@@ -165,7 +152,7 @@ const Layout = () => {
           <NewsSchedule
             selectedJournal={selectedJournal}
             onEditItem={handleEditItem}
-            isRundownOpen={isRundownOpen}
+            currentTelejornal={currentTelejornal}
             onOpenRundown={handleToggleRundown}
           />
         </div>
