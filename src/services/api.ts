@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Telejornal, Bloco, Materia, Pauta } from "@/types";
+import { Telejornal, Bloco, Materia, Pauta, BlocoCreateInput, MateriaCreateInput, PautaCreateInput } from "@/types";
 import { toast } from "@/hooks/use-toast";
 
 // Telejornais
@@ -34,7 +34,7 @@ export const fetchBlocosByTelejornal = async (telejornalId: string) => {
   return data as Bloco[];
 };
 
-export const createBloco = async (bloco: Partial<Bloco>) => {
+export const createBloco = async (bloco: BlocoCreateInput) => {
   const { data, error } = await supabase
     .from('blocos')
     .insert(bloco)
@@ -75,7 +75,7 @@ export const fetchMateriasByBloco = async (blocoId: string) => {
   return data as Materia[];
 };
 
-export const createMateria = async (materia: Partial<Materia>) => {
+export const createMateria = async (materia: MateriaCreateInput) => {
   const { data, error } = await supabase
     .from('materias')
     .insert(materia)
@@ -165,7 +165,7 @@ export const fetchPautas = async () => {
   return data as Pauta[];
 };
 
-export const createPauta = async (pauta: Partial<Pauta>) => {
+export const createPauta = async (pauta: PautaCreateInput) => {
   const { data, error } = await supabase
     .from('pautas')
     .insert(pauta)

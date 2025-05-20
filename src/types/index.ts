@@ -50,3 +50,22 @@ export interface GeneralScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
+
+// Required fields for Bloco creation (based on Supabase schema)
+export interface BlocoCreateInput {
+  telejornal_id: string;
+  nome: string;
+  ordem: number;
+}
+
+// Required fields for Materia creation (based on Supabase schema)
+export interface MateriaCreateInput {
+  bloco_id: string;
+  retranca: string;
+  ordem: number;
+}
+
+// Required fields for Pauta creation (based on Supabase schema)
+export interface PautaCreateInput {
+  titulo: string;
+}

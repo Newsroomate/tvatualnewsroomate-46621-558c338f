@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -28,41 +27,53 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
   const telejornaisQuery = useQuery({
     queryKey: ['telejornais'],
     queryFn: fetchTelejornais,
-    onSuccess: (data) => {
-      setTelejornais(data);
-      const journal = data.find(j => j.id === selectedJournal);
+  });
+
+  // Update state when telejornais data is fetched
+  useEffect(() => {
+    if (telejornaisQuery.data) {
+      setTelejornais(telejornaisQuery.data);
+      const journal = telejornaisQuery.data.find(j => j.id === selectedJournal);
       if (journal) {
         setCurrentTelejornal(journal);
       }
     }
-  });
+  }, [telejornaisQuery.data, selectedJournal]);
 
   // Buscar blocos do telejornal selecionado
   const blocosQuery = useQuery({
     queryKey: ['blocos', selectedJournal],
     queryFn: () => selectedJournal ? fetchBlocosByTelejornal(selectedJournal) : Promise.resolve([]),
     enabled: !!selectedJournal,
-    onSuccess: async (blocosData) => {
-      const blocosComItems = await Promise.all(
-        blocosData.map(async (bloco) => {
-          const materias = await fetchMateriasByBloco(bloco.id);
-          const totalTime = materias.reduce((sum, item) => sum + item.duracao, 0);
-          return {
-            ...bloco,
-            items: materias,
-            totalTime
-          };
-        })
-      );
-      
-      setBlocks(blocosComItems);
-      
-      // Criar automaticamente o Bloco 1 se não existir nenhum bloco
-      if (blocosComItems.length === 0 && selectedJournal) {
-        handleAddBlock();
-      }
-    }
   });
+
+  // Process blocks data when it changes
+  useEffect(() => {
+    const loadBlocos = async () => {
+      if (blocosQuery.data) {
+        const blocosComItems = await Promise.all(
+          blocosQuery.data.map(async (bloco) => {
+            const materias = await fetchMateriasByBloco(bloco.id);
+            const totalTime = materias.reduce((sum, item) => sum + item.duracao, 0);
+            return {
+              ...bloco,
+              items: materias,
+              totalTime
+            };
+          })
+        );
+        
+        setBlocks(blocosComItems);
+        
+        // Criar automaticamente o Bloco 1 se não existir nenhum bloco
+        if (blocosComItems.length === 0 && selectedJournal) {
+          handleAddBlock();
+        }
+      }
+    };
+    
+    loadBlocos();
+  }, [blocosQuery.data, selectedJournal]);
 
   // Atualiza o telejornal atual quando o selectedJournal muda
   useEffect(() => {
@@ -87,11 +98,13 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
     
     try {
       const nextOrder = blocks.length + 1;
-      const novoBloco = await createBloco({
+      const novoBlocoInput = {
         telejornal_id: selectedJournal,
         nome: `Bloco ${nextOrder}`,
         ordem: nextOrder
-      });
+      };
+      
+      const novoBloco = await createBloco(novoBlocoInput);
       
       // Atualizar a UI
       setBlocks([...blocks, { 
@@ -113,16 +126,18 @@ export const NewsSchedule = ({ selectedJournal, onEditItem }: NewsScheduleProps)
       
       const nextPage = (bloco.items.length + 1).toString();
       
-      const novaMateria = await createMateria({
+      const novaMateriaInput = {
         bloco_id: blocoId,
         pagina: nextPage,
         retranca: "Nova Matéria",
         clip: "",
         duracao: 0,
-        status: "draft",
+        status: "draft" as const,
         reporter: "",
         ordem: bloco.items.length + 1
-      });
+      };
+      
+      const novaMateria = await createMateria(novaMateriaInput);
       
       // Atualizar a UI
       setBlocks(blocks.map(block => {
