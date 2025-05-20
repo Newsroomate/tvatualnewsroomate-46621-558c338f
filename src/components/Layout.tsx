@@ -6,7 +6,7 @@ import { NewsSchedule } from "./NewsSchedule";
 import { EditPanel } from "./EditPanel";
 import { Materia, Telejornal } from "@/types";
 import { updateTelejornal, fetchTelejornal } from "@/services/api";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient();
@@ -24,11 +24,14 @@ const Layout = () => {
     // Fechar o painel de edição ao trocar de jornal
     setIsEditPanelOpen(false);
     
-    // Fetch telejornal details to check if it's open
+    // Reset rundown status when changing journal
+    setIsRundownOpen(false);
+    
+    // Fetch telejornal details
     if (journalId) {
       fetchTelejornal(journalId).then(journal => {
         setCurrentTelejornal(journal);
-        setIsRundownOpen(!!journal?.is_open);
+        // Aqui não temos mais o campo is_open no banco, então sempre começamos fechado
       });
     } else {
       setCurrentTelejornal(null);
@@ -60,22 +63,32 @@ const Layout = () => {
     if (!selectedJournal || !currentTelejornal) return;
     
     try {
-      const updatedJournal = {
-        ...currentTelejornal,
-        is_open: !isRundownOpen,
-        open_date: !isRundownOpen ? new Date().toISOString() : undefined
-      };
+      // Aqui vamos simular o estado do espelho apenas na memória
+      // já que não temos as colunas no banco de dados
+      const newIsRundownOpen = !isRundownOpen;
+      const newOpenDate = newIsRundownOpen ? new Date().toISOString() : undefined;
       
-      await updateTelejornal(selectedJournal, updatedJournal);
-      setIsRundownOpen(!isRundownOpen);
-      setCurrentTelejornal(updatedJournal);
+      // Atualizamos o telejornal (esta função foi modificada para ignorar os campos inexistentes)
+      await updateTelejornal(selectedJournal, {
+        ...currentTelejornal,
+        is_open: newIsRundownOpen,
+        open_date: newOpenDate
+      });
+      
+      // Atualizamos os estados locais
+      setIsRundownOpen(newIsRundownOpen);
+      setCurrentTelejornal({
+        ...currentTelejornal,
+        is_open: newIsRundownOpen,
+        open_date: newOpenDate
+      });
       
       toast({
-        title: !isRundownOpen ? "Espelho aberto" : "Espelho fechado",
-        description: !isRundownOpen 
+        title: newIsRundownOpen ? "Espelho aberto" : "Espelho fechado",
+        description: newIsRundownOpen 
           ? `Espelho de ${currentTelejornal.nome} aberto com sucesso` 
           : `Espelho de ${currentTelejornal.nome} fechado`,
-        variant: !isRundownOpen ? "default" : "destructive"
+        variant: newIsRundownOpen ? "default" : "destructive"
       });
       
       // Refresh data
@@ -114,8 +127,8 @@ const Layout = () => {
                         <span className="text-red-600">FECHADO</span>
                       )}:
                     </span> {' '}
-                    {currentTelejornal.nome} {isRundownOpen && currentTelejornal.open_date && (
-                      <>- ({new Date(currentTelejornal.open_date).toLocaleDateString('pt-BR')})</>
+                    {currentTelejornal.nome} {isRundownOpen && (
+                      <>- ({new Date().toLocaleDateString('pt-BR')})</>
                     )}
                   </div>
                 )}
