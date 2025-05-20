@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -40,7 +41,9 @@ export const EditPanel = ({
         pagina: item.pagina,
         bloco_id: item.bloco_id,
         ordem: item.ordem,
-        tags: item.tags
+        tags: item.tags,
+        equipamento: item.equipamento || '',
+        horario_exibicao: item.horario_exibicao || '',
       });
     }
   }, [item]);
@@ -121,21 +124,67 @@ export const EditPanel = ({
             <Textarea id="texto" rows={10} value={formData.texto || ''} onChange={handleInputChange} placeholder="Texto completo da matéria que será exibido no teleprompter." />
           </div>
           
-          <div className="grid grid-cols-2 gap-4">
+          {/* Novos campos adicionados aqui */}
+          <div className="space-y-4 border rounded-md p-4 bg-gray-50">
+            <h4 className="font-medium text-sm text-gray-700 mb-2">Metadados da Matéria</h4>
             
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="reporter">Repórter</Label>
+                <Input id="reporter" value={formData.reporter || ''} onChange={handleInputChange} />
+              </div>
+              
+              <div className="space-y-1.5">
+                <Label htmlFor="editor">Editor</Label>
+                <Input id="editor" value={formData.editor || ''} onChange={handleInputChange} />
+              </div>
+            </div>
             
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="local_gravacao">Local de Gravação</Label>
+                <Input 
+                  id="local_gravacao" 
+                  value={formData.local_gravacao || ''} 
+                  onChange={handleInputChange}
+                  placeholder="Ex: Estúdio, Externa"
+                />
+              </div>
+              
+              <div className="space-y-1.5">
+                <Label htmlFor="equipamento">Equipamento</Label>
+                <Input 
+                  id="equipamento" 
+                  value={formData.equipamento || ''} 
+                  onChange={handleInputChange}
+                  placeholder="Câmera, microfone, etc."
+                />
+              </div>
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="horario_exibicao">Horário de Exibição</Label>
+              <Input 
+                id="horario_exibicao" 
+                type="datetime-local" 
+                value={formData.horario_exibicao ? new Date(formData.horario_exibicao).toISOString().slice(0, 16) : ''} 
+                onChange={handleInputChange}
+              />
+            </div>
+            
+            <div className="space-y-1.5">
+              <Label htmlFor="tags">Tags SEO (separadas por vírgula)</Label>
+              <Input 
+                id="tags" 
+                value={Array.isArray(formData.tags) ? formData.tags.join(', ') : ''} 
+                onChange={(e) => {
+                  const tagsArray = e.target.value.split(',').map(tag => tag.trim());
+                  setFormData(prev => ({...prev, tags: tagsArray}));
+                }}
+                placeholder="Ex: política, economia, cultura"
+              />
+            </div>
           </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            
-            
-          </div>
-          
-          
-          
-          
-          
-          
           
           <div className="space-y-1.5">
             <Label>Anexos</Label>
