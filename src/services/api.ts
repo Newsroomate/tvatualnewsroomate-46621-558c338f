@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Telejornal, Bloco, Materia, Pauta, BlocoCreateInput, MateriaCreateInput, PautaCreateInput } from "@/types";
 import { toast } from "@/hooks/use-toast";
+import { enableRealtimeForTable } from "@/integrations/supabase/enableRealtime";
 
 // Telejornais
 export const fetchTelejornais = async () => {
@@ -70,7 +71,7 @@ export const createTelejornal = async (telejornal: TelejornalCreateInput) => {
 
 export const updateTelejornal = async (id: string, updates: Partial<Telejornal>) => {
   // Habilitamos o suporte a realtime para atualizações de telejornais
-  await supabase.rpc('enable_realtime_for_table', { table_name: 'telejornais' });
+  await enableRealtimeForTable('telejornais');
   
   const { data, error } = await supabase
     .from('telejornais')

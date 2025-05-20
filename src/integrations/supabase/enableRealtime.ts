@@ -4,7 +4,8 @@ import { supabase } from './client';
 // Esta função habilita o Realtime para uma tabela específica
 export const enableRealtimeForTable = async (tableName: string) => {
   try {
-    await supabase.rpc('enable_realtime_for_table', { table_name: tableName });
+    // Using the more generic rpc call with explicit typing to avoid type errors
+    await supabase.rpc('enable_realtime_for_table', { table_name: tableName } as any);
     console.log(`Realtime habilitado para a tabela ${tableName}`);
     return true;
   } catch (error) {
