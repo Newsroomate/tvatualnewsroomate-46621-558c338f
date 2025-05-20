@@ -29,7 +29,7 @@ import { NewsBlock } from "./NewsBlock";
 import { useAuth } from "@/context/AuthContext";
 import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
 
-export interface NewsScheduleProps {
+interface NewsScheduleProps {
   selectedJournal: string | null;
   onEditItem: (item: Materia) => void;
   currentTelejornal: Telejornal | null;
@@ -56,6 +56,13 @@ export const NewsSchedule = ({
   // Track if a block creation is in progress to prevent multiple attempts
   const blockCreationInProgress = useRef(false);
 
+  // Use our new custom hook for realtime updates
+  const { blocks, setBlocks } = useRealtimeMaterias({
+    selectedJournal,
+    newItemBlock,
+    materiaToDelete
+  });
+
   // Fetch telejornais
   const telejornaisQuery = useQuery({
     queryKey: ['telejornais'],
@@ -74,14 +81,6 @@ export const NewsSchedule = ({
     queryKey: ['blocos', selectedJournal],
     queryFn: () => selectedJournal ? fetchBlocosByTelejornal(selectedJournal) : Promise.resolve([]),
     enabled: !!selectedJournal,
-  });
-
-  // Use our new custom hook for realtime updates
-  const { blocks, setBlocks, isLoading } = useRealtimeMaterias({
-    selectedJournal,
-    newItemBlock,
-    materiaToDelete,
-    blocks: blocosQuery.data || []
   });
 
   // Process blocks data when it changes

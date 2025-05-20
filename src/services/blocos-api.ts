@@ -2,17 +2,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Bloco, BlocoCreateInput } from "@/types";
 import { toastService } from "@/utils/toast-utils";
-import { enableRealtimeForTable } from "@/integrations/supabase/enableRealtime";
-
-// Enable realtime for blocos table when the module is loaded
-enableRealtimeForTable('blocos')
-  .then(success => {
-    if (success) {
-      console.log('Realtime enabled for blocos table');
-    } else {
-      console.warn('Failed to enable realtime for blocos table');
-    }
-  });
 
 export const fetchBlocosByTelejornal = async (telejornalId: string) => {
   const { data, error } = await supabase
@@ -45,40 +34,4 @@ export const createBloco = async (bloco: BlocoCreateInput) => {
   toastService.success("Bloco criado", `${bloco.nome} foi adicionado com sucesso`);
 
   return data as Bloco;
-};
-
-export const updateBloco = async (id: string, updates: Partial<Bloco>) => {
-  const { data, error } = await supabase
-    .from('blocos')
-    .update(updates)
-    .eq('id', id)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Erro ao atualizar bloco:', error);
-    toastService.error("Erro ao atualizar bloco", error.message);
-    throw error;
-  }
-
-  toastService.success("Bloco atualizado", `Alterações salvas com sucesso`);
-
-  return data as Bloco;
-};
-
-export const deleteBloco = async (id: string) => {
-  const { error } = await supabase
-    .from('blocos')
-    .delete()
-    .eq('id', id);
-
-  if (error) {
-    console.error('Erro ao excluir bloco:', error);
-    toastService.error("Erro ao excluir bloco", error.message);
-    throw error;
-  }
-
-  toastService.success("Bloco excluído", `O bloco foi removido com sucesso`);
-
-  return true;
 };

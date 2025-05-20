@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Materia, Bloco } from "@/types";
 import { processUpdatedMateria, calculateBlockTotalTime } from "@/components/news-schedule/utils";
@@ -13,7 +13,6 @@ interface UseRealtimeMateriasProps {
   selectedJournal: string | null;
   newItemBlock: string | null;
   materiaToDelete: Materia | null;
-  blocks: Bloco[];
 }
 
 /**
@@ -22,68 +21,9 @@ interface UseRealtimeMateriasProps {
 export const useRealtimeMaterias = ({
   selectedJournal,
   newItemBlock,
-  materiaToDelete,
-  blocks: rawBlocks
+  materiaToDelete
 }: UseRealtimeMateriasProps) => {
   const [blocks, setBlocks] = useState<BlockWithItems[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  
-  // Transform raw blocks into blocks with items whenever raw blocks change
-  useEffect(() => {
-    if (!rawBlocks.length) {
-      setBlocks([]);
-      return;
-    }
-    
-    const fetchInitialMaterias = async () => {
-      setIsLoading(true);
-      
-      try {
-        // Map each block to a promise that fetches its materias
-        const blocksWithItemsPromises = rawBlocks.map(async (block) => {
-          const { data, error } = await supabase
-            .from('materias')
-            .select('*')
-            .eq('bloco_id', block.id)
-            .order('ordem');
-            
-          if (error) {
-            console.error(`Error fetching materias for block ${block.id}:`, error);
-            return {
-              ...block,
-              items: [],
-              totalTime: 0
-            };
-          }
-          
-          // Ensure each materia has titulo property - map the database objects to the Materia interface
-          const items = data.map((item) => ({
-            ...item,
-            // Map retranca to titulo for UI consistency
-            titulo: item.retranca || "Sem título"
-          } as Materia));
-          
-          const totalTime = calculateBlockTotalTime(items);
-          
-          return {
-            ...block,
-            items,
-            totalTime
-          };
-        });
-        
-        // Wait for all promises to resolve
-        const blocksWithItems = await Promise.all(blocksWithItemsPromises);
-        setBlocks(blocksWithItems);
-      } catch (error) {
-        console.error('Exception fetching materias:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchInitialMaterias();
-  }, [rawBlocks]);
   
   // Setup realtime subscription for materias updates
   useEffect(() => {
@@ -91,15 +31,8 @@ export const useRealtimeMaterias = ({
     
     console.log('Setting up realtime subscription for materias table');
     
-    const handleMateriaUpdate = (payload: any) => {
-      const updatedMateria = payload.new as Materia & { retranca: string };
+    const handleMateriaUpdate = (updatedMateria: Materia) => {
       console.log('Processing materia update:', updatedMateria);
-      
-      // Add titulo property based on retranca for consistency with our app model
-      const processedMateria = {
-        ...updatedMateria,
-        titulo: updatedMateria.retranca || "Sem título"
-      };
       
       setBlocks(currentBlocks => {
         // Create new blocks array to ensure React detects the state change
@@ -114,12 +47,12 @@ export const useRealtimeMaterias = ({
               // Update the existing materia
               updatedItems = block.items.map(item => 
                 item.id === updatedMateria.id 
-                  ? processedMateria
+                  ? processUpdatedMateria(updatedMateria)
                   : item
               );
             } else {
               // This is a new materia for this block
-              updatedItems = [...block.items, processedMateria];
+              updatedItems = [...block.items, processUpdatedMateria(updatedMateria)];
             }
             
             // Calculate new total time
@@ -146,7 +79,8 @@ export const useRealtimeMaterias = ({
         table: 'materias',
       }, (payload) => {
         console.log('Materia updated via realtime:', payload);
-        handleMateriaUpdate(payload);
+        const updatedMateria = payload.new as Materia;
+        handleMateriaUpdate(updatedMateria);
       })
       .on('postgres_changes', {
         event: 'INSERT',
@@ -154,11 +88,12 @@ export const useRealtimeMaterias = ({
         table: 'materias'
       }, (payload) => {
         console.log('Materia inserted:', payload);
+        const newMateria = payload.new as Materia;
         
         // Only process if this was not triggered by the current client
         // (avoids duplicate items when we're the ones who created it)
-        if (newItemBlock !== payload.new.bloco_id) {
-          handleMateriaUpdate(payload);
+        if (newItemBlock !== newMateria.bloco_id) {
+          handleMateriaUpdate(newMateria);
         }
       })
       .on('postgres_changes', {
@@ -167,7 +102,7 @@ export const useRealtimeMaterias = ({
         table: 'materias'
       }, (payload) => {
         console.log('Materia deleted:', payload);
-        const deletedMateria = payload.old as { id: string; bloco_id: string };
+        const deletedMateria = payload.old as Materia;
         
         // Only process if this was not triggered by the current client
         if (!materiaToDelete || materiaToDelete.id !== deletedMateria.id) {
@@ -194,14 +129,13 @@ export const useRealtimeMaterias = ({
     
     // Clean up subscription on unmount or when selectedJournal changes
     return () => {
-      console.log('Cleaning up realtime subscription for materias');
+      console.log('Cleaning up realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [selectedJournal, newItemBlock, materiaToDelete]);
 
   return {
     blocks,
-    setBlocks,
-    isLoading
+    setBlocks
   };
 };
