@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Materia, Bloco } from "@/types";
 import { processUpdatedMateria, calculateBlockTotalTime } from "@/components/news-schedule/utils";
@@ -13,6 +13,7 @@ interface UseRealtimeMateriasProps {
   selectedJournal: string | null;
   newItemBlock: string | null;
   materiaToDelete: Materia | null;
+  blocks: Bloco[];
 }
 
 /**
@@ -21,9 +22,62 @@ interface UseRealtimeMateriasProps {
 export const useRealtimeMaterias = ({
   selectedJournal,
   newItemBlock,
-  materiaToDelete
+  materiaToDelete,
+  blocks: rawBlocks
 }: UseRealtimeMateriasProps) => {
   const [blocks, setBlocks] = useState<BlockWithItems[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  
+  // Transform raw blocks into blocks with items whenever raw blocks change
+  useEffect(() => {
+    if (!rawBlocks.length) {
+      setBlocks([]);
+      return;
+    }
+    
+    const fetchInitialMaterias = async () => {
+      setIsLoading(true);
+      
+      try {
+        // Map each block to a promise that fetches its materias
+        const blocksWithItemsPromises = rawBlocks.map(async (block) => {
+          const { data, error } = await supabase
+            .from('materias')
+            .select('*')
+            .eq('bloco_id', block.id)
+            .order('ordem');
+            
+          if (error) {
+            console.error(`Error fetching materias for block ${block.id}:`, error);
+            return {
+              ...block,
+              items: [],
+              totalTime: 0
+            };
+          }
+          
+          const items = data.map(processUpdatedMateria);
+          const totalTime = calculateBlockTotalTime(items);
+          
+          return {
+            ...block,
+            items,
+            totalTime
+          };
+        });
+        
+        // Wait for all promises to resolve
+        const blocksWithItems = await Promise.all(blocksWithItemsPromises);
+        setBlocks(blocksWithItems);
+      } catch (error) {
+        console.error('Exception fetching materias:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchInitialMaterias();
+  }, [rawBlocks]);
   
   // Setup realtime subscription for materias updates
   useEffect(() => {
@@ -129,13 +183,14 @@ export const useRealtimeMaterias = ({
     
     // Clean up subscription on unmount or when selectedJournal changes
     return () => {
-      console.log('Cleaning up realtime subscription');
+      console.log('Cleaning up realtime subscription for materias');
       supabase.removeChannel(channel);
     };
   }, [selectedJournal, newItemBlock, materiaToDelete]);
 
   return {
     blocks,
-    setBlocks
+    setBlocks,
+    isLoading
   };
 };
