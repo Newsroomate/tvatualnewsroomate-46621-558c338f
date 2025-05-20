@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -233,7 +232,7 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
                 <SelectValue placeholder="Selecione um telejornal" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos os telejornais</SelectItem>
+                <SelectItem value="all">Todos os telejornais</SelectItem>
                 {telejornais.map((jornal) => (
                   <SelectItem key={jornal.id} value={jornal.id}>
                     {jornal.nome}

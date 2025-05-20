@@ -1,27 +1,17 @@
-
 import { supabase } from "./client";
 
-// Define an interface for the parameters that matches the exact parameter name expected by the RPC
+// Define the interface for the enableRealtime function parameter
 interface EnableRealtimeParams {
   table_name: string;
 }
 
-// This function enables real-time updates for a specific table
-export const enableRealtimeForTable = async (table: string) => {
+export const enableRealtimeForTable = async (tableName: string) => {
   try {
-    // Use the correct parameter name that matches the RPC function's expected parameter
-    const { data, error } = await supabase.rpc('enable_realtime_for_table', {
-      table_name: table
-    } as EnableRealtimeParams);
-
-    if (error) {
-      console.error('Error enabling realtime:', error);
-      return false;
-    }
-
-    return data;
-  } catch (err) {
-    console.error('Failed to enable realtime:', err);
+    await supabase.rpc('enable_realtime', { table_name: tableName } as EnableRealtimeParams);
+    console.log(`Realtime enabled for table: ${tableName}`);
+    return true;
+  } catch (error) {
+    console.error(`Failed to enable realtime for table ${tableName}:`, error);
     return false;
   }
 };
