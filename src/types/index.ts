@@ -14,17 +14,51 @@ export interface Bloco {
   ordem: number;
 }
 
+export interface BlocoCreateInput {
+  nome: string;
+  telejornal_id: string;
+  ordem: number;
+}
+
 export interface Materia {
   id: string;
   created_at?: string;
-  titulo: string;
-  descricao?: string;
+  // Update Materia interface to match the actual database schema
   bloco_id: string;
   ordem: number;
+  // Add fields used in the application
+  retranca: string;
+  clip?: string;
+  duracao: number;
+  texto?: string;
+  cabeca?: string;
+  status?: string;
+  pagina?: string;
+  reporter?: string;
+  local_gravacao?: string;
+  tags?: string[];
+  equipamento?: string;
+  horario_exibicao?: string;
+  updated_at?: string;
+  // Keep the old fields for backwards compatibility
+  titulo: string;
+  descricao?: string;
   tempo_estimado?: number;
   apresentador?: string;
-  reporter?: string;
   link_vt?: string;
+}
+
+export interface MateriaCreateInput {
+  bloco_id: string;
+  ordem: number;
+  retranca: string;
+  clip?: string;
+  duracao: number;
+  pagina?: string;
+  reporter?: string;
+  status?: string;
+  texto?: string;
+  cabeca?: string;
 }
 
 export interface Pauta {
@@ -32,6 +66,13 @@ export interface Pauta {
   created_at?: string;
   titulo: string;
   descricao?: string;
+}
+
+export interface PautaCreateInput {
+  titulo: string;
+  descricao?: string;
+  status?: string;
+  data_cobertura?: string;
 }
 
 export interface CloseRundownDialogProps {

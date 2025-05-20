@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Pauta, PautaCreateInput } from "@/types";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export const fetchPautas = async () => {
   const { data, error } = await supabase
@@ -26,7 +26,7 @@ export const createPauta = async (pauta: PautaCreateInput) => {
 
   if (error) {
     console.error('Erro ao criar pauta:', error);
-    toast({
+    useToast().toast({
       title: "Erro ao criar pauta",
       description: error.message,
       variant: "destructive",
@@ -34,7 +34,7 @@ export const createPauta = async (pauta: PautaCreateInput) => {
     throw error;
   }
 
-  toast({
+  useToast().toast({
     title: "Pauta criada",
     description: `${pauta.titulo} foi adicionada com sucesso`,
   });
@@ -52,7 +52,7 @@ export const updatePauta = async (id: string, updates: { titulo: string }) => {
 
   if (error) {
     console.error('Erro ao atualizar pauta:', error);
-    toast({
+    useToast().toast({
       title: "Erro ao atualizar pauta",
       description: error.message,
       variant: "destructive",
@@ -60,7 +60,7 @@ export const updatePauta = async (id: string, updates: { titulo: string }) => {
     throw error;
   }
 
-  toast({
+  useToast().toast({
     title: "Pauta atualizada",
     description: `${updates.titulo} foi atualizada com sucesso`,
   });
@@ -76,7 +76,7 @@ export const deletePauta = async (id: string) => {
 
   if (error) {
     console.error('Erro ao excluir pauta:', error);
-    toast({
+    useToast().toast({
       title: "Erro ao excluir pauta",
       description: error.message,
       variant: "destructive",
@@ -84,7 +84,7 @@ export const deletePauta = async (id: string) => {
     throw error;
   }
 
-  toast({
+  useToast().toast({
     title: "Pauta excluída",
     description: "A pauta foi removida com sucesso",
   });

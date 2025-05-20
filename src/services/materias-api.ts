@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Materia, MateriaCreateInput } from "@/types";
-import { toast } from "@/hooks/use-toast";
+import { useToast } from "@/hooks/use-toast";
 
 export const fetchMateriasByBloco = async (blocoId: string) => {
   const { data, error } = await supabase
@@ -15,7 +15,12 @@ export const fetchMateriasByBloco = async (blocoId: string) => {
     throw error;
   }
 
-  return data as Materia[];
+  // Add type assertion to handle database vs. interface mismatch
+  return data.map(item => ({
+    ...item,
+    // Map retranca to titulo and vice versa if needed
+    titulo: item.retranca || "Sem título"
+  })) as Materia[];
 };
 
 export const createMateria = async (materia: MateriaCreateInput) => {
@@ -27,7 +32,7 @@ export const createMateria = async (materia: MateriaCreateInput) => {
 
   if (error) {
     console.error('Erro ao criar matéria:', error);
-    toast({
+    useToast().toast({
       title: "Erro ao criar matéria",
       description: error.message,
       variant: "destructive",
@@ -35,12 +40,16 @@ export const createMateria = async (materia: MateriaCreateInput) => {
     throw error;
   }
 
-  toast({
+  useToast().toast({
     title: "Matéria criada",
     description: `${materia.retranca} foi adicionada com sucesso`,
   });
 
-  return data as Materia;
+  // Add type assertion with the necessary field
+  return {
+    ...data,
+    titulo: data.retranca || "Sem título"
+  } as Materia;
 };
 
 export const updateMateria = async (id: string, updates: Partial<Materia>) => {
@@ -53,7 +62,7 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
 
   if (error) {
     console.error('Erro ao atualizar matéria:', error);
-    toast({
+    useToast().toast({
       title: "Erro ao atualizar matéria",
       description: error.message,
       variant: "destructive",
@@ -61,12 +70,16 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
     throw error;
   }
 
-  toast({
+  useToast().toast({
     title: "Matéria atualizada",
     description: `Alterações salvas com sucesso`,
   });
 
-  return data as Materia;
+  // Add type assertion with the necessary field
+  return {
+    ...data,
+    titulo: data.retranca || "Sem título"
+  } as Materia;
 };
 
 export const deleteMateria = async (id: string) => {
@@ -77,7 +90,7 @@ export const deleteMateria = async (id: string) => {
 
   if (error) {
     console.error('Erro ao excluir matéria:', error);
-    toast({
+    useToast().toast({
       title: "Erro ao excluir matéria",
       description: error.message,
       variant: "destructive",
@@ -85,7 +98,7 @@ export const deleteMateria = async (id: string) => {
     throw error;
   }
 
-  toast({
+  useToast().toast({
     title: "Matéria excluída",
     description: `A matéria foi removida com sucesso`,
   });
