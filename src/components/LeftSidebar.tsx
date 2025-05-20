@@ -58,8 +58,50 @@ export const LeftSidebar = ({
       )
       .subscribe();
 
+    // Configurando a inscrição para ouvir atualizações em tempo real da tabela pautas
+    const pautasChannel = supabase
+      .channel('pautas-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'pautas'
+        },
+        (payload) => {
+          console.log('Pauta adicionada:', payload);
+          loadData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'pautas'
+        },
+        (payload) => {
+          console.log('Pauta atualizada:', payload);
+          loadData();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'pautas'
+        },
+        (payload) => {
+          console.log('Pauta excluída:', payload);
+          loadData();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(telejornaisChannel);
+      supabase.removeChannel(pautasChannel);
     };
   }, []);
 
