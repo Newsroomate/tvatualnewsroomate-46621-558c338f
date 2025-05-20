@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
+import { Trash2, Pencil } from "lucide-react";
 import { Materia } from "@/types";
 import { formatTime } from "./utils";
 import {
@@ -78,7 +78,7 @@ export const NewsItem = ({
                   onClick={() => onEdit(item)}
                   disabled={!isEspelhoOpen || !canModify}
                 >
-                  Editar
+                  <Pencil className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               {!isEspelhoOpen && (
