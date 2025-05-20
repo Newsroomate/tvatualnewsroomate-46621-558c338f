@@ -24,18 +24,20 @@ const Layout = () => {
     // Fechar o painel de edição ao trocar de jornal
     setIsEditPanelOpen(false);
     
-    // Reset rundown status when changing journal
-    setIsRundownOpen(false);
-    
-    // Fetch telejornal details
+    // Fetch telejornal details - mantendo o estado do espelho
     if (journalId) {
       fetchTelejornal(journalId).then(journal => {
         setCurrentTelejornal(journal);
-        // Aqui não temos mais o campo is_open no banco, então sempre começamos fechado
+        // Mantemos o estado do espelho de acordo com o status armazenado no objeto do telejornal
+        // Não resetamos mais o isRundownOpen automáticamente ao trocar de jornal
+        
+        // Verificamos se este jornal tem um estado de espelho já definido
+        if (journal.is_open !== undefined) {
+          setIsRundownOpen(!!journal.is_open);
+        }
       });
     } else {
       setCurrentTelejornal(null);
-      setIsRundownOpen(false);
     }
   };
 
