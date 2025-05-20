@@ -16,7 +16,7 @@ interface BlockHeaderProps {
   newItemBlock: string | null;
   blockId: string;
   isEspelhoOpen: boolean;
-  canAddItem?: boolean; // Added missing prop
+  canAddItem?: boolean; // Property is now explicitly defined
 }
 
 export const BlockHeader = ({ 

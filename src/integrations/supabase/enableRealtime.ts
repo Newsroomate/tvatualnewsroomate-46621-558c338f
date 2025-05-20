@@ -8,9 +8,8 @@ interface EnableRealtimeParams {
 
 export const enableRealtimeForTable = async (tableName: string) => {
   try {
-    // Fix the type error by using proper call signature
-    // Using a type assertion since the RPC function isn't in the generated types
-    await supabase.rpc('enable_realtime', { table_name: tableName } as EnableRealtimeParams);
+    // Use a more specific type assertion to fix the type error
+    await supabase.rpc('enable_realtime', { table_name: tableName } as unknown as Record<string, any>);
     console.log(`Realtime enabled for table: ${tableName}`);
     return true;
   } catch (error) {

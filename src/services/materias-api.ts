@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Materia, MateriaCreateInput } from "@/types";
-import { useToast } from "@/hooks/use-toast";
+import { toastService } from "@/utils/toast-utils";
 
 export const fetchMateriasByBloco = async (blocoId: string) => {
   const { data, error } = await supabase
@@ -32,18 +32,11 @@ export const createMateria = async (materia: MateriaCreateInput) => {
 
   if (error) {
     console.error('Erro ao criar matéria:', error);
-    useToast().toast({
-      title: "Erro ao criar matéria",
-      description: error.message,
-      variant: "destructive",
-    });
+    toastService.error("Erro ao criar matéria", error.message);
     throw error;
   }
 
-  useToast().toast({
-    title: "Matéria criada",
-    description: `${materia.retranca} foi adicionada com sucesso`,
-  });
+  toastService.success("Matéria criada", `${materia.retranca} foi adicionada com sucesso`);
 
   // Add type assertion with the necessary field
   return {
@@ -62,18 +55,11 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
 
   if (error) {
     console.error('Erro ao atualizar matéria:', error);
-    useToast().toast({
-      title: "Erro ao atualizar matéria",
-      description: error.message,
-      variant: "destructive",
-    });
+    toastService.error("Erro ao atualizar matéria", error.message);
     throw error;
   }
 
-  useToast().toast({
-    title: "Matéria atualizada",
-    description: `Alterações salvas com sucesso`,
-  });
+  toastService.success("Matéria atualizada", `Alterações salvas com sucesso`);
 
   // Add type assertion with the necessary field
   return {
@@ -90,18 +76,11 @@ export const deleteMateria = async (id: string) => {
 
   if (error) {
     console.error('Erro ao excluir matéria:', error);
-    useToast().toast({
-      title: "Erro ao excluir matéria",
-      description: error.message,
-      variant: "destructive",
-    });
+    toastService.error("Erro ao excluir matéria", error.message);
     throw error;
   }
 
-  useToast().toast({
-    title: "Matéria excluída",
-    description: `A matéria foi removida com sucesso`,
-  });
+  toastService.success("Matéria excluída", `A matéria foi removida com sucesso`);
 
   return true;
 };

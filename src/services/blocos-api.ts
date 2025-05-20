@@ -1,7 +1,7 @@
 
 import { supabase } from "@/integrations/supabase/client";
 import { Bloco, BlocoCreateInput } from "@/types";
-import { useToast } from "@/hooks/use-toast";
+import { toastService } from "@/utils/toast-utils";
 
 export const fetchBlocosByTelejornal = async (telejornalId: string) => {
   const { data, error } = await supabase
@@ -27,18 +27,11 @@ export const createBloco = async (bloco: BlocoCreateInput) => {
 
   if (error) {
     console.error('Erro ao criar bloco:', error);
-    useToast().toast({
-      title: "Erro ao criar bloco",
-      description: error.message,
-      variant: "destructive",
-    });
+    toastService.error("Erro ao criar bloco", error.message);
     throw error;
   }
 
-  useToast().toast({
-    title: "Bloco criado",
-    description: `${bloco.nome} foi adicionado com sucesso`,
-  });
+  toastService.success("Bloco criado", `${bloco.nome} foi adicionado com sucesso`);
 
   return data as Bloco;
 };
