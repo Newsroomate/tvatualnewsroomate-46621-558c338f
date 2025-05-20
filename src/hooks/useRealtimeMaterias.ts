@@ -56,7 +56,13 @@ export const useRealtimeMaterias = ({
             };
           }
           
-          const items = data.map(processUpdatedMateria);
+          // Ensure each materia has titulo property - map the database objects to the Materia interface
+          const items = data.map((item) => ({
+            ...item,
+            // Map retranca to titulo for UI consistency
+            titulo: item.retranca || "Sem título"
+          } as Materia));
+          
           const totalTime = calculateBlockTotalTime(items);
           
           return {
@@ -85,8 +91,15 @@ export const useRealtimeMaterias = ({
     
     console.log('Setting up realtime subscription for materias table');
     
-    const handleMateriaUpdate = (updatedMateria: Materia) => {
+    const handleMateriaUpdate = (payload: any) => {
+      const updatedMateria = payload.new as Materia & { retranca: string };
       console.log('Processing materia update:', updatedMateria);
+      
+      // Add titulo property based on retranca for consistency with our app model
+      const processedMateria = {
+        ...updatedMateria,
+        titulo: updatedMateria.retranca || "Sem título"
+      };
       
       setBlocks(currentBlocks => {
         // Create new blocks array to ensure React detects the state change
@@ -101,12 +114,12 @@ export const useRealtimeMaterias = ({
               // Update the existing materia
               updatedItems = block.items.map(item => 
                 item.id === updatedMateria.id 
-                  ? processUpdatedMateria(updatedMateria)
+                  ? processedMateria
                   : item
               );
             } else {
               // This is a new materia for this block
-              updatedItems = [...block.items, processUpdatedMateria(updatedMateria)];
+              updatedItems = [...block.items, processedMateria];
             }
             
             // Calculate new total time
@@ -133,8 +146,7 @@ export const useRealtimeMaterias = ({
         table: 'materias',
       }, (payload) => {
         console.log('Materia updated via realtime:', payload);
-        const updatedMateria = payload.new as Materia;
-        handleMateriaUpdate(updatedMateria);
+        handleMateriaUpdate(payload);
       })
       .on('postgres_changes', {
         event: 'INSERT',
@@ -142,12 +154,11 @@ export const useRealtimeMaterias = ({
         table: 'materias'
       }, (payload) => {
         console.log('Materia inserted:', payload);
-        const newMateria = payload.new as Materia;
         
         // Only process if this was not triggered by the current client
         // (avoids duplicate items when we're the ones who created it)
-        if (newItemBlock !== newMateria.bloco_id) {
-          handleMateriaUpdate(newMateria);
+        if (newItemBlock !== payload.new.bloco_id) {
+          handleMateriaUpdate(payload);
         }
       })
       .on('postgres_changes', {
@@ -156,7 +167,7 @@ export const useRealtimeMaterias = ({
         table: 'materias'
       }, (payload) => {
         console.log('Materia deleted:', payload);
-        const deletedMateria = payload.old as Materia;
+        const deletedMateria = payload.old as { id: string; bloco_id: string };
         
         // Only process if this was not triggered by the current client
         if (!materiaToDelete || materiaToDelete.id !== deletedMateria.id) {
