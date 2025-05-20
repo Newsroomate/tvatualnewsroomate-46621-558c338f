@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -10,27 +11,20 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { format, parse, isValid } from "date-fns";
+import { format, isValid } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { fetchTelejornais } from "@/services/api";
+import { fetchTelejornais, fetchClosedRundowns } from "@/services/api";
 import { Telejornal } from "@/types";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, Clock, Search, Eye } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ClosedRundown } from "@/services/espelhos-api";
+import { useToast } from "@/hooks/use-toast";
 
 interface GeneralScheduleModalProps {
   isOpen: boolean;
   onClose: () => void;
-}
-
-interface ClosedRundown {
-  id: string;
-  jornal: string;
-  data: string;
-  dataFormatted: string;
-  hora: string;
-  status: string;
 }
 
 export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalProps) => {
@@ -45,6 +39,8 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
   const [filteredRundowns, setFilteredRundowns] = useState<ClosedRundown[]>([]);
   const [isReadOnlyMode, setIsReadOnlyMode] = useState<boolean>(false);
   const [selectedRundown, setSelectedRundown] = useState<ClosedRundown | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (isOpen) {
@@ -54,93 +50,57 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
   }, [isOpen]);
 
   useEffect(() => {
-    applyFilters();
-  }, [selectedJornal, selectedDate, selectedTime, startTime, endTime, showTimeRange, closedRundowns]);
+    if (isOpen) {
+      loadClosedRundowns();
+    }
+  }, [selectedJornal, selectedDate, selectedTime, startTime, endTime, showTimeRange, isOpen]);
 
   const loadTelejornais = async () => {
     try {
       const data = await fetchTelejornais();
       setTelejornais(data);
       if (data.length > 0 && !selectedJornal) {
-        setSelectedJornal(data[0].id);
+        setSelectedJornal("all");
       }
     } catch (error) {
       console.error("Erro ao carregar telejornais:", error);
+      toast({
+        title: "Erro ao carregar telejornais",
+        description: "Não foi possível carregar a lista de telejornais",
+        variant: "destructive"
+      });
     }
   };
 
   const loadClosedRundowns = async () => {
-    // In a real implementation, this would fetch from the database
-    // For now, we'll use more realistic sample data
-    const sampleData: ClosedRundown[] = [
-      {
-        id: "1",
-        jornal: "Jornal da Manhã",
-        data: "2025-05-20",
-        dataFormatted: "20/05/2025",
-        hora: "07:30",
-        status: "Fechado"
-      },
-      {
-        id: "2",
-        jornal: "Jornal do Meio-Dia",
-        data: "2025-05-19",
-        dataFormatted: "19/05/2025",
-        hora: "12:00",
-        status: "Fechado"
-      },
-      {
-        id: "3",
-        jornal: "Jornal da Noite",
-        data: "2025-05-18", 
-        dataFormatted: "18/05/2025",
-        hora: "19:45",
-        status: "Fechado"
-      },
-      {
-        id: "4",
-        jornal: "Bom Dia Brasil",
-        data: "2025-05-20",
-        dataFormatted: "20/05/2025",
-        hora: "06:00",
-        status: "Fechado"
+    setIsLoading(true);
+    try {
+      const data = await fetchClosedRundowns(
+        selectedJornal === "all" ? undefined : selectedJornal, 
+        selectedDate, 
+        selectedTime,
+        showTimeRange ? startTime : undefined,
+        showTimeRange ? endTime : undefined
+      );
+      
+      setClosedRundowns(data);
+      setFilteredRundowns(data);
+      
+      if (data.length === 0) {
+        console.log("Nenhum espelho fechado encontrado com os filtros selecionados");
+      } else {
+        console.log(`Encontrados ${data.length} espelhos fechados`);
       }
-    ];
-    
-    setClosedRundowns(sampleData);
-    setFilteredRundowns(sampleData);
-  };
-
-  const applyFilters = () => {
-    let filtered = [...closedRundowns];
-    
-    // Filter by journal
-    if (selectedJornal) {
-      const jornal = telejornais.find(j => j.id === selectedJornal);
-      if (jornal) {
-        filtered = filtered.filter(rundown => 
-          rundown.jornal.toLowerCase().includes(jornal.nome.toLowerCase()));
-      }
+    } catch (error) {
+      console.error("Erro ao carregar espelhos fechados:", error);
+      toast({
+        title: "Erro ao carregar espelhos",
+        description: "Não foi possível carregar os espelhos fechados",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
     }
-    
-    // Filter by date
-    if (selectedDate) {
-      const dateString = format(selectedDate, "yyyy-MM-dd");
-      filtered = filtered.filter(rundown => rundown.data === dateString);
-    }
-    
-    // Filter by time or time range
-    if (showTimeRange) {
-      if (startTime && endTime) {
-        filtered = filtered.filter(rundown => {
-          return rundown.hora >= startTime && rundown.hora <= endTime;
-        });
-      }
-    } else if (selectedTime) {
-      filtered = filtered.filter(rundown => rundown.hora === selectedTime);
-    }
-    
-    setFilteredRundowns(filtered);
   };
 
   const handleVisualizarEspelho = (rundown: ClosedRundown) => {
@@ -321,7 +281,13 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredRundowns.length > 0 ? (
+              {isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="text-center py-4">
+                    Carregando espelhos fechados...
+                  </TableCell>
+                </TableRow>
+              ) : filteredRundowns.length > 0 ? (
                 filteredRundowns.map((rundown) => (
                   <TableRow key={rundown.id}>
                     <TableCell>{rundown.jornal}</TableCell>
