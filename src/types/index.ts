@@ -1,90 +1,39 @@
-
 export interface Telejornal {
   id: string;
-  nome: string;
-  horario: string;
-  espelho_aberto?: boolean;
   created_at?: string;
-  updated_at?: string;
+  nome: string;
+  horario?: string;
+  espelho_aberto: boolean;
 }
 
 export interface Bloco {
   id: string;
-  telejornal_id: string;
-  nome: string;
-  ordem: number;
   created_at?: string;
-  updated_at?: string;
+  nome: string;
+  telejornal_id: string;
+  ordem: number;
 }
 
 export interface Materia {
   id: string;
-  bloco_id: string;
-  pagina: string;
-  retranca: string;
-  clip: string;
-  duracao: number;
-  status: "draft" | "pending" | "published" | "urgent";
-  reporter: string;
-  texto?: string;
-  cabeca?: string;
-  tags?: string[];
-  horario_exibicao?: string;
-  equipamento?: string;
-  local_gravacao?: string;
-  ordem: number;
   created_at?: string;
-  updated_at?: string;
+  titulo: string;
+  descricao?: string;
+  bloco_id: string;
+  ordem: number;
+  tempo_estimado?: number;
+  apresentador?: string;
+  reporter?: string;
+  link_vt?: string;
 }
 
 export interface Pauta {
   id: string;
-  titulo: string;
-  descricao?: string;
-  status: string;
-  data_cobertura?: string;
   created_at?: string;
-  updated_at?: string;
-}
-
-export interface GeneralScheduleModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
-
-// Required fields for Bloco creation (based on Supabase schema)
-export interface BlocoCreateInput {
-  telejornal_id: string;
-  nome: string;
-  ordem: number;
-}
-
-// Required fields for Materia creation (based on Supabase schema)
-export interface MateriaCreateInput {
-  bloco_id: string;
-  retranca: string;
-  ordem: number;
-  pagina?: string;
-  clip?: string;
-  duracao?: number;
-  status?: "draft" | "pending" | "published" | "urgent";
-  reporter?: string;
-}
-
-// Required fields for Pauta creation (based on Supabase schema)
-export interface PautaCreateInput {
   titulo: string;
   descricao?: string;
-  status?: string;
 }
 
-// Required fields for Telejornal creation (based on Supabase schema)
-export interface TelejornalCreateInput {
-  nome: string;
-  horario?: string;
-}
-
-// Interface para o diálogo de confirmação ao fechar o espelho
 export interface CloseRundownDialogProps {
   isOpen: boolean;
   onClose: () => void;

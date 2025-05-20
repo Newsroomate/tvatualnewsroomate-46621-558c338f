@@ -7,6 +7,7 @@ import { EditPanel } from "./EditPanel";
 import { Materia, Telejornal } from "@/types";
 import { updateTelejornal, fetchTelejornal } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
+import { CloseRundownDialog } from "./CloseRundownDialog";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient();
@@ -16,6 +17,7 @@ const Layout = () => {
   const [selectedItem, setSelectedItem] = useState<Materia | null>(null);
   const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
   const [currentTelejornal, setCurrentTelejornal] = useState<Telejornal | null>(null);
+  const [isCloseRundownDialogOpen, setIsCloseRundownDialogOpen] = useState(false);
   const { toast } = useToast();
 
   const handleSelectJournal = (journalId: string) => {
@@ -56,9 +58,16 @@ const Layout = () => {
   const handleToggleRundown = async () => {
     if (!selectedJournal || !currentTelejornal) return;
     
+    // Se o espelho está aberto e o usuário deseja fechá-lo, mostrar diálogo de confirmação
+    if (currentTelejornal.espelho_aberto) {
+      setIsCloseRundownDialogOpen(true);
+      return;
+    }
+    
+    // Se o espelho está fechado e o usuário deseja abri-lo, fazer a operação diretamente
     try {
       // Inverter o estado atual do espelho para este telejornal específico
-      const novoEstadoEspelho = !currentTelejornal.espelho_aberto;
+      const novoEstadoEspelho = !currentTelejornal.espelho_aberto; // true neste caso
       
       // Atualizar o telejornal no banco de dados
       await updateTelejornal(selectedJournal, {
@@ -73,11 +82,9 @@ const Layout = () => {
       });
       
       toast({
-        title: novoEstadoEspelho ? "Espelho aberto" : "Espelho fechado",
-        description: novoEstadoEspelho 
-          ? `Espelho de ${currentTelejornal.nome} aberto com sucesso` 
-          : `Espelho de ${currentTelejornal.nome} fechado`,
-        variant: novoEstadoEspelho ? "default" : "destructive"
+        title: "Espelho aberto",
+        description: `Espelho de ${currentTelejornal.nome} aberto com sucesso`,
+        variant: "default"
       });
       
       // Refresh data
@@ -87,6 +94,43 @@ const Layout = () => {
       toast({
         title: "Erro",
         description: "Não foi possível alterar o status do espelho",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleConfirmCloseRundown = async () => {
+    if (!selectedJournal || !currentTelejornal) return;
+    
+    try {
+      // Fechar o espelho do telejornal
+      await updateTelejornal(selectedJournal, {
+        ...currentTelejornal,
+        espelho_aberto: false
+      });
+      
+      // Atualizar o estado local
+      setCurrentTelejornal({
+        ...currentTelejornal,
+        espelho_aberto: false
+      });
+      
+      toast({
+        title: "Espelho fechado",
+        description: `Espelho de ${currentTelejornal.nome} fechado`,
+        variant: "destructive"
+      });
+      
+      // Fechar o diálogo
+      setIsCloseRundownDialogOpen(false);
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['telejornais'] });
+    } catch (error) {
+      console.error("Erro ao fechar espelho:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível fechar o espelho",
         variant: "destructive"
       });
     }
@@ -162,6 +206,14 @@ const Layout = () => {
           isOpen={isEditPanelOpen}
           onClose={handleCloseEditPanel}
           item={selectedItem}
+        />
+        
+        {/* Diálogo de confirmação para fechar o espelho */}
+        <CloseRundownDialog 
+          isOpen={isCloseRundownDialogOpen}
+          onClose={() => setIsCloseRundownDialogOpen(false)}
+          onConfirm={handleConfirmCloseRundown}
+          telejornalNome={currentTelejornal?.nome}
         />
       </div>
     </QueryClientProvider>
