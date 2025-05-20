@@ -68,4 +68,6 @@ export interface MateriaCreateInput {
 // Required fields for Pauta creation (based on Supabase schema)
 export interface PautaCreateInput {
   titulo: string;
+  descricao?: string;
+  status?: string;
 }
