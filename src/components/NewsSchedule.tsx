@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -48,6 +47,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [materiaToDelete, setMateriaToDelete] = useState<Materia | null>(null);
   const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
+  const [isInitialBlockCreated, setIsInitialBlockCreated] = useState<Record<string, boolean>>({});
   const { toast } = useToast();
 
   // Fetch telejornais
@@ -77,7 +77,7 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
   // Process blocks data when it changes
   useEffect(() => {
     const loadBlocos = async () => {
-      if (blocosQuery.data) {
+      if (blocosQuery.data && selectedJournal) {
         const blocosComItems = await Promise.all(
           blocosQuery.data.map(async (bloco) => {
             const materias = await fetchMateriasByBloco(bloco.id);
@@ -92,9 +92,24 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
         
         setBlocks(blocosComItems);
         
-        // Automatically create Block 1 if no blocks exist and rundown is open
-        if (blocosComItems.length === 0 && selectedJournal && isRundownOpen) {
-          handleAddBlock();
+        // Only create Block 1 if no blocks exist, rundown is open, AND we haven't tried to create a block for this journal yet
+        if (blocosComItems.length === 0 && isRundownOpen && !isInitialBlockCreated[selectedJournal]) {
+          try {
+            await handleAddFirstBlock();
+            // Mark this journal as having its initial block created
+            setIsInitialBlockCreated(prev => ({
+              ...prev,
+              [selectedJournal]: true
+            }));
+          } catch (error) {
+            console.error("Erro ao criar o bloco inicial:", error);
+          }
+        } else if (blocosComItems.length > 0 && !isInitialBlockCreated[selectedJournal]) {
+          // If blocks already exist, mark this journal as having its blocks already set up
+          setIsInitialBlockCreated(prev => ({
+            ...prev,
+            [selectedJournal]: true
+          }));
         }
       }
     };
@@ -132,6 +147,48 @@ export const NewsSchedule = ({ selectedJournal, onEditItem, isRundownOpen, onOpe
       });
     });
     return highestPage;
+  };
+
+  // New function to handle adding the first block specifically
+  const handleAddFirstBlock = async () => {
+    if (!selectedJournal || !isRundownOpen) return;
+    
+    try {
+      // Check if blocks already exist for this journal to avoid duplicates
+      const existingBlocks = await fetchBlocosByTelejornal(selectedJournal);
+      if (existingBlocks.length > 0) {
+        console.log("Blocks already exist for this journal, skipping creation");
+        return;
+      }
+      
+      const novoBlocoInput = {
+        telejornal_id: selectedJournal,
+        nome: "Bloco 1",
+        ordem: 1
+      };
+      
+      const novoBloco = await createBloco(novoBlocoInput);
+      
+      // Immediately update the UI
+      setBlocks([{ 
+        ...novoBloco, 
+        items: [],
+        totalTime: 0
+      }]);
+      
+      return novoBloco;
+    } catch (error) {
+      console.error("Erro ao adicionar bloco inicial:", error);
+      // Don't show toast for duplicate error, as this is expected in some cases
+      if (!(error instanceof Error && error.message.includes("duplicate key value"))) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível adicionar o bloco inicial",
+          variant: "destructive"
+        });
+      }
+      throw error;
+    }
   };
 
   const handleAddBlock = async () => {
