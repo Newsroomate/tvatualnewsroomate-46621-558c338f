@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from 'react';
 import { Bloco, Materia } from "@/types";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,9 @@ import {
   Minimize2, 
   X, 
   TextCursor, 
-  ArrowUpFromLine,
-  ListMinus,
-  ListPlus
+  ArrowUpFromLine, 
+  ListCollapse, 
+  ListExpand 
 } from "lucide-react";
 
 interface TeleprompterProps {
@@ -363,7 +364,7 @@ export const Teleprompter = ({ blocks, onClose }: TeleprompterProps) => {
                     onClick={decreaseLineHeight}
                     className="h-8"
                   >
-                    <ListMinus className="h-4 w-4" />
+                    <ListCollapse className="h-4 w-4" />
                   </Button>
                   <span className="text-xs">Espaço: {lineHeight.toFixed(1)}</span>
                   <Button 
@@ -372,7 +373,7 @@ export const Teleprompter = ({ blocks, onClose }: TeleprompterProps) => {
                     onClick={increaseLineHeight}
                     className="h-8"
                   >
-                    <ListPlus className="h-4 w-4" />
+                    <ListExpand className="h-4 w-4" />
                   </Button>
                 </div>
               </div>
