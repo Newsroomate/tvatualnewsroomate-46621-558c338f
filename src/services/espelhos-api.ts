@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Bloco, Materia, Telejornal } from "@/types";
 
@@ -7,7 +8,7 @@ export interface ClosedRundown {
   nome_telejornal: string;
   data_fechamento: string;
   horario: string | null;
-  blocos: (Bloco & { materias: Materia[] })[];
+  status?: string;
 }
 
 export const fetchClosedRundowns = async (
