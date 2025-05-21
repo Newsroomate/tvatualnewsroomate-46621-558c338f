@@ -26,7 +26,11 @@ export const TelejornalModal = ({
     
     setIsSubmitting(true);
     try {
-      await createTelejornal({ nome, horario });
+      await createTelejornal({ 
+        nome, 
+        horario, 
+        espelho_aberto: false // Added the missing espelho_aberto property
+      });
       setNome("");
       setHorario("");
       onTelejornalCreated();

@@ -5,7 +5,7 @@ import { Bloco, Materia, Telejornal } from "@/types";
 export interface ClosedRundown {
   id: string;
   telejornal_id: string;
-  nome_telejornal: string; // This is the correct property name for the field
+  nome_telejornal: string;
   data_fechamento: string;
   horario: string | null;
   status?: string;
@@ -60,10 +60,21 @@ export const fetchRundownContentForTeleprompter = async (
         
         if (materiasError) throw materiasError;
         
+        // Add required fields for Materia interface compatibility
+        const materiasWithRequiredFields = (materias || []).map(item => ({
+          ...item,
+          // Add missing required fields if they don't exist
+          titulo: item.retranca || '', // Use retranca as titulo which is required by Materia interface
+          descricao: item.texto || '',  // Use texto as descricao if needed
+          tempo_estimado: item.duracao || 0, // Map duracao to tempo_estimado
+          apresentador: item.reporter || '', // Map reporter to apresentador
+          link_vt: item.clip || '' // Map clip to link_vt
+        }));
+        
         return {
           ...block,
-          items: materias || []
-        };
+          items: materiasWithRequiredFields
+        } as Bloco & { items: Materia[] };
       })
     );
     
