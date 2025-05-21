@@ -39,7 +39,7 @@ export const createBloco = async (bloco: BlocoCreateInput) => {
 export const renameBloco = async (blocoId: string, newName: string) => {
   const { data, error } = await supabase
     .from('blocos')
-    .update({ nome: newName, updated_at: new Date() })
+    .update({ nome: newName, updated_at: new Date().toISOString() })
     .eq('id', blocoId)
     .select()
     .single();

@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Telejornal, Materia, Pauta, MateriaCreateInput, PautaCreateInput } from "@/types";
 
@@ -33,7 +34,17 @@ export const fetchMateriasByBloco = async (blocoId: string): Promise<Materia[]> 
       return [];
     }
 
-    return materias || [];
+    // Ensure materia meets the Materia type requirements
+    const typedMaterias = materias.map(materia => {
+      return {
+        ...materia,
+        titulo: materia.retranca || 'Sem título', // Add titulo for backwards compatibility
+        tempo_estimado: materia.duracao || 0,
+        link_vt: materia.clip || '',
+      } as Materia;
+    });
+
+    return typedMaterias;
   } catch (error) {
     console.error(`Erro ao buscar matérias do bloco ${blocoId}:`, error);
     return [];
@@ -53,7 +64,15 @@ export const createMateria = async (materia: MateriaCreateInput): Promise<Materi
       throw error;
     }
 
-    return data as Materia;
+    // Add backwards compatibility fields
+    const typedMateria: Materia = {
+      ...data,
+      titulo: data.retranca || 'Sem título',
+      tempo_estimado: data.duracao || 0,
+      link_vt: data.clip || '',
+    };
+
+    return typedMateria;
   } catch (error) {
     console.error("Erro ao criar matéria:", error);
     throw error;
@@ -74,7 +93,15 @@ export const updateMateria = async (id: string, updates: Partial<Materia>): Prom
       throw error;
     }
 
-    return data as Materia;
+    // Add backwards compatibility fields
+    const typedMateria: Materia = {
+      ...data,
+      titulo: data.retranca || 'Sem título',
+      tempo_estimado: data.duracao || 0,
+      link_vt: data.clip || '',
+    };
+
+    return typedMateria;
   } catch (error) {
     console.error(`Erro ao atualizar matéria ${id}:`, error);
     return null;
@@ -139,10 +166,26 @@ export const createPauta = async (pauta: PautaCreateInput): Promise<Pauta> => {
   }
 };
 
-// Re-export functions from blocos-api
-export { 
+// Re-export functions from other service files
+export {
+  fetchTelejornal,
+  createTelejornal,
+  updateTelejornal,
+  deleteTelejornal
+} from './telejornais-api';
+
+export {
+  updatePauta,
+  deletePauta
+} from './pautas-api';
+
+export {
   fetchBlocosByTelejornal,
   createBloco,
   renameBloco,
   deleteBloco
 } from './blocos-api';
+
+export {
+  fetchClosedRundowns
+} from './espelhos-api';

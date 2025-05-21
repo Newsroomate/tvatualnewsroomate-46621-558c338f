@@ -28,6 +28,7 @@ import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { findHighestPageNumber, calculateBlockTotalTime } from "./utils";
 import { NewsBlock } from "./NewsBlock";
+import { Teleprompter } from "../teleprompter/Teleprompter";
 import { useAuth } from "@/context/AuthContext";
 import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
 import { Button } from "@/components/ui/button";
@@ -39,7 +40,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
-interface NewsScheduleProps {
+export interface NewsScheduleProps {
   selectedJournal: string | null;
   onEditItem: (item: Materia) => void;
   currentTelejornal: Telejornal | null;
@@ -60,6 +61,7 @@ export const NewsSchedule = ({
   const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
   const [isCreatingFirstBlock, setIsCreatingFirstBlock] = useState(false);
   const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
+  const [showTeleprompter, setShowTeleprompter] = useState(false);
   const { toast } = useToast();
   const { profile } = useAuth();
   
@@ -558,8 +560,6 @@ export const NewsSchedule = ({
     }
   };
 
-  const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
-
   const handleRenameBlock = async (blockId: string, newName: string) => {
     if (!currentTelejornal?.espelho_aberto) {
       toast({
@@ -641,6 +641,29 @@ export const NewsSchedule = ({
     }
   };
 
+  const handleTeleprompter = (shouldOpen: boolean) => {
+    if (shouldOpen && blocks.length === 0) {
+      toast({
+        title: "Sem blocos",
+        description: "Não há blocos para exibir no teleprompter.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setShowTeleprompter(shouldOpen);
+    
+    if (shouldOpen) {
+      toast({
+        title: "✅ Espelho carregado",
+        description: "Espelho carregado no modo Teleprompter com sucesso.",
+        variant: "default"
+      });
+    }
+  };
+
+  const isLoading = telejornaisQuery?.isLoading || blocosQuery?.isLoading;
+
   return (
     <div className="flex flex-col h-full">
       {/* Header with journal info and total time */}
@@ -649,6 +672,8 @@ export const NewsSchedule = ({
         totalJournalTime={totalJournalTime}
         onRenumberItems={handleRenumberItems}
         hasBlocks={blocks.length > 0}
+        blocksWithItems={blocks}
+        onOpenTeleprompter={handleTeleprompter}
       />
 
       {/* Main area with blocks */}
@@ -658,7 +683,7 @@ export const NewsSchedule = ({
             selectedJournal={selectedJournal}
             currentTelejornal={currentTelejornal}
             blocks={blocks}
-            isLoading={telejornaisQuery.isLoading || blocosQuery.isLoading}
+            isLoading={isLoading}
             isCreatingFirstBlock={isCreatingFirstBlock}
             newItemBlock={newItemBlock}
             onOpenRundown={onOpenRundown}
@@ -672,6 +697,14 @@ export const NewsSchedule = ({
           />
         </div>
       </DragDropContext>
+
+      {/* Teleprompter view (conditionally rendered) */}
+      {showTeleprompter && (
+        <Teleprompter 
+          blocks={blocks}
+          onClose={() => setShowTeleprompter(false)}
+        />
+      )}
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
