@@ -131,6 +131,14 @@ export const LeftSidebar = ({
         <h2 className="text-lg font-semibold">Newsroomate</h2>
       </div>
       
+      {/* Bottom Button - Moved up to be more visible */}
+      <div className="p-4 border-b border-gray-200">
+        <Button variant="outline" className="w-full" onClick={handleOpenGeneralSchedule}>
+          <FileText className="h-4 w-4 mr-2" />
+          Espelho Geral
+        </Button>
+      </div>
+
       <div className="flex-1 overflow-y-auto">
         {/* Telejornais Section */}
         <TelejornalSection 
@@ -149,14 +157,6 @@ export const LeftSidebar = ({
           isLoading={isLoading}
           onDataChange={loadData}
         />
-      </div>
-
-      {/* Bottom Button */}
-      <div className="p-4 border-t border-gray-200">
-        <Button variant="outline" className="w-full" onClick={handleOpenGeneralSchedule}>
-          <FileText className="h-4 w-4 mr-2" />
-          Espelho Geral
-        </Button>
       </div>
 
       {/* Modals */}
