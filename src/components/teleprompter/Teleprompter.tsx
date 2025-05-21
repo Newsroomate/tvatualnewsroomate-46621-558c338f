@@ -1,9 +1,20 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { Bloco, Materia } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, ArrowUp, ArrowDown, Maximize2, Minimize2, X, Plus, Minus } from "lucide-react";
+import { 
+  Play, 
+  Pause, 
+  ArrowUp, 
+  ArrowDown, 
+  Maximize2, 
+  Minimize2, 
+  X, 
+  TextCursor, 
+  ArrowUpFromLine,
+  ListMinus,
+  ListPlus
+} from "lucide-react";
 
 interface TeleprompterProps {
   blocks: (Bloco & { items: Materia[] })[];
@@ -89,6 +100,15 @@ export const Teleprompter = ({ blocks, onClose }: TeleprompterProps) => {
     setFontSize(prev => Math.max(prev - 2, 16)); // Min 16px
   };
   
+  // Function to increase/decrease line height
+  const increaseLineHeight = () => {
+    setLineHeight(prev => Math.min(prev + 0.1, 3.0)); // Max 3.0
+  };
+  
+  const decreaseLineHeight = () => {
+    setLineHeight(prev => Math.max(prev - 0.1, 1.0)); // Min 1.0
+  };
+  
   // Toggle fullscreen mode
   const toggleFullscreen = () => {
     if (!teleprompterRef.current) return;
@@ -138,6 +158,22 @@ export const Teleprompter = ({ blocks, onClose }: TeleprompterProps) => {
       } else if (e.key === 'h') {
         // 'h' key toggles controls visibility
         toggleControls();
+      } else if (e.key === 'ArrowUp') {
+        // Speed up
+        setScrollSpeed(prev => Math.min(prev + 0.5, 10));
+        e.preventDefault();
+      } else if (e.key === 'ArrowDown') {
+        // Speed down
+        setScrollSpeed(prev => Math.max(prev - 0.5, 0.5));
+        e.preventDefault();
+      } else if (e.key === '+') {
+        // Increase font size
+        increaseFontSize();
+        e.preventDefault();
+      } else if (e.key === '-') {
+        // Decrease font size
+        decreaseFontSize();
+        e.preventDefault();
       }
     };
     
@@ -159,18 +195,16 @@ export const Teleprompter = ({ blocks, onClose }: TeleprompterProps) => {
           <h2 className="text-lg font-medium ml-2">Teleprompter</h2>
           <div className="flex items-center gap-2">
             <Button
-              variant="outline"
+              variant="teleprompter"
               size="icon"
               onClick={(e) => { e.stopPropagation(); toggleFullscreen(); }}
-              className="bg-transparent border-gray-700 text-white hover:bg-gray-800"
             >
               {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
             </Button>
             <Button 
-              variant="outline"
+              variant="teleprompter"
               size="icon" 
-              onClick={(e) => { e.stopPropagation(); onClose(); }} 
-              className="bg-transparent border-gray-700 text-white hover:bg-gray-800"
+              onClick={(e) => { e.stopPropagation(); onClose(); }}
             >
               <X className="h-4 w-4" />
             </Button>
@@ -216,98 +250,144 @@ export const Teleprompter = ({ blocks, onClose }: TeleprompterProps) => {
         ))}
       </div>
       
-      {/* Control panel - only shown when controls are visible */}
+      {/* Control panel - organized in groups as requested */}
       {showControls && (
         <div 
-          className="bg-black bg-opacity-70 backdrop-blur-sm p-3 border-t border-gray-800"
+          className="bg-black bg-opacity-70 backdrop-blur-sm p-4 border-t border-gray-800"
           onClick={(e) => e.stopPropagation()}
         >
-          {/* Top row with play/pause and navigation controls */}
-          <div className="flex items-center justify-center gap-4 mb-3">
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={scrollToTop} 
-              className="text-white hover:bg-gray-800 h-8"
-            >
-              <ArrowUp className="h-4 w-4" />
-            </Button>
-            
-            <Button
-              variant={isScrolling ? "destructive" : "default"}
-              onClick={handlePlayPause}
-              className="w-24 h-8 flex items-center justify-center text-sm"
-              size="sm"
-            >
-              {isScrolling ? (
-                <>
-                  <Pause className="h-4 w-4 mr-1" /> Pausar
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4 mr-1" /> Iniciar
-                </>
-              )}
-            </Button>
-            
-            <Button 
-              variant="ghost"
-              size="sm"
-              onClick={scrollToBottom} 
-              className="text-white hover:bg-gray-800 h-8"
-            >
-              <ArrowDown className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          {/* Bottom row with sliders */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            {/* Scroll speed control */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs whitespace-nowrap w-16">Velocidade:</span>
-              <Slider
-                value={[scrollSpeed]}
-                min={0.5}
-                max={10}
-                step={0.5}
-                onValueChange={handleSpeedChange}
-                className="w-full"
-              />
-              <span className="text-xs w-8 text-right">{scrollSpeed}x</span>
+          {/* Control bar with grouped functions */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Group 1: Scroll controls */}
+            <div className="flex flex-col space-y-3">
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Controle de rolagem</div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="teleprompter"
+                    size="sm"
+                    onClick={scrollToTop} 
+                    className="h-8 w-8"
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    variant={isScrolling ? "destructive" : "default"}
+                    onClick={handlePlayPause}
+                    className="w-24 h-8 flex items-center justify-center text-sm"
+                    size="sm"
+                  >
+                    {isScrolling ? (
+                      <>
+                        <Pause className="h-4 w-4 mr-1" /> Pausar
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-4 w-4 mr-1" /> Iniciar
+                      </>
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    variant="teleprompter"
+                    size="sm"
+                    onClick={scrollToBottom} 
+                    className="h-8 w-8"
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-16">Velocidade:</span>
+                <Slider
+                  value={[scrollSpeed]}
+                  min={0.5}
+                  max={10}
+                  step={0.5}
+                  onValueChange={handleSpeedChange}
+                  className="flex-1"
+                />
+                <span className="text-xs w-8 text-right">{scrollSpeed}x</span>
+              </div>
             </div>
             
-            {/* Font size control */}
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="icon" onClick={decreaseFontSize} className="h-6 w-6 bg-transparent border-gray-700">
-                <Minus className="h-3 w-3" />
-              </Button>
-              <span className="text-xs whitespace-nowrap w-16">Fonte:</span>
-              <Slider
-                value={[fontSize]}
-                min={16}
-                max={72}
-                step={2}
-                onValueChange={handleFontSizeChange}
-                className="w-full"
-              />
-              <Button variant="outline" size="icon" onClick={increaseFontSize} className="h-6 w-6 bg-transparent border-gray-700">
-                <Plus className="h-3 w-3" />
-              </Button>
-              <span className="text-xs w-8 text-right">{fontSize}px</span>
+            {/* Group 2: Text controls */}
+            <div className="flex flex-col space-y-3">
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Controle de texto</div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="teleprompter" 
+                    size="sm" 
+                    onClick={decreaseFontSize}
+                    className="h-8"
+                  >
+                    <TextCursor className="h-3 w-3" /> -
+                  </Button>
+                  <span className="text-xs">Tamanho: {fontSize}px</span>
+                  <Button 
+                    variant="teleprompter" 
+                    size="sm" 
+                    onClick={increaseFontSize}
+                    className="h-8"
+                  >
+                    <TextCursor className="h-4 w-4" /> +
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-16">Tamanho:</span>
+                <Slider
+                  value={[fontSize]}
+                  min={16}
+                  max={72}
+                  step={2}
+                  onValueChange={handleFontSizeChange}
+                  className="flex-1"
+                />
+              </div>
             </div>
             
-            {/* Line height control */}
-            <div className="flex items-center gap-2">
-              <span className="text-xs whitespace-nowrap w-16">Espaçamento:</span>
-              <Slider
-                value={[lineHeight * 10]}
-                min={10}
-                max={30}
-                step={1}
-                onValueChange={(val) => handleLineHeightChange([val[0] / 10])}
-                className="w-full"
-              />
-              <span className="text-xs w-8 text-right">{lineHeight.toFixed(1)}</span>
+            {/* Group 3: Line spacing and display controls */}
+            <div className="flex flex-col space-y-3">
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">Espaçamento</div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Button 
+                    variant="teleprompter" 
+                    size="sm" 
+                    onClick={decreaseLineHeight}
+                    className="h-8"
+                  >
+                    <ListMinus className="h-4 w-4" />
+                  </Button>
+                  <span className="text-xs">Espaço: {lineHeight.toFixed(1)}</span>
+                  <Button 
+                    variant="teleprompter" 
+                    size="sm" 
+                    onClick={increaseLineHeight}
+                    className="h-8"
+                  >
+                    <ListPlus className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <span className="text-xs w-16">Espaço:</span>
+                <Slider
+                  value={[lineHeight * 10]} // Multiply by 10 to make the slider work with integers
+                  min={10}
+                  max={30}
+                  step={1}
+                  onValueChange={(val) => handleLineHeightChange([val[0] / 10])}
+                  className="flex-1"
+                />
+              </div>
             </div>
           </div>
         </div>
