@@ -42,6 +42,17 @@ export const NewsItem = ({
     }
   };
 
+  // Tradução do status para português
+  const translateStatus = (status: string): string => {
+    switch (status?.toLowerCase()) {
+      case 'published': return 'Publicado';
+      case 'draft': return 'Rascunho';
+      case 'pending': return 'Pendente';
+      case 'urgent': return 'Urgente';
+      default: return status || 'Rascunho';
+    }
+  };
+
   // Ensure we have valid data for display
   const displayRetranca = item.retranca || "Sem título";
   const displayStatus = item.status || "draft";
@@ -63,7 +74,7 @@ export const NewsItem = ({
       <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
       <td className="py-2 px-4">
         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(displayStatus)}`}>
-          {displayStatus}
+          {translateStatus(displayStatus)}
         </span>
       </td>
       <td className="py-2 px-4">{item.reporter || '-'}</td>

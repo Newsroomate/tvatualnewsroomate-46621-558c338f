@@ -33,6 +33,17 @@ export const getStatusClass = (status: string): string => {
   }
 };
 
+// Tradução do status para português
+export const translateStatus = (status: string): string => {
+  switch (status?.toLowerCase()) {
+    case 'published': return 'Publicado';
+    case 'draft': return 'Rascunho';
+    case 'pending': return 'Pendente';
+    case 'urgent': return 'Urgente';
+    default: return status || 'Rascunho';
+  }
+};
+
 // Process updated materia for UI updates - this is used in the realtime subscription handlers
 export const processUpdatedMateria = (updatedMateria: Materia): Materia => {
   console.log('Processing materia update for UI:', updatedMateria);
