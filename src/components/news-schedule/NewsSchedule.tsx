@@ -6,7 +6,9 @@ import {
   createBloco, 
   createMateria, 
   deleteMateria,
-  updateMateria
+  updateMateria,
+  renameBloco,
+  deleteBloco
 } from "@/services/api";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { fetchTelejornais } from "@/services/api";
@@ -28,6 +30,14 @@ import { findHighestPageNumber, calculateBlockTotalTime } from "./utils";
 import { NewsBlock } from "./NewsBlock";
 import { useAuth } from "@/context/AuthContext";
 import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
+import { Button } from "@/components/ui/button";
+import { PlusCircle, Trash2, ArrowDownUp, Lock } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -550,6 +560,87 @@ export const NewsSchedule = ({
 
   const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
 
+  const handleRenameBlock = async (blockId: string, newName: string) => {
+    if (!currentTelejornal?.espelho_aberto) {
+      toast({
+        title: "Espelho fechado",
+        description: "Você precisa abrir o espelho para renomear blocos.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      const updatedBlock = await renameBloco(blockId, newName);
+      
+      // Update blocks state
+      setBlocks(blocks.map(block => 
+        block.id === blockId 
+          ? { ...block, nome: newName } 
+          : block
+      ));
+      
+    } catch (error) {
+      console.error("Erro ao renomear bloco:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível renomear o bloco",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleDeleteBlock = async (blockId: string) => {
+    if (!currentTelejornal?.espelho_aberto) {
+      toast({
+        title: "Espelho fechado",
+        description: "Você precisa abrir o espelho para excluir blocos.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      await deleteBloco(blockId);
+      
+      // Update blocks state - remove the deleted block
+      setBlocks(blocks.filter(block => block.id !== blockId));
+      
+    } catch (error) {
+      console.error("Erro ao excluir bloco:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o bloco",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleItemDoubleClick = (item: Materia) => {
+    onEditItem(item);
+  };
+
+  const handleEditButtonClick = (item: Materia) => {
+    onEditItem(item);
+  };
+
+  const formatTime = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
+
+  // Status color classes
+  const getStatusClass = (status: string): string => {
+    switch (status.toLowerCase()) {
+      case 'published': return 'bg-green-100 text-green-800';
+      case 'draft': return 'bg-gray-100 text-gray-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'urgent': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       {/* Header with journal info and total time */}
@@ -567,7 +658,7 @@ export const NewsSchedule = ({
             selectedJournal={selectedJournal}
             currentTelejornal={currentTelejornal}
             blocks={blocks}
-            isLoading={isLoading}
+            isLoading={telejornaisQuery.isLoading || blocosQuery.isLoading}
             isCreatingFirstBlock={isCreatingFirstBlock}
             newItemBlock={newItemBlock}
             onOpenRundown={onOpenRundown}
@@ -576,6 +667,8 @@ export const NewsSchedule = ({
             onAddItem={handleAddItem}
             onEditItem={onEditItem}
             onDeleteItem={handleDeleteMateria}
+            onRenameBlock={handleRenameBlock}
+            onDeleteBlock={handleDeleteBlock}
           />
         </div>
       </DragDropContext>

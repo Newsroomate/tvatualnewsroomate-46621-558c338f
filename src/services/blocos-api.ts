@@ -35,3 +35,45 @@ export const createBloco = async (bloco: BlocoCreateInput) => {
 
   return data as Bloco;
 };
+
+export const renameBloco = async (blocoId: string, newName: string) => {
+  const { data, error } = await supabase
+    .from('blocos')
+    .update({ nome: newName, updated_at: new Date() })
+    .eq('id', blocoId)
+    .select()
+    .single();
+    
+  if (error) {
+    console.error('Erro ao renomear bloco:', error);
+    throw error;
+  }
+  
+  return data as Bloco;
+};
+
+export const deleteBloco = async (blocoId: string) => {
+  // First delete all materias belonging to this block
+  const { error: materiasDeleteError } = await supabase
+    .from('materias')
+    .delete()
+    .eq('bloco_id', blocoId);
+    
+  if (materiasDeleteError) {
+    console.error('Erro ao excluir matérias do bloco:', materiasDeleteError);
+    throw materiasDeleteError;
+  }
+  
+  // Then delete the block itself
+  const { error } = await supabase
+    .from('blocos')
+    .delete()
+    .eq('id', blocoId);
+    
+  if (error) {
+    console.error('Erro ao excluir bloco:', error);
+    throw error;
+  }
+  
+  return true;
+};
