@@ -62,6 +62,14 @@ export default {
 					'accent-foreground': 'hsl(var(--sidebar-accent-foreground))',
 					border: 'hsl(var(--sidebar-border))',
 					ring: 'hsl(var(--sidebar-ring))'
+				},
+				teleprompter: {
+					DEFAULT: '#000000',
+					text: '#FFFFFF',
+					highlight: '#FFD700',
+					control: '#333333',
+					'control-hover': '#444444',
+					accent: '#1E90FF',
 				}
 			},
 			borderRadius: {
@@ -109,4 +117,3 @@ export default {
 		}
 	],
 } satisfies Config;
-

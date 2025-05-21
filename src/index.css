@@ -34,6 +34,15 @@
     --ring: 222.2 84% 4.9%;
  
     --radius: 0.5rem;
+    
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 212.7 26.8% 83.9%;
   }
  
   .dark {
@@ -93,21 +102,19 @@
 /* Estilos para o teleprompter */
 .teleprompter-text {
   font-family: 'Arial', sans-serif;
-  font-size: 24px;
+  font-size: 36px;
   line-height: 1.6;
   padding: 2rem;
   color: white;
   background-color: black;
   height: 100%;
   overflow-y: auto;
+  text-align: center;
 }
 
-.teleprompter-text p {
-  margin-bottom: 1.5rem;
-}
-
-.teleprompter-text strong {
-  color: #FFD700;
+/* Corrigir o contraste para links e botões no teleprompter */
+.teleprompter-controls button {
+  @apply bg-opacity-70 backdrop-blur-sm;
 }
 
 /* Animação para realce de itens atualizados */

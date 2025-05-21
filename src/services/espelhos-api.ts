@@ -5,7 +5,7 @@ import { Bloco, Materia, Telejornal } from "@/types";
 export interface ClosedRundown {
   id: string;
   telejornal_id: string;
-  nome_telejornal: string;
+  nome_telejornal: string; // This is the correct property name for the field
   data_fechamento: string;
   horario: string | null;
   status?: string;
@@ -27,6 +27,49 @@ export const fetchClosedRundowns = async (
     return [];
   } catch (error) {
     console.error("Erro ao buscar espelhos fechados:", error);
+    return [];
+  }
+};
+
+// Function to fetch blocks and their materias for a specific rundown
+export const fetchRundownContentForTeleprompter = async (
+  rundownId: string
+): Promise<(Bloco & { items: Materia[] })[]> => {
+  try {
+    // This would fetch blocks for a specific rundown
+    const { data: blocks, error: blocksError } = await supabase
+      .from('blocos')
+      .select('*')
+      .eq('telejornal_id', rundownId)
+      .order('ordem', { ascending: true });
+    
+    if (blocksError) throw blocksError;
+    
+    if (!blocks || blocks.length === 0) {
+      return [];
+    }
+    
+    // For each block, fetch its materias
+    const blocksWithItems = await Promise.all(
+      blocks.map(async (block) => {
+        const { data: materias, error: materiasError } = await supabase
+          .from('materias')
+          .select('*')
+          .eq('bloco_id', block.id)
+          .order('ordem', { ascending: true });
+        
+        if (materiasError) throw materiasError;
+        
+        return {
+          ...block,
+          items: materias || []
+        };
+      })
+    );
+    
+    return blocksWithItems;
+  } catch (error) {
+    console.error("Erro ao buscar conteúdo para o teleprompter:", error);
     return [];
   }
 };
