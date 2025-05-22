@@ -1,10 +1,10 @@
 
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { Layout } from './components/Layout';
-import { Auth } from './pages/Auth';
-import { NotFound } from './pages/NotFound';
-import { Index } from './pages/Index';
+import Layout from './components/Layout';
+import Auth from './pages/Auth';
+import NotFound from './pages/NotFound';
+import Index from './pages/Index';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { initializeRealtimeSubscriptions } from './utils/supabase-init';
