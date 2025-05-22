@@ -19,6 +19,7 @@ interface NewsItemProps {
   isEspelhoOpen: boolean;
   onDoubleClick: (item: Materia) => void;
   canModify?: boolean;
+  onUpdateItem?: (item: Materia) => void;
 }
 
 export const NewsItem = ({ 
@@ -29,7 +30,8 @@ export const NewsItem = ({
   snapshot,
   isEspelhoOpen,
   onDoubleClick,
-  canModify = true
+  canModify = true,
+  onUpdateItem
 }: NewsItemProps) => {
   // Status color classes
   const getStatusClass = (status: string): string => {
@@ -51,6 +53,15 @@ export const NewsItem = ({
       case 'urgent': return 'Urgente';
       default: return status || 'Rascunho';
     }
+  };
+
+  // Handle edit with callback for instant update
+  const handleEdit = (item: Materia) => {
+    // Use both the standard edit callback and pass a function to handle the save callback
+    onEdit({
+      ...item,
+      _onSave: onUpdateItem // We'll use this in App.tsx
+    });
   };
 
   // Ensure we have valid data for display
@@ -86,7 +97,7 @@ export const NewsItem = ({
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  onClick={() => onEdit(item)}
+                  onClick={() => handleEdit(item)}
                   disabled={!isEspelhoOpen || !canModify}
                 >
                   <Pencil className="h-4 w-4" />

@@ -10,6 +10,7 @@ interface BlockContentProps {
   onDeleteItem: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModifyItems?: boolean;
+  onUpdateItem?: (item: Materia) => void;
 }
 
 export const BlockContent = ({ 
@@ -18,7 +19,8 @@ export const BlockContent = ({
   onEditItem, 
   onDeleteItem,
   isEspelhoOpen,
-  canModifyItems = true
+  canModifyItems = true,
+  onUpdateItem
 }: BlockContentProps) => {
   return (
     <div className="overflow-x-auto">
@@ -66,6 +68,7 @@ export const BlockContent = ({
                           isEspelhoOpen={isEspelhoOpen}
                           onDoubleClick={onEditItem}
                           canModify={canModifyItems}
+                          onUpdateItem={onUpdateItem}
                         />
                       )}
                     </Draggable>

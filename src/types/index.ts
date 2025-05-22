@@ -46,6 +46,8 @@ export interface Materia {
   tempo_estimado?: number;
   apresentador?: string;
   link_vt?: string;
+  // Add internal property for callbacks
+  _onSave?: (item: Materia) => void;
 }
 
 export interface MateriaCreateInput {

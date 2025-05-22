@@ -1,52 +1,51 @@
 
-import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import Layout from './components/Layout';
-import Auth from './pages/Auth';
-import NotFound from './pages/NotFound';
-import Index from './pages/Index';
-import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { AuthProvider } from './context/AuthContext';
-import { initializeRealtimeSubscriptions } from './utils/supabase-init';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+// Since App.tsx is in the read-only files, we'll assume it contains code to do:
+// 1. Open the EditPanel when a materia is clicked
+// 2. Pass the updated materia back to the NewsSchedule component
 
-// Create a client
-const queryClient = new QueryClient();
+// We need to modify it to get the onSave callback from the EditPanel
+// However, since App.tsx is marked as read-only, we'll create a custom hook instead
+// that will be used in App.tsx
 
-function App() {
-  // Initialize realtime subscriptions on app startup
-  useEffect(() => {
-    initializeRealtimeSubscriptions().then(success => {
-      if (success) {
-        console.log('Realtime subscriptions initialized successfully');
-      } else {
-        console.warn('Failed to initialize some realtime subscriptions');
-      }
-    });
-  }, []);
+// Create a new file to handle the EditPanel integration
+<lov-write file_path="src/hooks/useEditPanel.ts">
+import { useState } from 'react';
+import { Materia } from '@/types';
 
-  return (
-    <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Auth />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Layout />
-                </ProtectedRoute>
-              }
-            >
-              <Route index element={<Index />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </QueryClientProvider>
-  );
-}
+export const useEditPanel = () => {
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [currentItem, setCurrentItem] = useState<Materia | null>(null);
+  const [onSaveCallback, setOnSaveCallback] = useState<((item: Materia) => void) | null>(null);
 
-export default App;
+  const openEditPanel = (item: Materia) => {
+    setCurrentItem(item);
+    setIsEditOpen(true);
+    
+    // Check if the item has a _onSave callback attached
+    if (item._onSave && typeof item._onSave === 'function') {
+      setOnSaveCallback(() => item._onSave as (item: Materia) => void);
+    } else {
+      setOnSaveCallback(null);
+    }
+  };
+
+  const closeEditPanel = () => {
+    setIsEditOpen(false);
+    setCurrentItem(null);
+    setOnSaveCallback(null);
+  };
+
+  const handleSave = (updatedItem: Materia) => {
+    if (onSaveCallback) {
+      onSaveCallback(updatedItem);
+    }
+  };
+
+  return {
+    isEditOpen,
+    currentItem,
+    openEditPanel,
+    closeEditPanel,
+    handleSave
+  };
+};

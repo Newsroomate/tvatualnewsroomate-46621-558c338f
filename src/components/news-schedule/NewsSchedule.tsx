@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -229,8 +228,8 @@ export const NewsSchedule = ({
       } else {
         // For other errors, show a toast
         toast({
-          title: "Erro",
-          description: "Não foi possível adicionar o bloco inicial",
+          title: "Erro ao criar bloco inicial",
+          description: "Ocorreu um erro ao criar o primeiro bloco. Por favor, tente novamente.",
           variant: "destructive"
         });
       }
@@ -641,6 +640,28 @@ export const NewsSchedule = ({
     }
   };
 
+  const handleMateriaUpdate = (updatedMateria: Materia) => {
+    console.log("Handling materia update in NewsSchedule:", updatedMateria);
+    
+    setBlocks(currentBlocks => {
+      return currentBlocks.map(block => {
+        if (block.id === updatedMateria.bloco_id) {
+          // Update the item in the block
+          const updatedItems = block.items.map(item => 
+            item.id === updatedMateria.id ? updatedMateria : item
+          );
+          
+          return {
+            ...block,
+            items: updatedItems,
+            totalTime: calculateBlockTotalTime(updatedItems)
+          };
+        }
+        return block;
+      });
+    });
+  };
+
   const handleItemDoubleClick = (item: Materia) => {
     onEditItem(item);
   };
@@ -722,6 +743,7 @@ export const NewsSchedule = ({
           startDragging={startDragging}
           endDragging={endDragging}
           trackDragOperation={trackDragOperation}
+          onUpdateItem={handleMateriaUpdate}
         />
       </div>
 

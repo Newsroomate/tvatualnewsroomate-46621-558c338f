@@ -26,6 +26,7 @@ interface ScheduleContentProps {
   startDragging: () => void;
   endDragging: (itemId?: string, sourceBlockId?: string, destBlockId?: string) => void;
   trackDragOperation: (itemId: string, sourceBlockId: string, destBlockId: string) => void;
+  onUpdateItem?: (item: Materia) => void;
 }
 
 export const ScheduleContent = ({
@@ -46,7 +47,8 @@ export const ScheduleContent = ({
   onDragEnd,
   startDragging,
   endDragging,
-  trackDragOperation
+  trackDragOperation,
+  onUpdateItem
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -154,6 +156,7 @@ export const ScheduleContent = ({
             onRenameBlock={onRenameBlock}
             onDeleteBlock={onDeleteBlock}
             isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
+            onUpdateItem={onUpdateItem}
           />
         ))}
       </DragDropContext>
