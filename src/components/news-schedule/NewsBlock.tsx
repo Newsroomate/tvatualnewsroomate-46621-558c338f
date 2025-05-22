@@ -14,7 +14,6 @@ interface NewsBlockProps {
   onRenameBlock?: (blockId: string, newName: string) => Promise<void>;
   onDeleteBlock?: (blockId: string) => Promise<void>;
   isEspelhoOpen: boolean;
-  onUpdateItem?: (item: Materia) => void;
 }
 
 export const NewsBlock = ({
@@ -25,8 +24,7 @@ export const NewsBlock = ({
   onDeleteItem,
   onRenameBlock,
   onDeleteBlock,
-  isEspelhoOpen,
-  onUpdateItem
+  isEspelhoOpen
 }: NewsBlockProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -63,7 +61,6 @@ export const NewsBlock = ({
         onDeleteItem={onDeleteItem}
         isEspelhoOpen={isEspelhoOpen}
         canModifyItems={canModify}
-        onUpdateItem={onUpdateItem}
       />
     </div>
   );

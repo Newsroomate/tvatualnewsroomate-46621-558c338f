@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -12,10 +13,9 @@ interface EditPanelProps {
   isOpen: boolean;
   onClose: () => void;
   item: Materia | null;
-  onSave?: (updatedItem: Materia) => void;
 }
 
-export const EditPanel = ({ isOpen, onClose, item, onSave }: EditPanelProps) => {
+export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const [activeTab, setActiveTab] = useState("editor");
   const [formData, setFormData] = useState<Partial<Materia>>({});
   const [isSaving, setIsSaving] = useState(false);
@@ -67,12 +67,6 @@ export const EditPanel = ({ isOpen, onClose, item, onSave }: EditPanelProps) => 
         title: "Matéria atualizada",
         description: "As alterações foram salvas com sucesso.",
       });
-      
-      // Call the onSave callback with the updated item to update UI immediately
-      if (onSave && updatedMateria) {
-        console.log("Passing updated materia to parent:", updatedMateria);
-        onSave(updatedMateria);
-      }
       
       // Force close the edit panel immediately after saving
       onClose();
