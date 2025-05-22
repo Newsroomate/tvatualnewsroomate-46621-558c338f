@@ -13,17 +13,12 @@ export const enableRealtimeForTable = async (tableName: string) => {
     await (supabase.rpc as any)('enable_realtime', { table_name: tableName } as EnableRealtimeParams);
     console.log(`Realtime enabled for table: ${tableName}`);
     
-    // Use supabase.rpc instead of supabase.query for setting replica identity
-    try {
-      // Using raw SQL query through rpc
-      // Type casting is needed since execute_sql is not in the type definitions
-      await (supabase.rpc as any)('execute_sql', {
-        sql_query: `ALTER TABLE "${tableName}" REPLICA IDENTITY FULL;`
-      });
-      
+    // Set replica identity to full for this table to ensure we receive complete row data
+    const { error } = await supabase.query(`ALTER TABLE "${tableName}" REPLICA IDENTITY FULL;`);
+    if (error) {
+      console.error(`Error setting REPLICA IDENTITY FULL for ${tableName}:`, error);
+    } else {
       console.log(`REPLICA IDENTITY FULL set for table: ${tableName}`);
-    } catch (sqlError) {
-      console.error(`Failed to set REPLICA IDENTITY FULL for ${tableName}:`, sqlError);
     }
     
     return true;
