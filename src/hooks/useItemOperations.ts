@@ -3,17 +3,26 @@ import { Materia } from "@/types";
 
 export const useItemOperations = (
   onEditItem: (item: any) => void,
-  handleMateriaEdit?: (item: Materia) => void
+  handleMateriaEdit?: (item: Materia) => void,
+  onSaveCallback?: (updatedItem: Materia) => void
 ) => {
-  // Create a wrapper function for handleItemClick that also calls our new handleMateriaEdit
+  // Wrapper function para o handleItemClick que também chama o handleMateriaEdit
   const handleItemClick = (item: any) => {
-    // Call the original edit handler from props
-    onEditItem(item);
-    
-    // Also call our new handler for improved update handling
-    if (handleMateriaEdit) {
-      handleMateriaEdit(item);
-    }
+    // Anexa o callback de salvamento ao item para que seja recuperado no painel de edição
+    const itemWithCallback = {
+      ...item,
+      _onSave: (updatedItem: Materia) => {
+        if (handleMateriaEdit) {
+          handleMateriaEdit(updatedItem);
+        }
+        if (onSaveCallback) {
+          onSaveCallback(updatedItem);
+        }
+      }
+    };
+
+    // Chama o manipulador de edição original dos props
+    onEditItem(itemWithCallback);
   };
 
   return {

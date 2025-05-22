@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Materia } from "@/types";
-import { updateMateria } from "@/services/api";
+import { updateMateria } from "@/services/materias-api";
 import { useToast } from "@/hooks/use-toast";
 
 interface EditPanelProps {
@@ -67,6 +67,12 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         title: "Matéria atualizada",
         description: "As alterações foram salvas com sucesso.",
       });
+      
+      // Se o item tem um callback onSave anexado, chame-o com a matéria atualizada
+      if (item._onSave && typeof item._onSave === 'function') {
+        console.log("Calling onSave callback with updated materia");
+        item._onSave(updatedMateria);
+      }
       
       // Force close the edit panel immediately after saving
       onClose();

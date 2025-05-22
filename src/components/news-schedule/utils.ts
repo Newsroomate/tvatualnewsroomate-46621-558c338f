@@ -1,28 +1,18 @@
 
-import { Bloco, Materia } from "@/types";
+import { Materia } from "@/types";
 
-// Format time from seconds to MM:SS
+/**
+ * Formata o tempo em segundos para o formato MM:SS
+ */
 export const formatTime = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60);
   const remainingSeconds = seconds % 60;
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
-// Find the highest page number across all blocks
-export const findHighestPageNumber = (blocks: (Bloco & { items: Materia[] })[]): number => {
-  let highestPage = 0;
-  blocks.forEach(block => {
-    block.items.forEach(item => {
-      const pageNum = parseInt(item.pagina || '0');
-      if (!isNaN(pageNum) && pageNum > highestPage) {
-        highestPage = pageNum;
-      }
-    });
-  });
-  return highestPage;
-};
-
-// Get status color class
+/**
+ * Obtém a classe CSS para exibição de status
+ */
 export const getStatusClass = (status: string): string => {
   switch (status?.toLowerCase()) {
     case 'published': return 'bg-green-100 text-green-800';
@@ -33,7 +23,9 @@ export const getStatusClass = (status: string): string => {
   }
 };
 
-// Tradução do status para português
+/**
+ * Traduz o status para português
+ */
 export const translateStatus = (status: string): string => {
   switch (status?.toLowerCase()) {
     case 'published': return 'Publicado';
@@ -44,17 +36,25 @@ export const translateStatus = (status: string): string => {
   }
 };
 
-// Process updated materia for UI updates - this is used in the realtime subscription handlers
-export const processUpdatedMateria = (updatedMateria: Materia): Materia => {
-  console.log('Processing materia update for UI:', updatedMateria);
+/**
+ * Processa uma matéria atualizada para garantir formato consistente
+ */
+export const processUpdatedMateria = (materia: Materia): Materia => {
   return {
-    ...updatedMateria,
-    // Make sure we have a titulo property for UI consistency
-    titulo: updatedMateria.retranca || "Sem título" 
+    ...materia,
+    // Garante que duracao seja um número
+    duracao: typeof materia.duracao === 'number' ? materia.duracao : 0,
+    // Mapeia retranca para título para consistência da UI
+    titulo: materia.retranca || "Sem título"
   };
 };
 
-// Helper to calculate total time for a block
+/**
+ * Calcula o tempo total do bloco a partir de seus itens
+ */
 export const calculateBlockTotalTime = (items: Materia[]): number => {
-  return items.reduce((sum, item) => sum + (item.duracao || 0), 0);
+  return items.reduce((sum, item) => {
+    const duration = typeof item.duracao === 'number' ? item.duracao : 0;
+    return sum + duration;
+  }, 0);
 };

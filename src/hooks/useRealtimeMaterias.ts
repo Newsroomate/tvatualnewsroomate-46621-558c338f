@@ -14,7 +14,7 @@ interface UseRealtimeMateriasProps {
 }
 
 /**
- * Custom hook to handle realtime subscriptions for materias
+ * Custom hook para lidar com assinaturas em tempo real para materias
  */
 export const useRealtimeMaterias = ({
   selectedJournal,
@@ -24,7 +24,7 @@ export const useRealtimeMaterias = ({
   const [blocks, setBlocks] = useState<BlockWithItems[]>([]);
   const { toast } = useToast();
   
-  // Use enhanced drag tracking hook
+  // Use o hook de rastreamento de arrastar aprimorado
   const {
     startDragging,
     endDragging,
@@ -33,7 +33,7 @@ export const useRealtimeMaterias = ({
     markItemAsEdited
   } = useDragTracker();
   
-  // Create handlers for materia operations
+  // Cria manipuladores para operações de matéria
   const {
     handleMateriaUpdate,
     handleMateriaInsert,
@@ -41,7 +41,7 @@ export const useRealtimeMaterias = ({
     updateExistingMateria
   } = createMateriaOperations(setBlocks);
   
-  // Set up realtime subscription
+  // Configura inscrição em tempo real
   useRealtimeSubscription({
     selectedJournal,
     newItemBlock,
@@ -52,17 +52,22 @@ export const useRealtimeMaterias = ({
     handleMateriaDelete
   });
   
-  // Handle explicit materia editing (for both button click and double-click)
+  // Manipula a edição explícita de matéria (tanto para clique de botão quanto para clique duplo)
   const handleMateriaEdit = (materia: Materia) => {
-    // Mark this item to ignore upcoming realtime updates
+    // Marca este item para ignorar atualizações em tempo real futuras
     markItemAsEdited(materia.id);
     
-    // Update the UI immediately after edit
-    setTimeout(() => {
-      setBlocks(currentBlocks => {
-        return updateExistingMateria(currentBlocks, materia);
-      });
-    }, 500);
+    // Atualiza a interface imediatamente após a edição
+    console.log("Atualizando interface com matéria editada:", materia);
+    setBlocks(currentBlocks => {
+      return updateExistingMateria(currentBlocks, materia);
+    });
+  };
+  
+  // Manipulador para atualização de matéria após salvamento
+  const handleMateriaSave = (updatedMateria: Materia) => {
+    console.log("Matéria salva, atualizando a interface:", updatedMateria);
+    handleMateriaEdit(updatedMateria);
   };
   
   return {
@@ -71,6 +76,7 @@ export const useRealtimeMaterias = ({
     startDragging,
     endDragging,
     trackDragOperation,
-    handleMateriaEdit
+    handleMateriaEdit,
+    handleMateriaSave
   };
 };

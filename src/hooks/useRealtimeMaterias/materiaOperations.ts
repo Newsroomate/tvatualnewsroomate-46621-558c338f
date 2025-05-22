@@ -1,3 +1,4 @@
+
 import { Materia } from "@/types";
 import { 
   BlockWithItems, 
@@ -12,43 +13,43 @@ import { processUpdatedMateria, calculateBlockTotalTime } from "@/components/new
 export const createMateriaOperations = (
   setBlocks: React.Dispatch<React.SetStateAction<BlockWithItems[]>>
 ) => {
-  // Handle materia update (from realtime)
+  // Manipula atualização de matéria (de tempo real)
   const handleMateriaUpdate = (updatedMateria: Materia) => {
     logger.info('Processing materia update for UI:', updatedMateria);
     
-    // Optimize state updates by using functional updates with priority rendering
+    // Otimiza atualizações de estado usando atualizações funcionais com renderização prioritária
     setBlocks(currentBlocks => {
       try {
-        // Process materia immediately to ensure consistent format
+        // Processa a matéria imediatamente para garantir um formato consistente
         const processedMateria = processUpdatedMateria(updatedMateria);
         
-        // Find where this item exists currently
+        // Encontra onde este item existe atualmente
         const { blockId: sourceBlockId } = findItemById(currentBlocks, updatedMateria.id);
         
-        // If not found, treat as a new item
+        // Se não for encontrado, trate como um novo item
         if (!sourceBlockId) {
           logger.debug(`Item ${updatedMateria.id} not found in current blocks, adding as new`);
           return addNewMateriaToBlock(currentBlocks, processedMateria);
         }
         
-        // If the bloco_id changed, this is a move operation between blocks
+        // Se o bloco_id mudou, esta é uma operação de movimentação entre blocos
         if (sourceBlockId !== updatedMateria.bloco_id) {
           logger.debug(`Item ${updatedMateria.id} moved blocks from ${sourceBlockId} to ${updatedMateria.bloco_id}`);
           return moveMateriaToNewBlock(currentBlocks, processedMateria, sourceBlockId);
         }
         
-        // Fast path for simple updates to improve UI responsiveness
+        // Caminho rápido para atualizações simples para melhorar a capacidade de resposta da interface do usuário
         logger.debug(`Updating item ${updatedMateria.id} in block ${sourceBlockId}`);
         return updateExistingMateria(currentBlocks, processedMateria);
       } catch (error) {
         logger.error('Error processing materia update:', error);
-        // Return unchanged blocks on error to prevent UI breakage
+        // Retorna blocos inalterados em caso de erro para evitar quebra da interface do usuário
         return currentBlocks;
       }
     });
   };
   
-  // Handle new materia insertion
+  // Manipula inserção de nova matéria
   const handleMateriaInsert = (newMateria: Materia) => {
     logger.info('Processing materia insert:', newMateria);
     
@@ -63,22 +64,22 @@ export const createMateriaOperations = (
     });
   };
   
-  // Handle materia deletion
+  // Manipula exclusão de matéria
   const handleMateriaDelete = (deletedMateria: Materia) => {
     logger.info('Processing materia deletion:', deletedMateria);
     
     setBlocks(currentBlocks => {
       try {
-        // Check if the item exists in any block
+        // Verifica se o item existe em algum bloco
         const { blockId } = findItemById(currentBlocks, deletedMateria.id);
         
-        // If not found in any block, no need to update
+        // Se não for encontrado em nenhum bloco, não há necessidade de atualizar
         if (!blockId) {
           logger.debug(`Item ${deletedMateria.id} not found for deletion`);
           return currentBlocks;
         }
         
-        // Remove the item from its block
+        // Remove o item do seu bloco
         return currentBlocks.map(block => {
           if (block.id === blockId) {
             const updatedItems = block.items.filter(item => item.id !== deletedMateria.id);
@@ -97,15 +98,15 @@ export const createMateriaOperations = (
     });
   };
   
-  // Helper functions for various materia operations
+  // Funções auxiliares para várias operações de matéria
   
-  // Add a new materia to its block
+  // Adiciona uma nova matéria ao seu bloco
   const addNewMateriaToBlock = (blocks: BlockWithItems[], materia: Materia): BlockWithItems[] => {
     try {
-      // Find the block where this materia should be added
+      // Encontra o bloco onde esta matéria deve ser adicionada
       const targetBlock = blocks.find(block => block.id === materia.bloco_id);
       
-      // If block not found, no changes needed
+      // Se o bloco não for encontrado, nenhuma alteração é necessária
       if (!targetBlock) {
         logger.warn(`Block ${materia.bloco_id} not found for item ${materia.id}`);
         return blocks;
@@ -113,10 +114,10 @@ export const createMateriaOperations = (
       
       return blocks.map(block => {
         if (block.id === materia.bloco_id) {
-          // Process to ensure consistent format
+          // Processa para garantir formato consistente
           const processedMateria = processUpdatedMateria(materia);
           
-          // Insert the item at the correct position based on ordem
+          // Insere o item na posição correta com base em ordem
           const updatedItems = [...block.items];
           const insertIndex = updatedItems.findIndex(item => 
             (item.ordem || 0) > (materia.ordem || 0)
@@ -138,7 +139,7 @@ export const createMateriaOperations = (
     }
   };
   
-  // Move a materia from one block to another
+  // Move uma matéria de um bloco para outro com implementação melhorada
   const moveMateriaToNewBlock = (
     blocks: BlockWithItems[], 
     updatedMateria: Materia, 
@@ -147,7 +148,7 @@ export const createMateriaOperations = (
     try {
       logger.info(`Item ${updatedMateria.id} moved from block ${sourceBlockId} to ${updatedMateria.bloco_id}`);
       
-      // Make sure both source and destination blocks exist
+      // Certifique-se de que tanto os blocos de origem quanto de destino existem
       const sourceBlock = blocks.find(block => block.id === sourceBlockId);
       const destBlock = blocks.find(block => block.id === updatedMateria.bloco_id);
       
@@ -156,22 +157,28 @@ export const createMateriaOperations = (
         return updateExistingMateria(blocks, updatedMateria);
       }
       
-      // Process blocks in immutable way
+      // Processa blocos de forma imutável
       return blocks.map(block => {
-        // Remove from source block
+        // Remove do bloco de origem
         if (block.id === sourceBlockId) {
           const updatedItems = block.items.filter(item => item.id !== updatedMateria.id);
           return updateBlockItems(block, updatedItems);
         }
         
-        // Add to destination block
+        // Adiciona ao bloco de destino
         if (block.id === updatedMateria.bloco_id) {
           const processedMateria = processUpdatedMateria(updatedMateria);
           
-          // Find the correct position based on ordem
+          // Encontra a posição correta com base em ordem
           const updatedItems = [...block.items];
+          
+          // Se não houver ordem ou a ordem for inválida, adicione ao final
+          if (!processedMateria.ordem || processedMateria.ordem <= 0) {
+            processedMateria.ordem = updatedItems.length + 1;
+          }
+          
           const insertIndex = updatedItems.findIndex(item => 
-            (item.ordem || 0) > (updatedMateria.ordem || 0)
+            (item.ordem || 0) > (processedMateria.ordem || 0)
           );
           
           if (insertIndex === -1) {
@@ -191,34 +198,49 @@ export const createMateriaOperations = (
     }
   };
   
-  // Update an existing materia in its current block with improved efficiency
+  // Atualiza uma matéria existente em seu bloco atual com eficiência aprimorada
   const updateExistingMateria = (
     blocks: BlockWithItems[], 
     updatedMateria: Materia
   ): BlockWithItems[] => {
     try {
-      // Immediately process the materia to ensure format consistency
+      // Processa imediatamente a matéria para garantir consistência de formato
       const processedMateria = processUpdatedMateria(updatedMateria);
       
-      return blocks.map(block => {
-        // Check if this materia belongs to this block
-        const hasMateria = block.items.some(item => item.id === updatedMateria.id);
+      // Encontra o bloco que contém esta matéria
+      const blockId = updatedMateria.bloco_id;
+      const blockWithItem = blocks.find(block => 
+        block.id === blockId && block.items.some(item => item.id === updatedMateria.id)
+      );
+      
+      // Se o bloco não for encontrado, tente encontrar o item em qualquer bloco
+      if (!blockWithItem) {
+        const { blockId: sourceBlockId } = findItemById(blocks, updatedMateria.id);
         
-        // If this block has the materia or if the updated materia has this block's ID
-        if (hasMateria || block.id === updatedMateria.bloco_id) {
-          // Shallow copy the items array for comparison
-          const updatedItems = block.items.map(item => 
-            item.id === updatedMateria.id ? processedMateria : item
-          );
+        if (sourceBlockId && sourceBlockId !== blockId) {
+          // O item foi movido para um bloco diferente
+          return moveMateriaToNewBlock(blocks, processedMateria, sourceBlockId);
+        } else if (blockId) {
+          // O item não foi encontrado, mas temos um bloco_id, então adicione-o
+          return addNewMateriaToBlock(blocks, processedMateria);
+        } else {
+          // Não podemos processar esta atualização
+          logger.warn(`Could not find block for item ${updatedMateria.id}`);
+          return blocks;
+        }
+      }
+      
+      // Atualiza a matéria no bloco onde ela existe
+      return blocks.map(block => {
+        if (block.id === blockId) {
+          const itemIndex = block.items.findIndex(item => item.id === updatedMateria.id);
           
-          // If no change was needed (item wasn't in this block)
-          if (updatedItems.length === block.items.length && 
-              !updatedItems.some(item => item.id === updatedMateria.id)) {
-            return block;
+          if (itemIndex >= 0) {
+            const updatedItems = [...block.items];
+            updatedItems[itemIndex] = processedMateria;
+            
+            return updateBlockItems(block, updatedItems);
           }
-          
-          // Only create a new block if there were actual changes
-          return updateBlockItems(block, updatedItems);
         }
         return block;
       });
@@ -232,6 +254,6 @@ export const createMateriaOperations = (
     handleMateriaUpdate,
     handleMateriaInsert,
     handleMateriaDelete,
-    updateExistingMateria // Export for direct access
+    updateExistingMateria
   };
 };

@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil } from "lucide-react";
 import { Materia } from "@/types";
-import { formatTime } from "./utils";
+import { formatTime, getStatusClass, translateStatus } from "./utils";
 import {
   Tooltip,
   TooltipContent,
@@ -35,9 +35,9 @@ export const NewsItem = ({
   const [isEditing, setIsEditing] = useState(false);
   const [isHighlighted, setIsHighlighted] = useState(false);
   
-  // Add highlight effect when item props change (except for drag operations)
+  // Adiciona efeito de destaque quando os props do item mudam (exceto para operações de arrastar)
   useEffect(() => {
-    // Skip highlight during drag operations
+    // Ignora o destaque durante operações de arrastar
     if (snapshot.isDragging) return;
     
     setIsHighlighted(true);
@@ -48,45 +48,23 @@ export const NewsItem = ({
     return () => clearTimeout(timer);
   }, [item.retranca, item.duracao, item.status, item.reporter]);
 
-  // Status color classes
-  const getStatusClass = (status: string): string => {
-    switch (status?.toLowerCase()) {
-      case 'published': return 'bg-green-100 text-green-800';
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'urgent': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Tradução do status para português
-  const translateStatus = (status: string): string => {
-    switch (status?.toLowerCase()) {
-      case 'published': return 'Publicado';
-      case 'draft': return 'Rascunho';
-      case 'pending': return 'Pendente';
-      case 'urgent': return 'Urgente';
-      default: return status || 'Rascunho';
-    }
-  };
-
-  // Handle edit click with improved feedback
+  // Manipula clique de edição com feedback aprimorado
   const handleEdit = () => {
     if (isEspelhoOpen && canModify) {
-      // Set editing state to provide visual feedback
+      // Define o estado de edição para fornecer feedback visual
       setIsEditing(true);
       
-      // Call the onEdit handler
+      // Chama o manipulador onEdit
       onEdit(item);
       
-      // Reset editing state after a short delay to ensure UI feels responsive
+      // Redefine o estado de edição após um curto atraso para garantir que a interface pareça responsiva
       setTimeout(() => {
         setIsEditing(false);
       }, 300);
     }
   };
 
-  // Handle double click with feedback
+  // Manipula duplo clique com feedback
   const handleDoubleClick = () => {
     if (isEspelhoOpen && canModify) {
       setIsEditing(true);
@@ -98,7 +76,7 @@ export const NewsItem = ({
     }
   };
 
-  // Ensure we have valid data for display
+  // Garante que tenhamos dados válidos para exibição
   const displayRetranca = item.retranca || "Sem título";
   const displayStatus = item.status || "draft";
   const displayDuracao = item.duracao || 0;

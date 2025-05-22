@@ -31,7 +31,7 @@ export const NewsSchedule = ({
   const [totalJournalTime, setTotalJournalTime] = useState(0);
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   
-  // Use materia operations hook first to access the state we need for useRealtimeMaterias
+  // Use o hook de operações de matéria primeiro para acessar o estado de que precisamos para useRealtimeMaterias
   const {
     newItemBlock,
     setNewItemBlock,
@@ -41,21 +41,22 @@ export const NewsSchedule = ({
     setDeleteConfirmOpen
   } = useMateriaOperations();
   
-  // Now use our enhanced custom hook for realtime updates with all required props
+  // Agora use nosso hook personalizado aprimorado para atualizações em tempo real com todos os props necessários
   const { 
     blocks, 
     setBlocks, 
     startDragging, 
     endDragging, 
     trackDragOperation,
-    handleMateriaEdit
+    handleMateriaEdit,
+    handleMateriaSave
   } = useRealtimeMaterias({
     selectedJournal,
     newItemBlock,
     materiaToDelete
   });
 
-  // Use block operations hook
+  // Use o hook de operações de bloco
   const {
     isCreatingFirstBlock,
     setIsCreatingFirstBlock,
@@ -69,7 +70,7 @@ export const NewsSchedule = ({
     handleDeleteBlock
   } = useBlockOperations(selectedJournal, currentTelejornal, setBlocks);
 
-  // Reinitialize materia operations with the blocks state and current telejornal
+  // Reinicializa as operações de matéria com o estado de blocos e telejornal atual
   const {
     handleAddItem,
     handleDeleteMateria,
@@ -79,22 +80,22 @@ export const NewsSchedule = ({
     confirmRenumberItems
   } = useMateriaOperations(setBlocks, currentTelejornal, setMateriaToDelete, setDeleteConfirmOpen, setNewItemBlock);
 
-  // Use teleprompter hook
+  // Use o hook do teleprompter
   const { 
     showTeleprompter, 
     setShowTeleprompter, 
     handleOpenTeleprompter 
   } = useTeleprompter(blocks);
 
-  // Use confirmation hook
+  // Use o hook de confirmação
   const {
     renumberConfirmOpen,
     setRenumberConfirmOpen,
     triggerRenumberItems
   } = useConfirmation();
 
-  // Use item operations hook
-  const { handleItemClick } = useItemOperations(onEditItem, handleMateriaEdit);
+  // Use o hook de operações de item com o callback de salvamento
+  const { handleItemClick } = useItemOperations(onEditItem, handleMateriaEdit, handleMateriaSave);
 
   // Fetch telejornais
   const telejornaisQuery = useQuery({
@@ -102,14 +103,14 @@ export const NewsSchedule = ({
     queryFn: fetchTelejornais,
   });
 
-  // Update state when telejornais data is fetched
+  // Atualiza o estado quando os dados de telejornais são buscados
   useEffect(() => {
     if (telejornaisQuery.data) {
       setTelejornais(telejornaisQuery.data);
     }
   }, [telejornaisQuery.data]);
 
-  // Recalculate total journal time when blocks change
+  // Recalcula o tempo total do jornal quando os blocos mudam
   useEffect(() => {
     const total = blocks.reduce((sum, block) => sum + block.totalTime, 0);
     setTotalJournalTime(total);
