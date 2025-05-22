@@ -26,7 +26,6 @@ interface ScheduleContentProps {
   startDragging: () => void;
   endDragging: (itemId?: string, sourceBlockId?: string, destBlockId?: string) => void;
   trackDragOperation: (itemId: string, sourceBlockId: string, destBlockId: string) => void;
-  handleMateriaEdit?: (materia: Materia) => void;
 }
 
 export const ScheduleContent = ({
@@ -47,8 +46,7 @@ export const ScheduleContent = ({
   onDragEnd,
   startDragging,
   endDragging,
-  trackDragOperation,
-  handleMateriaEdit
+  trackDragOperation
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -141,17 +139,6 @@ export const ScheduleContent = ({
     endDragging(draggableId, sourceBlockId, destBlockId);
   };
 
-  // Create a wrapper function to handle both edit and double-click events
-  const handleItemEdit = (item: Materia) => {
-    // Call the original edit handler
-    onEditItem(item);
-    
-    // Also call our new handler if available
-    if (handleMateriaEdit) {
-      handleMateriaEdit(item);
-    }
-  };
-
   // Render blocks
   return (
     <>
@@ -162,7 +149,7 @@ export const ScheduleContent = ({
             block={block}
             newItemBlock={newItemBlock}
             onAddItem={onAddItem}
-            onEditItem={handleItemEdit}
+            onEditItem={onEditItem}
             onDeleteItem={onDeleteItem}
             onRenameBlock={onRenameBlock}
             onDeleteBlock={onDeleteBlock}

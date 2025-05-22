@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { fetchTelejornais } from "@/services/api";
+import { fetchTelejornais, fetchClosedRundowns } from "@/services/api";
 import { Telejornal } from "@/types";
-import { ClosedRundown, fetchClosedRundowns } from "@/services/espelhos-api";
+import { ClosedRundown } from "@/services/espelhos-api";
 import { useToast } from "@/hooks/use-toast";
 
 import { FilterSection } from "./FilterSection";
@@ -102,16 +102,9 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
     setSelectedRundown(null);
   };
 
-  // Modified to prevent closing the modal when in read-only mode
-  const handleDialogChange = (open: boolean) => {
-    if (!open && !isReadOnlyMode) {
-      onClose();
-    }
-  };
-
   if (isReadOnlyMode && selectedRundown) {
     return (
-      <Dialog open={isOpen} onOpenChange={handleDialogChange}>
+      <Dialog open={isOpen} onOpenChange={onClose}>
         <DialogContent className="sm:max-w-4xl h-auto max-h-[80vh] overflow-hidden flex flex-col">
           <ReadOnlyView 
             selectedRundown={selectedRundown} 
@@ -123,7 +116,7 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleDialogChange}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl h-auto max-h-[80vh] overflow-hidden flex flex-col">
         <FilterSection 
           telejornais={telejornais}
@@ -145,10 +138,8 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
           isLoading={isLoading}
           filteredRundowns={filteredRundowns}
           onVisualizarEspelho={handleVisualizarEspelho}
-          onClose={onClose}
         />
       </DialogContent>
     </Dialog>
   );
 };
-

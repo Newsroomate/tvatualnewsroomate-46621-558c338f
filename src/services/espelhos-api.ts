@@ -16,58 +16,15 @@ export const fetchClosedRundowns = async (
   selectedDate?: Date | undefined,
   selectedTime?: string,
   startTime?: string,
-  endTime?: string,
-  showTimeRange?: boolean
+  endTime?: string
 ): Promise<ClosedRundown[]> => {
   try {
-    // Build query to fetch closed rundowns (telejornais with espelho_aberto = false)
-    let query = supabase
-      .from('telejornais')
-      .select('id, nome, horario, created_at, updated_at')
-      .eq('espelho_aberto', false);
+    // This is a placeholder for the actual implementation
+    // In a real implementation, this should get data from a table that stores closed rundowns
+    console.log("Fetching closed rundowns with filters:", { telejornalId, selectedDate, selectedTime, startTime, endTime });
     
-    // Apply telejornal filter if provided
-    if (telejornalId && telejornalId !== 'all') {
-      query = query.eq('id', telejornalId);
-    }
-    
-    // Apply date filter if provided
-    if (selectedDate) {
-      const dateStr = selectedDate.toISOString().split('T')[0]; // Format as YYYY-MM-DD
-      query = query.gte('updated_at', `${dateStr}T00:00:00Z`)
-                   .lt('updated_at', `${dateStr}T23:59:59Z`);
-    }
-    
-    // Apply time filter if provided (exact time match)
-    if (selectedTime && !showTimeRange) {
-      // Convert time to 24-hour format with leading zeros
-      const timeRegex = `T${selectedTime.padStart(5, '0')}:00`; 
-      query = query.ilike('horario', `%${timeRegex}%`);
-    }
-    
-    // Apply time range filter if provided
-    if (startTime && endTime && showTimeRange) {
-      // This is a simplification - in a real implementation we would need to handle time ranges properly
-      // For now, we'll filter based on the horario field string comparison
-      query = query.gte('horario', startTime).lte('horario', endTime);
-    }
-    
-    const { data, error } = await query;
-    
-    if (error) {
-      console.error('Error fetching closed rundowns:', error);
-      return [];
-    }
-    
-    // Map the data to the expected format
-    return data.map(rundown => ({
-      id: rundown.id,
-      telejornal_id: rundown.id,
-      nome_telejornal: rundown.nome,
-      data_fechamento: rundown.updated_at,
-      horario: rundown.horario,
-      status: 'closed'
-    }));
+    // Mocking an empty array for now - this needs to be implemented properly
+    return [];
   } catch (error) {
     console.error("Erro ao buscar espelhos fechados:", error);
     return [];

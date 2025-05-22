@@ -19,11 +19,6 @@ export const logger = {
     if (logger.enabled) {
       console.error(`[Warning] ${message}`, data || '');
     }
-  },
-  error: (message: string, data?: any) => {
-    if (logger.enabled) {
-      console.error(`[Error] ${message}`, data || '');
-    }
   }
 };
 
@@ -69,18 +64,4 @@ export const findItemById = (blocks: BlockWithItems[], itemId: string): {
 // Update blocks array with a modified block
 export const updateBlocks = (blocks: BlockWithItems[], updatedBlock: BlockWithItems): BlockWithItems[] => {
   return blocks.map(block => block.id === updatedBlock.id ? updatedBlock : block);
-};
-
-// Find the highest page number across all blocks
-export const findHighestPageNumber = (blocks: BlockWithItems[]): number => {
-  let highestPage = 0;
-  blocks.forEach(block => {
-    block.items.forEach(item => {
-      const pageNum = parseInt(item.pagina || '0');
-      if (!isNaN(pageNum) && pageNum > highestPage) {
-        highestPage = pageNum;
-      }
-    });
-  });
-  return highestPage;
 };
