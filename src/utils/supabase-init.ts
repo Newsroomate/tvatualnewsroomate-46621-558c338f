@@ -18,6 +18,16 @@ export async function initializeRealtimeSubscriptions() {
     return true;
   } catch (error) {
     console.error("Failed to initialize realtime subscriptions:", error);
-    return false;
+    
+    // Attempt retry for better resilience
+    try {
+      console.log("Retrying realtime subscription initialization...");
+      await enableRealtimeForTable("materias");
+      console.log("Retry successful for materias table");
+      return true;
+    } catch (retryError) {
+      console.error("Retry failed:", retryError);
+      return false;
+    }
   }
 }

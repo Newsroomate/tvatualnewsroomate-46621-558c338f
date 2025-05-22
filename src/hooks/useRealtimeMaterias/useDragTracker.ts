@@ -40,13 +40,13 @@ export const useDragTracker = () => {
         destBlock: destBlockId
       });
       
-      // Use 8 seconds buffer for moved items to ensure local updates take priority
+      // Reduced from 8 seconds to 3 seconds for faster UI updates
       setTimeout(() => {
         if (recentlyMovedItemsRef.current.has(itemId)) {
           logger.debug(`Removing ${itemId} from recently moved items buffer`);
           recentlyMovedItemsRef.current.delete(itemId);
         }
-      }, 8000);
+      }, 3000);
     } else {
       logger.debug('Drag operation completed without item details');
     }
@@ -78,7 +78,8 @@ export const useDragTracker = () => {
       const moveInfo = recentlyMovedItemsRef.current.get(materiaId);
       
       // Only ignore updates if they appear to be related to our move operation
-      if (moveInfo && (Date.now() - moveInfo.timestamp < 8000)) {
+      // Reduced ignore window from 8 seconds to 3 seconds
+      if (moveInfo && (Date.now() - moveInfo.timestamp < 3000)) {
         logger.debug(`Ignoring update for recently moved item ${materiaId}`);
         return true;
       }

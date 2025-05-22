@@ -41,13 +41,18 @@ export const useRealtimeSubscription = ({
         logger.info('Materia updated via realtime:', payload);
         const updatedMateria = payload.new as Materia;
         
-        // Check if we should ignore this update
-        if (shouldIgnoreRealtimeUpdate(updatedMateria.id)) {
-          logger.debug('Skipping realtime update for item due to local editing:', updatedMateria.id);
-          return;
+        try {
+          // Check if we should ignore this update
+          if (shouldIgnoreRealtimeUpdate(updatedMateria.id)) {
+            logger.debug('Skipping realtime update for item due to local editing:', updatedMateria.id);
+            return;
+          }
+          
+          // Handle the update with automatic retry if needed
+          handleMateriaUpdate(updatedMateria);
+        } catch (error) {
+          console.error("Error handling materia update:", error);
         }
-        
-        handleMateriaUpdate(updatedMateria);
       })
       // Listen for inserts
       .on('postgres_changes', {
@@ -58,9 +63,13 @@ export const useRealtimeSubscription = ({
         logger.info('Materia inserted:', payload);
         const newMateria = payload.new as Materia;
         
-        // Only process if this was not triggered by the current client
-        if (newItemBlock !== newMateria.bloco_id) {
-          handleMateriaInsert(newMateria);
+        try {
+          // Only process if this was not triggered by the current client
+          if (newItemBlock !== newMateria.bloco_id) {
+            handleMateriaInsert(newMateria);
+          }
+        } catch (error) {
+          console.error("Error handling materia insert:", error);
         }
       })
       // Listen for deletes
@@ -72,9 +81,13 @@ export const useRealtimeSubscription = ({
         logger.info('Materia deleted:', payload);
         const deletedMateria = payload.old as Materia;
         
-        // Only process if this was not triggered by the current client
-        if (!materiaToDelete || materiaToDelete.id !== deletedMateria.id) {
-          handleMateriaDelete(deletedMateria);
+        try {
+          // Only process if this was not triggered by the current client
+          if (!materiaToDelete || materiaToDelete.id !== deletedMateria.id) {
+            handleMateriaDelete(deletedMateria);
+          }
+        } catch (error) {
+          console.error("Error handling materia delete:", error);
         }
       })
       .subscribe((status) => {

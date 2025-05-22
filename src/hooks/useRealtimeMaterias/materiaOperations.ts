@@ -1,4 +1,3 @@
-
 import { Materia } from "@/types";
 import { 
   BlockWithItems, 
@@ -17,23 +16,39 @@ export const createMateriaOperations = (
   const handleMateriaUpdate = (updatedMateria: Materia) => {
     logger.info('Processing materia update for UI:', updatedMateria);
     
-    // Optimize state updates by using functional updates
+    // Optimize state updates by using functional updates with priority rendering
     setBlocks(currentBlocks => {
+      // Process materia immediately to ensure consistent format
+      const processedMateria = processUpdatedMateria(updatedMateria);
+      
       // Find where this item exists currently
       const { blockId: sourceBlockId } = findItemById(currentBlocks, updatedMateria.id);
       
       // If not found, treat as a new item
       if (!sourceBlockId) {
-        return addNewMateriaToBlock(currentBlocks, updatedMateria);
+        return addNewMateriaToBlock(currentBlocks, processedMateria);
       }
       
       // If the bloco_id changed, this is a move operation between blocks
       if (sourceBlockId !== updatedMateria.bloco_id) {
-        return moveMateriaToNewBlock(currentBlocks, updatedMateria, sourceBlockId);
+        return moveMateriaToNewBlock(currentBlocks, processedMateria, sourceBlockId);
       }
       
-      // Simple update of an existing item with priority render
-      return updateExistingMateria(currentBlocks, updatedMateria);
+      // Fast path for simple updates to improve UI responsiveness
+      return currentBlocks.map(block => {
+        if (block.id === updatedMateria.bloco_id) {
+          const updatedItems = block.items.map(item => 
+            item.id === updatedMateria.id ? processedMateria : item
+          );
+          
+          return {
+            ...block,
+            items: updatedItems,
+            totalTime: calculateBlockTotalTime(updatedItems)
+          };
+        }
+        return block;
+      });
     });
   };
   
@@ -42,7 +57,8 @@ export const createMateriaOperations = (
     logger.info('Processing materia insert:', newMateria);
     
     setBlocks(currentBlocks => {
-      return addNewMateriaToBlock(currentBlocks, newMateria);
+      const processedMateria = processUpdatedMateria(newMateria);
+      return addNewMateriaToBlock(currentBlocks, processedMateria);
     });
   };
   

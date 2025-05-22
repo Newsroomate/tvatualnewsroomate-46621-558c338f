@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil } from "lucide-react";
 import { Materia } from "@/types";
@@ -9,6 +8,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useState } from "react";
 
 interface NewsItemProps {
   item: Materia;
@@ -31,6 +31,8 @@ export const NewsItem = ({
   onDoubleClick,
   canModify = true
 }: NewsItemProps) => {
+  const [isEditing, setIsEditing] = useState(false);
+
   // Status color classes
   const getStatusClass = (status: string): string => {
     switch (status?.toLowerCase()) {
@@ -56,8 +58,16 @@ export const NewsItem = ({
   // Handle edit click with improved feedback
   const handleEdit = () => {
     if (isEspelhoOpen && canModify) {
-      // Call the onEdit handler immediately
+      // Set editing state to provide visual feedback
+      setIsEditing(true);
+      
+      // Call the onEdit handler
       onEdit(item);
+      
+      // Reset editing state after a short delay to ensure UI feels responsive
+      setTimeout(() => {
+        setIsEditing(false);
+      }, 300);
     }
   };
 
@@ -95,10 +105,10 @@ export const NewsItem = ({
                   size="sm" 
                   variant="ghost" 
                   onClick={handleEdit}
-                  disabled={!isEspelhoOpen || !canModify}
-                  className="hover:bg-blue-50 transition-colors"
+                  disabled={!isEspelhoOpen || !canModify || isEditing}
+                  className={`hover:bg-blue-50 transition-colors ${isEditing ? 'opacity-50 bg-blue-50' : ''}`}
                 >
-                  <Pencil className="h-4 w-4" />
+                  <Pencil className={`h-4 w-4 ${isEditing ? 'text-blue-500' : ''}`} />
                 </Button>
               </TooltipTrigger>
               {!isEspelhoOpen && (
@@ -109,6 +119,11 @@ export const NewsItem = ({
               {!canModify && isEspelhoOpen && (
                 <TooltipContent>
                   Sem permissão para editar
+                </TooltipContent>
+              )}
+              {isEditing && (
+                <TooltipContent>
+                  Processando...
                 </TooltipContent>
               )}
             </Tooltip>
@@ -122,7 +137,7 @@ export const NewsItem = ({
                   variant="ghost" 
                   className="text-red-600 hover:text-red-800"
                   onClick={() => onDelete(item)}
-                  disabled={!isEspelhoOpen || !canModify}
+                  disabled={!isEspelhoOpen || !canModify || isEditing}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
