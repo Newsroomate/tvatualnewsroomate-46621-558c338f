@@ -12,7 +12,6 @@ import {
 } from "@/services/api";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { fetchTelejornais } from "@/services/api";
-import { DragDropContext } from "@hello-pangea/dnd";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,7 +26,6 @@ import { useToast } from "@/hooks/use-toast";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { findHighestPageNumber, calculateBlockTotalTime } from "./utils";
-import { NewsBlock } from "./NewsBlock";
 import { Teleprompter } from "../teleprompter/Teleprompter";
 import { useAuth } from "@/context/AuthContext";
 import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
@@ -69,7 +67,7 @@ export const NewsSchedule = ({
   const blockCreationInProgress = useRef(false);
 
   // Use our enhanced custom hook for realtime updates
-  const { blocks, setBlocks, startDragging, endDragging } = useRealtimeMaterias({
+  const { blocks, setBlocks, startDragging, endDragging, trackDragOperation } = useRealtimeMaterias({
     selectedJournal,
     newItemBlock,
     materiaToDelete
@@ -169,7 +167,7 @@ export const NewsSchedule = ({
     };
     
     createInitialBlock();
-  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, toast]);
+  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted]);
 
   // Recalculate total journal time when blocks change
   useEffect(() => {
@@ -416,6 +414,7 @@ export const NewsSchedule = ({
     }
   };
 
+  // Update the handleDragEnd function to improve sync between local and realtime updates
   const handleDragEnd = async (result: any) => {
     if (!currentTelejornal?.espelho_aberto) {
       toast({
@@ -449,6 +448,10 @@ export const NewsSchedule = ({
     
     // Get the item being moved
     const movedItem = {...sourceBlock.items[source.index]};
+    
+    // Log detailed information about the move
+    console.log(`Moving item ${movedItem.id} from block ${sourceBlockId} (index ${source.index}) to block ${destBlockId} (index ${destination.index})`);
+    console.log('Item being moved:', movedItem);
     
     // Update blocks array for optimistic UI update
     const updatedBlocks = newBlocks.map(block => {
@@ -498,10 +501,16 @@ export const NewsSchedule = ({
       };
       
       // Log what we're about to update
-      console.log(`Updating item ${movedItem.id} to block ${destBlockId}, position ${destination.index + 1}`);
+      console.log(`Updating item ${movedItem.id} in database with:`, updatedItem);
       
       await updateMateria(movedItem.id, updatedItem);
       console.log("Database update complete");
+      
+      // Show success toast
+      toast({
+        title: "Matéria movida",
+        description: "A posição da matéria foi atualizada com sucesso.",
+      });
     } catch (error) {
       console.error("Error updating item position:", error);
       toast({
@@ -509,8 +518,9 @@ export const NewsSchedule = ({
         description: "Ocorreu um erro ao reordenar as matérias",
         variant: "destructive"
       });
-      // If there was an error, revert to original state
-      // (But don't do this too soon as it might conflict with optimistic updates)
+      
+      // If there was an error, revert to original state - but with a delay
+      // to avoid conflict with optimistic updates
       setTimeout(() => {
         blocosQuery.refetch();
       }, 500);
@@ -710,6 +720,7 @@ export const NewsSchedule = ({
           onDragEnd={handleDragEnd}
           startDragging={startDragging}
           endDragging={endDragging}
+          trackDragOperation={trackDragOperation}
         />
       </div>
 

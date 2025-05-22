@@ -14,6 +14,7 @@ export const enableRealtimeForTable = async (tableName: string) => {
     console.log(`Realtime enabled for table: ${tableName}`);
     
     // Set replica identity to full for this table to ensure we receive complete row data
+    // This is crucial for drag and drop operations to work correctly
     const { error } = await supabase.query(`ALTER TABLE "${tableName}" REPLICA IDENTITY FULL;`);
     if (error) {
       console.error(`Error setting REPLICA IDENTITY FULL for ${tableName}:`, error);

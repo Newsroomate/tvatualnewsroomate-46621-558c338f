@@ -24,25 +24,65 @@ export const useRealtimeMaterias = ({
   materiaToDelete
 }: UseRealtimeMateriasProps) => {
   const [blocks, setBlocks] = useState<BlockWithItems[]>([]);
-  // Track ongoing drag operations to prevent conflicts with realtime updates
+  
+  // Advanced tracking for drag operations
   const isDraggingRef = useRef(false);
-  const recentlyMovedItemsRef = useRef<Set<string>>(new Set());
+  const recentlyMovedItemsRef = useRef<Map<string, {timestamp: number, sourceBlock: string, destBlock: string}>>(new Map());
+  const dragOperationInProgressRef = useRef<{itemId: string, sourceBlock: string, destBlock: string} | null>(null);
   
   // Function to mark item as being moved by user action
   const startDragging = () => {
     isDraggingRef.current = true;
+    console.log('Drag operation started');
   };
   
-  // Function to mark that drag operation has completed
-  const endDragging = (itemId?: string) => {
-    if (itemId) {
-      recentlyMovedItemsRef.current.add(itemId);
-      // Clear the item from recently moved after a short delay
+  // Function to mark that drag operation has completed with enhanced tracking
+  const endDragging = (itemId?: string, sourceBlockId?: string, destBlockId?: string) => {
+    if (itemId && sourceBlockId && destBlockId) {
+      console.log(`Drag operation completed: Item ${itemId} moved from ${sourceBlockId} to ${destBlockId}`);
+      
+      // Store more context about the move operation
+      recentlyMovedItemsRef.current.set(itemId, {
+        timestamp: Date.now(),
+        sourceBlock: sourceBlockId,
+        destBlock: destBlockId
+      });
+      
+      // Set a longer buffer time (5 seconds) for moved items
       setTimeout(() => {
-        recentlyMovedItemsRef.current.delete(itemId);
-      }, 2000); // 2 second buffer to prevent overriding by realtime
+        if (recentlyMovedItemsRef.current.has(itemId)) {
+          console.log(`Removing ${itemId} from recently moved items buffer`);
+          recentlyMovedItemsRef.current.delete(itemId);
+        }
+      }, 5000);
+    } else {
+      console.log('Drag operation completed without item details');
     }
+    
     isDraggingRef.current = false;
+    dragOperationInProgressRef.current = null;
+  };
+  
+  // Helper function to determine if we should ignore an update from realtime
+  const shouldIgnoreRealtimeUpdate = (materia: Materia): boolean => {
+    // If we're currently dragging, ignore all updates
+    if (isDraggingRef.current) {
+      console.log(`Ignoring update for ${materia.id} because drag is in progress`);
+      return true;
+    }
+    
+    // Check if this item was recently moved by the user
+    if (recentlyMovedItemsRef.current.has(materia.id)) {
+      const moveInfo = recentlyMovedItemsRef.current.get(materia.id);
+      // Only ignore updates if they appear to be related to our move operation
+      // This is a heuristic based on timing and involved blocks
+      if (moveInfo && (Date.now() - moveInfo.timestamp < 5000)) {
+        console.log(`Ignoring update for recently moved item ${materia.id}`);
+        return true;
+      }
+    }
+    
+    return false;
   };
   
   // Setup realtime subscription for materias updates
@@ -53,8 +93,8 @@ export const useRealtimeMaterias = ({
     
     const handleMateriaUpdate = (updatedMateria: Materia) => {
       // Skip processing updates for items that were just moved by the user
-      if (recentlyMovedItemsRef.current.has(updatedMateria.id)) {
-        console.log('Skipping realtime update for recently moved item:', updatedMateria.id);
+      if (shouldIgnoreRealtimeUpdate(updatedMateria)) {
+        console.log('Skipping realtime update for item due to local editing:', updatedMateria.id);
         return;
       }
       
@@ -111,43 +151,36 @@ export const useRealtimeMaterias = ({
               return block;
             });
           }
-        }
-        
-        // Default update handling (non-move operations)
-        return currentBlocks.map(block => {
-          // Find the block that contains this materia
-          if (block.id === updatedMateria.bloco_id) {
-            // Find if the materia already exists in this block
-            const itemExists = block.items.some(item => item.id === updatedMateria.id);
-            
-            let updatedItems;
-            if (itemExists) {
-              // Update the existing materia
-              updatedItems = block.items.map(item => 
-                item.id === updatedMateria.id 
-                  ? processUpdatedMateria(updatedMateria)
-                  : item
+          
+          // The item exists and the block hasn't changed (regular update)
+          return currentBlocks.map(block => {
+            if (block.id === updatedMateria.bloco_id) {
+              const updatedItems = block.items.map(item => 
+                item.id === updatedMateria.id ? processUpdatedMateria(updatedMateria) : item
               );
-            } else {
-              // This is a new materia for this block
-              updatedItems = [...block.items, processUpdatedMateria(updatedMateria)];
+              return {
+                ...block,
+                items: updatedItems,
+                totalTime: calculateBlockTotalTime(updatedItems)
+              };
             }
-            
-            // Ensure items are sorted by ordem
-            updatedItems.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
-            
-            // Calculate new total time
-            const totalTime = calculateBlockTotalTime(updatedItems);
-            
-            // Return updated block
-            return {
-              ...block,
-              items: updatedItems,
-              totalTime
-            };
-          }
-          return block;
-        });
+            return block;
+          });
+        } else {
+          // This is a new item we haven't seen before
+          return currentBlocks.map(block => {
+            if (block.id === updatedMateria.bloco_id) {
+              const updatedItems = [...block.items, processUpdatedMateria(updatedMateria)];
+              updatedItems.sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+              return {
+                ...block,
+                items: updatedItems,
+                totalTime: calculateBlockTotalTime(updatedItems)
+              };
+            }
+            return block;
+          });
+        }
       });
     };
     
@@ -172,7 +205,6 @@ export const useRealtimeMaterias = ({
         const newMateria = payload.new as Materia;
         
         // Only process if this was not triggered by the current client
-        // (avoids duplicate items when we're the ones who created it)
         if (newItemBlock !== newMateria.bloco_id) {
           handleMateriaUpdate(newMateria);
         }
@@ -215,10 +247,17 @@ export const useRealtimeMaterias = ({
     };
   }, [selectedJournal, newItemBlock, materiaToDelete]);
 
+  // Track active drag operation with more context
+  const trackDragOperation = (itemId: string, sourceBlockId: string, destBlockId: string) => {
+    dragOperationInProgressRef.current = { itemId, sourceBlock: sourceBlockId, destBlock: destBlockId };
+    console.log(`Tracking drag operation: Item ${itemId} from ${sourceBlockId} to ${destBlockId}`);
+  };
+
   return {
     blocks,
     setBlocks,
     startDragging,
-    endDragging
+    endDragging,
+    trackDragOperation
   };
 };

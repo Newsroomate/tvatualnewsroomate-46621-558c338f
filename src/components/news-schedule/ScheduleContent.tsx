@@ -24,7 +24,8 @@ interface ScheduleContentProps {
   onDeleteBlock?: (blockId: string) => Promise<void>;
   onDragEnd: (result: any) => void;
   startDragging: () => void;
-  endDragging: (itemId?: string) => void;
+  endDragging: (itemId?: string, sourceBlockId?: string, destBlockId?: string) => void;
+  trackDragOperation: (itemId: string, sourceBlockId: string, destBlockId: string) => void;
 }
 
 export const ScheduleContent = ({
@@ -44,7 +45,8 @@ export const ScheduleContent = ({
   onDeleteBlock,
   onDragEnd,
   startDragging,
-  endDragging
+  endDragging,
+  trackDragOperation
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -104,15 +106,34 @@ export const ScheduleContent = ({
   }
 
   // Handler for dragstart event
-  const handleDragStart = () => {
+  const handleDragStart = (start: any) => {
+    console.log('Drag started:', start);
     startDragging();
   };
 
-  // Handler for dragend event that includes the item being dragged
+  // Handler for dragend event with enhanced context tracking
   const handleDragEnd = (result: any) => {
-    const itemId = result.draggableId;
-    endDragging(itemId);
+    const { draggableId, source, destination } = result;
+    
+    if (!destination) {
+      console.log('Dropped outside a droppable area');
+      endDragging();
+      return;
+    }
+    
+    const sourceBlockId = source.droppableId;
+    const destBlockId = destination.droppableId;
+    
+    console.log(`Item ${draggableId} moved from block ${sourceBlockId} (index ${source.index}) to block ${destBlockId} (index ${destination.index})`);
+    
+    // Track this operation to prevent realtime conflicts
+    trackDragOperation(draggableId, sourceBlockId, destBlockId);
+    
+    // Call the parent's drag end handler
     onDragEnd(result);
+    
+    // Notify the hook that dragging has ended with detailed context
+    endDragging(draggableId, sourceBlockId, destBlockId);
   };
 
   // Render blocks
