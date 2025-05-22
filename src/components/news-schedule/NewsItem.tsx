@@ -53,6 +53,14 @@ export const NewsItem = ({
     }
   };
 
+  // Handle edit click with improved feedback
+  const handleEdit = () => {
+    if (isEspelhoOpen && canModify) {
+      // Call the onEdit handler immediately
+      onEdit(item);
+    }
+  };
+
   // Ensure we have valid data for display
   const displayRetranca = item.retranca || "Sem título";
   const displayStatus = item.status || "draft";
@@ -86,8 +94,9 @@ export const NewsItem = ({
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  onClick={() => onEdit(item)}
+                  onClick={handleEdit}
                   disabled={!isEspelhoOpen || !canModify}
+                  className="hover:bg-blue-50 transition-colors"
                 >
                   <Pencil className="h-4 w-4" />
                 </Button>

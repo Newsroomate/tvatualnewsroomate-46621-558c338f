@@ -15,8 +15,9 @@ export const createMateriaOperations = (
 ) => {
   // Handle materia update (from realtime)
   const handleMateriaUpdate = (updatedMateria: Materia) => {
-    logger.info('Processing materia update:', updatedMateria);
+    logger.info('Processing materia update for UI:', updatedMateria);
     
+    // Optimize state updates by using functional updates
     setBlocks(currentBlocks => {
       // Find where this item exists currently
       const { blockId: sourceBlockId } = findItemById(currentBlocks, updatedMateria.id);
@@ -31,7 +32,7 @@ export const createMateriaOperations = (
         return moveMateriaToNewBlock(currentBlocks, updatedMateria, sourceBlockId);
       }
       
-      // Simple update of an existing item
+      // Simple update of an existing item with priority render
       return updateExistingMateria(currentBlocks, updatedMateria);
     });
   };
@@ -130,16 +131,22 @@ export const createMateriaOperations = (
     });
   };
   
-  // Update an existing materia in its current block
+  // Update an existing materia in its current block with improved efficiency
   const updateExistingMateria = (
     blocks: BlockWithItems[], 
     updatedMateria: Materia
   ): BlockWithItems[] => {
+    // Immediately process the materia to ensure format consistency
+    const processedMateria = processUpdatedMateria(updatedMateria);
+    
     return blocks.map(block => {
       if (block.id === updatedMateria.bloco_id) {
+        // Shallow copy the items array for comparison
         const updatedItems = block.items.map(item => 
-          item.id === updatedMateria.id ? processUpdatedMateria(updatedMateria) : item
+          item.id === updatedMateria.id ? processedMateria : item
         );
+        
+        // Only create a new block if there were actual changes
         return updateBlockItems(block, updatedItems);
       }
       return block;
