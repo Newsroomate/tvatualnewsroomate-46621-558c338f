@@ -6,6 +6,11 @@ interface EnableRealtimeParams {
   table_name: string;
 }
 
+// Define explicit types for the execute_sql RPC function parameters
+interface ExecuteSqlParams {
+  query: string;
+}
+
 export const enableRealtimeForTable = async (tableName: string) => {
   try {
     // Use the any type to bypass TypeScript's type checking for the RPC function name
@@ -16,9 +21,9 @@ export const enableRealtimeForTable = async (tableName: string) => {
     // Set replica identity to full for this table to ensure we receive complete row data
     // This is crucial for drag and drop operations to work correctly
     // Use raw SQL to set REPLICA IDENTITY FULL since it's not exposed as a method on the supabase client
-    const { error } = await supabase.rpc('execute_sql', { 
+    const { error } = await (supabase.rpc as any)('execute_sql', { 
       query: `ALTER TABLE "${tableName}" REPLICA IDENTITY FULL;` 
-    });
+    } as ExecuteSqlParams);
     
     if (error) {
       console.error(`Error setting REPLICA IDENTITY FULL for ${tableName}:`, error);
