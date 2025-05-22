@@ -1,8 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchMateriasByBloco, fetchTelejornais } from "@/services/api";
+import { fetchTelejornais } from "@/services/api";
 import { Telejornal } from "@/types";
-import { useToast } from "@/hooks/use-toast";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { Teleprompter } from "../teleprompter/Teleprompter";
@@ -11,6 +11,9 @@ import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
 import { useBlockOperations } from "@/hooks/useBlockOperations";
 import { useMateriaOperations } from "@/hooks/useMateriaOperations";
 import { ConfirmationDialog } from "./ConfirmationDialog";
+import { useTeleprompter } from "@/hooks/useTeleprompter";
+import { useConfirmation } from "@/hooks/useConfirmation";
+import { useItemOperations } from "@/hooks/useItemOperations";
 
 export interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -27,10 +30,6 @@ export const NewsSchedule = ({
 }: NewsScheduleProps) => {
   const [totalJournalTime, setTotalJournalTime] = useState(0);
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
-  const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
-  const [showTeleprompter, setShowTeleprompter] = useState(false);
-  const { toast } = useToast();
-  const { profile } = useAuth();
   
   // Use materia operations hook first to access the state we need for useRealtimeMaterias
   const {
@@ -80,6 +79,23 @@ export const NewsSchedule = ({
     confirmRenumberItems
   } = useMateriaOperations(setBlocks, currentTelejornal, setMateriaToDelete, setDeleteConfirmOpen, setNewItemBlock);
 
+  // Use teleprompter hook
+  const { 
+    showTeleprompter, 
+    setShowTeleprompter, 
+    handleOpenTeleprompter 
+  } = useTeleprompter(blocks);
+
+  // Use confirmation hook
+  const {
+    renumberConfirmOpen,
+    setRenumberConfirmOpen,
+    triggerRenumberItems
+  } = useConfirmation();
+
+  // Use item operations hook
+  const { handleItemClick } = useItemOperations(onEditItem, handleMateriaEdit);
+
   // Fetch telejornais
   const telejornaisQuery = useQuery({
     queryKey: ['telejornais'],
@@ -93,124 +109,11 @@ export const NewsSchedule = ({
     }
   }, [telejornaisQuery.data]);
 
-  // Process blocks data when it changes
-  useEffect(() => {
-    if (!blocosQuery.data || !selectedJournal) return;
-    
-    const loadBlocos = async () => {
-      try {
-        const blocosComItems = await Promise.all(
-          blocosQuery.data.map(async (bloco) => {
-            const materias = await fetchMateriasByBloco(bloco.id);
-            const totalTime = materias.reduce((sum, item) => sum + item.duracao, 0);
-            return {
-              ...bloco,
-              items: materias,
-              totalTime
-            };
-          })
-        );
-        
-        setBlocks(blocosComItems);
-        
-        // Reset the flag since we've processed the data
-        setBlockCreationAttempted(true);
-      } catch (error) {
-        console.error("Erro ao carregar blocos e matérias:", error);
-      }
-    };
-    
-    loadBlocos();
-  }, [blocosQuery.data, selectedJournal, setBlocks]);
-
-  // Handle auto-creation of first block, separated from the blocks data processing effect
-  useEffect(() => {
-    // Skip if no telejornal selected, espelho is not open, or we're already creating a block
-    if (!selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
-      return;
-    }
-    
-    // Skip if we don't have the blocks data yet or if we've already checked
-    if (!blocosQuery.data || !blockCreationAttempted) {
-      return;
-    }
-
-    const createInitialBlock = async () => {
-      // Only create a block if there are no blocks and we haven't already tried
-      if (blocosQuery.data.length === 0 && !blockCreationInProgress.current) {
-        setIsCreatingFirstBlock(true);
-        blockCreationInProgress.current = true;
-        
-        console.log("Attempting to create initial block for telejornal:", selectedJournal);
-        
-        try {
-          await handleAddFirstBlock();
-        } catch (error) {
-          console.error("Erro ao criar o bloco inicial:", error);
-          // If the error is about a duplicate, we can ignore it - the block exists
-          if (error instanceof Error && error.message.includes("duplicate key value")) {
-            console.log("Block already exists, refreshing data...");
-            // Force a refresh of blocks query
-            blocosQuery.refetch();
-          } else {
-            toast({
-              title: "Erro ao criar bloco inicial",
-              description: "Ocorreu um erro ao criar o primeiro bloco. Por favor, tente novamente.",
-              variant: "destructive"
-            });
-          }
-        } finally {
-          blockCreationInProgress.current = false;
-          setIsCreatingFirstBlock(false);
-        }
-      }
-    };
-    
-    createInitialBlock();
-  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted]);
-
   // Recalculate total journal time when blocks change
   useEffect(() => {
     const total = blocks.reduce((sum, block) => sum + block.totalTime, 0);
     setTotalJournalTime(total);
   }, [blocks]);
-
-  const handleOpenTeleprompter = (shouldOpen: boolean) => {
-    if (shouldOpen && blocks.length === 0) {
-      toast({
-        title: "Sem blocos",
-        description: "Não há blocos para exibir no teleprompter.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setShowTeleprompter(shouldOpen);
-    
-    if (shouldOpen) {
-      toast({
-        title: "✅ Espelho carregado",
-        description: "Espelho carregado no modo Teleprompter com sucesso.",
-        variant: "default"
-      });
-    }
-  };
-
-  // Create a wrapper function for handleItemClick that also calls our new handleMateriaEdit
-  const handleItemClick = (item: any) => {
-    // Call the original edit handler from props
-    onEditItem(item);
-    
-    // Also call our new handler for improved update handling
-    handleMateriaEdit(item);
-  };
-
-  const triggerRenumberItems = async () => {
-    const canProceed = await handleRenumberItems(blocks);
-    if (canProceed) {
-      setRenumberConfirmOpen(true);
-    }
-  };
 
   const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
 
@@ -220,7 +123,7 @@ export const NewsSchedule = ({
       <ScheduleHeader
         currentTelejornal={currentTelejornal}
         totalJournalTime={totalJournalTime}
-        onRenumberItems={triggerRenumberItems}
+        onRenumberItems={() => triggerRenumberItems(blocks, currentTelejornal, handleRenumberItems)}
         hasBlocks={blocks.length > 0}
         blocksWithItems={blocks}
         onOpenTeleprompter={handleOpenTeleprompter}

@@ -25,7 +25,10 @@ export const useRenumberItems = (
     return true;
   };
 
-  const confirmRenumberItems = async (blocks: BlockWithItems[], setRenumberConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>) => {
+  const confirmRenumberItems = async (
+    blocks: BlockWithItems[], 
+    setRenumberConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>
+  ) => {
     let pageNumber = 1;
     
     try {
