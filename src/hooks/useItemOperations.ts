@@ -12,10 +12,15 @@ export const useItemOperations = (
     const itemWithCallback = {
       ...item,
       _onSave: (updatedItem: Materia) => {
+        console.log("Save callback triggered for item:", updatedItem.id);
+        
         if (handleMateriaEdit) {
+          console.log("Calling handleMateriaEdit");
           handleMateriaEdit(updatedItem);
         }
+        
         if (onSaveCallback) {
+          console.log("Calling onSaveCallback");
           onSaveCallback(updatedItem);
         }
       }

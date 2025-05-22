@@ -68,10 +68,11 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         description: "As alterações foram salvas com sucesso.",
       });
       
-      // Se o item tem um callback onSave anexado, chame-o com a matéria atualizada
-      if (item._onSave && typeof item._onSave === 'function') {
+      // If the item has an onSave callback attached, call it with the updated materia
+      const saveCallback = item._onSave;
+      if (saveCallback && typeof saveCallback === 'function') {
         console.log("Calling onSave callback with updated materia");
-        item._onSave(updatedMateria);
+        saveCallback(updatedMateria);
       }
       
       // Force close the edit panel immediately after saving
