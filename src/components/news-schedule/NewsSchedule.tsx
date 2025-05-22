@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -485,17 +486,25 @@ export const NewsSchedule = ({
     
     // Update in the database
     try {
-      // The item's ordem property should reflect its visual position
-      const updatedItem = {
-        ...movedItem,
+      // Only include the fields that are expected by the API
+      const updatePayload = {
+        bloco_id: destBlockId,
         ordem: destination.index + 1,
-        bloco_id: destBlockId
+        // Include only fields needed by the database
+        retranca: movedItem.retranca,
+        clip: movedItem.clip || "",
+        status: movedItem.status || "draft",
+        reporter: movedItem.reporter || "",
+        duracao: movedItem.duracao,
+        pagina: movedItem.pagina || "",
+        texto: movedItem.texto || "",
+        cabeca: movedItem.cabeca || ""
       };
       
       // Log what we're about to update
-      console.log(`Updating item ${movedItem.id} in database with:`, updatedItem);
+      console.log(`Updating item ${movedItem.id} in database with:`, updatePayload);
       
-      await updateMateria(movedItem.id, updatedItem);
+      await updateMateria(movedItem.id, updatePayload);
       console.log("Database update complete");
       
       // Show success toast
