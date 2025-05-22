@@ -1,9 +1,10 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { AuthContextType, AuthProviderProps, UserProfile } from '@/types/auth';
-import { useToast } from '@/hooks/use-toast';
-import { useNavigate } from 'react-router-dom';
+import { cleanupAuthState, fetchUserProfile } from '@/utils/auth-utils';
+import { useAuthOperations } from '@/hooks/use-auth-operations';
 
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
@@ -23,178 +24,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-  const navigate = useNavigate();
-
-  // Utility function to clean up auth state
-  const cleanupAuthState = () => {
-    // Remove standard auth tokens
-    localStorage.removeItem('supabase.auth.token');
-    
-    // Remove all Supabase auth keys
-    Object.keys(localStorage).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        localStorage.removeItem(key);
-      }
-    });
-    
-    // Also clean sessionStorage if used
-    Object.keys(sessionStorage || {}).forEach((key) => {
-      if (key.startsWith('supabase.auth.') || key.includes('sb-')) {
-        sessionStorage.removeItem(key);
-      }
-    });
-  };
-
-  // Fetch user profile data
-  const fetchUserProfile = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return;
-      }
-
-      if (data) {
-        setProfile(data as UserProfile);
-      }
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    }
-  };
-
-  // Sign in function
-  const signIn = async (email: string, password: string) => {
-    try {
-      setIsLoading(true);
-      
-      // Clean up existing state before signing in
-      cleanupAuthState();
-      
-      // Attempt global sign out to clear any existing session
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
-      }
-      
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        toast({
-          title: 'Erro ao entrar',
-          description: error.message,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      if (data.user) {
-        setSession(data.session);
-        setUser(data.user);
-        toast({
-          title: 'Login bem-sucedido',
-          description: 'Você entrou com sucesso.',
-        });
-        navigate('/');
-      }
-    } catch (error: any) {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Ocorreu um erro ao tentar entrar',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Sign up function
-  const signUp = async (email: string, password: string, fullName: string) => {
-    try {
-      setIsLoading(true);
-      
-      // Clean up state before signing up
-      cleanupAuthState();
-      
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            full_name: fullName,
-          },
-        },
-      });
-
-      if (error) {
-        toast({
-          title: 'Erro ao cadastrar',
-          description: error.message,
-          variant: 'destructive',
-        });
-        return;
-      }
-
-      toast({
-        title: 'Cadastro realizado',
-        description: 'Seu cadastro foi realizado. Você já pode fazer login.',
-      });
-
-      // Navigate to login page
-      navigate('/auth');
-    } catch (error: any) {
-      toast({
-        title: 'Erro',
-        description: error.message || 'Ocorreu um erro ao tentar cadastrar',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Sign out function
-  const signOut = async () => {
-    try {
-      setIsLoading(true);
-      
-      // Clean up auth state
-      cleanupAuthState();
-      
-      // Sign out from Supabase
-      await supabase.auth.signOut({ scope: 'global' });
-      
-      // Clear local state
-      setSession(null);
-      setUser(null);
-      setProfile(null);
-      
-      toast({
-        title: 'Logout bem-sucedido',
-        description: 'Você saiu da sua conta.',
-      });
-      
-      // Force navigation to auth page
-      navigate('/auth');
-    } catch (error: any) {
-      toast({
-        title: 'Erro ao sair',
-        description: error.message || 'Ocorreu um erro ao tentar sair',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  
+  // Get auth operations
+  const { signIn, signUp, signOut } = useAuthOperations(
+    setUser,
+    setSession,
+    setProfile,
+    setIsLoading
+  );
 
   // Initialize auth state
   useEffect(() => {
@@ -207,7 +44,9 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Fetch user profile after a small delay to prevent deadlocks
         if (newSession?.user) {
           setTimeout(() => {
-            fetchUserProfile(newSession.user.id);
+            fetchUserProfile(newSession.user.id).then(profileData => {
+              if (profileData) setProfile(profileData);
+            });
           }, 0);
         }
 
@@ -226,7 +65,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         setUser(existingSession?.user ?? null);
         
         if (existingSession?.user) {
-          await fetchUserProfile(existingSession.user.id);
+          const profileData = await fetchUserProfile(existingSession.user.id);
+          if (profileData) setProfile(profileData);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
