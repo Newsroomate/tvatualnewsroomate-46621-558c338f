@@ -48,13 +48,14 @@ export const useRealtimeMaterias = ({
         destBlock: destBlockId
       });
       
-      // Set a longer buffer time (5 seconds) for moved items
+      // Add a longer buffer time (8 seconds) for moved items
+      // This gives more time for the local update to take effect before accepting remote updates
       setTimeout(() => {
         if (recentlyMovedItemsRef.current.has(itemId)) {
           console.log(`Removing ${itemId} from recently moved items buffer`);
           recentlyMovedItemsRef.current.delete(itemId);
         }
-      }, 5000);
+      }, 8000);
     } else {
       console.log('Drag operation completed without item details');
     }
@@ -76,7 +77,7 @@ export const useRealtimeMaterias = ({
       const moveInfo = recentlyMovedItemsRef.current.get(materia.id);
       // Only ignore updates if they appear to be related to our move operation
       // This is a heuristic based on timing and involved blocks
-      if (moveInfo && (Date.now() - moveInfo.timestamp < 5000)) {
+      if (moveInfo && (Date.now() - moveInfo.timestamp < 8000)) {
         console.log(`Ignoring update for recently moved item ${materia.id}`);
         return true;
       }

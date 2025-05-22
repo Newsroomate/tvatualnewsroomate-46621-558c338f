@@ -23,10 +23,11 @@ export const BlockContent = ({
   return (
     <div className="overflow-x-auto">
       <Droppable droppableId={blockId}>
-        {(provided) => (
+        {(provided, snapshot) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
+            className={snapshot.isDraggingOver ? "bg-gray-50" : ""}
           >
             <table className="w-full">
               <thead className="bg-gray-50 text-xs uppercase">

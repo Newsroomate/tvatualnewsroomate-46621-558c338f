@@ -443,9 +443,6 @@ export const NewsSchedule = ({
     
     if (!sourceBlock || !destBlock) return;
     
-    // Clone current blocks state
-    const newBlocks = [...blocks];
-    
     // Get the item being moved
     const movedItem = {...sourceBlock.items[source.index]};
     
@@ -454,39 +451,34 @@ export const NewsSchedule = ({
     console.log('Item being moved:', movedItem);
     
     // Update blocks array for optimistic UI update
-    const updatedBlocks = newBlocks.map(block => {
-      // Remove from source block
-      if (block.id === sourceBlockId) {
-        const newItems = [...block.items];
-        newItems.splice(source.index, 1);
-        
-        return {
-          ...block,
-          items: newItems,
-          totalTime: calculateBlockTotalTime(newItems)
-        };
-      }
-      
-      // Add to destination block
-      if (block.id === destBlockId) {
-        const newItems = [...block.items];
-        
-        // If moving to a different block, update the bloco_id
-        if (sourceBlockId !== destBlockId) {
-          movedItem.bloco_id = destBlockId;
-        }
-        
-        newItems.splice(destination.index, 0, movedItem);
-        
-        return {
-          ...block,
-          items: newItems,
-          totalTime: calculateBlockTotalTime(newItems)
-        };
-      }
-      
-      return block;
-    });
+    const updatedBlocks = blocks.map(block => ({
+      ...block,
+      items: [...block.items]
+    }));
+    
+    // Find the source and destination blocks in our cloned array
+    const updatedSourceBlock = updatedBlocks.find(b => b.id === sourceBlockId);
+    const updatedDestBlock = updatedBlocks.find(b => b.id === destBlockId);
+    
+    if (!updatedSourceBlock || !updatedDestBlock) return;
+    
+    // Remove item from source block
+    const [removedItem] = updatedSourceBlock.items.splice(source.index, 1);
+    
+    // If moving to a different block, update the bloco_id
+    if (sourceBlockId !== destBlockId) {
+      removedItem.bloco_id = destBlockId;
+    }
+    
+    // Update the ordem to match the destination index
+    removedItem.ordem = destination.index + 1;
+    
+    // Insert item at destination position
+    updatedDestBlock.items.splice(destination.index, 0, removedItem);
+    
+    // Recalculate total times
+    updatedSourceBlock.totalTime = calculateBlockTotalTime(updatedSourceBlock.items);
+    updatedDestBlock.totalTime = calculateBlockTotalTime(updatedDestBlock.items);
     
     // Update the state immediately for responsive UI
     setBlocks(updatedBlocks);

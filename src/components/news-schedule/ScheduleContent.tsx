@@ -127,12 +127,15 @@ export const ScheduleContent = ({
     console.log(`Item ${draggableId} moved from block ${sourceBlockId} (index ${source.index}) to block ${destBlockId} (index ${destination.index})`);
     
     // Track this operation to prevent realtime conflicts
+    // This needs to be called BEFORE onDragEnd to ensure tracking is in place
+    // before any database updates are triggered
     trackDragOperation(draggableId, sourceBlockId, destBlockId);
     
     // Call the parent's drag end handler
     onDragEnd(result);
     
     // Notify the hook that dragging has ended with detailed context
+    // This must come after onDragEnd to ensure state is updated with the drag results
     endDragging(draggableId, sourceBlockId, destBlockId);
   };
 
