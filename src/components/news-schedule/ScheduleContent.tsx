@@ -5,7 +5,7 @@ import { PlusCircle, Lock } from "lucide-react";
 import { NewsBlock } from "./NewsBlock";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
-import { renameBloco, deleteBloco } from "@/services/blocos-api";
+import { DragDropContext } from "@hello-pangea/dnd";
 
 interface ScheduleContentProps {
   selectedJournal: string | null;
@@ -22,6 +22,9 @@ interface ScheduleContentProps {
   onDeleteItem: (item: Materia) => void;
   onRenameBlock?: (blockId: string, newName: string) => Promise<void>;
   onDeleteBlock?: (blockId: string) => Promise<void>;
+  onDragEnd: (result: any) => void;
+  startDragging: () => void;
+  endDragging: (itemId?: string) => void;
 }
 
 export const ScheduleContent = ({
@@ -38,7 +41,10 @@ export const ScheduleContent = ({
   onEditItem,
   onDeleteItem,
   onRenameBlock,
-  onDeleteBlock
+  onDeleteBlock,
+  onDragEnd,
+  startDragging,
+  endDragging
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -97,22 +103,36 @@ export const ScheduleContent = ({
     );
   }
 
+  // Handler for dragstart event
+  const handleDragStart = () => {
+    startDragging();
+  };
+
+  // Handler for dragend event that includes the item being dragged
+  const handleDragEnd = (result: any) => {
+    const itemId = result.draggableId;
+    endDragging(itemId);
+    onDragEnd(result);
+  };
+
   // Render blocks
   return (
     <>
-      {blocks.map((block) => (
-        <NewsBlock
-          key={block.id}
-          block={block}
-          newItemBlock={newItemBlock}
-          onAddItem={onAddItem}
-          onEditItem={onEditItem}
-          onDeleteItem={onDeleteItem}
-          onRenameBlock={onRenameBlock}
-          onDeleteBlock={onDeleteBlock}
-          isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
-        />
-      ))}
+      <DragDropContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+        {blocks.map((block) => (
+          <NewsBlock
+            key={block.id}
+            block={block}
+            newItemBlock={newItemBlock}
+            onAddItem={onAddItem}
+            onEditItem={onEditItem}
+            onDeleteItem={onDeleteItem}
+            onRenameBlock={onRenameBlock}
+            onDeleteBlock={onDeleteBlock}
+            isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
+          />
+        ))}
+      </DragDropContext>
 
       {/* Button to add new block */}
       <div className="flex justify-center">

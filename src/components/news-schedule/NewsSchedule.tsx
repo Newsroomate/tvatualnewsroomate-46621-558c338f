@@ -68,8 +68,8 @@ export const NewsSchedule = ({
   // Track if a block creation is in progress to prevent multiple attempts
   const blockCreationInProgress = useRef(false);
 
-  // Use our new custom hook for realtime updates
-  const { blocks, setBlocks } = useRealtimeMaterias({
+  // Use our enhanced custom hook for realtime updates
+  const { blocks, setBlocks, startDragging, endDragging } = useRealtimeMaterias({
     selectedJournal,
     newItemBlock,
     materiaToDelete
@@ -450,7 +450,7 @@ export const NewsSchedule = ({
     // Get the item being moved
     const movedItem = {...sourceBlock.items[source.index]};
     
-    // Update blocks array
+    // Update blocks array for optimistic UI update
     const updatedBlocks = newBlocks.map(block => {
       // Remove from source block
       if (block.id === sourceBlockId) {
@@ -460,7 +460,7 @@ export const NewsSchedule = ({
         return {
           ...block,
           items: newItems,
-          totalTime: newItems.reduce((sum, item) => sum + item.duracao, 0)
+          totalTime: calculateBlockTotalTime(newItems)
         };
       }
       
@@ -478,14 +478,14 @@ export const NewsSchedule = ({
         return {
           ...block,
           items: newItems,
-          totalTime: newItems.reduce((sum, item) => sum + item.duracao, 0)
+          totalTime: calculateBlockTotalTime(newItems)
         };
       }
       
       return block;
     });
     
-    // Update the state
+    // Update the state immediately for responsive UI
     setBlocks(updatedBlocks);
     
     // Update in the database
@@ -497,9 +497,23 @@ export const NewsSchedule = ({
         bloco_id: destBlockId
       };
       
+      // Log what we're about to update
+      console.log(`Updating item ${movedItem.id} to block ${destBlockId}, position ${destination.index + 1}`);
+      
       await updateMateria(movedItem.id, updatedItem);
+      console.log("Database update complete");
     } catch (error) {
       console.error("Error updating item position:", error);
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao reordenar as matérias",
+        variant: "destructive"
+      });
+      // If there was an error, revert to original state
+      // (But don't do this too soon as it might conflict with optimistic updates)
+      setTimeout(() => {
+        blocosQuery.refetch();
+      }, 500);
     }
   };
 
@@ -677,26 +691,27 @@ export const NewsSchedule = ({
       />
 
       {/* Main area with blocks */}
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          <ScheduleContent
-            selectedJournal={selectedJournal}
-            currentTelejornal={currentTelejornal}
-            blocks={blocks}
-            isLoading={isLoading}
-            isCreatingFirstBlock={isCreatingFirstBlock}
-            newItemBlock={newItemBlock}
-            onOpenRundown={onOpenRundown}
-            onAddFirstBlock={handleAddFirstBlock}
-            onAddBlock={handleAddBlock}
-            onAddItem={handleAddItem}
-            onEditItem={onEditItem}
-            onDeleteItem={handleDeleteMateria}
-            onRenameBlock={handleRenameBlock}
-            onDeleteBlock={handleDeleteBlock}
-          />
-        </div>
-      </DragDropContext>
+      <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <ScheduleContent
+          selectedJournal={selectedJournal}
+          currentTelejornal={currentTelejornal}
+          blocks={blocks}
+          isLoading={isLoading}
+          isCreatingFirstBlock={isCreatingFirstBlock}
+          newItemBlock={newItemBlock}
+          onOpenRundown={onOpenRundown}
+          onAddFirstBlock={handleAddFirstBlock}
+          onAddBlock={handleAddBlock}
+          onAddItem={handleAddItem}
+          onEditItem={onEditItem}
+          onDeleteItem={handleDeleteMateria}
+          onRenameBlock={handleRenameBlock}
+          onDeleteBlock={handleDeleteBlock}
+          onDragEnd={handleDragEnd}
+          startDragging={startDragging}
+          endDragging={endDragging}
+        />
+      </div>
 
       {/* Teleprompter view (conditionally rendered) */}
       {showTeleprompter && (
