@@ -16,7 +16,8 @@ export const fetchClosedRundowns = async (
   selectedDate?: Date | undefined,
   selectedTime?: string,
   startTime?: string,
-  endTime?: string
+  endTime?: string,
+  showTimeRange?: boolean
 ): Promise<ClosedRundown[]> => {
   try {
     // Build query to fetch closed rundowns (telejornais with espelho_aberto = false)
@@ -45,7 +46,7 @@ export const fetchClosedRundowns = async (
     }
     
     // Apply time range filter if provided
-    if (startTime && endTime && startTime && endTime) {
+    if (startTime && endTime && showTimeRange) {
       // This is a simplification - in a real implementation we would need to handle time ranges properly
       // For now, we'll filter based on the horario field string comparison
       query = query.gte('horario', startTime).lte('horario', endTime);
