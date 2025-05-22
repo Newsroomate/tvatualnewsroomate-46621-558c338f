@@ -1,27 +1,47 @@
 
 import { useState } from "react";
+import { Materia, Telejornal } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-import { 
-  createMateria, 
-  deleteMateria,
-  updateMateria
-} from "@/services/api";
-import { Bloco, Materia, Telejornal } from "@/types";
-import { findHighestPageNumber, calculateBlockTotalTime } from "@/components/news-schedule/utils";
+import { createMateria, deleteMateria, updateMateria } from "@/services/api";
+import { BlockWithItems } from "./useRealtimeMaterias/utils";
 
 export const useMateriaOperations = (
-  setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>,
-  currentTelejornal: Telejornal | null
+  setBlocks?: React.Dispatch<React.SetStateAction<BlockWithItems[]>>,
+  currentTelejornal?: Telejornal | null,
+  setMateriaToDelete?: React.Dispatch<React.SetStateAction<Materia | null>>,
+  setDeleteConfirmOpen?: React.Dispatch<React.SetStateAction<boolean>>,
+  setNewItemBlock?: React.Dispatch<React.SetStateAction<string | null>>
 ) => {
-  const [newItemBlock, setNewItemBlock] = useState<string | null>(null);
-  const [materiaToDelete, setMateriaToDelete] = useState<Materia | null>(null);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  // Initialize state if not provided externally
+  const [newItemBlockInternal, setNewItemBlockInternal] = useState<string | null>(null);
+  const [materiaToDeleteInternal, setMateriaToDeleteInternal] = useState<Materia | null>(null);
+  const [deleteConfirmOpenInternal, setDeleteConfirmOpenInternal] = useState(false);
+  
+  // Use provided state setters or internal ones
+  const newItemBlock = newItemBlockInternal;
+  const setNewItemBlockState = setNewItemBlock || setNewItemBlockInternal;
+  const materiaToDelete = materiaToDeleteInternal;
+  const setMateriaToDeleteState = setMateriaToDelete || setMateriaToDeleteInternal;
+  const deleteConfirmOpen = deleteConfirmOpenInternal;
+  const setDeleteConfirmOpenState = setDeleteConfirmOpen || setDeleteConfirmOpenInternal;
+  
   const { toast } = useToast();
 
-  const handleAddItem = async (
-    blocoId: string, 
-    blocks: (Bloco & { items: Materia[], totalTime: number })[]
-  ) => {
+  // Find the highest page number across all blocks
+  const findHighestPageNumber = (blocks: BlockWithItems[]): number => {
+    let highestPage = 0;
+    blocks.forEach(block => {
+      block.items.forEach(item => {
+        const pageNum = parseInt(item.pagina || '0');
+        if (!isNaN(pageNum) && pageNum > highestPage) {
+          highestPage = pageNum;
+        }
+      });
+    });
+    return highestPage;
+  };
+
+  const handleAddItem = async (blocoId: string, blocks: BlockWithItems[]) => {
     // Can't add items if espelho is not open
     if (!currentTelejornal?.espelho_aberto) {
       toast({
@@ -32,7 +52,7 @@ export const useMateriaOperations = (
       return;
     }
     
-    setNewItemBlock(blocoId);
+    setNewItemBlockState(blocoId);
     
     try {
       const bloco = blocks.find(b => b.id === blocoId);
@@ -54,23 +74,25 @@ export const useMateriaOperations = (
       
       const novaMateria = await createMateria(novaMateriaInput);
       
-      // Update UI
-      setBlocks(blocks.map(block => {
-        if (block.id === blocoId) {
-          const updatedItems = [...block.items, novaMateria];
-          return {
-            ...block,
-            items: updatedItems,
-            totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
-          };
-        }
-        return block;
-      }));
+      // Update UI if setBlocks is provided
+      if (setBlocks) {
+        setBlocks(prevBlocks => prevBlocks.map(block => {
+          if (block.id === blocoId) {
+            const updatedItems = [...block.items, novaMateria];
+            return {
+              ...block,
+              items: updatedItems,
+              totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
+            };
+          }
+          return block;
+        }));
+      }
       
-      setNewItemBlock(null);
+      setNewItemBlockState(null);
     } catch (error) {
       console.error("Erro ao adicionar matéria:", error);
-      setNewItemBlock(null);
+      setNewItemBlockState(null);
       toast({
         title: "Erro",
         description: "Não foi possível adicionar a matéria",
@@ -90,31 +112,33 @@ export const useMateriaOperations = (
       return;
     }
     
-    setMateriaToDelete(item);
-    setDeleteConfirmOpen(true);
+    setMateriaToDeleteState(item);
+    setDeleteConfirmOpenState(true);
   };
 
-  const confirmDeleteMateria = async (blocks: (Bloco & { items: Materia[], totalTime: number })[]) => {
+  const confirmDeleteMateria = async (blocks: BlockWithItems[]) => {
     if (!materiaToDelete) return;
     
     try {
       await deleteMateria(materiaToDelete.id);
       
-      // Update UI after successful deletion
-      setBlocks(blocks.map(block => {
-        if (block.id === materiaToDelete.bloco_id) {
-          const updatedItems = block.items.filter(item => item.id !== materiaToDelete.id);
-          return {
-            ...block,
-            items: updatedItems,
-            totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
-          };
-        }
-        return block;
-      }));
+      // Update UI if setBlocks is provided
+      if (setBlocks) {
+        setBlocks(prevBlocks => prevBlocks.map(block => {
+          if (block.id === materiaToDelete.bloco_id) {
+            const updatedItems = block.items.filter(item => item.id !== materiaToDelete.id);
+            return {
+              ...block,
+              items: updatedItems,
+              totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
+            };
+          }
+          return block;
+        }));
+      }
       
-      setDeleteConfirmOpen(false);
-      setMateriaToDelete(null);
+      setDeleteConfirmOpenState(false);
+      setMateriaToDeleteState(null);
     } catch (error) {
       console.error("Erro ao excluir matéria:", error);
       toast({
@@ -125,10 +149,7 @@ export const useMateriaOperations = (
     }
   };
 
-  const handleDragEnd = async (
-    result: any, 
-    blocks: (Bloco & { items: Materia[], totalTime: number })[]
-  ) => {
+  const handleDragEnd = async (result: any, blocks: BlockWithItems[]) => {
     if (!currentTelejornal?.espelho_aberto) {
       toast({
         title: "Espelho fechado",
@@ -156,83 +177,68 @@ export const useMateriaOperations = (
     
     if (!sourceBlock || !destBlock) return;
     
-    // Log detailed information about the move
-    console.log(`Moving item from block ${sourceBlockId} (index ${source.index}) to block ${destBlockId} (index ${destination.index})`);
+    // Clone current blocks state
+    const newBlocks = [...blocks];
     
-    // Update blocks array for optimistic UI update
-    const updatedBlocks = blocks.map(block => ({
-      ...block,
-      items: [...block.items]
-    }));
+    // Get the item being moved
+    const movedItem = {...sourceBlock.items[source.index]};
     
-    // Find the source and destination blocks in our cloned array
-    const updatedSourceBlock = updatedBlocks.find(b => b.id === sourceBlockId);
-    const updatedDestBlock = updatedBlocks.find(b => b.id === destBlockId);
+    // Update blocks array
+    const updatedBlocks = newBlocks.map(block => {
+      // Remove from source block
+      if (block.id === sourceBlockId) {
+        const newItems = [...block.items];
+        newItems.splice(source.index, 1);
+        
+        return {
+          ...block,
+          items: newItems,
+          totalTime: newItems.reduce((sum, item) => sum + item.duracao, 0)
+        };
+      }
+      
+      // Add to destination block
+      if (block.id === destBlockId) {
+        const newItems = [...block.items];
+        
+        // If moving to a different block, update the bloco_id
+        if (sourceBlockId !== destBlockId) {
+          movedItem.bloco_id = destBlockId;
+        }
+        
+        newItems.splice(destination.index, 0, movedItem);
+        
+        return {
+          ...block,
+          items: newItems,
+          totalTime: newItems.reduce((sum, item) => sum + item.duracao, 0)
+        };
+      }
+      
+      return block;
+    });
     
-    if (!updatedSourceBlock || !updatedDestBlock) return;
-    
-    // Remove item from source block
-    const [removedItem] = updatedSourceBlock.items.splice(source.index, 1);
-    
-    // If moving to a different block, update the bloco_id
-    if (sourceBlockId !== destBlockId) {
-      removedItem.bloco_id = destBlockId;
+    // Update the state if setBlocks is provided
+    if (setBlocks) {
+      setBlocks(updatedBlocks);
     }
-    
-    // Update the ordem to match the destination index
-    removedItem.ordem = destination.index + 1;
-    
-    // Insert item at destination position
-    updatedDestBlock.items.splice(destination.index, 0, removedItem);
-    
-    // Recalculate total times
-    updatedSourceBlock.totalTime = calculateBlockTotalTime(updatedSourceBlock.items);
-    updatedDestBlock.totalTime = calculateBlockTotalTime(updatedDestBlock.items);
-    
-    // Update the state immediately for responsive UI
-    setBlocks(updatedBlocks);
     
     // Update in the database
     try {
-      // Only include the fields that are expected by the API
-      const updatePayload = {
-        bloco_id: destBlockId,
+      // The item's ordem property should reflect its visual position
+      const updatedItem = {
+        ...movedItem,
         ordem: destination.index + 1,
-        // Include only fields needed by the database
-        retranca: removedItem.retranca,
-        clip: removedItem.clip || "",
-        status: removedItem.status || "draft",
-        reporter: removedItem.reporter || "",
-        duracao: removedItem.duracao,
-        pagina: removedItem.pagina || "",
-        texto: removedItem.texto || "",
-        cabeca: removedItem.cabeca || ""
+        bloco_id: destBlockId
       };
       
-      // Log what we're about to update
-      console.log(`Updating item ${removedItem.id} in database with:`, updatePayload);
-      
-      await updateMateria(removedItem.id, updatePayload);
-      console.log("Database update complete");
-      
-      // Show success toast
-      toast({
-        title: "Matéria movida",
-        description: "A posição da matéria foi atualizada com sucesso.",
-      });
+      await updateMateria(movedItem.id, updatedItem);
     } catch (error) {
       console.error("Error updating item position:", error);
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao reordenar as matérias",
-        variant: "destructive"
-      });
     }
   };
 
-  const handleRenumberItems = async (
-    blocks: (Bloco & { items: Materia[], totalTime: number })[]
-  ) => {
+  const handleRenumberItems = async (blocks: BlockWithItems[]) => {
     // Can't renumber if espelho is not open
     if (!currentTelejornal?.espelho_aberto) {
       toast({
@@ -246,10 +252,7 @@ export const useMateriaOperations = (
     return true;
   };
 
-  const confirmRenumberItems = async (
-    blocks: (Bloco & { items: Materia[], totalTime: number })[], 
-    setRenumberConfirmOpen: (open: boolean) => void
-  ) => {
+  const confirmRenumberItems = async (blocks: BlockWithItems[], setRenumberConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>) => {
     let pageNumber = 1;
     
     try {
@@ -274,8 +277,11 @@ export const useMateriaOperations = (
         }
       }
       
-      // Update blocks state to trigger re-render
-      setBlocks([...blocks]);
+      // Update blocks state to trigger re-render if setBlocks is provided
+      if (setBlocks) {
+        setBlocks([...blocks]);
+      }
+      
       setRenumberConfirmOpen(false);
       
       toast({
@@ -294,11 +300,11 @@ export const useMateriaOperations = (
 
   return {
     newItemBlock,
-    setNewItemBlock,
+    setNewItemBlock: setNewItemBlockState,
     materiaToDelete,
-    setMateriaToDelete,
+    setMateriaToDelete: setMateriaToDeleteState,
     deleteConfirmOpen,
-    setDeleteConfirmOpen,
+    setDeleteConfirmOpen: setDeleteConfirmOpenState,
     handleAddItem,
     handleDeleteMateria,
     confirmDeleteMateria,

@@ -33,7 +33,17 @@ export const NewsSchedule = ({
   const { toast } = useToast();
   const { profile } = useAuth();
   
-  // Use our enhanced custom hook for realtime updates
+  // Use materia operations hook first to access the state we need for useRealtimeMaterias
+  const {
+    newItemBlock,
+    setNewItemBlock,
+    materiaToDelete,
+    setMateriaToDelete,
+    deleteConfirmOpen,
+    setDeleteConfirmOpen
+  } = useMateriaOperations();
+  
+  // Now use our enhanced custom hook for realtime updates with all required props
   const { 
     blocks, 
     setBlocks, 
@@ -41,7 +51,9 @@ export const NewsSchedule = ({
     endDragging, 
     trackDragOperation 
   } = useRealtimeMaterias({
-    selectedJournal
+    selectedJournal,
+    newItemBlock,
+    materiaToDelete
   });
 
   // Use block operations hook
@@ -58,21 +70,15 @@ export const NewsSchedule = ({
     handleDeleteBlock
   } = useBlockOperations(selectedJournal, currentTelejornal, setBlocks);
 
-  // Use materia operations hook
+  // Reinitialize materia operations with the blocks state and current telejornal
   const {
-    newItemBlock,
-    setNewItemBlock,
-    materiaToDelete,
-    setMateriaToDelete,
-    deleteConfirmOpen,
-    setDeleteConfirmOpen,
     handleAddItem,
     handleDeleteMateria,
     confirmDeleteMateria,
     handleDragEnd,
     handleRenumberItems,
     confirmRenumberItems
-  } = useMateriaOperations(setBlocks, currentTelejornal);
+  } = useMateriaOperations(setBlocks, currentTelejornal, setMateriaToDelete, setDeleteConfirmOpen, setNewItemBlock);
 
   // Fetch telejornais
   const telejornaisQuery = useQuery({
