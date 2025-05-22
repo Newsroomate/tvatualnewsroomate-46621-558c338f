@@ -145,8 +145,10 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
           isLoading={isLoading}
           filteredRundowns={filteredRundowns}
           onVisualizarEspelho={handleVisualizarEspelho}
+          onClose={onClose}
         />
       </DialogContent>
     </Dialog>
   );
 };
+

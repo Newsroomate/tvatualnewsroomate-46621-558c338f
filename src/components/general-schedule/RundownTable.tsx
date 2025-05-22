@@ -19,12 +19,14 @@ interface RundownTableProps {
   isLoading: boolean;
   filteredRundowns: ClosedRundown[];
   onVisualizarEspelho: (rundown: ClosedRundown) => void;
+  onClose: () => void; // Adding onClose prop to allow modal closing
 }
 
 export const RundownTable = ({ 
   isLoading, 
   filteredRundowns, 
-  onVisualizarEspelho 
+  onVisualizarEspelho,
+  onClose 
 }: RundownTableProps) => {
   // Format the date for display
   const formatDate = (dateString: string) => {
@@ -95,8 +97,9 @@ export const RundownTable = ({
       </div>
       
       <DialogFooter className="mt-4">
-        <Button>Fechar</Button>
+        <Button onClick={onClose}>Fechar</Button>
       </DialogFooter>
     </>
   );
 };
+
