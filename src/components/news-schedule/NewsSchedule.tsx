@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchMateriasByBloco, fetchTelejornais } from "@/services/api";
@@ -49,7 +48,8 @@ export const NewsSchedule = ({
     setBlocks, 
     startDragging, 
     endDragging, 
-    trackDragOperation 
+    trackDragOperation,
+    handleMateriaEdit
   } = useRealtimeMaterias({
     selectedJournal,
     newItemBlock,
@@ -196,8 +196,13 @@ export const NewsSchedule = ({
     }
   };
 
+  // Create a wrapper function for handleItemClick that also calls our new handleMateriaEdit
   const handleItemClick = (item: any) => {
+    // Call the original edit handler from props
     onEditItem(item);
+    
+    // Also call our new handler for improved update handling
+    handleMateriaEdit(item);
   };
 
   const triggerRenumberItems = async () => {
@@ -242,6 +247,7 @@ export const NewsSchedule = ({
           startDragging={startDragging}
           endDragging={endDragging}
           trackDragOperation={trackDragOperation}
+          handleMateriaEdit={handleMateriaEdit}
         />
       </div>
 

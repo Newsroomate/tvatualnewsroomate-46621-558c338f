@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil } from "lucide-react";
 import { Materia } from "@/types";
@@ -8,7 +9,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface NewsItemProps {
   item: Materia;
@@ -32,6 +33,20 @@ export const NewsItem = ({
   canModify = true
 }: NewsItemProps) => {
   const [isEditing, setIsEditing] = useState(false);
+  const [isHighlighted, setIsHighlighted] = useState(false);
+  
+  // Add highlight effect when item props change (except for drag operations)
+  useEffect(() => {
+    // Skip highlight during drag operations
+    if (snapshot.isDragging) return;
+    
+    setIsHighlighted(true);
+    const timer = setTimeout(() => {
+      setIsHighlighted(false);
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, [item.retranca, item.duracao, item.status, item.reporter]);
 
   // Status color classes
   const getStatusClass = (status: string): string => {
@@ -71,6 +86,18 @@ export const NewsItem = ({
     }
   };
 
+  // Handle double click with feedback
+  const handleDoubleClick = () => {
+    if (isEspelhoOpen && canModify) {
+      setIsEditing(true);
+      onDoubleClick(item);
+      
+      setTimeout(() => {
+        setIsEditing(false);
+      }, 300);
+    }
+  };
+
   // Ensure we have valid data for display
   const displayRetranca = item.retranca || "Sem título";
   const displayStatus = item.status || "draft";
@@ -83,8 +110,10 @@ export const NewsItem = ({
       {...provided.dragHandleProps}
       className={`hover:bg-gray-50 transition-colors ${
         snapshot.isDragging ? "bg-blue-50" : ""
+      } ${isHighlighted ? "bg-yellow-50 animate-pulse" : ""} ${
+        isEditing ? "opacity-70" : ""
       }`}
-      onDoubleClick={() => onDoubleClick(item)}
+      onDoubleClick={handleDoubleClick}
     >
       <td className="py-2 px-4">{item.pagina}</td>
       <td className="py-2 px-4 font-medium">{displayRetranca}</td>
