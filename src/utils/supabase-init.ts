@@ -49,7 +49,7 @@ export async function initializeRealtimeSubscriptions() {
           toast({
             title: "Conectividade parcial",
             description: "Algumas funções de tempo real podem ter funcionalidade limitada",
-            variant: "warning"
+            variant: "default"
           });
           
           return true;
