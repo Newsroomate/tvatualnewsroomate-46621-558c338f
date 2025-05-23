@@ -113,3 +113,26 @@ export const deleteMateria = async (id: string) => {
 
   return true;
 };
+
+// Nova função para atualizar ordenadamente várias matérias de uma vez
+export const updateMateriasOrdem = async (materias: Partial<Materia>[]) => {
+  const updates = materias.map(materia => {
+    const updateData = { ...materia };
+    // @ts-ignore - Remove titulo property if it exists
+    delete updateData.titulo;
+    return updateData;
+  });
+  
+  const { data, error } = await supabase
+    .from('materias')
+    .upsert(updates)
+    .select();
+
+  if (error) {
+    console.error('Erro ao reordenar matérias:', error);
+    toastService.error("Erro ao reordenar matérias", error.message);
+    throw error;
+  }
+  
+  return data as Materia[];
+};

@@ -6,7 +6,8 @@ import {
   createBloco, 
   createMateria, 
   deleteMateria,
-  updateMateria
+  updateMateria,
+  updateMateriasOrdem
 } from "@/services/api";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { fetchTelejornais } from "@/services/api";
@@ -438,56 +439,126 @@ export const NewsSchedule = ({
     // Get the item being moved
     const movedItem = {...sourceBlock.items[source.index]};
     
-    // Update blocks array
+    // Create updated versions of the source and destination blocks
     const updatedBlocks = newBlocks.map(block => {
-      // Remove from source block
+      // Handle source block
       if (block.id === sourceBlockId) {
         const newItems = [...block.items];
         newItems.splice(source.index, 1);
         
+        // If moving within the same block, we need to update all items' ordem
+        if (sourceBlockId === destBlockId) {
+          // Re-insert the item at the destination index
+          newItems.splice(destination.index, 0, {
+            ...movedItem,
+            bloco_id: destBlockId,
+          });
+          
+          // Update ordem for all items in the block
+          const updatedItems = newItems.map((item, index) => ({
+            ...item,
+            ordem: index + 1
+          }));
+          
+          return {
+            ...block,
+            items: updatedItems,
+            totalTime: calculateBlockTotalTime(updatedItems)
+          };
+        }
+        
+        // If moved to a different block, just remove from source
         return {
           ...block,
-          items: newItems,
-          totalTime: newItems.reduce((sum, item) => sum + item.duracao, 0)
+          items: newItems.map((item, index) => ({
+            ...item,
+            ordem: index + 1
+          })),
+          totalTime: calculateBlockTotalTime(newItems)
         };
       }
       
-      // Add to destination block
-      if (block.id === destBlockId) {
+      // Handle destination block (if different from source)
+      if (block.id === destBlockId && sourceBlockId !== destBlockId) {
         const newItems = [...block.items];
         
-        // If moving to a different block, update the bloco_id
-        if (sourceBlockId !== destBlockId) {
-          movedItem.bloco_id = destBlockId;
-        }
+        // Insert the moved item at the destination index
+        newItems.splice(destination.index, 0, {
+          ...movedItem,
+          bloco_id: destBlockId,
+        });
         
-        newItems.splice(destination.index, 0, movedItem);
+        // Update ordem for all items in the destination block
+        const updatedItems = newItems.map((item, index) => ({
+          ...item,
+          ordem: index + 1
+        }));
         
         return {
           ...block,
-          items: newItems,
-          totalTime: newItems.reduce((sum, item) => sum + item.duracao, 0)
+          items: updatedItems,
+          totalTime: calculateBlockTotalTime(updatedItems)
         };
       }
       
       return block;
     });
     
-    // Update the state
+    // Update UI state immediately for better UX
     setBlocks(updatedBlocks);
     
-    // Update in the database
     try {
-      // The item's ordem property should reflect its visual position
-      const updatedItem = {
-        ...movedItem,
-        ordem: destination.index + 1,
-        bloco_id: destBlockId
-      };
+      // Collect all items that need ordem updates
+      const itemsToUpdate: Partial<Materia>[] = [];
       
-      await updateMateria(movedItem.id, updatedItem);
+      // If same block, update all items in that block
+      if (sourceBlockId === destBlockId) {
+        const updatedBlock = updatedBlocks.find(b => b.id === sourceBlockId);
+        if (updatedBlock) {
+          itemsToUpdate.push(...updatedBlock.items.map(item => ({
+            id: item.id,
+            bloco_id: item.bloco_id,
+            ordem: item.ordem
+          })));
+        }
+      } else {
+        // If different blocks, update items in both blocks
+        const updatedSourceBlock = updatedBlocks.find(b => b.id === sourceBlockId);
+        const updatedDestBlock = updatedBlocks.find(b => b.id === destBlockId);
+        
+        if (updatedSourceBlock) {
+          itemsToUpdate.push(...updatedSourceBlock.items.map(item => ({
+            id: item.id,
+            bloco_id: item.bloco_id,
+            ordem: item.ordem
+          })));
+        }
+        
+        if (updatedDestBlock) {
+          itemsToUpdate.push(...updatedDestBlock.items.map(item => ({
+            id: item.id,
+            bloco_id: item.bloco_id,
+            ordem: item.ordem
+          })));
+        }
+      }
+      
+      // Update all changed items in one batch operation
+      if (itemsToUpdate.length > 0) {
+        await updateMateriasOrdem(itemsToUpdate);
+        console.log('Updated items ordem successfully:', itemsToUpdate);
+      }
+      
     } catch (error) {
-      console.error("Error updating item position:", error);
+      console.error("Error updating item positions:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível atualizar a posição das matérias",
+        variant: "destructive"
+      });
+      
+      // Refetch blocks to ensure UI is in sync with database
+      blocosQuery.refetch();
     }
   };
 
