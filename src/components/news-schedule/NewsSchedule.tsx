@@ -14,6 +14,7 @@ import { ConfirmationDialog } from "./ConfirmationDialog";
 import { useTeleprompter } from "@/hooks/useTeleprompter";
 import { useConfirmation } from "@/hooks/useConfirmation";
 import { useItemOperations } from "@/hooks/useItemOperations";
+import { useToast } from "@/hooks/use-toast";
 
 export interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -30,6 +31,7 @@ export const NewsSchedule = ({
 }: NewsScheduleProps) => {
   const [totalJournalTime, setTotalJournalTime] = useState(0);
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
+  const { toast } = useToast();
   
   // Use o hook de operações de matéria primeiro para acessar o estado de que precisamos para useRealtimeMaterias
   const {

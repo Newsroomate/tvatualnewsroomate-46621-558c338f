@@ -6,6 +6,7 @@ import { Trash2 } from "lucide-react";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { formatTime } from "./formatting";
 import { getStatusClass } from "./utils";
+import { DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
 
 interface NewsItemProps {
   item: Materia;
@@ -14,6 +15,10 @@ interface NewsItemProps {
   isEspelhoOpen: boolean;
   onDelete: (item: Materia) => void;
   onEdit: (item: Materia) => void;
+  provided?: DraggableProvided;
+  snapshot?: DraggableStateSnapshot;
+  onDoubleClick?: (item: Materia) => void;
+  canModify?: boolean;
 }
 
 export const NewsItem = ({ 
@@ -22,24 +27,43 @@ export const NewsItem = ({
   dragHandleProps, 
   isEspelhoOpen,
   onDelete,
-  onEdit 
+  onEdit,
+  provided,
+  snapshot,
+  onDoubleClick,
+  canModify = true
 }: NewsItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
   
   // Check if the item has the highlight property
   const isHighlighted = (item as any)._highlight === true;
   
+  // Use either direct props or provided props from Draggable
+  const innerRef = provided?.innerRef || draggableProps?.innerRef;
+  const dragProps = provided?.draggableProps || draggableProps;
+  const handleProps = provided?.dragHandleProps || dragHandleProps;
+  
+  const handleDoubleClick = () => {
+    if (isEspelhoOpen && onDoubleClick) {
+      onDoubleClick(item);
+    } else if (isEspelhoOpen) {
+      onEdit(item);
+    }
+  };
+  
   return (
     <tr 
-      ref={draggableProps?.innerRef}
-      {...draggableProps}
-      {...dragHandleProps}
+      ref={innerRef}
+      {...dragProps}
+      {...handleProps}
       className={`hover:bg-gray-50 transition-colors ${
         isHovered ? "bg-gray-50" : ""
-      } ${isHighlighted ? "bg-green-50 animate-pulse" : ""}`}
+      } ${isHighlighted ? "bg-green-50 animate-pulse" : ""} ${
+        snapshot?.isDragging ? "bg-blue-50" : ""
+      }`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      onDoubleClick={() => isEspelhoOpen && onEdit(item)}
+      onDoubleClick={handleDoubleClick}
     >
       <td className="py-2 px-4">{item.pagina}</td>
       <td className="py-2 px-4 font-medium">{item.retranca}</td>
@@ -60,7 +84,7 @@ export const NewsItem = ({
                   size="sm" 
                   variant="ghost" 
                   onClick={() => onEdit(item)}
-                  disabled={!isEspelhoOpen}
+                  disabled={!isEspelhoOpen || !canModify}
                 >
                   Editar
                 </Button>
@@ -81,7 +105,7 @@ export const NewsItem = ({
                   variant="ghost" 
                   className="text-red-600 hover:text-red-800"
                   onClick={() => onDelete(item)}
-                  disabled={!isEspelhoOpen}
+                  disabled={!isEspelhoOpen || !canModify}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

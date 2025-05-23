@@ -61,10 +61,9 @@ export const BlockContent = ({
                           item={item}
                           onEdit={onEditItem}
                           onDelete={onDeleteItem}
+                          isEspelhoOpen={isEspelhoOpen}
                           provided={provided}
                           snapshot={snapshot}
-                          isEspelhoOpen={isEspelhoOpen}
-                          onDoubleClick={onEditItem}
                           canModify={canModifyItems}
                         />
                       )}
