@@ -1,13 +1,9 @@
-import { useState, useEffect, useRef } from "react";
+
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
   fetchBlocosByTelejornal, 
   fetchMateriasByBloco, 
-  createBloco, 
-  createMateria, 
-  deleteMateria,
-  updateMateria,
-  updateMateriasOrdem
 } from "@/services/api";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { fetchTelejornais } from "@/services/api";
@@ -22,13 +18,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { useToast } from "@/hooks/use-toast";
-import { ScheduleHeader } from "./ScheduleHeader";
-import { ScheduleContent } from "./ScheduleContent";
-import { findHighestPageNumber, calculateBlockTotalTime } from "./utils";
-import { NewsBlock } from "./NewsBlock";
 import { useAuth } from "@/context/AuthContext";
 import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
+import { ScheduleHeader } from "./ScheduleHeader";
+import { ScheduleContent } from "./ScheduleContent";
+import { useDragAndDrop } from "@/hooks/useDragAndDrop";
+import { useBlockManagement } from "@/hooks/useBlockManagement";
+import { useItemManagement } from "@/hooks/useItemManagement";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -44,44 +40,68 @@ export const NewsSchedule = ({
   onOpenRundown 
 }: NewsScheduleProps) => {
   const [totalJournalTime, setTotalJournalTime] = useState(0);
-  const [newItemBlock, setNewItemBlock] = useState<string | null>(null);
-  const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
-  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [materiaToDelete, setMateriaToDelete] = useState<Materia | null>(null);
-  const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
-  const [isCreatingFirstBlock, setIsCreatingFirstBlock] = useState(false);
   const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
-  const { toast } = useToast();
   const { profile } = useAuth();
   
-  // Track if a block creation is in progress to prevent multiple attempts
-  const blockCreationInProgress = useRef(false);
-
-  // Use our new custom hook for realtime updates
-  const { blocks, setBlocks } = useRealtimeMaterias({
-    selectedJournal,
-    newItemBlock,
-    materiaToDelete
-  });
-
   // Fetch telejornais
   const telejornaisQuery = useQuery({
     queryKey: ['telejornais'],
     queryFn: fetchTelejornais,
   });
 
-  // Update state when telejornais data is fetched
-  useEffect(() => {
-    if (telejornaisQuery.data) {
-      setTelejornais(telejornaisQuery.data);
-    }
-  }, [telejornaisQuery.data]);
-
   // Fetch blocks for the selected journal
   const blocosQuery = useQuery({
     queryKey: ['blocos', selectedJournal],
     queryFn: () => selectedJournal ? fetchBlocosByTelejornal(selectedJournal) : Promise.resolve([]),
     enabled: !!selectedJournal,
+  });
+
+  // Use our custom hooks for realtime updates and state management
+  const { blocks, setBlocks } = useRealtimeMaterias({
+    selectedJournal,
+    newItemBlock: null,
+    materiaToDelete: null
+  });
+
+  // Use the custom hooks for item, block, and drag-drop management
+  const { 
+    newItemBlock, 
+    setNewItemBlock, 
+    deleteConfirmOpen, 
+    setDeleteConfirmOpen,
+    materiaToDelete, 
+    setMateriaToDelete,
+    renumberConfirmOpen, 
+    setRenumberConfirmOpen,
+    handleAddItem, 
+    handleDeleteMateria, 
+    confirmDeleteMateria,
+    handleRenumberItems, 
+    confirmRenumberItems 
+  } = useItemManagement({ 
+    blocks, 
+    setBlocks, 
+    currentTelejornal 
+  });
+
+  const { 
+    isCreatingFirstBlock, 
+    setIsCreatingFirstBlock,
+    blockCreationInProgress,
+    handleAddFirstBlock, 
+    handleAddBlock 
+  } = useBlockManagement({ 
+    blocks, 
+    setBlocks, 
+    selectedJournal, 
+    currentTelejornal, 
+    blocosQuery 
+  });
+
+  const { handleDragEnd } = useDragAndDrop({ 
+    blocks, 
+    setBlocks, 
+    isEspelhoAberto: !!currentTelejornal?.espelho_aberto 
   });
 
   // Process blocks data when it changes
@@ -138,18 +158,7 @@ export const NewsSchedule = ({
           await handleAddFirstBlock();
         } catch (error) {
           console.error("Erro ao criar o bloco inicial:", error);
-          // If the error is about a duplicate, we can ignore it - the block exists
-          if (error instanceof Error && error.message.includes("duplicate key value")) {
-            console.log("Block already exists, refreshing data...");
-            // Force a refresh of blocks query
-            blocosQuery.refetch();
-          } else {
-            toast({
-              title: "Erro ao criar bloco inicial",
-              description: "Ocorreu um erro ao criar o primeiro bloco. Por favor, tente novamente.",
-              variant: "destructive"
-            });
-          }
+          // Error handling already done in handleAddFirstBlock
         } finally {
           blockCreationInProgress.current = false;
           setIsCreatingFirstBlock(false);
@@ -158,466 +167,13 @@ export const NewsSchedule = ({
     };
     
     createInitialBlock();
-  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, toast]);
+  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, handleAddFirstBlock, blockCreationInProgress]);
 
   // Recalculate total journal time when blocks change
   useEffect(() => {
     const total = blocks.reduce((sum, block) => sum + block.totalTime, 0);
     setTotalJournalTime(total);
   }, [blocks]);
-
-  // Function to handle adding the first block specifically
-  const handleAddFirstBlock = async () => {
-    if (!selectedJournal || !currentTelejornal?.espelho_aberto) {
-      console.log("Cannot create first block - journal not selected or espelho not open");
-      return;
-    }
-    
-    try {
-      // Double check to make sure we don't have blocks already
-      const existingBlocks = await fetchBlocosByTelejornal(selectedJournal);
-      
-      console.log(`Checking for existing blocks for telejornal ${selectedJournal}:`, existingBlocks);
-      
-      // If blocks already exist, just return without creating a new one
-      if (existingBlocks && existingBlocks.length > 0) {
-        console.log("Blocks already exist for this journal, skipping creation");
-        setBlocks(blocks => blocks.length ? blocks : existingBlocks.map(b => ({ ...b, items: [], totalTime: 0 })));
-        return;
-      }
-      
-      console.log("No existing blocks found, creating first block");
-      
-      // Create the new block
-      const novoBlocoInput = {
-        telejornal_id: selectedJournal,
-        nome: "Bloco 1",
-        ordem: 1
-      };
-      
-      const novoBloco = await createBloco(novoBlocoInput);
-      console.log("First block created successfully:", novoBloco);
-      
-      // Immediately update the UI
-      setBlocks([{ 
-        ...novoBloco, 
-        items: [],
-        totalTime: 0
-      }]);
-      
-      // Force refresh the blocks query
-      blocosQuery.refetch();
-      
-      return novoBloco;
-    } catch (error) {
-      console.error("Erro ao adicionar bloco inicial:", error);
-      
-      // If the error is a duplicate key error, we can try to fetch the blocks again
-      if (error instanceof Error && error.message.includes("duplicate key value")) {
-        console.log("Duplicate error detected, attempting to refetch blocks");
-        blocosQuery.refetch();
-      } else {
-        // For other errors, show a toast
-        toast({
-          title: "Erro",
-          description: "Não foi possível adicionar o bloco inicial",
-          variant: "destructive"
-        });
-      }
-      
-      throw error;
-    }
-  };
-
-  const handleAddBlock = async () => {
-    if (!selectedJournal) return;
-    
-    // Can't add blocks if espelho is not open
-    if (!currentTelejornal?.espelho_aberto) {
-      toast({
-        title: "Espelho fechado",
-        description: "Você precisa abrir o espelho para adicionar blocos.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      const nextOrder = blocks.length + 1;
-      const novoBlocoInput = {
-        telejornal_id: selectedJournal,
-        nome: `Bloco ${nextOrder}`,
-        ordem: nextOrder
-      };
-      
-      const novoBloco = await createBloco(novoBlocoInput);
-      console.log(`New block created: ${novoBloco.nome} with order ${novoBloco.ordem}`);
-      
-      // Update UI
-      setBlocks([...blocks, { 
-        ...novoBloco, 
-        items: [],
-        totalTime: 0
-      }]);
-    } catch (error) {
-      console.error("Erro ao adicionar bloco:", error);
-      
-      // If it's a duplicate key error, try to use a different order number
-      if (error instanceof Error && error.message.includes("duplicate key value")) {
-        console.log("Duplicate block order detected, trying with a different order");
-        
-        try {
-          // Find the highest order number and add 1
-          const highestOrder = blocks.reduce((max, block) => 
-            block.ordem > max ? block.ordem : max, 0);
-          
-          const novoBlocoInput = {
-            telejornal_id: selectedJournal,
-            nome: `Bloco ${highestOrder + 1}`,
-            ordem: highestOrder + 1
-          };
-          
-          const novoBloco = await createBloco(novoBlocoInput);
-          console.log(`New block created with adjusted order: ${novoBloco.nome} with order ${novoBloco.ordem}`);
-          
-          // Update UI
-          setBlocks([...blocks, { 
-            ...novoBloco, 
-            items: [],
-            totalTime: 0
-          }]);
-          
-          return;
-        } catch (retryError) {
-          console.error("Erro ao tentar criar bloco com ordem diferente:", retryError);
-        }
-      }
-      
-      toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o bloco",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleAddItem = async (blocoId: string) => {
-    // Can't add items if espelho is not open
-    if (!currentTelejornal?.espelho_aberto) {
-      toast({
-        title: "Espelho fechado",
-        description: "Você precisa abrir o espelho para adicionar matérias.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setNewItemBlock(blocoId);
-    
-    try {
-      const bloco = blocks.find(b => b.id === blocoId);
-      if (!bloco) return;
-      
-      // Use the highest page number + 1 across all blocks
-      const nextPage = (findHighestPageNumber(blocks) + 1).toString();
-      
-      const novaMateriaInput = {
-        bloco_id: blocoId,
-        pagina: nextPage,
-        retranca: "Nova Matéria",
-        clip: "",
-        duracao: 0,
-        status: "draft" as const,
-        reporter: "",
-        ordem: bloco.items.length + 1
-      };
-      
-      const novaMateria = await createMateria(novaMateriaInput);
-      
-      // Update UI
-      setBlocks(blocks.map(block => {
-        if (block.id === blocoId) {
-          const updatedItems = [...block.items, novaMateria];
-          return {
-            ...block,
-            items: updatedItems,
-            totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
-          };
-        }
-        return block;
-      }));
-      
-      setNewItemBlock(null);
-    } catch (error) {
-      console.error("Erro ao adicionar matéria:", error);
-      setNewItemBlock(null);
-      toast({
-        title: "Erro",
-        description: "Não foi possível adicionar a matéria",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteMateria = (item: Materia) => {
-    // Can't delete items if espelho is not open
-    if (!currentTelejornal?.espelho_aberto) {
-      toast({
-        title: "Espelho fechado",
-        description: "Você precisa abrir o espelho para excluir matérias.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setMateriaToDelete(item);
-    setDeleteConfirmOpen(true);
-  };
-
-  const confirmDeleteMateria = async () => {
-    if (!materiaToDelete) return;
-    
-    try {
-      await deleteMateria(materiaToDelete.id);
-      
-      // Update UI after successful deletion
-      setBlocks(blocks.map(block => {
-        if (block.id === materiaToDelete.bloco_id) {
-          const updatedItems = block.items.filter(item => item.id !== materiaToDelete.id);
-          return {
-            ...block,
-            items: updatedItems,
-            totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
-          };
-        }
-        return block;
-      }));
-      
-      setDeleteConfirmOpen(false);
-      setMateriaToDelete(null);
-    } catch (error) {
-      console.error("Erro ao excluir matéria:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível excluir a matéria",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDragEnd = async (result: any) => {
-    if (!currentTelejornal?.espelho_aberto) {
-      toast({
-        title: "Espelho fechado",
-        description: "Você precisa abrir o espelho para reordenar matérias.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    const { source, destination } = result;
-    
-    // Dropped outside the list or no movement
-    if (!destination || 
-        (source.droppableId === destination.droppableId && 
-         source.index === destination.index)) {
-      return;
-    }
-    
-    // Find source and destination blocks
-    const sourceBlockId = source.droppableId;
-    const destBlockId = destination.droppableId;
-    
-    const sourceBlock = blocks.find(b => b.id === sourceBlockId);
-    const destBlock = blocks.find(b => b.id === destBlockId);
-    
-    if (!sourceBlock || !destBlock) return;
-    
-    // Clone current blocks state
-    const newBlocks = [...blocks];
-    
-    // Get the item being moved
-    const movedItem = {...sourceBlock.items[source.index]};
-    
-    // Create updated versions of the source and destination blocks
-    const updatedBlocks = newBlocks.map(block => {
-      // Handle source block
-      if (block.id === sourceBlockId) {
-        const newItems = [...block.items];
-        newItems.splice(source.index, 1);
-        
-        // If moving within the same block, we need to update all items' ordem
-        if (sourceBlockId === destBlockId) {
-          // Re-insert the item at the destination index
-          newItems.splice(destination.index, 0, {
-            ...movedItem,
-            bloco_id: destBlockId,
-          });
-          
-          // Update ordem for all items in the block
-          const updatedItems = newItems.map((item, index) => ({
-            ...item,
-            ordem: index + 1
-          }));
-          
-          return {
-            ...block,
-            items: updatedItems,
-            totalTime: calculateBlockTotalTime(updatedItems)
-          };
-        }
-        
-        // If moved to a different block, just remove from source
-        return {
-          ...block,
-          items: newItems.map((item, index) => ({
-            ...item,
-            ordem: index + 1
-          })),
-          totalTime: calculateBlockTotalTime(newItems)
-        };
-      }
-      
-      // Handle destination block (if different from source)
-      if (block.id === destBlockId && sourceBlockId !== destBlockId) {
-        const newItems = [...block.items];
-        
-        // Insert the moved item at the destination index
-        newItems.splice(destination.index, 0, {
-          ...movedItem,
-          bloco_id: destBlockId,
-        });
-        
-        // Update ordem for all items in the destination block
-        const updatedItems = newItems.map((item, index) => ({
-          ...item,
-          ordem: index + 1
-        }));
-        
-        return {
-          ...block,
-          items: updatedItems,
-          totalTime: calculateBlockTotalTime(updatedItems)
-        };
-      }
-      
-      return block;
-    });
-    
-    // Update UI state immediately for better UX
-    setBlocks(updatedBlocks);
-    
-    try {
-      // Collect all items that need ordem updates
-      const itemsToUpdate: Partial<Materia>[] = [];
-      
-      // If same block, update all items in that block
-      if (sourceBlockId === destBlockId) {
-        const updatedBlock = updatedBlocks.find(b => b.id === sourceBlockId);
-        if (updatedBlock) {
-          itemsToUpdate.push(...updatedBlock.items.map(item => ({
-            id: item.id,
-            bloco_id: item.bloco_id,
-            ordem: item.ordem
-          })));
-        }
-      } else {
-        // If different blocks, update items in both blocks
-        const updatedSourceBlock = updatedBlocks.find(b => b.id === sourceBlockId);
-        const updatedDestBlock = updatedBlocks.find(b => b.id === destBlockId);
-        
-        if (updatedSourceBlock) {
-          itemsToUpdate.push(...updatedSourceBlock.items.map(item => ({
-            id: item.id,
-            bloco_id: item.bloco_id,
-            ordem: item.ordem
-          })));
-        }
-        
-        if (updatedDestBlock) {
-          itemsToUpdate.push(...updatedDestBlock.items.map(item => ({
-            id: item.id,
-            bloco_id: item.bloco_id,
-            ordem: item.ordem
-          })));
-        }
-      }
-      
-      // Update all changed items in one batch operation
-      if (itemsToUpdate.length > 0) {
-        await updateMateriasOrdem(itemsToUpdate);
-        console.log('Updated items ordem successfully:', itemsToUpdate);
-      }
-      
-    } catch (error) {
-      console.error("Error updating item positions:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a posição das matérias",
-        variant: "destructive"
-      });
-      
-      // Refetch blocks to ensure UI is in sync with database
-      blocosQuery.refetch();
-    }
-  };
-
-  const handleRenumberItems = async () => {
-    // Can't renumber if espelho is not open
-    if (!currentTelejornal?.espelho_aberto) {
-      toast({
-        title: "Espelho fechado",
-        description: "Você precisa abrir o espelho para reorganizar a numeração.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setRenumberConfirmOpen(true);
-  };
-
-  const confirmRenumberItems = async () => {
-    let pageNumber = 1;
-    
-    try {
-      // Process blocks in order
-      for (const block of blocks) {
-        // Process items in each block
-        for (let i = 0; i < block.items.length; i++) {
-          const item = block.items[i];
-          const updatedItem = {
-            ...item,
-            pagina: pageNumber.toString()
-          };
-          
-          // Update in database
-          await updateMateria(item.id, updatedItem);
-          
-          // Update local state
-          block.items[i] = updatedItem;
-          
-          // Increment page number
-          pageNumber++;
-        }
-      }
-      
-      // Update blocks state to trigger re-render
-      setBlocks([...blocks]);
-      setRenumberConfirmOpen(false);
-      
-      toast({
-        title: "Numeração reorganizada",
-        description: "A numeração das matérias foi reorganizada com sucesso.",
-      });
-    } catch (error) {
-      console.error("Error renumbering items:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível reorganizar a numeração",
-        variant: "destructive"
-      });
-    }
-  };
 
   const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
 

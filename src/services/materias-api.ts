@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { Materia, MateriaCreateInput } from "@/types";
 import { toastService } from "@/utils/toast-utils";
