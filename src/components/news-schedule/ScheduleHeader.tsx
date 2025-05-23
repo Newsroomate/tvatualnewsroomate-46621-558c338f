@@ -1,30 +1,21 @@
-
 import { Button } from "@/components/ui/button";
 import { ArrowDownUp, Lock } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal } from "@/types";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 interface ScheduleHeaderProps {
   currentTelejornal: Telejornal | null;
   totalJournalTime: number;
   onRenumberItems: () => void;
   hasBlocks: boolean;
 }
-
-export const ScheduleHeader = ({ 
-  currentTelejornal, 
-  totalJournalTime, 
+export const ScheduleHeader = ({
+  currentTelejornal,
+  totalJournalTime,
   onRenumberItems,
   hasBlocks
 }: ScheduleHeaderProps) => {
-  return (
-    <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
+  return <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
       <div>
         <h1 className="text-xl font-bold">
           {currentTelejornal ? currentTelejornal.nome : "Selecione um Telejornal"}
@@ -37,22 +28,11 @@ export const ScheduleHeader = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              <Button 
-                onClick={onRenumberItems}
-                variant="secondary"
-                size="sm"
-                className="flex items-center gap-1"
-                disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
-              >
-                <ArrowDownUp className="h-4 w-4" />
-                Reorganizar Numeração
-              </Button>
+              
             </TooltipTrigger>
-            {!currentTelejornal?.espelho_aberto && (
-              <TooltipContent>
+            {!currentTelejornal?.espelho_aberto && <TooltipContent>
                 Abra o espelho para reorganizar a numeração
-              </TooltipContent>
-            )}
+              </TooltipContent>}
           </Tooltip>
         </TooltipProvider>
         <div className="text-right">
@@ -60,6 +40,5 @@ export const ScheduleHeader = ({
           <p className="text-lg font-bold">{formatTime(totalJournalTime)}</p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };
