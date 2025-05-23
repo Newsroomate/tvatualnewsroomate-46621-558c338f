@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Materia } from "@/types";
-import { updateMateria } from "@/services/api";
+import { updateMateria } from "@/services/materias-api";
 import { useToast } from "@/hooks/use-toast";
 
 interface EditPanelProps {
@@ -54,10 +55,11 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const handleSave = async () => {
     if (!item) return;
     
-    // Make sure ordem is included in the update data
+    // Make sure ordem and retranca are included in the update data
     const updateData = {
       ...formData,
-      ordem: item.ordem // Ensure ordem is always included and maintains its original value
+      ordem: item.ordem, // Ensure ordem is always included and maintains its original value
+      retranca: formData.retranca || item.retranca // Ensure retranca is always included
     };
     
     setIsSaving(true);

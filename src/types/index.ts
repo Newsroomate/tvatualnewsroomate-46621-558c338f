@@ -1,3 +1,4 @@
+
 export interface Telejornal {
   id: string;
   created_at?: string;
@@ -27,7 +28,7 @@ export interface Materia {
   bloco_id: string;
   ordem: number;
   // Add fields used in the application
-  retranca: string;
+  retranca: string;  // This is required
   clip?: string;
   duracao: number;
   texto?: string;
@@ -51,7 +52,7 @@ export interface Materia {
 export interface MateriaCreateInput {
   bloco_id: string;
   ordem: number;
-  retranca: string;
+  retranca: string;  // This is required
   clip?: string;
   duracao: number;
   pagina?: string;

@@ -69,6 +69,12 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
   // @ts-ignore - Remove titulo property if it exists
   delete updatesToSend.titulo;
   
+  // Ensure retranca is included since it's a required field in the database
+  if (updatesToSend.retranca === undefined) {
+    console.error('Missing required field retranca in updateMateria');
+    throw new Error('Retranca field is required when updating a materia');
+  }
+  
   console.log('Sending updates to database:', updatesToSend);
 
   const { data, error } = await supabase
