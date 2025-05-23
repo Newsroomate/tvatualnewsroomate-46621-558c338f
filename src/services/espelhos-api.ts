@@ -1,86 +1,107 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Bloco, Materia, Telejornal } from "@/types";
+import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
 
 export interface ClosedRundown {
   id: string;
-  telejornal_id: string;
-  nome_telejornal: string;
-  data_fechamento: string;
-  horario: string | null;
-  status?: string;
+  jornal: string;
+  data: string;
+  dataFormatted: string;
+  hora: string;
+  status: string;
 }
 
+// Busca espelhos fechados baseado nos filtros
 export const fetchClosedRundowns = async (
-  telejornalId?: string, 
-  selectedDate?: Date | undefined,
+  selectedJornal?: string,
+  selectedDate?: Date,
   selectedTime?: string,
   startTime?: string,
   endTime?: string
 ): Promise<ClosedRundown[]> => {
   try {
-    // This is a placeholder for the actual implementation
-    // In a real implementation, this should get data from a table that stores closed rundowns
-    console.log("Fetching closed rundowns with filters:", { telejornalId, selectedDate, selectedTime, startTime, endTime });
+    // Iniciar uma query base para telejornais
+    let query = supabase
+      .from('telejornais')
+      .select(`
+        id,
+        nome,
+        horario,
+        created_at,
+        updated_at
+      `)
+      .eq('espelho_aberto', false); // Apenas telejornais com espelho fechado
     
-    // Mocking an empty array for now - this needs to be implemented properly
-    return [];
-  } catch (error) {
-    console.error("Erro ao buscar espelhos fechados:", error);
-    return [];
-  }
-};
+    // Filtrar por jornal específico se fornecido
+    if (selectedJornal && selectedJornal !== 'all') {
+      query = query.eq('id', selectedJornal);
+    }
 
-// Function to fetch blocks and their materias for a specific rundown
-export const fetchRundownContentForTeleprompter = async (
-  rundownId: string
-): Promise<(Bloco & { items: Materia[] })[]> => {
-  try {
-    // This would fetch blocks for a specific rundown
-    const { data: blocks, error: blocksError } = await supabase
-      .from('blocos')
-      .select('*')
-      .eq('telejornal_id', rundownId)
-      .order('ordem', { ascending: true });
-    
-    if (blocksError) throw blocksError;
-    
-    if (!blocks || blocks.length === 0) {
+    const { data: telejornais, error } = await query;
+
+    if (error) {
+      console.error('Erro ao buscar telejornais com espelhos fechados:', error);
+      throw error;
+    }
+
+    if (!telejornais || telejornais.length === 0) {
       return [];
     }
+
+    // Mapear os telejornais para o formato de ClosedRundown
+    const closedRundowns: ClosedRundown[] = telejornais.map(tj => {
+      const createdDate = new Date(tj.created_at);
+      const formattedDate = format(createdDate, 'yyyy-MM-dd');
+      const formattedDisplayDate = format(createdDate, 'dd/MM/yyyy');
+      
+      // Extrair hora do campo horário ou usar a hora da criação
+      const horario = tj.horario || format(createdDate, 'HH:mm');
+
+      return {
+        id: tj.id,
+        jornal: tj.nome,
+        data: formattedDate,
+        dataFormatted: formattedDisplayDate,
+        hora: horario,
+        status: 'Fechado'
+      };
+    });
+
+    // Aplicar filtros adicionais no cliente
+    let filteredRundowns = [...closedRundowns];
     
-    // For each block, fetch its materias
-    const blocksWithItems = await Promise.all(
-      blocks.map(async (block) => {
-        const { data: materias, error: materiasError } = await supabase
-          .from('materias')
-          .select('*')
-          .eq('bloco_id', block.id)
-          .order('ordem', { ascending: true });
-        
-        if (materiasError) throw materiasError;
-        
-        // Add required fields for Materia interface compatibility
-        const materiasWithRequiredFields = (materias || []).map(item => ({
-          ...item,
-          // Add missing required fields if they don't exist
-          titulo: item.retranca || '', // Use retranca as titulo which is required by Materia interface
-          descricao: item.texto || '',  // Use texto as descricao if needed
-          tempo_estimado: item.duracao || 0, // Map duracao to tempo_estimado
-          apresentador: item.reporter || '', // Map reporter to apresentador
-          link_vt: item.clip || '' // Map clip to link_vt
-        }));
-        
-        return {
-          ...block,
-          items: materiasWithRequiredFields
-        } as Bloco & { items: Materia[] };
-      })
-    );
+    // Filtrar por data
+    if (selectedDate) {
+      const dateStr = format(selectedDate, 'yyyy-MM-dd');
+      filteredRundowns = filteredRundowns.filter(rundown => 
+        rundown.data === dateStr
+      );
+    }
     
-    return blocksWithItems;
+    // Filtrar por horário específico
+    if (selectedTime) {
+      filteredRundowns = filteredRundowns.filter(rundown => 
+        rundown.hora === selectedTime
+      );
+    }
+    
+    // Filtrar por faixa de horário
+    if (startTime && endTime) {
+      filteredRundowns = filteredRundowns.filter(rundown => 
+        rundown.hora >= startTime && rundown.hora <= endTime
+      );
+    }
+
+    return filteredRundowns;
+    
   } catch (error) {
-    console.error("Erro ao buscar conteúdo para o teleprompter:", error);
+    console.error('Erro ao buscar espelhos fechados:', error);
+    toast({
+      title: "Erro ao buscar espelhos fechados",
+      description: "Não foi possível carregar os espelhos fechados",
+      variant: "destructive",
+    });
     return [];
   }
 };

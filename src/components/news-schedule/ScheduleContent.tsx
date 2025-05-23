@@ -5,7 +5,6 @@ import { PlusCircle, Lock } from "lucide-react";
 import { NewsBlock } from "./NewsBlock";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
-import { renameBloco, deleteBloco } from "@/services/blocos-api";
 
 interface ScheduleContentProps {
   selectedJournal: string | null;
@@ -20,8 +19,6 @@ interface ScheduleContentProps {
   onAddItem: (blockId: string) => void;
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
-  onRenameBlock?: (blockId: string, newName: string) => Promise<void>;
-  onDeleteBlock?: (blockId: string) => Promise<void>;
 }
 
 export const ScheduleContent = ({
@@ -36,9 +33,7 @@ export const ScheduleContent = ({
   onAddBlock,
   onAddItem,
   onEditItem,
-  onDeleteItem,
-  onRenameBlock,
-  onDeleteBlock
+  onDeleteItem
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -108,8 +103,6 @@ export const ScheduleContent = ({
           onAddItem={onAddItem}
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
-          onRenameBlock={onRenameBlock}
-          onDeleteBlock={onDeleteBlock}
           isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
         />
       ))}

@@ -81,7 +81,7 @@ export const ReadOnlyView = ({ selectedRundown, onClose }: ReadOnlyViewProps) =>
     <>
       <div className="bg-gray-200 p-2 -mt-4 -mx-4 mb-4 flex justify-between items-center">
         <span className="font-medium text-gray-700">
-          Espelho em modo de leitura - {selectedRundown.nome_telejornal} - {new Date(selectedRundown.data_fechamento).toLocaleDateString('pt-BR')}
+          Espelho em modo de leitura - {selectedRundown.jornal} - {selectedRundown.dataFormatted}
         </span>
         <Button variant="outline" size="sm" onClick={onClose}>
           Voltar

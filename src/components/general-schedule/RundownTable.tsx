@@ -11,8 +11,6 @@ import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
 import { Eye, Loader2 } from "lucide-react";
 import { ClosedRundown } from "@/services/espelhos-api";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 interface RundownTableProps {
   isLoading: boolean;
@@ -25,16 +23,6 @@ export const RundownTable = ({
   filteredRundowns, 
   onVisualizarEspelho 
 }: RundownTableProps) => {
-  // Format the date for display
-  const formatDate = (dateString: string) => {
-    try {
-      const date = new Date(dateString);
-      return format(date, "dd/MM/yyyy", { locale: ptBR });
-    } catch (error) {
-      return dateString;
-    }
-  };
-
   return (
     <>
       <div className="overflow-auto flex-grow">
@@ -62,12 +50,12 @@ export const RundownTable = ({
             ) : filteredRundowns.length > 0 ? (
               filteredRundowns.map((rundown) => (
                 <TableRow key={rundown.id}>
-                  <TableCell>{rundown.nome_telejornal}</TableCell>
-                  <TableCell>{formatDate(rundown.data_fechamento)}</TableCell>
-                  <TableCell>{rundown.horario}</TableCell>
+                  <TableCell>{rundown.jornal}</TableCell>
+                  <TableCell>{rundown.dataFormatted}</TableCell>
+                  <TableCell>{rundown.hora}</TableCell>
                   <TableCell>
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      {rundown.status || "Fechado"}
+                      {rundown.status}
                     </span>
                   </TableCell>
                   <TableCell>

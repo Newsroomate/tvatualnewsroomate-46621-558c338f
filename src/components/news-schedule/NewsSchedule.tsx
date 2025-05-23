@@ -6,9 +6,7 @@ import {
   createBloco, 
   createMateria, 
   deleteMateria,
-  updateMateria,
-  renameBloco,
-  deleteBloco
+  updateMateria
 } from "@/services/api";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { fetchTelejornais } from "@/services/api";
@@ -28,19 +26,10 @@ import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { findHighestPageNumber, calculateBlockTotalTime } from "./utils";
 import { NewsBlock } from "./NewsBlock";
-import { Teleprompter } from "../teleprompter/Teleprompter";
 import { useAuth } from "@/context/AuthContext";
 import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
-import { Button } from "@/components/ui/button";
-import { PlusCircle, Trash2, ArrowDownUp, Lock } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
-export interface NewsScheduleProps {
+interface NewsScheduleProps {
   selectedJournal: string | null;
   onEditItem: (item: Materia) => void;
   currentTelejornal: Telejornal | null;
@@ -61,7 +50,6 @@ export const NewsSchedule = ({
   const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
   const [isCreatingFirstBlock, setIsCreatingFirstBlock] = useState(false);
   const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
-  const [showTeleprompter, setShowTeleprompter] = useState(false);
   const { toast } = useToast();
   const { profile } = useAuth();
   
@@ -560,109 +548,7 @@ export const NewsSchedule = ({
     }
   };
 
-  const handleRenameBlock = async (blockId: string, newName: string) => {
-    if (!currentTelejornal?.espelho_aberto) {
-      toast({
-        title: "Espelho fechado",
-        description: "Você precisa abrir o espelho para renomear blocos.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      const updatedBlock = await renameBloco(blockId, newName);
-      
-      // Update blocks state
-      setBlocks(blocks.map(block => 
-        block.id === blockId 
-          ? { ...block, nome: newName } 
-          : block
-      ));
-      
-    } catch (error) {
-      console.error("Erro ao renomear bloco:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível renomear o bloco",
-        variant: "destructive"
-      });
-    }
-  };
-  
-  const handleDeleteBlock = async (blockId: string) => {
-    if (!currentTelejornal?.espelho_aberto) {
-      toast({
-        title: "Espelho fechado",
-        description: "Você precisa abrir o espelho para excluir blocos.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      await deleteBloco(blockId);
-      
-      // Update blocks state - remove the deleted block
-      setBlocks(blocks.filter(block => block.id !== blockId));
-      
-    } catch (error) {
-      console.error("Erro ao excluir bloco:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível excluir o bloco",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleItemDoubleClick = (item: Materia) => {
-    onEditItem(item);
-  };
-
-  const handleEditButtonClick = (item: Materia) => {
-    onEditItem(item);
-  };
-
-  const formatTime = (seconds: number): string => {
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
-  };
-
-  // Status color classes
-  const getStatusClass = (status: string): string => {
-    switch (status.toLowerCase()) {
-      case 'published': return 'bg-green-100 text-green-800';
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'urgent': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const handleTeleprompter = (shouldOpen: boolean) => {
-    if (shouldOpen && blocks.length === 0) {
-      toast({
-        title: "Sem blocos",
-        description: "Não há blocos para exibir no teleprompter.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setShowTeleprompter(shouldOpen);
-    
-    if (shouldOpen) {
-      toast({
-        title: "✅ Espelho carregado",
-        description: "Espelho carregado no modo Teleprompter com sucesso.",
-        variant: "default"
-      });
-    }
-  };
-
-  const isLoading = telejornaisQuery?.isLoading || blocosQuery?.isLoading;
+  const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
 
   return (
     <div className="flex flex-col h-full">
@@ -672,8 +558,6 @@ export const NewsSchedule = ({
         totalJournalTime={totalJournalTime}
         onRenumberItems={handleRenumberItems}
         hasBlocks={blocks.length > 0}
-        blocksWithItems={blocks}
-        onOpenTeleprompter={handleTeleprompter}
       />
 
       {/* Main area with blocks */}
@@ -692,19 +576,9 @@ export const NewsSchedule = ({
             onAddItem={handleAddItem}
             onEditItem={onEditItem}
             onDeleteItem={handleDeleteMateria}
-            onRenameBlock={handleRenameBlock}
-            onDeleteBlock={handleDeleteBlock}
           />
         </div>
       </DragDropContext>
-
-      {/* Teleprompter view (conditionally rendered) */}
-      {showTeleprompter && (
-        <Teleprompter 
-          blocks={blocks}
-          onClose={() => setShowTeleprompter(false)}
-        />
-      )}
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>

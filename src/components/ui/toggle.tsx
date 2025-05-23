@@ -1,4 +1,3 @@
-
 import * as React from "react"
 import * as TogglePrimitive from "@radix-ui/react-toggle"
 import { cva, type VariantProps } from "class-variance-authority"
@@ -13,14 +12,11 @@ const toggleVariants = cva(
         default: "bg-transparent",
         outline:
           "border border-input bg-transparent hover:bg-accent hover:text-accent-foreground",
-        teleprompter: 
-          "border border-gray-700 bg-black bg-opacity-70 text-white hover:bg-gray-800 hover:text-white",
       },
       size: {
         default: "h-10 px-3",
         sm: "h-9 px-2.5",
         lg: "h-11 px-5",
-        icon: "h-9 w-9"
       },
     },
     defaultVariants: {
