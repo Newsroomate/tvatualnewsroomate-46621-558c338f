@@ -19,6 +19,8 @@ interface ScheduleContentProps {
   onAddItem: (blockId: string) => void;
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
+  onRenameBlock: (blockId: string, newName: string) => void;
+  onDeleteBlock: (blockId: string) => void;
 }
 
 export const ScheduleContent = ({
@@ -33,7 +35,9 @@ export const ScheduleContent = ({
   onAddBlock,
   onAddItem,
   onEditItem,
-  onDeleteItem
+  onDeleteItem,
+  onRenameBlock,
+  onDeleteBlock
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -104,6 +108,8 @@ export const ScheduleContent = ({
           onEditItem={onEditItem}
           onDeleteItem={onDeleteItem}
           isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
+          onRenameBlock={onRenameBlock}
+          onDeleteBlock={onDeleteBlock}
         />
       ))}
 
