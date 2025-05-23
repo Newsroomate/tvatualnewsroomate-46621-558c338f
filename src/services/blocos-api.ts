@@ -35,3 +35,37 @@ export const createBloco = async (bloco: BlocoCreateInput) => {
 
   return data as Bloco;
 };
+
+export const updateBloco = async (blocoId: string, updates: Partial<Bloco>) => {
+  const { data, error } = await supabase
+    .from('blocos')
+    .update(updates)
+    .eq('id', blocoId)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Erro ao atualizar bloco:', error);
+    toastService.error("Erro ao atualizar bloco", error.message);
+    throw error;
+  }
+
+  toastService.success("Bloco atualizado", "O nome do bloco foi alterado com sucesso");
+
+  return data as Bloco;
+};
+
+export const deleteBloco = async (blocoId: string) => {
+  const { error } = await supabase
+    .from('blocos')
+    .delete()
+    .eq('id', blocoId);
+
+  if (error) {
+    console.error('Erro ao excluir bloco:', error);
+    toastService.error("Erro ao excluir bloco", error.message);
+    throw error;
+  }
+
+  toastService.success("Bloco excluído", "O bloco foi removido com sucesso");
+};

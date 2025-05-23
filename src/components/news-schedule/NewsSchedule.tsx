@@ -89,7 +89,9 @@ export const NewsSchedule = ({
     setIsCreatingFirstBlock,
     blockCreationInProgress,
     handleAddFirstBlock, 
-    handleAddBlock 
+    handleAddBlock,
+    handleRenameBlock,
+    handleDeleteBlock
   } = useBlockManagement({ 
     blocks, 
     setBlocks, 
@@ -203,6 +205,8 @@ export const NewsSchedule = ({
             onAddItem={handleAddItem}
             onEditItem={onEditItem}
             onDeleteItem={handleDeleteMateria}
+            onRenameBlock={handleRenameBlock}
+            onDeleteBlock={handleDeleteBlock}
           />
         </div>
       </DragDropContext>
