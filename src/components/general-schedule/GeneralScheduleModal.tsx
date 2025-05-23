@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { fetchTelejornais, fetchClosedRundowns } from "@/services/api";
+import { fetchTelejornais, fetchBlocosByTelejornal, fetchMateriasByBloco } from "@/services/api";
+import { fetchClosedRundowns, ClosedRundown } from "@/services/espelhos-api";
 import { Telejornal } from "@/types";
-import { ClosedRundown } from "@/services/espelhos-api";
 import { useToast } from "@/hooks/use-toast";
 
 import { FilterSection } from "./FilterSection";
@@ -17,7 +17,7 @@ interface GeneralScheduleModalProps {
 
 export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalProps) => {
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
-  const [selectedJornal, setSelectedJornal] = useState<string>("");
+  const [selectedJornal, setSelectedJornal] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [startTime, setStartTime] = useState<string>("");
@@ -48,9 +48,6 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
     try {
       const data = await fetchTelejornais();
       setTelejornais(data);
-      if (data.length > 0 && !selectedJornal) {
-        setSelectedJornal("all");
-      }
     } catch (error) {
       console.error("Erro ao carregar telejornais:", error);
       toast({

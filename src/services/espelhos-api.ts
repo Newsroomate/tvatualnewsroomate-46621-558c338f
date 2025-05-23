@@ -1,107 +1,81 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
 import { format } from "date-fns";
 
 export interface ClosedRundown {
   id: string;
   jornal: string;
-  data: string;
+  data: Date;
   dataFormatted: string;
   hora: string;
   status: string;
 }
 
-// Busca espelhos fechados baseado nos filtros
-export const fetchClosedRundowns = async (
-  selectedJornal?: string,
+export async function fetchClosedRundowns(
+  telejornalId?: string,
   selectedDate?: Date,
   selectedTime?: string,
   startTime?: string,
   endTime?: string
-): Promise<ClosedRundown[]> => {
-  try {
-    // Iniciar uma query base para telejornais
-    let query = supabase
-      .from('telejornais')
-      .select(`
-        id,
-        nome,
-        horario,
-        created_at,
-        updated_at
-      `)
-      .eq('espelho_aberto', false); // Apenas telejornais com espelho fechado
-    
-    // Filtrar por jornal específico se fornecido
-    if (selectedJornal && selectedJornal !== 'all') {
-      query = query.eq('id', selectedJornal);
-    }
+): Promise<ClosedRundown[]> {
+  console.info("Fetching closed rundowns with filters:", {
+    telejornalId,
+    selectedDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : null,
+    selectedTime,
+    startTime,
+    endTime
+  });
 
-    const { data: telejornais, error } = await query;
+  let query = supabase
+    .from("telejornais")
+    .select("id, nome, created_at, horario, espelho_aberto")
+    .eq("espelho_aberto", false);
 
-    if (error) {
-      console.error('Erro ao buscar telejornais com espelhos fechados:', error);
-      throw error;
-    }
-
-    if (!telejornais || telejornais.length === 0) {
-      return [];
-    }
-
-    // Mapear os telejornais para o formato de ClosedRundown
-    const closedRundowns: ClosedRundown[] = telejornais.map(tj => {
-      const createdDate = new Date(tj.created_at);
-      const formattedDate = format(createdDate, 'yyyy-MM-dd');
-      const formattedDisplayDate = format(createdDate, 'dd/MM/yyyy');
-      
-      // Extrair hora do campo horário ou usar a hora da criação
-      const horario = tj.horario || format(createdDate, 'HH:mm');
-
-      return {
-        id: tj.id,
-        jornal: tj.nome,
-        data: formattedDate,
-        dataFormatted: formattedDisplayDate,
-        hora: horario,
-        status: 'Fechado'
-      };
-    });
-
-    // Aplicar filtros adicionais no cliente
-    let filteredRundowns = [...closedRundowns];
-    
-    // Filtrar por data
-    if (selectedDate) {
-      const dateStr = format(selectedDate, 'yyyy-MM-dd');
-      filteredRundowns = filteredRundowns.filter(rundown => 
-        rundown.data === dateStr
-      );
-    }
-    
-    // Filtrar por horário específico
-    if (selectedTime) {
-      filteredRundowns = filteredRundowns.filter(rundown => 
-        rundown.hora === selectedTime
-      );
-    }
-    
-    // Filtrar por faixa de horário
-    if (startTime && endTime) {
-      filteredRundowns = filteredRundowns.filter(rundown => 
-        rundown.hora >= startTime && rundown.hora <= endTime
-      );
-    }
-
-    return filteredRundowns;
-    
-  } catch (error) {
-    console.error('Erro ao buscar espelhos fechados:', error);
-    toast({
-      title: "Erro ao buscar espelhos fechados",
-      description: "Não foi possível carregar os espelhos fechados",
-      variant: "destructive",
-    });
-    return [];
+  if (telejornalId && telejornalId !== "all") {
+    query = query.eq("id", telejornalId);
   }
-};
+
+  if (selectedDate) {
+    const dateString = format(selectedDate, "yyyy-MM-dd");
+    query = query.gte("created_at", `${dateString}T00:00:00`)
+      .lt("created_at", `${dateString}T23:59:59`);
+  }
+
+  // Filter by time if specified
+  if (selectedTime && !startTime && !endTime) {
+    // Extract hour and minute from the time string (HH:MM format)
+    const [hour, minute] = selectedTime.split(":");
+    if (hour && minute && selectedDate) {
+      const dateString = format(selectedDate, "yyyy-MM-dd");
+      const timePoint = `${dateString}T${hour}:${minute}:00`;
+      
+      // Find journals with the exact hour specified
+      query = query.eq("horario", selectedTime);
+    }
+  }
+
+  // Filter by time range if both start and end times are specified
+  if (startTime && endTime && selectedDate) {
+    query = query.gte("horario", startTime).lte("horario", endTime);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching closed rundowns:", error);
+    throw error;
+  }
+
+  // Map the data to the ClosedRundown format
+  return data.map(journal => {
+    const createdDate = new Date(journal.created_at || "");
+    return {
+      id: journal.id,
+      jornal: journal.nome,
+      data: createdDate,
+      dataFormatted: format(createdDate, "dd/MM/yyyy"),
+      hora: journal.horario || "",
+      status: "Fechado"
+    };
+  });
+}

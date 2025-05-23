@@ -82,7 +82,7 @@ export const RundownTable = ({
       </div>
       
       <DialogFooter className="mt-4">
-        <Button>Fechar</Button>
+        <Button onClick={onClose}>Fechar</Button>
       </DialogFooter>
     </>
   );
