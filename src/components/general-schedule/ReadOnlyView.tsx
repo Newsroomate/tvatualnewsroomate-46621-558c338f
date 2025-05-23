@@ -2,8 +2,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { DialogFooter } from "@/components/ui/dialog";
-import { ClosedRundown, fetchRundownContentForTeleprompter } from "@/services/espelhos-api";
+import { ClosedRundown } from "@/services/espelhos-api";
 import { Bloco, Materia } from "@/types";
+import { fetchBlocosByTelejornal, fetchMateriasByBloco } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { formatTime } from "../news-schedule/utils";
 import { Loader2 } from "lucide-react";
@@ -16,7 +17,6 @@ interface ReadOnlyViewProps {
 export const ReadOnlyView = ({ selectedRundown, onClose }: ReadOnlyViewProps) => {
   const [rundownBlocks, setRundownBlocks] = useState<(Bloco & { items: Materia[], totalTime: number })[]>([]);
   const [isLoadingBlocks, setIsLoadingBlocks] = useState<boolean>(false);
-  const [totalRundownDuration, setTotalRundownDuration] = useState<number>(0);
   const { toast } = useToast();
   
   useEffect(() => {
@@ -27,8 +27,8 @@ export const ReadOnlyView = ({ selectedRundown, onClose }: ReadOnlyViewProps) =>
     setIsLoadingBlocks(true);
     
     try {
-      // Fetch blocks with their materias for the selected rundown
-      const blocks = await fetchRundownContentForTeleprompter(selectedRundown.id);
+      // Fetch blocks for this telejornal
+      const blocks = await fetchBlocosByTelejornal(selectedRundown.id);
       
       if (!blocks || blocks.length === 0) {
         toast({
@@ -39,20 +39,21 @@ export const ReadOnlyView = ({ selectedRundown, onClose }: ReadOnlyViewProps) =>
         return;
       }
       
-      // Calculate total time for each block and overall rundown
-      let totalTime = 0;
-      const blocksWithTotalTime = blocks.map(block => {
-        const blockTotalTime = block.items.reduce((sum, item) => sum + item.duracao, 0);
-        totalTime += blockTotalTime;
-        
-        return {
-          ...block,
-          totalTime: blockTotalTime
-        };
-      });
+      // For each block, fetch its materias
+      const blocksWithItems = await Promise.all(
+        blocks.map(async (block) => {
+          const materias = await fetchMateriasByBloco(block.id);
+          const totalTime = materias.reduce((sum, item) => sum + item.duracao, 0);
+          
+          return {
+            ...block,
+            items: materias,
+            totalTime
+          };
+        })
+      );
       
-      setRundownBlocks(blocksWithTotalTime);
-      setTotalRundownDuration(totalTime);
+      setRundownBlocks(blocksWithItems);
     } catch (error) {
       console.error("Erro ao carregar blocos e matérias:", error);
       toast({
@@ -76,37 +77,15 @@ export const ReadOnlyView = ({ selectedRundown, onClose }: ReadOnlyViewProps) =>
     }
   };
   
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-  
   return (
     <>
-      <div className="bg-gray-200 p-2 -mt-4 -mx-4 mb-4 flex flex-col gap-1 md:flex-row md:justify-between md:items-center">
-        <div className="flex flex-col gap-1">
-          <span className="font-medium text-gray-700">
-            Espelho em modo de leitura - {selectedRundown.nome_telejornal}
-          </span>
-          <span className="text-sm text-gray-600">
-            Fechado em: {formatDate(selectedRundown.data_fechamento)} 
-            {selectedRundown.horario && ` - Horário: ${selectedRundown.horario}`}
-          </span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-medium">
-            Duração Total: <span className="text-blue-600">{formatTime(totalRundownDuration)}</span>
-          </span>
-          <Button variant="outline" size="sm" onClick={onClose}>
-            Voltar para Lista
-          </Button>
-        </div>
+      <div className="bg-gray-200 p-2 -mt-4 -mx-4 mb-4 flex justify-between items-center">
+        <span className="font-medium text-gray-700">
+          Espelho em modo de leitura - {selectedRundown.nome_telejornal} - {new Date(selectedRundown.data_fechamento).toLocaleDateString('pt-BR')}
+        </span>
+        <Button variant="outline" size="sm" onClick={onClose}>
+          Voltar
+        </Button>
       </div>
       
       <div className="overflow-auto flex-grow">
@@ -117,14 +96,13 @@ export const ReadOnlyView = ({ selectedRundown, onClose }: ReadOnlyViewProps) =>
           </div>
         ) : rundownBlocks.length > 0 ? (
           <div className="space-y-6">
-            {rundownBlocks.map((block, blockIndex) => (
+            <h3 className="font-medium mb-2">Blocos</h3>
+            {rundownBlocks.map((block) => (
               <div key={block.id} className="border rounded-md p-4 mb-4 bg-gray-50">
                 <div className="flex justify-between mb-2">
-                  <h4 className="font-medium">
-                    {block.nome} <span className="text-sm text-gray-500">#{blockIndex + 1}</span>
-                  </h4>
+                  <h4 className="font-medium">{block.nome}</h4>
                   <span className="text-sm font-medium text-gray-500">
-                    Tempo do Bloco: {formatTime(block.totalTime)}
+                    Tempo: {formatTime(block.totalTime)}
                   </span>
                 </div>
                 
@@ -150,16 +128,16 @@ export const ReadOnlyView = ({ selectedRundown, onClose }: ReadOnlyViewProps) =>
                       ) : (
                         block.items.map((item) => (
                           <tr key={item.id} className="hover:bg-gray-50">
-                            <td className="py-2 px-3 text-gray-900">{item.pagina}</td>
-                            <td className="py-2 px-3 font-medium text-gray-900">{item.retranca}</td>
-                            <td className="py-2 px-3 font-mono text-xs">{item.clip || '-'}</td>
-                            <td className="py-2 px-3 text-gray-900">{formatTime(item.duracao)}</td>
+                            <td className="py-2 px-3">{item.pagina}</td>
+                            <td className="py-2 px-3 font-medium">{item.retranca}</td>
+                            <td className="py-2 px-3 font-mono text-xs">{item.clip || ''}</td>
+                            <td className="py-2 px-3">{formatTime(item.duracao)}</td>
                             <td className="py-2 px-3">
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(item.status || 'draft')}`}>
                                 {item.status || 'draft'}
                               </span>
                             </td>
-                            <td className="py-2 px-3 text-gray-900">{item.reporter || '-'}</td>
+                            <td className="py-2 px-3">{item.reporter || '-'}</td>
                           </tr>
                         ))
                       )}
@@ -177,7 +155,7 @@ export const ReadOnlyView = ({ selectedRundown, onClose }: ReadOnlyViewProps) =>
       </div>
       
       <DialogFooter className="mt-4 border-t pt-4">
-        <Button variant="default" onClick={onClose}>Voltar para Lista</Button>
+        <Button onClick={onClose}>Fechar</Button>
       </DialogFooter>
     </>
   );

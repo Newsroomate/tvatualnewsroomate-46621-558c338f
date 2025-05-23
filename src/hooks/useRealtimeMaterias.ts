@@ -1,149 +1,141 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 import { Materia, Bloco } from "@/types";
-import { BlockWithItems } from "./useRealtimeMaterias/utils";
-import { useDragTracker } from "./useRealtimeMaterias/useDragTracker";
-import { useRealtimeSubscription } from "./useRealtimeMaterias/useRealtimeSubscription";
-import { createMateriaOperations } from "./useRealtimeMaterias/materiaOperations";
-import { useToast } from "@/hooks/use-toast";
-import { fetchMateriasByBloco } from "@/services/materias-api";
+import { processUpdatedMateria, calculateBlockTotalTime } from "@/components/news-schedule/utils";
+
+type BlockWithItems = Bloco & { 
+  items: Materia[];
+  totalTime: number;
+};
 
 interface UseRealtimeMateriasProps {
   selectedJournal: string | null;
   newItemBlock: string | null;
   materiaToDelete: Materia | null;
-  blocosData?: Array<Bloco>;
-  isLoading: boolean;
 }
 
 /**
- * Custom hook para lidar com assinaturas em tempo real para materias
+ * Custom hook to handle realtime subscriptions for materias
  */
 export const useRealtimeMaterias = ({
   selectedJournal,
   newItemBlock,
-  materiaToDelete,
-  blocosData,
-  isLoading
+  materiaToDelete
 }: UseRealtimeMateriasProps) => {
   const [blocks, setBlocks] = useState<BlockWithItems[]>([]);
-  const [initialDataLoaded, setInitialDataLoaded] = useState(false);
-  const { toast } = useToast();
   
-  // Use o hook de rastreamento de arrastar aprimorado
-  const {
-    startDragging,
-    endDragging,
-    trackDragOperation,
-    shouldIgnoreRealtimeUpdate,
-    markItemAsEdited
-  } = useDragTracker();
-  
-  // Cria manipuladores para operações de matéria
-  const {
-    handleMateriaUpdate,
-    handleMateriaInsert,
-    handleMateriaDelete,
-    updateExistingMateria
-  } = createMateriaOperations(setBlocks);
-  
-  // Load initial data when blocosData changes and is available
+  // Setup realtime subscription for materias updates
   useEffect(() => {
-    const loadInitialData = async () => {
-      if (!blocosData || blocosData.length === 0 || isLoading || initialDataLoaded) {
-        return;
-      }
-
-      try {
-        console.log("Loading initial materia data for blocks:", blocosData.map(b => b.id));
-        
-        // Map blocks to include items and totalTime
-        const blocksWithItems = await Promise.all(
-          blocosData.map(async (bloco) => {
-            try {
-              // Fetch materias for each block
-              const materias = await fetchMateriasByBloco(bloco.id);
-              console.log(`Loaded ${materias.length} materias for block ${bloco.id}`);
-              
-              // Calculate total time for the block
-              const totalTime = materias.reduce((sum, materia) => sum + materia.duracao, 0);
-              
-              return {
-                ...bloco,
-                items: materias,
-                totalTime
-              };
-            } catch (error) {
-              console.error(`Error loading materias for block ${bloco.id}:`, error);
-              return {
-                ...bloco,
-                items: [],
-                totalTime: 0
-              };
-            }
-          })
-        );
-
-        console.log("Setting blocks with initial data:", blocksWithItems);
-        setBlocks(blocksWithItems);
-        setInitialDataLoaded(true);
-      } catch (error) {
-        console.error("Error loading initial data:", error);
-        toast({
-          title: "Erro ao carregar dados",
-          description: "Não foi possível carregar as matérias. Tente recarregar a página.",
-          variant: "destructive"
-        });
-      }
-    };
-
-    loadInitialData();
-  }, [blocosData, isLoading, initialDataLoaded, toast]);
-
-  // Reset initialDataLoaded flag when journal changes
-  useEffect(() => {
-    if (selectedJournal) {
-      setInitialDataLoaded(false);
-    }
-  }, [selectedJournal]);
-  
-  // Configura inscrição em tempo real
-  useRealtimeSubscription({
-    selectedJournal,
-    newItemBlock,
-    materiaToDelete,
-    shouldIgnoreRealtimeUpdate,
-    handleMateriaUpdate,
-    handleMateriaInsert,
-    handleMateriaDelete
-  });
-  
-  // Manipula a edição explícita de matéria (tanto para clique de botão quanto para clique duplo)
-  const handleMateriaEdit = (materia: Materia) => {
-    // Marca este item para ignorar atualizações em tempo real futuras
-    markItemAsEdited(materia.id);
+    if (!selectedJournal) return;
     
-    // Atualiza a interface imediatamente após a edição
-    console.log("Atualizando interface com matéria editada:", materia);
-    setBlocks(currentBlocks => {
-      return updateExistingMateria(currentBlocks, materia);
-    });
-  };
-  
-  // Manipulador para atualização de matéria após salvamento
-  const handleMateriaSave = (updatedMateria: Materia) => {
-    console.log("Matéria salva, atualizando a interface:", updatedMateria);
-    handleMateriaEdit(updatedMateria);
-  };
-  
+    console.log('Setting up realtime subscription for materias table');
+    
+    const handleMateriaUpdate = (updatedMateria: Materia) => {
+      console.log('Processing materia update:', updatedMateria);
+      
+      setBlocks(currentBlocks => {
+        // Create new blocks array to ensure React detects the state change
+        return currentBlocks.map(block => {
+          // Find the block that contains this materia
+          if (block.id === updatedMateria.bloco_id) {
+            // Find if the materia already exists in this block
+            const itemExists = block.items.some(item => item.id === updatedMateria.id);
+            
+            let updatedItems;
+            if (itemExists) {
+              // Update the existing materia
+              updatedItems = block.items.map(item => 
+                item.id === updatedMateria.id 
+                  ? processUpdatedMateria(updatedMateria)
+                  : item
+              );
+            } else {
+              // This is a new materia for this block
+              updatedItems = [...block.items, processUpdatedMateria(updatedMateria)];
+            }
+            
+            // Calculate new total time
+            const totalTime = calculateBlockTotalTime(updatedItems);
+            
+            // Return updated block
+            return {
+              ...block,
+              items: updatedItems,
+              totalTime
+            };
+          }
+          return block;
+        });
+      });
+    };
+    
+    // Subscribe to all materias changes related to the current telejornal's blocks
+    const channel = supabase
+      .channel('public:materias-changes')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'materias',
+      }, (payload) => {
+        console.log('Materia updated via realtime:', payload);
+        const updatedMateria = payload.new as Materia;
+        handleMateriaUpdate(updatedMateria);
+      })
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'materias'
+      }, (payload) => {
+        console.log('Materia inserted:', payload);
+        const newMateria = payload.new as Materia;
+        
+        // Only process if this was not triggered by the current client
+        // (avoids duplicate items when we're the ones who created it)
+        if (newItemBlock !== newMateria.bloco_id) {
+          handleMateriaUpdate(newMateria);
+        }
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'materias'
+      }, (payload) => {
+        console.log('Materia deleted:', payload);
+        const deletedMateria = payload.old as Materia;
+        
+        // Only process if this was not triggered by the current client
+        if (!materiaToDelete || materiaToDelete.id !== deletedMateria.id) {
+          setBlocks(currentBlocks => 
+            currentBlocks.map(block => {
+              if (block.id === deletedMateria.bloco_id) {
+                const updatedItems = block.items.filter(item => item.id !== deletedMateria.id);
+                const totalTime = calculateBlockTotalTime(updatedItems);
+                
+                return {
+                  ...block,
+                  items: updatedItems,
+                  totalTime
+                };
+              }
+              return block;
+            })
+          );
+        }
+      })
+      .subscribe((status) => {
+        console.log('Realtime subscription status for materias:', status);
+      });
+    
+    // Clean up subscription on unmount or when selectedJournal changes
+    return () => {
+      console.log('Cleaning up realtime subscription');
+      supabase.removeChannel(channel);
+    };
+  }, [selectedJournal, newItemBlock, materiaToDelete]);
+
   return {
     blocks,
-    setBlocks,
-    startDragging,
-    endDragging,
-    trackDragOperation,
-    handleMateriaEdit,
-    handleMateriaSave,
-    initialDataLoaded
+    setBlocks
   };
 };

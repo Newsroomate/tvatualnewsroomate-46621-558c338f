@@ -1,77 +1,80 @@
 
-import { useState } from "react";
-import { Materia } from "@/types";
 import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
-import { formatTime } from "./formatting";
-import { getStatusClass } from "./utils";
-import { DraggableProvided, DraggableStateSnapshot } from "@hello-pangea/dnd";
+import { Trash2, Pencil } from "lucide-react";
+import { Materia } from "@/types";
+import { formatTime } from "./utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface NewsItemProps {
   item: Materia;
-  draggableProps?: any;
-  dragHandleProps?: any;
-  isEspelhoOpen: boolean;
-  onDelete: (item: Materia) => void;
   onEdit: (item: Materia) => void;
-  provided?: DraggableProvided;
-  snapshot?: DraggableStateSnapshot;
-  onDoubleClick?: (item: Materia) => void;
+  onDelete: (item: Materia) => void;
+  provided: any;
+  snapshot: any;
+  isEspelhoOpen: boolean;
+  onDoubleClick: (item: Materia) => void;
   canModify?: boolean;
 }
 
 export const NewsItem = ({ 
   item, 
-  draggableProps, 
-  dragHandleProps, 
-  isEspelhoOpen,
-  onDelete,
-  onEdit,
-  provided,
+  onEdit, 
+  onDelete, 
+  provided, 
   snapshot,
+  isEspelhoOpen,
   onDoubleClick,
   canModify = true
 }: NewsItemProps) => {
-  const [isHovered, setIsHovered] = useState(false);
-  
-  // Check if the item has the highlight property
-  const isHighlighted = (item as any)._highlight === true;
-  
-  // Use either direct props or provided props from Draggable
-  const innerRef = provided?.innerRef || draggableProps?.innerRef;
-  const dragProps = provided?.draggableProps || draggableProps;
-  const handleProps = provided?.dragHandleProps || dragHandleProps;
-  
-  const handleDoubleClick = () => {
-    if (isEspelhoOpen && onDoubleClick) {
-      onDoubleClick(item);
-    } else if (isEspelhoOpen) {
-      onEdit(item);
+  // Status color classes
+  const getStatusClass = (status: string): string => {
+    switch (status?.toLowerCase()) {
+      case 'published': return 'bg-green-100 text-green-800';
+      case 'draft': return 'bg-gray-100 text-gray-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'urgent': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
+
+  // Tradução do status para português
+  const translateStatus = (status: string): string => {
+    switch (status?.toLowerCase()) {
+      case 'published': return 'Publicado';
+      case 'draft': return 'Rascunho';
+      case 'pending': return 'Pendente';
+      case 'urgent': return 'Urgente';
+      default: return status || 'Rascunho';
+    }
+  };
+
+  // Ensure we have valid data for display
+  const displayRetranca = item.retranca || "Sem título";
+  const displayStatus = item.status || "draft";
+  const displayDuracao = item.duracao || 0;
   
   return (
     <tr 
-      ref={innerRef}
-      {...dragProps}
-      {...handleProps}
+      ref={provided.innerRef}
+      {...provided.draggableProps}
+      {...provided.dragHandleProps}
       className={`hover:bg-gray-50 transition-colors ${
-        isHovered ? "bg-gray-50" : ""
-      } ${isHighlighted ? "bg-green-50 animate-pulse" : ""} ${
-        snapshot?.isDragging ? "bg-blue-50" : ""
+        snapshot.isDragging ? "bg-blue-50" : ""
       }`}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onDoubleClick={handleDoubleClick}
+      onDoubleClick={() => onDoubleClick(item)}
     >
       <td className="py-2 px-4">{item.pagina}</td>
-      <td className="py-2 px-4 font-medium">{item.retranca}</td>
-      <td className="py-2 px-4 font-mono text-xs">{item.clip}</td>
-      <td className="py-2 px-4">{formatTime(item.duracao)}</td>
+      <td className="py-2 px-4 font-medium">{displayRetranca}</td>
+      <td className="py-2 px-4 font-mono text-xs">{item.clip || ''}</td>
+      <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
       <td className="py-2 px-4">
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(item.status || '')}`}>
-          {item.status}
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(displayStatus)}`}>
+          {translateStatus(displayStatus)}
         </span>
       </td>
       <td className="py-2 px-4">{item.reporter || '-'}</td>
@@ -86,12 +89,17 @@ export const NewsItem = ({
                   onClick={() => onEdit(item)}
                   disabled={!isEspelhoOpen || !canModify}
                 >
-                  Editar
+                  <Pencil className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
               {!isEspelhoOpen && (
                 <TooltipContent>
                   Abra o espelho para editar
+                </TooltipContent>
+              )}
+              {!canModify && isEspelhoOpen && (
+                <TooltipContent>
+                  Sem permissão para editar
                 </TooltipContent>
               )}
             </Tooltip>
@@ -113,6 +121,11 @@ export const NewsItem = ({
               {!isEspelhoOpen && (
                 <TooltipContent>
                   Abra o espelho para excluir
+                </TooltipContent>
+              )}
+              {!canModify && isEspelhoOpen && (
+                <TooltipContent>
+                  Sem permissão para excluir
                 </TooltipContent>
               )}
             </Tooltip>

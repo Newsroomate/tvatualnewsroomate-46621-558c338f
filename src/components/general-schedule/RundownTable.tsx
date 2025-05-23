@@ -13,20 +13,17 @@ import { Eye, Loader2 } from "lucide-react";
 import { ClosedRundown } from "@/services/espelhos-api";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { translateStatus } from "@/components/news-schedule/utils";
 
 interface RundownTableProps {
   isLoading: boolean;
   filteredRundowns: ClosedRundown[];
   onVisualizarEspelho: (rundown: ClosedRundown) => void;
-  onClose: () => void; // Adding onClose prop to allow modal closing
 }
 
 export const RundownTable = ({ 
   isLoading, 
   filteredRundowns, 
-  onVisualizarEspelho,
-  onClose 
+  onVisualizarEspelho 
 }: RundownTableProps) => {
   // Format the date for display
   const formatDate = (dateString: string) => {
@@ -70,7 +67,7 @@ export const RundownTable = ({
                   <TableCell>{rundown.horario}</TableCell>
                   <TableCell>
                     <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      {translateStatus(rundown.status || "closed")}
+                      {rundown.status || "Fechado"}
                     </span>
                   </TableCell>
                   <TableCell>
@@ -97,9 +94,8 @@ export const RundownTable = ({
       </div>
       
       <DialogFooter className="mt-4">
-        <Button onClick={onClose}>Fechar</Button>
+        <Button>Fechar</Button>
       </DialogFooter>
     </>
   );
 };
-

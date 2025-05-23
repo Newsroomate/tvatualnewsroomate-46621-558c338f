@@ -23,11 +23,10 @@ export const BlockContent = ({
   return (
     <div className="overflow-x-auto">
       <Droppable droppableId={blockId}>
-        {(provided, snapshot) => (
+        {(provided) => (
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={snapshot.isDraggingOver ? "bg-gray-50" : ""}
           >
             <table className="w-full">
               <thead className="bg-gray-50 text-xs uppercase">
@@ -61,9 +60,10 @@ export const BlockContent = ({
                           item={item}
                           onEdit={onEditItem}
                           onDelete={onDeleteItem}
-                          isEspelhoOpen={isEspelhoOpen}
                           provided={provided}
                           snapshot={snapshot}
+                          isEspelhoOpen={isEspelhoOpen}
+                          onDoubleClick={onEditItem}
                           canModify={canModifyItems}
                         />
                       )}
