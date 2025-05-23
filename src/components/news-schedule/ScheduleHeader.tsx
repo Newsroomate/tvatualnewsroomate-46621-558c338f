@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowDownUp, Lock } from "lucide-react";
 import { formatTime } from "./utils";
@@ -28,7 +29,17 @@ export const ScheduleHeader = ({
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
-              
+              <div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={onRenumberItems}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <ArrowDownUp className="h-4 w-4 mr-2" />
+                  Reordenar Numeração
+                </Button>
+              </div>
             </TooltipTrigger>
             {!currentTelejornal?.espelho_aberto && <TooltipContent>
                 Abra o espelho para reorganizar a numeração
