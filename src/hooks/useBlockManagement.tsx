@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia, Telejornal } from "@/types";
-import { createBloco, updateBlocoName, deleteBloco } from "@/services/blocos-api";
+import { createBloco } from "@/services/api";
 
 interface UseBlockManagementProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
@@ -157,66 +157,11 @@ export const useBlockManagement = ({
     }
   };
 
-  const handleRenameBlock = async (blockId: string, newName: string) => {
-    if (!selectedJournal || !currentTelejornal?.espelho_aberto) {
-      toast({
-        title: "Espelho fechado",
-        description: "Você precisa abrir o espelho para renomear blocos.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      // Atualiza o nome do bloco no banco de dados
-      await updateBlocoName(blockId, newName);
-      
-      // Atualiza o estado local
-      setBlocks(currentBlocks => 
-        currentBlocks.map(block => 
-          block.id === blockId 
-            ? { ...block, nome: newName } 
-            : block
-        )
-      );
-    } catch (error) {
-      console.error("Erro ao renomear bloco:", error);
-    }
-  };
-
-  const handleDeleteBlock = async (blockId: string) => {
-    if (!selectedJournal || !currentTelejornal?.espelho_aberto) {
-      toast({
-        title: "Espelho fechado",
-        description: "Você precisa abrir o espelho para excluir blocos.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    try {
-      // Exclui o bloco do banco de dados
-      await deleteBloco(blockId);
-      
-      // Remove o bloco do estado local
-      setBlocks(currentBlocks => 
-        currentBlocks.filter(block => block.id !== blockId)
-      );
-      
-      // Atualiza a query para garantir que os dados estejam sincronizados
-      blocosQuery.refetch();
-    } catch (error) {
-      console.error("Erro ao excluir bloco:", error);
-    }
-  };
-
   return {
     isCreatingFirstBlock,
     setIsCreatingFirstBlock,
     blockCreationInProgress,
     handleAddFirstBlock,
-    handleAddBlock,
-    handleRenameBlock,
-    handleDeleteBlock
+    handleAddBlock
   };
 };

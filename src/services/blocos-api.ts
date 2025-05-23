@@ -35,37 +35,3 @@ export const createBloco = async (bloco: BlocoCreateInput) => {
 
   return data as Bloco;
 };
-
-export const updateBlocoName = async (blocoId: string, newName: string) => {
-  const { data, error } = await supabase
-    .from('blocos')
-    .update({ nome: newName })
-    .eq('id', blocoId)
-    .select()
-    .single();
-
-  if (error) {
-    console.error('Erro ao renomear bloco:', error);
-    toastService.error("Erro ao renomear bloco", error.message);
-    throw error;
-  }
-
-  toastService.success("Bloco renomeado", `O bloco foi renomeado para ${newName}`);
-
-  return data as Bloco;
-};
-
-export const deleteBloco = async (blocoId: string) => {
-  const { error } = await supabase
-    .from('blocos')
-    .delete()
-    .eq('id', blocoId);
-
-  if (error) {
-    console.error('Erro ao excluir bloco:', error);
-    toastService.error("Erro ao excluir bloco", error.message);
-    throw error;
-  }
-
-  toastService.success("Bloco excluído", "O bloco foi excluído com sucesso");
-};
