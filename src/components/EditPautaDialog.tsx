@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { updatePauta } from "@/services/api";
+import { updatePauta } from "@/services/pautas-api";
 import { Pauta } from "@/types";
 
 interface EditPautaDialogProps {

@@ -1,8 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
-import { fetchTelejornais, fetchPautas } from "@/services/api";
+import { fetchTelejornais } from "@/services/api";
+import { fetchPautas } from "@/services/pautas-api";
 import { Telejornal, Pauta } from "@/types";
 import { GeneralScheduleModal } from "@/components/general-schedule";
 import { PautaModal } from "@/components/PautaModal";

@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit2, Trash2 } from "lucide-react";
 import { Pauta } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EditPautaDialog } from "@/components/EditPautaDialog";
-import { deletePauta } from "@/services/api";
+import { deletePauta } from "@/services/pautas-api";
 
 interface PautaSectionProps {
   pautas: Pauta[];

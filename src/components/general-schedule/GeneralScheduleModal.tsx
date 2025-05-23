@@ -1,7 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { fetchTelejornais, fetchBlocosByTelejornal, fetchMateriasByBloco } from "@/services/api";
+import { fetchTelejornais } from "@/services/api";
 import { fetchClosedRundowns, ClosedRundown } from "@/services/espelhos-api";
 import { Telejornal } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -135,6 +134,7 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
           isLoading={isLoading}
           filteredRundowns={filteredRundowns}
           onVisualizarEspelho={handleVisualizarEspelho}
+          onClose={onClose}
         />
       </DialogContent>
     </Dialog>

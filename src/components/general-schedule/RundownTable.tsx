@@ -8,7 +8,6 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Eye, Loader2 } from "lucide-react";
 import { ClosedRundown } from "@/services/espelhos-api";
 
@@ -16,12 +15,14 @@ interface RundownTableProps {
   isLoading: boolean;
   filteredRundowns: ClosedRundown[];
   onVisualizarEspelho: (rundown: ClosedRundown) => void;
+  onClose: () => void; // Add the missing onClose prop
 }
 
 export const RundownTable = ({ 
   isLoading, 
   filteredRundowns, 
-  onVisualizarEspelho 
+  onVisualizarEspelho,
+  onClose // Add the missing prop
 }: RundownTableProps) => {
   return (
     <>
@@ -81,9 +82,9 @@ export const RundownTable = ({
         </Table>
       </div>
       
-      <DialogFooter className="mt-4">
+      <div className="mt-4 flex justify-end">
         <Button onClick={onClose}>Fechar</Button>
-      </DialogFooter>
+      </div>
     </>
   );
 };

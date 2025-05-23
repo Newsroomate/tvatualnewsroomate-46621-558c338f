@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -21,7 +20,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  // Inicializa os dados do formulário quando o item muda
+  // Initialize form data when item changes
   useEffect(() => {
     if (item) {
       console.log("Initializing form data with item:", item);
@@ -36,7 +35,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         local_gravacao: item.local_gravacao || '',
         pagina: item.pagina,
         bloco_id: item.bloco_id,
-        ordem: item.ordem,
+        ordem: item.ordem, // Ensure ordem is included
         tags: item.tags
       });
     }
@@ -55,12 +54,18 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const handleSave = async () => {
     if (!item) return;
     
+    // Make sure ordem is included in the update data
+    const updateData = {
+      ...formData,
+      ordem: item.ordem // Ensure ordem is always included and maintains its original value
+    };
+    
     setIsSaving(true);
     try {
-      console.log("Saving updated materia:", { id: item.id, ...formData });
+      console.log("Saving updated materia:", { id: item.id, ...updateData });
       
       // Update the materia in the database
-      const updatedMateria = await updateMateria(item.id, formData);
+      const updatedMateria = await updateMateria(item.id, updateData);
       
       // Show success toast
       toast({
@@ -82,6 +87,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
     }
   };
 
+  // ... keep existing code (component rendering)
   return (
     <div className="fixed top-0 right-0 w-[400px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20 overflow-y-auto">
       {/* Header */}

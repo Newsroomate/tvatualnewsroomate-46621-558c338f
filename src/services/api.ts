@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Telejornal, Bloco, Materia } from "@/types";
+import { Telejornal, Bloco, Materia, Pauta, PautaCreateInput } from "@/types";
 import { TablesInsert } from "@/integrations/supabase/types";
+import { ClosedRundown } from "@/services/espelhos-api";
 
 export const fetchTelejornais = async (): Promise<Telejornal[]> => {
   const { data, error } = await supabase
@@ -57,6 +58,22 @@ export const deleteTelejornal = async (id: string): Promise<void> => {
     console.error("Erro ao deletar telejornal:", error);
     throw error;
   }
+};
+
+// Add the missing fetchTelejornal function
+export const fetchTelejornal = async (id: string): Promise<Telejornal | null> => {
+  const { data, error } = await supabase
+    .from('telejornais')
+    .select('*')
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error(`Erro ao buscar telejornal ${id}:`, error);
+    throw error;
+  }
+
+  return data as Telejornal;
 };
 
 export const fetchBlocosByTelejornal = async (telejornalId: string): Promise<Bloco[]> => {
@@ -129,7 +146,11 @@ export const fetchMateriasByBloco = async (blocoId: string): Promise<Materia[]> 
     return [];
   }
 
-  return data || [];
+  // Map the data to include the titulo property that's required by the Materia type
+  return data.map(item => ({
+    ...item,
+    titulo: item.retranca || "Sem título" // Add the missing titulo property
+  })) as Materia[];
 };
 
 export const createMateria = async (materia: TablesInsert<'materias'>): Promise<Materia> => {
@@ -175,5 +196,54 @@ export const deleteMateria = async (id: string): Promise<void> => {
   }
 };
 
-// Export the espelho-api functions for easy access
+export const updateMateriasOrdem = async (materias: Partial<Materia>[]): Promise<Materia[]> => {
+  // Filter out entries that don't have both id and ordem
+  const validUpdates = materias.filter(materia => 
+    materia.id !== undefined);
+  
+  const updates = validUpdates.map(materia => {
+    // Create a proper update object that includes ordem as required
+    const updateData: any = {
+      id: materia.id,
+      ordem: materia.ordem || 0, // Ensure ordem is provided with a default value
+    };
+    
+    // Include other fields if they're present
+    if (materia.bloco_id !== undefined) updateData.bloco_id = materia.bloco_id;
+    if (materia.retranca !== undefined) updateData.retranca = materia.retranca;
+    else updateData.retranca = "Sem título"; // Default value for retranca
+    
+    return updateData;
+  });
+  
+  if (updates.length === 0) {
+    return [];
+  }
+  
+  const { data, error } = await supabase
+    .from('materias')
+    .upsert(updates)
+    .select();
+
+  if (error) {
+    console.error('Erro ao reordenar matérias:', error);
+    throw error;
+  }
+  
+  // Add the titulo property to each returned item
+  return data.map(item => ({
+    ...item,
+    titulo: item.retranca || "Sem título"
+  })) as Materia[];
+};
+
+// Export the pautas-api functions 
+export { 
+  fetchPautas, 
+  createPauta, 
+  updatePauta, 
+  deletePauta 
+} from "./pautas-api";
+
+// Export the espelhos-api functions
 export { fetchClosedRundowns } from "./espelhos-api";
