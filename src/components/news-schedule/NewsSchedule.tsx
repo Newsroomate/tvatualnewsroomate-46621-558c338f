@@ -40,21 +40,6 @@ export const NewsSchedule = ({
     deleteConfirmOpen,
     setDeleteConfirmOpen
   } = useMateriaOperations();
-  
-  // Agora use nosso hook personalizado aprimorado para atualizações em tempo real com todos os props necessários
-  const { 
-    blocks, 
-    setBlocks, 
-    startDragging, 
-    endDragging, 
-    trackDragOperation,
-    handleMateriaEdit,
-    handleMateriaSave
-  } = useRealtimeMaterias({
-    selectedJournal,
-    newItemBlock,
-    materiaToDelete
-  });
 
   // Use o hook de operações de bloco
   const {
@@ -68,7 +53,25 @@ export const NewsSchedule = ({
     handleAddBlock,
     handleRenameBlock,
     handleDeleteBlock
-  } = useBlockOperations(selectedJournal, currentTelejornal, setBlocks);
+  } = useBlockOperations(selectedJournal, currentTelejornal);
+  
+  // Agora use nosso hook personalizado aprimorado para atualizações em tempo real com todos os props necessários
+  const { 
+    blocks, 
+    setBlocks, 
+    startDragging, 
+    endDragging, 
+    trackDragOperation,
+    handleMateriaEdit,
+    handleMateriaSave,
+    initialDataLoaded
+  } = useRealtimeMaterias({
+    selectedJournal,
+    newItemBlock,
+    materiaToDelete,
+    blocosData: blocosQuery.data,
+    isLoading: blocosQuery.isLoading
+  });
 
   // Reinicializa as operações de matéria com o estado de blocos e telejornal atual
   const {
@@ -110,13 +113,71 @@ export const NewsSchedule = ({
     }
   }, [telejornaisQuery.data]);
 
+  // Handle auto-creation of first block, separated from the blocks data processing effect
+  useEffect(() => {
+    // Skip if no telejornal selected, espelho is not open, or we're already creating a block
+    if (!selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
+      return;
+    }
+    
+    // Skip if we don't have the blocks data yet or if we've already checked
+    if (!blocosQuery.data || !blockCreationAttempted) {
+      return;
+    }
+
+    const createInitialBlock = async () => {
+      // Only create a block if there are no blocks and we haven't already tried
+      if (blocosQuery.data.length === 0 && !blockCreationInProgress.current) {
+        setIsCreatingFirstBlock(true);
+        blockCreationInProgress.current = true;
+        
+        console.log("Attempting to create initial block for telejornal:", selectedJournal);
+        
+        try {
+          await handleAddFirstBlock();
+        } catch (error) {
+          console.error("Erro ao criar o bloco inicial:", error);
+          // If the error is about a duplicate, we can ignore it - the block exists
+          if (error instanceof Error && error.message.includes("duplicate key value")) {
+            console.log("Block already exists, refreshing data...");
+            // Force a refresh of blocks query
+            blocosQuery.refetch();
+          } else {
+            toast({
+              title: "Erro ao criar bloco inicial",
+              description: "Ocorreu um erro ao criar o primeiro bloco. Por favor, tente novamente.",
+              variant: "destructive"
+            });
+          }
+        } finally {
+          blockCreationInProgress.current = false;
+          setIsCreatingFirstBlock(false);
+        }
+      }
+    };
+    
+    createInitialBlock();
+  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted]);
+
   // Recalcula o tempo total do jornal quando os blocos mudam
   useEffect(() => {
     const total = blocks.reduce((sum, block) => sum + block.totalTime, 0);
     setTotalJournalTime(total);
   }, [blocks]);
 
-  const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
+  // Add debug logs for data flow
+  useEffect(() => {
+    if (selectedJournal) {
+      console.log("Selected journal changed:", selectedJournal);
+      console.log("Current blocks state:", blocks);
+      console.log("Blocos query data:", blocosQuery.data);
+      console.log("Initial data loaded:", initialDataLoaded);
+    }
+  }, [selectedJournal, blocks, blocosQuery.data, initialDataLoaded]);
+
+  const isLoading = telejornaisQuery.isLoading || 
+                    blocosQuery.isLoading || 
+                    (selectedJournal && !initialDataLoaded && blocosQuery.data && blocosQuery.data.length > 0);
 
   return (
     <div className="flex flex-col h-full">

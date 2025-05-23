@@ -9,6 +9,7 @@ import {
   findItemById
 } from "./utils";
 import { processUpdatedMateria, calculateBlockTotalTime } from "@/components/news-schedule/utils";
+import { toast } from "@/hooks/use-toast";
 
 export const createMateriaOperations = (
   setBlocks: React.Dispatch<React.SetStateAction<BlockWithItems[]>>
@@ -56,7 +57,15 @@ export const createMateriaOperations = (
     setBlocks(currentBlocks => {
       try {
         const processedMateria = processUpdatedMateria(newMateria);
-        return addNewMateriaToBlock(currentBlocks, processedMateria);
+        const updatedBlocks = addNewMateriaToBlock(currentBlocks, processedMateria);
+        
+        // Show a toast notification for new items
+        toast({
+          title: "Nova matéria adicionada",
+          description: `${processedMateria.retranca || "Nova matéria"} foi adicionada ao espelho.`,
+        });
+        
+        return updatedBlocks;
       } catch (error) {
         logger.error('Error processing materia insert:', error);
         return currentBlocks;
@@ -78,6 +87,12 @@ export const createMateriaOperations = (
           logger.debug(`Item ${deletedMateria.id} not found for deletion`);
           return currentBlocks;
         }
+        
+        // Show a toast notification
+        toast({
+          title: "Matéria removida",
+          description: `${deletedMateria.retranca || "Matéria"} foi removida do espelho.`,
+        });
         
         // Remove o item do seu bloco
         return currentBlocks.map(block => {
@@ -116,6 +131,23 @@ export const createMateriaOperations = (
         if (block.id === materia.bloco_id) {
           // Processa para garantir formato consistente
           const processedMateria = processUpdatedMateria(materia);
+          
+          // Verifica se o item já existe no bloco para evitar duplicatas
+          const itemExists = block.items.some(item => item.id === processedMateria.id);
+          if (itemExists) {
+            // Se o item já existe, apenas atualize-o
+            return {
+              ...block,
+              items: block.items.map(item => 
+                item.id === processedMateria.id ? processedMateria : item
+              ),
+              totalTime: calculateBlockTotalTime(
+                block.items.map(item => 
+                  item.id === processedMateria.id ? processedMateria : item
+                )
+              )
+            };
+          }
           
           // Insere o item na posição correta com base em ordem
           const updatedItems = [...block.items];
@@ -156,6 +188,12 @@ export const createMateriaOperations = (
         logger.warn(`Source or destination block not found for move operation`);
         return updateExistingMateria(blocks, updatedMateria);
       }
+      
+      // Show a toast notification
+      toast({
+        title: "Matéria movida",
+        description: `${updatedMateria.retranca || "Matéria"} foi movida para outro bloco.`,
+      });
       
       // Processa blocos de forma imutável
       return blocks.map(block => {
@@ -237,7 +275,38 @@ export const createMateriaOperations = (
           
           if (itemIndex >= 0) {
             const updatedItems = [...block.items];
-            updatedItems[itemIndex] = processedMateria;
+            
+            // Add a highlight effect by adding a special property
+            const highlightedItem = {
+              ...processedMateria,
+              _highlight: true
+            };
+            
+            updatedItems[itemIndex] = highlightedItem;
+            
+            // Add animation effect by removing highlight after a delay
+            setTimeout(() => {
+              setBlocks(currentBlocks => {
+                return currentBlocks.map(currentBlock => {
+                  if (currentBlock.id === blockId) {
+                    const items = currentBlock.items.map(item => {
+                      if (item.id === updatedMateria.id) {
+                        // Remove highlight property
+                        const { _highlight, ...rest } = item as any;
+                        return rest;
+                      }
+                      return item;
+                    });
+                    
+                    return {
+                      ...currentBlock,
+                      items
+                    };
+                  }
+                  return currentBlock;
+                });
+              });
+            }, 1500);
             
             return updateBlockItems(block, updatedItems);
           }

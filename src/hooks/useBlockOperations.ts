@@ -13,7 +13,7 @@ import { Bloco, Telejornal } from "@/types";
 export const useBlockOperations = (
   selectedJournal: string | null,
   currentTelejornal: Telejornal | null,
-  setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: any[], totalTime: number })[]>>
+  setBlocks?: React.Dispatch<React.SetStateAction<(Bloco & { items: any[], totalTime: number })[]>>
 ) => {
   const [isCreatingFirstBlock, setIsCreatingFirstBlock] = useState(false);
   const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
@@ -28,6 +28,20 @@ export const useBlockOperations = (
     queryFn: () => selectedJournal ? fetchBlocosByTelejornal(selectedJournal) : Promise.resolve([]),
     enabled: !!selectedJournal,
   });
+
+  // Reset blockCreationAttempted when journal changes
+  useEffect(() => {
+    if (selectedJournal) {
+      setBlockCreationAttempted(false);
+    }
+  }, [selectedJournal]);
+
+  // Set blockCreationAttempted to true when blocks data is loaded
+  useEffect(() => {
+    if (blocosQuery.data) {
+      setBlockCreationAttempted(true);
+    }
+  }, [blocosQuery.data]);
 
   // Function to handle adding the first block specifically
   const handleAddFirstBlock = async () => {
@@ -45,7 +59,9 @@ export const useBlockOperations = (
       // If blocks already exist, just return without creating a new one
       if (existingBlocks && existingBlocks.length > 0) {
         console.log("Blocks already exist for this journal, skipping creation");
-        setBlocks(blocks => blocks.length ? blocks : existingBlocks.map(b => ({ ...b, items: [], totalTime: 0 })));
+        if (setBlocks) {
+          setBlocks(blocks => blocks.length ? blocks : existingBlocks.map(b => ({ ...b, items: [], totalTime: 0 })));
+        }
         return;
       }
       
@@ -61,12 +77,14 @@ export const useBlockOperations = (
       const novoBloco = await createBloco(novoBlocoInput);
       console.log("First block created successfully:", novoBloco);
       
-      // Immediately update the UI
-      setBlocks([{ 
-        ...novoBloco, 
-        items: [],
-        totalTime: 0
-      }]);
+      // Immediately update the UI if setBlocks is provided
+      if (setBlocks) {
+        setBlocks([{ 
+          ...novoBloco, 
+          items: [],
+          totalTime: 0
+        }]);
+      }
       
       // Force refresh the blocks query
       blocosQuery.refetch();
@@ -233,3 +251,6 @@ export const useBlockOperations = (
     handleDeleteBlock
   };
 };
+
+// Add React import at the top
+import { useEffect } from 'react';
