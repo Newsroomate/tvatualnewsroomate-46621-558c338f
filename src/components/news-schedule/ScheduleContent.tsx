@@ -112,27 +112,6 @@ export const ScheduleContent = ({
           onDeleteBlock={onDeleteBlock}
         />
       ))}
-
-      {/* Button to add new block */}
-      <div className="flex justify-center">
-        {currentTelejornal?.espelho_aberto && canModify ? (
-          <Button 
-            variant="outline"
-            onClick={onAddBlock}
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Adicionar Novo Bloco
-          </Button>
-        ) : (
-          <Button 
-            variant="outline"
-            disabled={true}
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Adicionar Novo Bloco
-          </Button>
-        )}
-      </div>
     </>
   );
 };
