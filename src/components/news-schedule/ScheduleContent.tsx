@@ -1,10 +1,11 @@
-
 import { Bloco, Materia, Telejornal } from "@/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Lock } from "lucide-react";
 import { NewsBlock } from "./NewsBlock";
+import { OpenRundownDialog } from "./OpenRundownDialog";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
+import { useState } from "react";
 
 interface ScheduleContentProps {
   selectedJournal: string | null;
@@ -14,6 +15,8 @@ interface ScheduleContentProps {
   isCreatingFirstBlock: boolean;
   newItemBlock: string | null;
   onOpenRundown: () => void;
+  onReopenLastRundown: () => void;
+  onReopenFromDate: (date: Date) => void;
   onAddFirstBlock: () => void;
   onAddBlock: () => void;
   onAddItem: (blockId: string) => void;
@@ -32,6 +35,8 @@ export const ScheduleContent = ({
   isCreatingFirstBlock,
   newItemBlock,
   onOpenRundown,
+  onReopenLastRundown,
+  onReopenFromDate,
   onAddFirstBlock,
   onAddBlock,
   onAddItem,
@@ -43,6 +48,7 @@ export const ScheduleContent = ({
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
+  const [openRundownDialogOpen, setOpenRundownDialogOpen] = useState(false);
 
   // If no journal selected
   if (!selectedJournal) {
@@ -70,9 +76,17 @@ export const ScheduleContent = ({
           <Lock className="h-5 w-5 mr-2" />
           <p>O espelho está fechado. Abra o espelho para adicionar e editar matérias.</p>
         </div>
-        <Button onClick={onOpenRundown} variant="default">
+        <Button onClick={() => setOpenRundownDialogOpen(true)} variant="default">
           Abrir Espelho Agora
         </Button>
+        
+        <OpenRundownDialog
+          open={openRundownDialogOpen}
+          onOpenChange={setOpenRundownDialogOpen}
+          onCreateNew={onOpenRundown}
+          onReopenLast={onReopenLastRundown}
+          onReopenFromDate={onReopenFromDate}
+        />
       </div>
     );
   }

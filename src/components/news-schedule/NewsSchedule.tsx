@@ -180,6 +180,19 @@ export const NewsSchedule = ({
     createInitialBlock();
   }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, handleAddFirstBlock, blockCreationInProgress]);
 
+  // Placeholder functions for the new rundown opening options
+  const handleReopenLastRundown = () => {
+    // TODO: Implement logic to reopen the last used rundown
+    console.log("Reopen last rundown - to be implemented");
+    onOpenRundown(); // For now, just call the existing function
+  };
+
+  const handleReopenFromDate = (date: Date) => {
+    // TODO: Implement logic to reopen rundown from specific date
+    console.log("Reopen from date:", date);
+    onOpenRundown(); // For now, just call the existing function
+  };
+
   // Recalculate total journal time when blocks change
   useEffect(() => {
     const total = blocks.reduce((sum, block) => sum + block.totalTime, 0);
@@ -211,6 +224,8 @@ export const NewsSchedule = ({
             isCreatingFirstBlock={isCreatingFirstBlock}
             newItemBlock={newItemBlock}
             onOpenRundown={onOpenRundown}
+            onReopenLastRundown={handleReopenLastRundown}
+            onReopenFromDate={handleReopenFromDate}
             onAddFirstBlock={handleAddFirstBlock}
             onAddBlock={handleAddBlock}
             onAddItem={handleAddItem}
