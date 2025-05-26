@@ -28,7 +28,7 @@ import { useItemManagement } from "@/hooks/useItemManagement";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
-  onEditItem: (item: Materia) => void;
+  onEditItem: (Materia) => void;
   currentTelejornal: Telejornal | null;
   onOpenRundown: () => void;
 }
@@ -74,7 +74,8 @@ export const NewsSchedule = ({
     setMateriaToDelete,
     renumberConfirmOpen, 
     setRenumberConfirmOpen,
-    handleAddItem, 
+    handleAddItem,
+    handleDuplicateItem,
     handleDeleteMateria, 
     confirmDeleteMateria,
     handleRenumberItems, 
@@ -215,6 +216,7 @@ export const NewsSchedule = ({
             onAddItem={handleAddItem}
             onEditItem={onEditItem}
             onDeleteItem={handleDeleteMateria}
+            onDuplicateItem={handleDuplicateItem}
             onRenameBlock={handleRenameBlock}
             onDeleteBlock={handleDeleteBlock}
           />

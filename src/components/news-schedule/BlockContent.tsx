@@ -8,6 +8,7 @@ interface BlockContentProps {
   items: Materia[];
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
+  onDuplicateItem: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModifyItems?: boolean;
 }
@@ -17,6 +18,7 @@ export const BlockContent = ({
   items, 
   onEditItem, 
   onDeleteItem,
+  onDuplicateItem,
   isEspelhoOpen,
   canModifyItems = true
 }: BlockContentProps) => {
@@ -60,6 +62,7 @@ export const BlockContent = ({
                           item={item}
                           onEdit={onEditItem}
                           onDelete={onDeleteItem}
+                          onDuplicate={onDuplicateItem}
                           provided={provided}
                           snapshot={snapshot}
                           isEspelhoOpen={isEspelhoOpen}

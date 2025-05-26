@@ -11,6 +11,7 @@ interface NewsBlockProps {
   onAddItem: (blockId: string) => void;
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
+  onDuplicateItem: (item: Materia) => void;
   isEspelhoOpen: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
@@ -22,6 +23,7 @@ export const NewsBlock = ({
   onAddItem,
   onEditItem,
   onDeleteItem,
+  onDuplicateItem,
   isEspelhoOpen,
   onRenameBlock,
   onDeleteBlock
@@ -47,6 +49,7 @@ export const NewsBlock = ({
         items={block.items}
         onEditItem={onEditItem}
         onDeleteItem={onDeleteItem}
+        onDuplicateItem={onDuplicateItem}
         isEspelhoOpen={isEspelhoOpen}
         canModifyItems={canModify}
       />

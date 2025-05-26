@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil } from "lucide-react";
+import { Trash2, Pencil, Copy } from "lucide-react";
 import { Materia } from "@/types";
 import { formatTime } from "./utils";
 import {
@@ -14,6 +14,7 @@ interface NewsItemProps {
   item: Materia;
   onEdit: (item: Materia) => void;
   onDelete: (item: Materia) => void;
+  onDuplicate: (item: Materia) => void;
   provided: any;
   snapshot: any;
   isEspelhoOpen: boolean;
@@ -24,7 +25,8 @@ interface NewsItemProps {
 export const NewsItem = ({ 
   item, 
   onEdit, 
-  onDelete, 
+  onDelete,
+  onDuplicate,
   provided, 
   snapshot,
   isEspelhoOpen,
@@ -100,6 +102,31 @@ export const NewsItem = ({
               {!canModify && isEspelhoOpen && (
                 <TooltipContent>
                   Sem permissão para editar
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => onDuplicate(item)}
+                  disabled={!isEspelhoOpen || !canModify}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              {!isEspelhoOpen && (
+                <TooltipContent>
+                  Abra o espelho para duplicar
+                </TooltipContent>
+              )}
+              {!canModify && isEspelhoOpen && (
+                <TooltipContent>
+                  Sem permissão para duplicar
                 </TooltipContent>
               )}
             </Tooltip>
