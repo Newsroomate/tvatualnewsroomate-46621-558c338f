@@ -97,21 +97,15 @@ export const fetchAllSavedRundowns = async (
     throw error;
   }
 
+  // Convert the raw data to SavedRundown format, ensuring proper type conversion
   return data?.map(item => ({
     id: item.id,
     telejornal_id: item.telejornal_id,
     data_salvamento: item.data_salvamento,
     data_referencia: item.data_referencia,
     nome: item.nome,
-    estrutura: item.estrutura,
+    estrutura: item.estrutura as SavedRundown['estrutura'], // Explicit type assertion
     created_at: item.created_at,
-    updated_at: item.updated_at,
-    jornal: (item as any).telejornais?.nome || item.nome,
-    dataFormatted: new Date(item.data_referencia).toLocaleDateString('pt-BR'),
-    hora: new Date(item.data_salvamento).toLocaleTimeString('pt-BR', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    }),
-    status: 'Fechado'
+    updated_at: item.updated_at
   })) as SavedRundown[] || [];
 };
