@@ -10,7 +10,7 @@ interface ScheduleHeaderProps {
   totalJournalTime: number;
   onRenumberItems: () => void;
   hasBlocks: boolean;
-  onAddBlock?: () => void;
+  onAddBlock: () => void;
   onViewTeleprompter?: () => void;
 }
 
