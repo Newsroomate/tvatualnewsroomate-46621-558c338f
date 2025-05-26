@@ -16,6 +16,10 @@ interface PautaModalProps {
 export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps) => {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
+  const [local, setLocal] = useState("");
+  const [horario, setHorario] = useState("");
+  const [entrevistado, setEntrevistado] = useState("");
+  const [produtor, setProdutor] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -27,6 +31,10 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
       await createPauta({
         titulo,
         descricao,
+        local,
+        horario,
+        entrevistado,
+        produtor,
         status: "pendente",
       });
       
@@ -42,6 +50,10 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
   const handleClose = () => {
     setTitulo("");
     setDescricao("");
+    setLocal("");
+    setHorario("");
+    setEntrevistado("");
+    setProdutor("");
     onClose();
   };
 
@@ -71,8 +83,52 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Descreva os detalhes da pauta"
-              rows={5}
+              rows={3}
             />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="local">Local</Label>
+              <Input
+                id="local"
+                value={local}
+                onChange={(e) => setLocal(e.target.value)}
+                placeholder="Local da cobertura"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="horario">Horário</Label>
+              <Input
+                id="horario"
+                type="time"
+                value={horario}
+                onChange={(e) => setHorario(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="entrevistado">Entrevistado</Label>
+              <Input
+                id="entrevistado"
+                value={entrevistado}
+                onChange={(e) => setEntrevistado(e.target.value)}
+                placeholder="Nome do entrevistado"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="produtor">Produtor</Label>
+              <Input
+                id="produtor"
+                value={produtor}
+                onChange={(e) => setProdutor(e.target.value)}
+                placeholder="Nome do produtor"
+              />
+            </div>
           </div>
           
           <DialogFooter>

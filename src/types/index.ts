@@ -67,11 +67,19 @@ export interface Pauta {
   created_at?: string;
   titulo: string;
   descricao?: string;
+  local?: string;
+  horario?: string;
+  entrevistado?: string;
+  produtor?: string;
 }
 
 export interface PautaCreateInput {
   titulo: string;
   descricao?: string;
+  local?: string;
+  horario?: string;
+  entrevistado?: string;
+  produtor?: string;
   status?: string;
   data_cobertura?: string;
 }
