@@ -1,9 +1,10 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, Download } from "lucide-react";
 import { formatTime } from "./utils";
-import { Telejornal } from "@/types";
+import { Telejornal, Materia } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import jsPDF from 'jspdf';
 
 interface ScheduleHeaderProps {
   currentTelejornal: Telejornal | null;
@@ -12,6 +13,7 @@ interface ScheduleHeaderProps {
   hasBlocks: boolean;
   onAddBlock?: () => void;
   onViewTeleprompter?: () => void;
+  materias?: Materia[];
 }
 
 export const ScheduleHeader = ({
@@ -20,8 +22,67 @@ export const ScheduleHeader = ({
   onRenumberItems,
   hasBlocks,
   onAddBlock,
-  onViewTeleprompter
+  onViewTeleprompter,
+  materias = []
 }: ScheduleHeaderProps) => {
+
+  const exportToPDF = () => {
+    if (!currentTelejornal || !materias.length) {
+      return;
+    }
+
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const margin = 20;
+    let yPosition = 30;
+
+    // Título do documento
+    doc.setFontSize(18);
+    doc.setFont("helvetica", "bold");
+    doc.text(`Espelho - ${currentTelejornal.nome}`, margin, yPosition);
+    
+    yPosition += 10;
+    doc.setFontSize(12);
+    doc.setFont("helvetica", "normal");
+    doc.text(`Data: ${new Date().toLocaleDateString('pt-BR')}`, margin, yPosition);
+    
+    yPosition += 20;
+
+    // Ordenar matérias por ordem
+    const sortedMaterias = [...materias].sort((a, b) => a.ordem - b.ordem);
+
+    sortedMaterias.forEach((materia, index) => {
+      // Verificar se precisa de nova página
+      if (yPosition > 250) {
+        doc.addPage();
+        yPosition = 30;
+      }
+
+      // Retranca em negrito
+      doc.setFontSize(14);
+      doc.setFont("helvetica", "bold");
+      doc.text(`${index + 1}. ${materia.retranca || materia.titulo}`, margin, yPosition);
+      yPosition += 8;
+
+      // Cabeça se existir
+      if (materia.cabeca) {
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        
+        // Quebrar texto longo em múltiplas linhas
+        const splitText = doc.splitTextToSize(materia.cabeca, pageWidth - (margin * 2));
+        doc.text(splitText, margin, yPosition);
+        yPosition += splitText.length * 5;
+      }
+
+      yPosition += 10; // Espaço entre matérias
+    });
+
+    // Salvar o PDF
+    const fileName = `Espelho_${currentTelejornal.nome}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.pdf`;
+    doc.save(fileName);
+  };
+
   return <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
       <div>
         <h1 className="text-xl font-bold">
@@ -50,6 +111,16 @@ export const ScheduleHeader = ({
         >
           <Eye className="h-4 w-4 mr-2" />
           Visualizar Teleprompter
+        </Button>
+
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={exportToPDF}
+          disabled={!currentTelejornal || !materias.length}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Exportar PDF
         </Button>
         
         <TooltipProvider>
