@@ -1,22 +1,29 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 interface ScheduleHeaderProps {
   currentTelejornal: Telejornal | null;
   totalJournalTime: number;
   onRenumberItems: () => void;
   hasBlocks: boolean;
+  onAddBlock?: () => void;
+  onViewTeleprompter?: () => void;
 }
+
 export const ScheduleHeader = ({
   currentTelejornal,
   totalJournalTime,
   onRenumberItems,
-  hasBlocks
+  hasBlocks,
+  onAddBlock,
+  onViewTeleprompter
 }: ScheduleHeaderProps) => {
-  return <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
+  return (
+    <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
       <div>
         <h1 className="text-xl font-bold">
           {currentTelejornal ? currentTelejornal.nome : "Selecione um Telejornal"}
@@ -26,6 +33,25 @@ export const ScheduleHeader = ({
         </p>
       </div>
       <div className="flex gap-4 items-center">
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={onAddBlock}
+          disabled={!currentTelejornal?.espelho_aberto}
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Adicionar Bloco
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm"
+          onClick={onViewTeleprompter}
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Visualizar Teleprompter
+        </Button>
+        
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -41,15 +67,19 @@ export const ScheduleHeader = ({
                 </Button>
               </div>
             </TooltipTrigger>
-            {!currentTelejornal?.espelho_aberto && <TooltipContent>
+            {!currentTelejornal?.espelho_aberto && (
+              <TooltipContent>
                 Abra o espelho para reorganizar a numeração
-              </TooltipContent>}
+              </TooltipContent>
+            )}
           </Tooltip>
         </TooltipProvider>
+        
         <div className="text-right">
           <p className="text-sm font-medium">Tempo Total:</p>
           <p className="text-lg font-bold">{formatTime(totalJournalTime)}</p>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
