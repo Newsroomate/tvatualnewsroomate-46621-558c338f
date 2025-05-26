@@ -187,6 +187,7 @@ export const NewsSchedule = ({
         totalJournalTime={totalJournalTime}
         onRenumberItems={handleRenumberItems}
         hasBlocks={blocks.length > 0}
+        onAddBlock={handleAddBlock}
       />
 
       {/* Main area with blocks */}

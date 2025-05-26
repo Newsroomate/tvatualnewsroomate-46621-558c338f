@@ -1,8 +1,10 @@
+
 import { Button } from "@/components/ui/button";
 import { ArrowDownUp, Lock, PlusCircle, Eye } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 interface ScheduleHeaderProps {
   currentTelejornal: Telejornal | null;
   totalJournalTime: number;
@@ -11,6 +13,7 @@ interface ScheduleHeaderProps {
   onAddBlock?: () => void;
   onViewTeleprompter?: () => void;
 }
+
 export const ScheduleHeader = ({
   currentTelejornal,
   totalJournalTime,
@@ -29,7 +32,15 @@ export const ScheduleHeader = ({
         </p>
       </div>
       <div className="flex gap-4 items-center">
-        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onAddBlock}
+          disabled={!currentTelejornal?.espelho_aberto}
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Adicionar Novo Bloco
+        </Button>
         
         <Button variant="outline" size="sm" onClick={onViewTeleprompter}>
           <Eye className="h-4 w-4 mr-2" />
