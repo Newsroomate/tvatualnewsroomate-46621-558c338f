@@ -42,7 +42,12 @@ export const ScheduleHeader = ({
           Adicionar Novo Bloco
         </Button>
         
-        <Button variant="outline" size="sm" onClick={onViewTeleprompter}>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onViewTeleprompter}
+          disabled={!currentTelejornal}
+        >
           <Eye className="h-4 w-4 mr-2" />
           Visualizar Teleprompter
         </Button>

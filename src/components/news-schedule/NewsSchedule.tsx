@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -22,6 +21,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
+import { Teleprompter } from "./Teleprompter";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useBlockManagement } from "@/hooks/useBlockManagement";
 import { useItemManagement } from "@/hooks/useItemManagement";
@@ -41,6 +41,7 @@ export const NewsSchedule = ({
 }: NewsScheduleProps) => {
   const [totalJournalTime, setTotalJournalTime] = useState(0);
   const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
+  const [showTeleprompter, setShowTeleprompter] = useState(false);
   const { profile } = useAuth();
   
   // Fetch telejornais
@@ -105,6 +106,13 @@ export const NewsSchedule = ({
     setBlocks, 
     isEspelhoAberto: !!currentTelejornal?.espelho_aberto 
   });
+
+  // Get all materias from all blocks for teleprompter
+  const allMaterias = blocks.flatMap(block => block.items);
+
+  const handleViewTeleprompter = () => {
+    setShowTeleprompter(true);
+  };
 
   // Process blocks data when it changes
   useEffect(() => {
@@ -188,6 +196,7 @@ export const NewsSchedule = ({
         onRenumberItems={handleRenumberItems}
         hasBlocks={blocks.length > 0}
         onAddBlock={handleAddBlock}
+        onViewTeleprompter={handleViewTeleprompter}
       />
 
       {/* Main area with blocks */}
@@ -211,6 +220,14 @@ export const NewsSchedule = ({
           />
         </div>
       </DragDropContext>
+
+      {/* Teleprompter Modal */}
+      <Teleprompter
+        isOpen={showTeleprompter}
+        onClose={() => setShowTeleprompter(false)}
+        materias={allMaterias}
+        telejornal={currentTelejornal}
+      />
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
