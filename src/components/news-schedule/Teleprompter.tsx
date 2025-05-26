@@ -137,17 +137,17 @@ export const Teleprompter = ({ isOpen, onClose, materias, telejornal }: Teleprom
             <div className="space-y-8">
               {sortedMaterias.map((materia, index) => (
                 <div key={materia.id} className="space-y-4">
-                  {/* Cabeça em branco */}
+                  {/* Retranca em amarelo - aparece primeiro */}
+                  <div className="text-yellow-400 font-bold text-2xl">
+                    {materia.retranca || materia.titulo}
+                  </div>
+                  
+                  {/* Cabeça em branco - aparece depois */}
                   {materia.cabeca && (
                     <div className="text-white font-medium">
                       {materia.cabeca}
                     </div>
                   )}
-                  
-                  {/* Retranca em amarelo */}
-                  <div className="text-yellow-400 font-bold text-2xl">
-                    {materia.retranca || materia.titulo}
-                  </div>
                   
                   {/* Spacer between items */}
                   {index < sortedMaterias.length - 1 && (
