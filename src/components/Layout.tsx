@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
@@ -9,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import { CloseRundownDialog } from "./CloseRundownDialog";
 import { useAuth } from "@/context/AuthContext";
 import { canCreateEspelhos } from "@/utils/permission";
-import { useRundownAutoSave } from "@/hooks/useRundownAutoSave";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -29,7 +29,6 @@ const Layout = () => {
   const [isCloseRundownDialogOpen, setIsCloseRundownDialogOpen] = useState(false);
   const { toast } = useToast();
   const { profile } = useAuth();
-  const { autoSaveRundown } = useRundownAutoSave();
 
   const handleSelectJournal = (journalId: string) => {
     setSelectedJournal(journalId);
@@ -132,19 +131,11 @@ const Layout = () => {
     if (!selectedJournal || !currentTelejornal) return;
     
     try {
-      // Get current blocks before closing
-      const blocksQuery = queryClient.getQueryData(['blocos', selectedJournal]);
-      
       // Fechar o espelho do telejornal
       await updateTelejornal(selectedJournal, {
         ...currentTelejornal,
         espelho_aberto: false
       });
-      
-      // Auto-save the rundown if we have blocks
-      if (blocksQuery && Array.isArray(blocksQuery)) {
-        await autoSaveRundown(currentTelejornal, blocksQuery as any);
-      }
       
       // Atualizar o estado local
       setCurrentTelejornal({
@@ -153,8 +144,8 @@ const Layout = () => {
       });
       
       toast({
-        title: "Espelho fechado e salvo",
-        description: `Espelho de ${currentTelejornal.nome} fechado e salvo automaticamente`,
+        title: "Espelho fechado",
+        description: `Espelho de ${currentTelejornal.nome} fechado`,
         variant: "destructive"
       });
       
