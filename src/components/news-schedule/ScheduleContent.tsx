@@ -86,6 +86,7 @@ export const ScheduleContent = ({
           onCreateNew={onOpenRundown}
           onReopenLast={onReopenLastRundown}
           onReopenFromDate={onReopenFromDate}
+          currentTelejornalId={selectedJournal}
         />
       </div>
     );
