@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
@@ -10,6 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { CloseRundownDialog } from "./CloseRundownDialog";
 import { useAuth } from "@/context/AuthContext";
 import { canCreateEspelhos } from "@/utils/permission";
+import { PostCloseRundownModal } from "./PostCloseRundownModal";
+import { SavedRundownsModal } from "./SavedRundownsModal";
+import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
+import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -29,6 +32,9 @@ const Layout = () => {
   const [isCloseRundownDialogOpen, setIsCloseRundownDialogOpen] = useState(false);
   const { toast } = useToast();
   const { profile } = useAuth();
+  const [isPostCloseModalOpen, setIsPostCloseModalOpen] = useState(false);
+  const [isSavedRundownsModalOpen, setIsSavedRundownsModalOpen] = useState(false);
+  const [selectedViewDate, setSelectedViewDate] = useState<Date>(new Date());
 
   const handleSelectJournal = (journalId: string) => {
     setSelectedJournal(journalId);
@@ -71,6 +77,58 @@ const Layout = () => {
     }
     
     console.log("Edit panel closed - UI will update via Realtime subscription and explicit query invalidation");
+  };
+
+  const saveCurrentRundownSnapshot = async () => {
+    if (!selectedJournal || !currentTelejornal) return;
+
+    try {
+      console.log("Salvando snapshot do espelho atual...");
+      
+      // Fetch current blocks and materias
+      const blocks = await fetchBlocosByTelejornal(selectedJournal);
+      const blocksWithItems = await Promise.all(
+        blocks.map(async (block) => {
+          const materias = await fetchMateriasByBloco(block.id);
+          return {
+            id: block.id,
+            nome: block.nome,
+            ordem: block.ordem,
+            items: materias.map(materia => ({
+              id: materia.id,
+              retranca: materia.retranca,
+              clip: materia.clip,
+              duracao: materia.duracao || 0,
+              pagina: materia.pagina,
+              reporter: materia.reporter,
+              status: materia.status,
+              texto: materia.texto,
+              cabeca: materia.cabeca,
+              ordem: materia.ordem
+            }))
+          };
+        })
+      );
+
+      // Save the snapshot
+      await saveRundownSnapshot({
+        telejornal_id: selectedJournal,
+        data_referencia: new Date().toISOString().split('T')[0],
+        nome: currentTelejornal.nome,
+        estrutura: {
+          blocos: blocksWithItems
+        }
+      });
+
+      console.log("Snapshot salvo com sucesso!");
+    } catch (error) {
+      console.error("Erro ao salvar snapshot:", error);
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar o snapshot do espelho",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleToggleRundown = async () => {
@@ -131,6 +189,9 @@ const Layout = () => {
     if (!selectedJournal || !currentTelejornal) return;
     
     try {
+      // Save snapshot before closing
+      await saveCurrentRundownSnapshot();
+      
       // Fechar o espelho do telejornal
       await updateTelejornal(selectedJournal, {
         ...currentTelejornal,
@@ -145,12 +206,15 @@ const Layout = () => {
       
       toast({
         title: "Espelho fechado",
-        description: `Espelho de ${currentTelejornal.nome} fechado`,
-        variant: "destructive"
+        description: `Espelho de ${currentTelejornal.nome} fechado e salvo`,
+        variant: "default"
       });
       
       // Fechar o diálogo
       setIsCloseRundownDialogOpen(false);
+      
+      // Mostrar modal pós-fechamento
+      setIsPostCloseModalOpen(true);
       
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ['telejornais'] });
@@ -162,6 +226,52 @@ const Layout = () => {
         variant: "destructive"
       });
     }
+  };
+
+  const handleCreateNewRundown = async () => {
+    if (!selectedJournal || !currentTelejornal) return;
+
+    try {
+      console.log("Criando novo espelho...");
+      
+      // Delete all current blocks and materias
+      await deleteAllBlocos(selectedJournal);
+      
+      // Open the rundown
+      await updateTelejornal(selectedJournal, {
+        ...currentTelejornal,
+        espelho_aberto: true
+      });
+      
+      // Update local state
+      setCurrentTelejornal({
+        ...currentTelejornal,
+        espelho_aberto: true
+      });
+      
+      toast({
+        title: "Novo espelho criado",
+        description: `Novo espelho de ${currentTelejornal.nome} criado e aberto`,
+        variant: "default"
+      });
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['telejornais'] });
+      queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
+      
+    } catch (error) {
+      console.error("Erro ao criar novo espelho:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar um novo espelho",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleViewByDate = (date: Date) => {
+    setSelectedViewDate(date);
+    setIsSavedRundownsModalOpen(true);
   };
 
   return (
@@ -244,6 +354,23 @@ const Layout = () => {
           onClose={() => setIsCloseRundownDialogOpen(false)}
           onConfirm={handleConfirmCloseRundown}
           telejornalNome={currentTelejornal?.nome}
+        />
+        
+        {/* Modal pós-fechamento */}
+        <PostCloseRundownModal
+          isOpen={isPostCloseModalOpen}
+          onClose={() => setIsPostCloseModalOpen(false)}
+          currentTelejornal={currentTelejornal}
+          onCreateNew={handleCreateNewRundown}
+          onViewByDate={handleViewByDate}
+        />
+        
+        {/* Modal para visualizar espelhos salvos por data */}
+        <SavedRundownsModal
+          isOpen={isSavedRundownsModalOpen}
+          onClose={() => setIsSavedRundownsModalOpen(false)}
+          telejornalId={selectedJournal || ""}
+          targetDate={selectedViewDate}
         />
       </div>
     </QueryClientProvider>

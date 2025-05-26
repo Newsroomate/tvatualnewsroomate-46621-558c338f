@@ -1,4 +1,3 @@
-
 export interface Telejornal {
   id: string;
   created_at?: string;
@@ -90,3 +89,5 @@ export interface CloseRundownDialogProps {
   onConfirm: () => void;
   telejornalNome?: string;
 }
+
+export * from './saved-rundowns';
