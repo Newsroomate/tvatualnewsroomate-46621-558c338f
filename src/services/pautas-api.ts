@@ -42,7 +42,14 @@ export const createPauta = async (pauta: PautaCreateInput) => {
   return data as Pauta;
 };
 
-export const updatePauta = async (id: string, updates: { titulo: string }) => {
+export const updatePauta = async (id: string, updates: { 
+  titulo: string;
+  descricao?: string;
+  local?: string;
+  horario?: string;
+  entrevistado?: string;
+  produtor?: string;
+}) => {
   const { data, error } = await supabase
     .from('pautas')
     .update(updates)
