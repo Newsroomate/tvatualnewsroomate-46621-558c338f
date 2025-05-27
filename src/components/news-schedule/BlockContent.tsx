@@ -11,10 +11,6 @@ interface BlockContentProps {
   onDuplicateItem: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModifyItems?: boolean;
-  onCopyItem?: (item: Materia) => void;
-  onPasteItem?: (blockId: string) => void;
-  hasClipboardData?: boolean;
-  clipboardType?: 'block' | 'item' | null;
 }
 
 export const BlockContent = ({ 
@@ -24,11 +20,7 @@ export const BlockContent = ({
   onDeleteItem,
   onDuplicateItem,
   isEspelhoOpen,
-  canModifyItems = true,
-  onCopyItem,
-  onPasteItem,
-  hasClipboardData,
-  clipboardType
+  canModifyItems = true
 }: BlockContentProps) => {
   return (
     <div className="overflow-x-auto">
@@ -76,10 +68,6 @@ export const BlockContent = ({
                           isEspelhoOpen={isEspelhoOpen}
                           onDoubleClick={onEditItem}
                           canModify={canModifyItems}
-                          onCopyItem={onCopyItem}
-                          onPasteItem={onPasteItem}
-                          hasClipboardData={hasClipboardData}
-                          clipboardType={clipboardType}
                         />
                       )}
                     </Draggable>

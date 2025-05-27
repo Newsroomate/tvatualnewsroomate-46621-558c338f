@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -26,8 +25,6 @@ import { Teleprompter } from "./Teleprompter";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useBlockManagement } from "@/hooks/useBlockManagement";
 import { useItemManagement } from "@/hooks/useItemManagement";
-import { ClipboardProvider } from "@/context/ClipboardContext";
-import { useClipboardOperations } from "@/hooks/useClipboardOperations";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -67,13 +64,6 @@ export const NewsSchedule = ({
     materiaToDelete: null
   });
 
-  // Initialize clipboard operations
-  const { handlePasteBlock, handlePasteItem } = useClipboardOperations({
-    blocks,
-    setBlocks,
-    currentTelejornalId: selectedJournal
-  });
-
   // Use the custom hooks for item, block, and drag-drop management
   const { 
     newItemBlock, 
@@ -89,13 +79,7 @@ export const NewsSchedule = ({
     handleDeleteMateria, 
     confirmDeleteMateria,
     handleRenumberItems, 
-    confirmRenumberItems,
-    handleCopyBlock,
-    handleCopyItem,
-    handlePasteBlock: handlePasteBlockAction,
-    handlePasteItem: handlePasteItemAction,
-    hasClipboardData,
-    getClipboardType
+    confirmRenumberItems 
   } = useItemManagement({ 
     blocks, 
     setBlocks, 
@@ -205,95 +189,87 @@ export const NewsSchedule = ({
   const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
 
   return (
-    <ClipboardProvider onPasteBlock={handlePasteBlock} onPasteItem={handlePasteItem}>
-      <div className="flex flex-col h-full">
-        {/* Header with journal info and total time */}
-        <ScheduleHeader
-          currentTelejornal={currentTelejornal}
-          totalJournalTime={totalJournalTime}
-          onRenumberItems={handleRenumberItems}
-          hasBlocks={blocks.length > 0}
-          onAddBlock={handleAddBlock}
-          onViewTeleprompter={handleViewTeleprompter}
-        />
+    <div className="flex flex-col h-full">
+      {/* Header with journal info and total time */}
+      <ScheduleHeader
+        currentTelejornal={currentTelejornal}
+        totalJournalTime={totalJournalTime}
+        onRenumberItems={handleRenumberItems}
+        hasBlocks={blocks.length > 0}
+        onAddBlock={handleAddBlock}
+        onViewTeleprompter={handleViewTeleprompter}
+      />
 
-        {/* Main area with blocks */}
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex-1 overflow-y-auto p-4 space-y-6">
-            <ScheduleContent
-              selectedJournal={selectedJournal}
-              currentTelejornal={currentTelejornal}
-              blocks={blocks}
-              isLoading={isLoading}
-              isCreatingFirstBlock={isCreatingFirstBlock}
-              newItemBlock={newItemBlock}
-              onOpenRundown={onOpenRundown}
-              onAddFirstBlock={handleAddFirstBlock}
-              onAddBlock={handleAddBlock}
-              onAddItem={handleAddItem}
-              onEditItem={onEditItem}
-              onDeleteItem={handleDeleteMateria}
-              onDuplicateItem={handleDuplicateItem}
-              onRenameBlock={handleRenameBlock}
-              onDeleteBlock={handleDeleteBlock}
-              onCopyBlock={handleCopyBlock}
-              onCopyItem={handleCopyItem}
-              onPasteBlock={handlePasteBlockAction}
-              onPasteItem={handlePasteItemAction}
-              hasClipboardData={hasClipboardData()}
-              clipboardType={getClipboardType()}
-            />
-          </div>
-        </DragDropContext>
+      {/* Main area with blocks */}
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+          <ScheduleContent
+            selectedJournal={selectedJournal}
+            currentTelejornal={currentTelejornal}
+            blocks={blocks}
+            isLoading={isLoading}
+            isCreatingFirstBlock={isCreatingFirstBlock}
+            newItemBlock={newItemBlock}
+            onOpenRundown={onOpenRundown}
+            onAddFirstBlock={handleAddFirstBlock}
+            onAddBlock={handleAddBlock}
+            onAddItem={handleAddItem}
+            onEditItem={onEditItem}
+            onDeleteItem={handleDeleteMateria}
+            onDuplicateItem={handleDuplicateItem}
+            onRenameBlock={handleRenameBlock}
+            onDeleteBlock={handleDeleteBlock}
+          />
+        </div>
+      </DragDropContext>
 
-        {/* Teleprompter Modal */}
-        <Teleprompter
-          isOpen={showTeleprompter}
-          onClose={() => setShowTeleprompter(false)}
-          materias={allMaterias}
-          telejornal={currentTelejornal}
-        />
+      {/* Teleprompter Modal */}
+      <Teleprompter
+        isOpen={showTeleprompter}
+        onClose={() => setShowTeleprompter(false)}
+        materias={allMaterias}
+        telejornal={currentTelejornal}
+      />
 
-        {/* Delete confirmation dialog */}
-        <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
-              <AlertDialogDescription>
-                Tem certeza que deseja excluir esta matéria? Esta ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction 
-                className="bg-red-600 hover:bg-red-700"
-                onClick={confirmDeleteMateria}
-              >
-                Excluir
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta matéria? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700"
+              onClick={confirmDeleteMateria}
+            >
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-        {/* Renumber confirmation dialog */}
-        <AlertDialog open={renumberConfirmOpen} onOpenChange={setRenumberConfirmOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Reorganizar Numeração</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação irá renumerar todas as matérias sequencialmente com base na ordem atual. 
-                Deseja continuar?
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={confirmRenumberItems}>
-                Reorganizar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialog>
-        </AlertDialog>
-      </div>
-    </ClipboardProvider>
+      {/* Renumber confirmation dialog */}
+      <AlertDialog open={renumberConfirmOpen} onOpenChange={setRenumberConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Reorganizar Numeração</AlertDialogTitle>
+            <AlertDialogDescription>
+              Esta ação irá renumerar todas as matérias sequencialmente com base na ordem atual. 
+              Deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmRenumberItems}>
+              Reorganizar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
   );
 };

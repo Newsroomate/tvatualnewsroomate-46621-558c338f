@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Copy as CopyIcon, Clipboard } from "lucide-react";
+import { Trash2, Pencil, Copy } from "lucide-react";
 import { Materia } from "@/types";
 import { formatTime } from "./utils";
 import {
@@ -9,12 +9,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
 
 interface NewsItemProps {
   item: Materia;
@@ -26,10 +20,6 @@ interface NewsItemProps {
   isEspelhoOpen: boolean;
   onDoubleClick: (item: Materia) => void;
   canModify?: boolean;
-  onCopyItem?: (item: Materia) => void;
-  onPasteItem?: (blockId: string) => void;
-  hasClipboardData?: boolean;
-  clipboardType?: 'block' | 'item' | null;
 }
 
 export const NewsItem = ({ 
@@ -41,11 +31,7 @@ export const NewsItem = ({
   snapshot,
   isEspelhoOpen,
   onDoubleClick,
-  canModify = true,
-  onCopyItem,
-  onPasteItem,
-  hasClipboardData,
-  clipboardType
+  canModify = true
 }: NewsItemProps) => {
   // Status color classes
   const getStatusClass = (status: string): string => {
@@ -75,122 +61,104 @@ export const NewsItem = ({
   const displayDuracao = item.duracao || 0;
   
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <tr 
-          ref={provided.innerRef}
-          {...provided.draggableProps}
-          {...provided.dragHandleProps}
-          className={`hover:bg-gray-50 transition-colors cursor-pointer ${
-            snapshot.isDragging ? "bg-blue-50" : ""
-          }`}
-          onDoubleClick={() => onDoubleClick(item)}
-        >
-          <td className="py-2 px-4">{item.pagina}</td>
-          <td className="py-2 px-4 font-medium">{displayRetranca}</td>
-          <td className="py-2 px-4 font-mono text-xs">{item.clip || ''}</td>
-          <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
-          <td className="py-2 px-4">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(displayStatus)}`}>
-              {translateStatus(displayStatus)}
-            </span>
-          </td>
-          <td className="py-2 px-4">{item.reporter || '-'}</td>
-          <td className="py-2 px-4">
-            <div className="flex gap-1">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => onEdit(item)}
-                      disabled={!isEspelhoOpen || !canModify}
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  {!isEspelhoOpen && (
-                    <TooltipContent>
-                      Abra o espelho para editar
-                    </TooltipContent>
-                  )}
-                  {!canModify && isEspelhoOpen && (
-                    <TooltipContent>
-                      Sem permissão para editar
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
+    <tr 
+      ref={provided.innerRef}
+      {...provided.draggableProps}
+      {...provided.dragHandleProps}
+      className={`hover:bg-gray-50 transition-colors ${
+        snapshot.isDragging ? "bg-blue-50" : ""
+      }`}
+      onDoubleClick={() => onDoubleClick(item)}
+    >
+      <td className="py-2 px-4">{item.pagina}</td>
+      <td className="py-2 px-4 font-medium">{displayRetranca}</td>
+      <td className="py-2 px-4 font-mono text-xs">{item.clip || ''}</td>
+      <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
+      <td className="py-2 px-4">
+        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(displayStatus)}`}>
+          {translateStatus(displayStatus)}
+        </span>
+      </td>
+      <td className="py-2 px-4">{item.reporter || '-'}</td>
+      <td className="py-2 px-4">
+        <div className="flex gap-1">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => onEdit(item)}
+                  disabled={!isEspelhoOpen || !canModify}
+                >
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              {!isEspelhoOpen && (
+                <TooltipContent>
+                  Abra o espelho para editar
+                </TooltipContent>
+              )}
+              {!canModify && isEspelhoOpen && (
+                <TooltipContent>
+                  Sem permissão para editar
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => onDuplicate(item)}
-                      disabled={!isEspelhoOpen || !canModify}
-                    >
-                      <CopyIcon className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  {!isEspelhoOpen && (
-                    <TooltipContent>
-                      Abra o espelho para duplicar
-                    </TooltipContent>
-                  )}
-                  {!canModify && isEspelhoOpen && (
-                    <TooltipContent>
-                      Sem permissão para duplicar
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-              
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      className="text-red-600 hover:text-red-800"
-                      onClick={() => onDelete(item)}
-                      disabled={!isEspelhoOpen || !canModify}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  {!isEspelhoOpen && (
-                    <TooltipContent>
-                      Abra o espelho para excluir
-                    </TooltipContent>
-                  )}
-                  {!canModify && isEspelhoOpen && (
-                    <TooltipContent>
-                      Sem permissão para excluir
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          </td>
-        </tr>
-      </ContextMenuTrigger>
-      <ContextMenuContent>
-        {canModify && isEspelhoOpen && (
-          <ContextMenuItem onClick={() => onCopyItem?.(item)}>
-            <CopyIcon className="h-4 w-4 mr-2" />
-            Copiar Matéria
-          </ContextMenuItem>
-        )}
-        {canModify && isEspelhoOpen && hasClipboardData && clipboardType === 'item' && (
-          <ContextMenuItem onClick={() => onPasteItem?.(item.bloco_id)}>
-            <Clipboard className="h-4 w-4 mr-2" />
-            Colar Matéria
-          </ContextMenuItem>
-        )}
-      </ContextMenuContent>
-    </ContextMenu>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  onClick={() => onDuplicate(item)}
+                  disabled={!isEspelhoOpen || !canModify}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              {!isEspelhoOpen && (
+                <TooltipContent>
+                  Abra o espelho para duplicar
+                </TooltipContent>
+              )}
+              {!canModify && isEspelhoOpen && (
+                <TooltipContent>
+                  Sem permissão para duplicar
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+          
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  size="sm" 
+                  variant="ghost" 
+                  className="text-red-600 hover:text-red-800"
+                  onClick={() => onDelete(item)}
+                  disabled={!isEspelhoOpen || !canModify}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              {!isEspelhoOpen && (
+                <TooltipContent>
+                  Abra o espelho para excluir
+                </TooltipContent>
+              )}
+              {!canModify && isEspelhoOpen && (
+                <TooltipContent>
+                  Sem permissão para excluir
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </td>
+    </tr>
   );
 };
