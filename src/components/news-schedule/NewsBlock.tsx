@@ -32,11 +32,7 @@ export const NewsBlock = ({
   const canModify = canModifyMaterias(profile);
   
   return (
-    <div 
-      key={block.id} 
-      data-block-id={block.id}
-      className="border border-gray-200 rounded-lg shadow-sm"
-    >
+    <div key={block.id} className="border border-gray-200 rounded-lg shadow-sm">
       <BlockHeader
         blockName={block.nome}
         totalTime={block.totalTime}
