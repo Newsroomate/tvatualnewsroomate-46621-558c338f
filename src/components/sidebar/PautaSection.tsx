@@ -1,12 +1,13 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit2, Trash2 } from "lucide-react";
+import { PlusCircle, Edit2, Trash2, FileText } from "lucide-react";
 import { Pauta } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EditPautaDialog } from "@/components/EditPautaDialog";
 import { deletePauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
+import { generatePautaPDF } from "@/utils/pdf-utils";
 
 interface PautaSectionProps {
   pautas: Pauta[];
@@ -33,6 +34,24 @@ export const PautaSection = ({
   const handleDeletePauta = (pauta: Pauta, e: React.MouseEvent) => {
     e.stopPropagation();
     setDeletingPauta(pauta);
+  };
+
+  const handlePrintPauta = (pauta: Pauta, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      generatePautaPDF(pauta);
+      toast({
+        title: "PDF gerado",
+        description: "O arquivo PDF da pauta foi baixado com sucesso",
+      });
+    } catch (error) {
+      console.error("Erro ao gerar PDF:", error);
+      toast({
+        title: "Erro ao gerar PDF",
+        description: "Ocorreu um erro ao gerar o PDF. Tente novamente.",
+        variant: "destructive",
+      });
+    }
   };
 
   const confirmDeletePauta = async () => {
@@ -72,10 +91,14 @@ export const PautaSection = ({
         <ul className="space-y-1">
           {pautas.map(pauta => (
             <li key={pauta.id} className="relative group">
-              <Button variant="ghost" className="w-full justify-start text-left pr-16">
+              <Button variant="ghost" className="w-full justify-start text-left pr-24">
                 {pauta.titulo}
               </Button>
               <div className="absolute top-1 right-1 hidden group-hover:flex space-x-1">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => handlePrintPauta(pauta, e)}>
+                  <FileText className="h-4 w-4" />
+                  <span className="sr-only">Imprimir PDF</span>
+                </Button>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => handleEditPauta(pauta, e)}>
                   <Edit2 className="h-4 w-4" />
                   <span className="sr-only">Editar</span>
