@@ -1,19 +1,18 @@
 
 import { Button } from "@/components/ui/button";
-import { Plus, RotateCcw, Eye, Download } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye } from "lucide-react";
 import { formatTime } from "./utils";
-import { Telejornal } from "@/types";
-import { useAuth } from "@/context/AuthContext";
-import { canCreateEspelhos, canModifyMaterias } from "@/utils/permission";
+import { Telejornal, Materia } from "@/types";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface ScheduleHeaderProps {
   currentTelejornal: Telejornal | null;
   totalJournalTime: number;
   onRenumberItems: () => void;
   hasBlocks: boolean;
-  onAddBlock: () => void;
-  onViewTeleprompter: () => void;
-  onExportEspelhoPDF?: () => void;
+  onAddBlock?: () => void;
+  onViewTeleprompter?: () => void;
+  materias?: Materia[];
 }
 
 export const ScheduleHeader = ({
@@ -23,71 +22,59 @@ export const ScheduleHeader = ({
   hasBlocks,
   onAddBlock,
   onViewTeleprompter,
-  onExportEspelhoPDF
+  materias = []
 }: ScheduleHeaderProps) => {
-  const { profile } = useAuth();
-  const canCreateBlocks = canCreateEspelhos(profile);
-  const canModify = canModifyMaterias(profile);
 
-  return (
-    <div className="border-b p-4 bg-white">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-xl font-semibold">
-            {currentTelejornal ? currentTelejornal.nome : "Selecione um telejornal"}
-          </h2>
-          {currentTelejornal && (
-            <p className="text-sm text-gray-600">
-              Tempo total: {formatTime(totalJournalTime)}
-            </p>
-          )}
-        </div>
-
-        <div className="flex gap-2">
-          {currentTelejornal?.espelho_aberto && canModify && hasBlocks && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={onRenumberItems}
-            >
-              <RotateCcw className="h-4 w-4 mr-2" />
-              Renumerar
-            </Button>
-          )}
-
-          {currentTelejornal?.espelho_aberto && canCreateBlocks && (
-            <Button 
-              size="sm" 
-              onClick={onAddBlock}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Adicionar Bloco
-            </Button>
-          )}
-
-          {hasBlocks && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={onViewTeleprompter}
-            >
-              <Eye className="h-4 w-4 mr-2" />
-              Teleprompter
-            </Button>
-          )}
-
-          {hasBlocks && onExportEspelhoPDF && (
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={onExportEspelhoPDF}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Exportar PDF
-            </Button>
-          )}
+  return <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
+      <div>
+        <h1 className="text-xl font-bold">
+          {currentTelejornal ? currentTelejornal.nome : "Selecione um Telejornal"}
+        </h1>
+        <p className="text-sm text-gray-500">
+          {new Date().toLocaleDateString('pt-BR')}
+        </p>
+      </div>
+      <div className="flex gap-4 items-center">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onAddBlock}
+          disabled={!currentTelejornal?.espelho_aberto}
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Adicionar Novo Bloco
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onViewTeleprompter}
+          disabled={!currentTelejornal}
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Visualizar Teleprompter
+        </Button>
+        
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <Button variant="outline" size="sm" onClick={onRenumberItems} disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}>
+                  <ArrowDownUp className="h-4 w-4 mr-2" />
+                  Reordenar Numeração
+                </Button>
+              </div>
+            </TooltipTrigger>
+            {!currentTelejornal?.espelho_aberto && <TooltipContent>
+                Abra o espelho para reorganizar a numeração
+              </TooltipContent>}
+          </Tooltip>
+        </TooltipProvider>
+        
+        <div className="text-right">
+          <p className="text-sm font-medium">Tempo Total:</p>
+          <p className="text-lg font-bold">{formatTime(totalJournalTime)}</p>
         </div>
       </div>
-    </div>
-  );
+    </div>;
 };

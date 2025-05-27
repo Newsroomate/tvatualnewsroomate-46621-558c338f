@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -25,8 +26,6 @@ import { Teleprompter } from "./Teleprompter";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useBlockManagement } from "@/hooks/useBlockManagement";
 import { useItemManagement } from "@/hooks/useItemManagement";
-import { useToast } from "@/hooks/use-toast";
-import { generateEspelhoPDF } from "@/utils/espelho-pdf-utils";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -113,33 +112,6 @@ export const NewsSchedule = ({
 
   // Get all materias from all blocks for teleprompter
   const allMaterias = blocks.flatMap(block => block.items);
-
-  const { toast } = useToast();
-
-  const handleExportEspelhoPDF = () => {
-    if (!currentTelejornal || blocks.length === 0) {
-      toast({
-        title: "Exportação não disponível",
-        description: "Não há dados para exportar ou nenhum telejornal selecionado",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      generateEspelhoPDF({
-        blocos: blocks,
-        telejornal: currentTelejornal
-      });
-    } catch (error) {
-      console.error("Erro ao exportar PDF:", error);
-      toast({
-        title: "Erro na exportação",
-        description: "Não foi possível gerar o PDF do espelho",
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleViewTeleprompter = () => {
     setShowTeleprompter(true);
@@ -288,7 +260,6 @@ export const NewsSchedule = ({
         hasBlocks={blocks.length > 0}
         onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
-        onExportEspelhoPDF={handleExportEspelhoPDF}
       />
 
       {/* Main area with blocks */}
