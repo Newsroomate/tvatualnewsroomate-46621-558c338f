@@ -51,8 +51,8 @@ export const useItemRenumbering = ({
           
           console.log(`Updating materia ${item.id} from page ${item.pagina} to page ${pageNumber}`);
           
-          // Prepare the update data with only the fields that exist in the database
-          const updateData = {
+          // Prepare the update data with proper typing to include all possible fields
+          const updateData: Partial<Materia> = {
             pagina: pageNumber.toString(),
             retranca: item.retranca, // Required field
             duracao: item.duracao,
