@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -36,11 +35,49 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         local_gravacao: item.local_gravacao || '',
         pagina: item.pagina,
         bloco_id: item.bloco_id,
-        ordem: item.ordem, // Ensure ordem is included
+        ordem: item.ordem,
         tags: item.tags
       });
     }
   }, [item]);
+
+  // Function to calculate duration based on word count
+  const calculateDuration = (retranca: string, cabeca: string, texto: string) => {
+    // Count words in each field
+    const countWords = (text: string) => {
+      return text ? text.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
+    };
+
+    const retrancaWords = countWords(retranca);
+    const cabecaWords = countWords(cabeca);
+    const textoWords = countWords(texto);
+    
+    const totalWords = retrancaWords + cabecaWords + textoWords;
+    
+    // Estimate reading speed: approximately 150 words per minute for TV news
+    // This translates to 2.5 words per second
+    const wordsPerSecond = 2.5;
+    const estimatedDuration = Math.round(totalWords / wordsPerSecond);
+    
+    return estimatedDuration > 0 ? estimatedDuration : 0;
+  };
+
+  // Update duration whenever text fields change
+  useEffect(() => {
+    const retranca = formData.retranca || '';
+    const cabeca = formData.cabeca || '';
+    const texto = formData.texto || '';
+    
+    const estimatedDuration = calculateDuration(retranca, cabeca, texto);
+    
+    // Only update if there's content and the duration has changed
+    if ((retranca || cabeca || texto) && estimatedDuration !== formData.duracao) {
+      setFormData(prev => ({
+        ...prev,
+        duracao: estimatedDuration
+      }));
+    }
+  }, [formData.retranca, formData.cabeca, formData.texto]);
 
   if (!isOpen || !item) return null;
 
@@ -55,27 +92,23 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const handleSave = async () => {
     if (!item) return;
     
-    // Make sure ordem and retranca are included in the update data
     const updateData = {
       ...formData,
-      ordem: item.ordem, // Ensure ordem is always included and maintains its original value
-      retranca: formData.retranca || item.retranca // Ensure retranca is always included
+      ordem: item.ordem,
+      retranca: formData.retranca || item.retranca
     };
     
     setIsSaving(true);
     try {
       console.log("Saving updated materia:", { id: item.id, ...updateData });
       
-      // Update the materia in the database
       const updatedMateria = await updateMateria(item.id, updateData);
       
-      // Show success toast
       toast({
         title: "Matéria atualizada",
         description: "As alterações foram salvas com sucesso.",
       });
       
-      // Force close the edit panel immediately after saving
       onClose();
     } catch (error) {
       console.error("Erro ao salvar matéria:", error);
@@ -89,7 +122,6 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
     }
   };
 
-  // ... keep existing code (component rendering)
   return (
     <div className="fixed top-0 right-0 w-[400px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20 overflow-y-auto">
       {/* Header */}
@@ -158,7 +190,13 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
                 type="number" 
                 value={formData.duracao || 0} 
                 onChange={handleInputChange}
+                title="Duração estimada automaticamente baseada na contagem de palavras"
               />
+              <p className="text-xs text-gray-500">
+                Estimativa automática baseada em {Math.round(((formData.retranca || '').split(/\s+/).filter(w => w).length + 
+                (formData.cabeca || '').split(/\s+/).filter(w => w).length + 
+                (formData.texto || '').split(/\s+/).filter(w => w).length))} palavras
+              </p>
             </div>
           </div>
           
