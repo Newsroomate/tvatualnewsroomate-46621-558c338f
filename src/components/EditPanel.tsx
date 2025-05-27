@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Materia } from "@/types";
 import { updateMateria } from "@/services/materias-api";
@@ -18,7 +17,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const [formData, setFormData] = useState<Partial<Materia>>({});
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
-  const { calculateDuration } = useDurationCalculator();
+  const { calculateCabecaDuration } = useDurationCalculator();
 
   // Initialize form data when item changes
   useEffect(() => {
@@ -42,22 +41,20 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
     }
   }, [item]);
 
-  // Update duration whenever text fields change
+  // Update duration whenever cabeca field changes (only based on cabeca words)
   useEffect(() => {
-    const retranca = formData.retranca || '';
     const cabeca = formData.cabeca || '';
-    const texto = formData.texto || '';
     
-    const estimatedDuration = calculateDuration(retranca, cabeca, texto);
+    const estimatedDuration = calculateCabecaDuration(cabeca);
     
-    // Only update if there's content and the duration has changed
-    if ((retranca || cabeca || texto) && estimatedDuration !== formData.duracao) {
+    // Only update if there's content in cabeca and the duration has changed
+    if (cabeca && estimatedDuration !== formData.duracao) {
       setFormData(prev => ({
         ...prev,
         duracao: estimatedDuration
       }));
     }
-  }, [formData.retranca, formData.cabeca, formData.texto, calculateDuration]);
+  }, [formData.cabeca, calculateCabecaDuration]);
 
   if (!isOpen || !item) return null;
 

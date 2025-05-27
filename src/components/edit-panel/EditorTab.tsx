@@ -24,13 +24,9 @@ export const EditorTab = ({
   onClose, 
   isSaving 
 }: EditorTabProps) => {
-  const { getTotalWords } = useDurationCalculator();
+  const { getCabecaWords } = useDurationCalculator();
   
-  const totalWords = getTotalWords(
-    formData.retranca || '',
-    formData.cabeca || '',
-    formData.texto || ''
-  );
+  const cabecaWords = getCabecaWords(formData.cabeca || '');
 
   const handleExportGC = () => {
     const retranca = formData.retranca || '';
@@ -127,10 +123,10 @@ export const EditorTab = ({
             type="number" 
             value={formData.duracao || 0} 
             onChange={onInputChange}
-            title="Duração estimada automaticamente baseada na contagem de palavras"
+            title="Duração estimada automaticamente baseada na contagem de palavras da cabeça"
           />
           <p className="text-xs text-gray-500">
-            Estimativa automática baseada em {Math.round(totalWords)} palavras
+            Estimativa automática baseada em {Math.round(cabecaWords)} palavras da cabeça
           </p>
         </div>
       </div>

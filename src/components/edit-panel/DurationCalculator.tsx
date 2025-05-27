@@ -20,6 +20,22 @@ export const useDurationCalculator = () => {
     return estimatedDuration > 0 ? estimatedDuration : 0;
   };
 
+  const calculateCabecaDuration = (cabeca: string) => {
+    // Count words only in cabeca field
+    const countWords = (text: string) => {
+      return text ? text.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
+    };
+
+    const cabecaWords = countWords(cabeca);
+    
+    // Estimate reading speed: approximately 150 words per minute for TV news
+    // This translates to 2.5 words per second
+    const wordsPerSecond = 2.5;
+    const estimatedDuration = Math.round(cabecaWords / wordsPerSecond);
+    
+    return estimatedDuration > 0 ? estimatedDuration : 0;
+  };
+
   const getTotalWords = (retranca: string, cabeca: string, texto: string) => {
     const countWords = (text: string) => {
       return text ? text.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
@@ -28,5 +44,13 @@ export const useDurationCalculator = () => {
     return countWords(retranca) + countWords(cabeca) + countWords(texto);
   };
 
-  return { calculateDuration, getTotalWords };
+  const getCabecaWords = (cabeca: string) => {
+    const countWords = (text: string) => {
+      return text ? text.trim().split(/\s+/).filter(word => word.length > 0).length : 0;
+    };
+
+    return countWords(cabeca);
+  };
+
+  return { calculateDuration, calculateCabecaDuration, getTotalWords, getCabecaWords };
 };
