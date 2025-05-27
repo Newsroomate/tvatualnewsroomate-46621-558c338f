@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -26,6 +25,7 @@ import { Teleprompter } from "./Teleprompter";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useBlockManagement } from "@/hooks/useBlockManagement";
 import { useItemManagement } from "@/hooks/useItemManagement";
+import { generateClipRetrancaPDF } from "@/utils/clip-retranca-pdf-utils";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -115,6 +115,16 @@ export const NewsSchedule = ({
 
   const handleViewTeleprompter = () => {
     setShowTeleprompter(true);
+  };
+
+  const handleExportClipRetranca = () => {
+    if (!currentTelejornal || blocks.length === 0) return;
+    
+    try {
+      generateClipRetrancaPDF(blocks, currentTelejornal);
+    } catch (error) {
+      console.error("Erro ao exportar PDF:", error);
+    }
   };
 
   // Function to scroll to bottom with smooth animation
@@ -260,6 +270,7 @@ export const NewsSchedule = ({
         hasBlocks={blocks.length > 0}
         onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
+        onExportClipRetranca={handleExportClipRetranca}
       />
 
       {/* Main area with blocks */}
