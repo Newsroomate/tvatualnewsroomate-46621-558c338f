@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
   fetchBlocosByTelejornal, 
@@ -44,6 +44,7 @@ export const NewsSchedule = ({
   const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
   const [showTeleprompter, setShowTeleprompter] = useState(false);
   const { profile } = useAuth();
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
   
   // Fetch telejornais
   const telejornaisQuery = useQuery({
@@ -114,6 +115,66 @@ export const NewsSchedule = ({
 
   const handleViewTeleprompter = () => {
     setShowTeleprompter(true);
+  };
+
+  // Function to scroll to bottom with smooth animation
+  const scrollToBottom = () => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      container.scrollTo({
+        top: container.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  // Enhanced handleAddBlock with auto-scroll
+  const handleAddBlockWithScroll = async () => {
+    const previousBlockCount = blocks.length;
+    await handleAddBlock();
+    
+    // Wait a bit for the DOM to update, then scroll
+    setTimeout(() => {
+      if (blocks.length > previousBlockCount) {
+        scrollToBottom();
+      }
+    }, 100);
+  };
+
+  // Enhanced handleAddFirstBlock with auto-scroll
+  const handleAddFirstBlockWithScroll = async () => {
+    const previousBlockCount = blocks.length;
+    await handleAddFirstBlock();
+    
+    // Wait a bit for the DOM to update, then scroll
+    setTimeout(() => {
+      if (blocks.length > previousBlockCount) {
+        scrollToBottom();
+      }
+    }, 100);
+  };
+
+  // Enhanced handleAddItem with auto-scroll
+  const handleAddItemWithScroll = (blockId: string) => {
+    const targetBlock = blocks.find(block => block.id === blockId);
+    const previousItemCount = targetBlock?.items.length || 0;
+    
+    handleAddItem(blockId);
+    
+    // Wait a bit for the DOM to update, then scroll to the block
+    setTimeout(() => {
+      const updatedBlock = blocks.find(block => block.id === blockId);
+      if (updatedBlock && updatedBlock.items.length > previousItemCount) {
+        const blockElement = document.querySelector(`[data-block-id="${blockId}"]`);
+        if (blockElement && scrollContainerRef.current) {
+          blockElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'end',
+            inline: 'nearest'
+          });
+        }
+      }
+    }, 100);
   };
 
   // Process blocks data when it changes
@@ -197,13 +258,16 @@ export const NewsSchedule = ({
         totalJournalTime={totalJournalTime}
         onRenumberItems={handleRenumberItems}
         hasBlocks={blocks.length > 0}
-        onAddBlock={handleAddBlock}
+        onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
       />
 
       {/* Main area with blocks */}
       <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <div 
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto p-4 space-y-6"
+        >
           <ScheduleContent
             selectedJournal={selectedJournal}
             currentTelejornal={currentTelejornal}
@@ -212,9 +276,9 @@ export const NewsSchedule = ({
             isCreatingFirstBlock={isCreatingFirstBlock}
             newItemBlock={newItemBlock}
             onOpenRundown={onOpenRundown}
-            onAddFirstBlock={handleAddFirstBlock}
-            onAddBlock={handleAddBlock}
-            onAddItem={handleAddItem}
+            onAddFirstBlock={handleAddFirstBlockWithScroll}
+            onAddBlock={handleAddBlockWithScroll}
+            onAddItem={handleAddItemWithScroll}
             onEditItem={onEditItem}
             onDeleteItem={handleDeleteMateria}
             onDuplicateItem={handleDuplicateItem}
