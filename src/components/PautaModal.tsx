@@ -51,11 +51,6 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
         status: "pendente",
       });
       
-      toast({
-        title: "Pauta criada",
-        description: `${titulo} foi adicionada com sucesso`,
-      });
-      
       onPautaCreated();
       handleClose();
     } catch (error) {

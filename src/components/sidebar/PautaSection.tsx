@@ -40,10 +40,6 @@ export const PautaSection = ({
     e.stopPropagation();
     try {
       generatePautaPDF(pauta);
-      toast({
-        title: "PDF gerado",
-        description: "O arquivo PDF da pauta foi baixado com sucesso",
-      });
     } catch (error) {
       console.error("Erro ao gerar PDF:", error);
       toast({
@@ -58,10 +54,6 @@ export const PautaSection = ({
     if (!deletingPauta) return;
     try {
       await deletePauta(deletingPauta.id);
-      toast({
-        title: "Pauta excluída",
-        description: "A pauta foi removida com sucesso",
-      });
       onDataChange();
     } catch (error) {
       console.error("Erro ao excluir pauta:", error);

@@ -52,8 +52,6 @@ export const createMateria = async (materia: MateriaCreateInput) => {
     throw error;
   }
 
-  toastService.success("Matéria criada", `${materia.retranca} foi adicionada com sucesso`);
-
   // Map database response to our application model
   return {
     ...data,
@@ -90,8 +88,6 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
     throw error;
   }
 
-  toastService.success("Matéria atualizada", `Alterações salvas com sucesso`);
-
   // Map database response to our application model
   const updatedMateria = {
     ...data,
@@ -114,8 +110,6 @@ export const deleteMateria = async (id: string) => {
     toastService.error("Erro ao excluir matéria", error.message);
     throw error;
   }
-
-  toastService.success("Matéria excluída", `A matéria foi removida com sucesso`);
 
   return true;
 };

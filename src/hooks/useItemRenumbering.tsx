@@ -89,11 +89,6 @@ export const useItemRenumbering = ({
       setBlocks(updatedBlocks);
       setRenumberConfirmOpen(false);
       
-      toast({
-        title: "Numeração reorganizada",
-        description: "A numeração das matérias foi reorganizada com sucesso.",
-      });
-      
       console.log('Renumbering completed successfully');
     } catch (error) {
       console.error("Error renumbering items:", error);

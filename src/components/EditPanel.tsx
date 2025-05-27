@@ -88,11 +88,6 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
       
       const updatedMateria = await updateMateria(item.id, updateData);
       
-      toast({
-        title: "Matéria atualizada",
-        description: "As alterações foram salvas com sucesso.",
-      });
-      
       onClose();
     } catch (error) {
       console.error("Erro ao salvar matéria:", error);

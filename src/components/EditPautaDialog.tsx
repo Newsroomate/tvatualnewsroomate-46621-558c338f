@@ -46,11 +46,6 @@ export const EditPautaDialog = ({
         produtor
       });
       
-      toast({
-        title: "Pauta atualizada",
-        description: `${titulo} foi atualizada com sucesso`,
-      });
-      
       onPautaUpdated();
       onClose();
     } catch (error) {

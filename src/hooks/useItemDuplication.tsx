@@ -63,10 +63,6 @@ export const useItemDuplication = ({
         return block;
       }));
       
-      toast({
-        title: "Matéria duplicada",
-        description: `${materia.retranca} foi duplicada com sucesso`,
-      });
     } catch (error) {
       console.error("Erro ao duplicar matéria:", error);
       toast({
