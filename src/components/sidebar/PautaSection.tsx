@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit2, Trash2 } from "lucide-react";
@@ -5,6 +6,7 @@ import { Pauta } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EditPautaDialog } from "@/components/EditPautaDialog";
 import { deletePauta } from "@/services/pautas-api";
+import { useToast } from "@/hooks/use-toast";
 
 interface PautaSectionProps {
   pautas: Pauta[];
@@ -21,6 +23,7 @@ export const PautaSection = ({
 }: PautaSectionProps) => {
   const [editingPauta, setEditingPauta] = useState<Pauta | null>(null);
   const [deletingPauta, setDeletingPauta] = useState<Pauta | null>(null);
+  const { toast } = useToast();
 
   const handleEditPauta = (pauta: Pauta, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,9 +39,18 @@ export const PautaSection = ({
     if (!deletingPauta) return;
     try {
       await deletePauta(deletingPauta.id);
+      toast({
+        title: "Pauta excluída",
+        description: "A pauta foi removida com sucesso",
+      });
       onDataChange();
     } catch (error) {
       console.error("Erro ao excluir pauta:", error);
+      toast({
+        title: "Erro ao excluir pauta",
+        description: "Ocorreu um erro ao excluir a pauta. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setDeletingPauta(null);
     }

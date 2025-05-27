@@ -158,7 +158,11 @@ export type Database = {
           created_at: string | null
           data_cobertura: string | null
           descricao: string | null
+          entrevistado: string | null
+          horario: string | null
           id: string
+          local: string | null
+          produtor: string | null
           status: string | null
           titulo: string
           updated_at: string | null
@@ -167,7 +171,11 @@ export type Database = {
           created_at?: string | null
           data_cobertura?: string | null
           descricao?: string | null
+          entrevistado?: string | null
+          horario?: string | null
           id?: string
+          local?: string | null
+          produtor?: string | null
           status?: string | null
           titulo: string
           updated_at?: string | null
@@ -176,7 +184,11 @@ export type Database = {
           created_at?: string | null
           data_cobertura?: string | null
           descricao?: string | null
+          entrevistado?: string | null
+          horario?: string | null
           id?: string
+          local?: string | null
+          produtor?: string | null
           status?: string | null
           titulo?: string
           updated_at?: string | null

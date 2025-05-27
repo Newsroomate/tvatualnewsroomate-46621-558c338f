@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { updatePauta } from "@/services/pautas-api";
 import { Pauta } from "@/types";
+import { useToast } from "@/hooks/use-toast";
 
 interface EditPautaDialogProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const EditPautaDialog = ({
   const [entrevistado, setEntrevistado] = useState(pauta.entrevistado || "");
   const [produtor, setProdutor] = useState(pauta.produtor || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,10 +45,21 @@ export const EditPautaDialog = ({
         entrevistado,
         produtor
       });
+      
+      toast({
+        title: "Pauta atualizada",
+        description: `${titulo} foi atualizada com sucesso`,
+      });
+      
       onPautaUpdated();
       onClose();
     } catch (error) {
       console.error("Erro ao atualizar pauta:", error);
+      toast({
+        title: "Erro ao atualizar pauta",
+        description: "Ocorreu um erro ao atualizar a pauta. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createPauta } from "@/services/pautas-api";
+import { useToast } from "@/hooks/use-toast";
 
 interface PautaModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
   const [entrevistado, setEntrevistado] = useState("");
   const [produtor, setProdutor] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,10 +40,20 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
         status: "pendente",
       });
       
+      toast({
+        title: "Pauta criada",
+        description: `${titulo} foi adicionada com sucesso`,
+      });
+      
       onPautaCreated();
       handleClose();
     } catch (error) {
       console.error("Erro ao criar pauta:", error);
+      toast({
+        title: "Erro ao criar pauta",
+        description: "Ocorreu um erro ao criar a pauta. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
