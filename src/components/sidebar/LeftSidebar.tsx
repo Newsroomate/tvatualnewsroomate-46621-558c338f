@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
@@ -26,9 +27,10 @@ export const LeftSidebar = ({
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   const [pautas, setPautas] = useState<Pauta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   useEffect(() => {
-    loadData();
+    initializeData();
 
     // Configurando a inscrição para ouvir atualizações em tempo real da tabela telejornais
     const telejornaisChannel = supabase
@@ -42,8 +44,8 @@ export const LeftSidebar = ({
         },
         (payload) => {
           console.log('Telejornal atualizado:', payload);
-          // Recarregar a lista de telejornais quando houver uma atualização
-          loadData();
+          // Recarregar apenas os dados, sem alterar seleção
+          loadDataWithoutSelection();
         }
       )
       .subscribe();
@@ -60,7 +62,7 @@ export const LeftSidebar = ({
         },
         (payload) => {
           console.log('Pauta adicionada:', payload);
-          loadData();
+          loadDataWithoutSelection();
         }
       )
       .on(
@@ -72,7 +74,7 @@ export const LeftSidebar = ({
         },
         (payload) => {
           console.log('Pauta atualizada:', payload);
-          loadData();
+          loadDataWithoutSelection();
         }
       )
       .on(
@@ -84,7 +86,7 @@ export const LeftSidebar = ({
         },
         (payload) => {
           console.log('Pauta excluída:', payload);
-          loadData();
+          loadDataWithoutSelection();
         }
       )
       .subscribe();
@@ -95,22 +97,42 @@ export const LeftSidebar = ({
     };
   }, []);
 
-  const loadData = async () => {
+  const initializeData = async () => {
     setIsLoading(true);
     try {
       const [jornaisData, pautasData] = await Promise.all([fetchTelejornais(), fetchPautas()]);
       setTelejornais(jornaisData);
       setPautas(pautasData);
 
-      // Se não houver jornal selecionado e existirem jornais, selecionar o primeiro
-      if (!selectedJournal && jornaisData.length > 0) {
+      // Apenas selecionar o primeiro jornal se não houver seleção E for a primeira inicialização
+      if (!selectedJournal && !hasInitialized && jornaisData.length > 0) {
         onSelectJournal(jornaisData[0].id);
       }
+      
+      setHasInitialized(true);
     } catch (error) {
       console.error("Erro ao carregar dados:", error);
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const loadDataWithoutSelection = async () => {
+    try {
+      const [jornaisData, pautasData] = await Promise.all([fetchTelejornais(), fetchPautas()]);
+      setTelejornais(jornaisData);
+      setPautas(pautasData);
+      
+      // NÃO alterar a seleção do jornal durante atualizações em tempo real
+      console.log('Dados atualizados sem alterar seleção do jornal');
+    } catch (error) {
+      console.error("Erro ao carregar dados:", error);
+    }
+  };
+
+  // Função pública para recarregar dados (mantendo compatibilidade)
+  const loadData = async () => {
+    await loadDataWithoutSelection();
   };
 
   const handleOpenGeneralSchedule = () => {
