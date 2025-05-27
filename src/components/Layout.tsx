@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
@@ -14,7 +13,6 @@ import { PostCloseRundownModal } from "./PostCloseRundownModal";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
-import { ClipboardProvider } from "@/context/ClipboardContext";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -278,105 +276,103 @@ const Layout = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ClipboardProvider>
-        <div className="flex h-screen overflow-hidden">
-          {/* Left Sidebar */}
-          <LeftSidebar 
-            selectedJournal={selectedJournal}
-            onSelectJournal={handleSelectJournal}
-          />
+      <div className="flex h-screen overflow-hidden">
+        {/* Left Sidebar */}
+        <LeftSidebar 
+          selectedJournal={selectedJournal}
+          onSelectJournal={handleSelectJournal}
+        />
 
-          {/* Main Content Area */}
-          <div className={`flex-1 flex flex-col overflow-hidden ${isEditPanelOpen ? 'mr-[400px]' : ''}`}>
-            {/* Rundown Status Bar */}
-            {selectedJournal && (
-              <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
-                <div>
-                  {currentTelejornal && (
-                    <div className="text-sm">
-                      <span className="font-medium">
-                        Espelho {currentTelejornal.espelho_aberto ? (
-                          <span className="text-green-600">ABERTO</span>
-                        ) : (
-                          <span className="text-red-600">FECHADO</span>
-                        )}:
-                      </span> {' '}
-                      {currentTelejornal.nome} {currentTelejornal.espelho_aberto && (
-                        <>- ({new Date().toLocaleDateString('pt-BR')})</>
-                      )}
-                    </div>
-                  )}
-                  {!currentTelejornal && (
-                    <div className="text-sm text-muted-foreground">
-                      Nenhum espelho selecionado
-                    </div>
-                  )}
-                </div>
-                
-                {canCreateEspelhos(profile) && (
-                  <button 
-                    onClick={handleToggleRundown}
-                    className={`px-4 py-1 rounded-md text-xs font-medium ${
-                      currentTelejornal?.espelho_aberto 
-                        ? "bg-red-100 text-red-700 hover:bg-red-200"
-                        : "bg-green-100 text-green-700 hover:bg-green-200"
-                    }`}
-                  >
-                    {currentTelejornal?.espelho_aberto ? "Fechar Espelho" : "Abrir Espelho"}
-                  </button>
+        {/* Main Content Area */}
+        <div className={`flex-1 flex flex-col overflow-hidden ${isEditPanelOpen ? 'mr-[400px]' : ''}`}>
+          {/* Rundown Status Bar */}
+          {selectedJournal && (
+            <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
+              <div>
+                {currentTelejornal && (
+                  <div className="text-sm">
+                    <span className="font-medium">
+                      Espelho {currentTelejornal.espelho_aberto ? (
+                        <span className="text-green-600">ABERTO</span>
+                      ) : (
+                        <span className="text-red-600">FECHADO</span>
+                      )}:
+                    </span> {' '}
+                    {currentTelejornal.nome} {currentTelejornal.espelho_aberto && (
+                      <>- ({new Date().toLocaleDateString('pt-BR')})</>
+                    )}
+                  </div>
+                )}
+                {!currentTelejornal && (
+                  <div className="text-sm text-muted-foreground">
+                    Nenhum espelho selecionado
+                  </div>
                 )}
               </div>
-            )}
-            
-            {!selectedJournal && (
-              <div className="bg-muted px-4 py-2 border-b">
-                <div className="text-sm text-muted-foreground">
-                  Nenhum espelho aberto no momento
-                </div>
+              
+              {canCreateEspelhos(profile) && (
+                <button 
+                  onClick={handleToggleRundown}
+                  className={`px-4 py-1 rounded-md text-xs font-medium ${
+                    currentTelejornal?.espelho_aberto 
+                      ? "bg-red-100 text-red-700 hover:bg-red-200"
+                      : "bg-green-100 text-green-700 hover:bg-green-200"
+                  }`}
+                >
+                  {currentTelejornal?.espelho_aberto ? "Fechar Espelho" : "Abrir Espelho"}
+                </button>
+              )}
+            </div>
+          )}
+          
+          {!selectedJournal && (
+            <div className="bg-muted px-4 py-2 border-b">
+              <div className="text-sm text-muted-foreground">
+                Nenhum espelho aberto no momento
               </div>
-            )}
+            </div>
+          )}
 
-            <NewsSchedule
-              selectedJournal={selectedJournal}
-              onEditItem={handleEditItem}
-              currentTelejornal={currentTelejornal}
-              onOpenRundown={handleToggleRundown}
-            />
-          </div>
-
-          {/* Right Edit Panel (Slide in/out) */}
-          <EditPanel 
-            isOpen={isEditPanelOpen}
-            onClose={handleCloseEditPanel}
-            item={selectedItem}
-          />
-          
-          {/* Diálogo de confirmação para fechar o espelho */}
-          <CloseRundownDialog 
-            isOpen={isCloseRundownDialogOpen}
-            onClose={() => setIsCloseRundownDialogOpen(false)}
-            onConfirm={handleConfirmCloseRundown}
-            telejornalNome={currentTelejornal?.nome}
-          />
-          
-          {/* Modal pós-fechamento */}
-          <PostCloseRundownModal
-            isOpen={isPostCloseModalOpen}
-            onClose={() => setIsPostCloseModalOpen(false)}
+          <NewsSchedule
+            selectedJournal={selectedJournal}
+            onEditItem={handleEditItem}
             currentTelejornal={currentTelejornal}
-            onCreateNew={handleCreateNewRundown}
-            onViewByDate={handleViewByDate}
-          />
-          
-          {/* Modal para visualizar espelhos salvos por data */}
-          <SavedRundownsModal
-            isOpen={isSavedRundownsModalOpen}
-            onClose={() => setIsSavedRundownsModalOpen(false)}
-            telejornalId={selectedJournal || ""}
-            targetDate={selectedViewDate}
+            onOpenRundown={handleToggleRundown}
           />
         </div>
-      </ClipboardProvider>
+
+        {/* Right Edit Panel (Slide in/out) */}
+        <EditPanel 
+          isOpen={isEditPanelOpen}
+          onClose={handleCloseEditPanel}
+          item={selectedItem}
+        />
+        
+        {/* Diálogo de confirmação para fechar o espelho */}
+        <CloseRundownDialog 
+          isOpen={isCloseRundownDialogOpen}
+          onClose={() => setIsCloseRundownDialogOpen(false)}
+          onConfirm={handleConfirmCloseRundown}
+          telejornalNome={currentTelejornal?.nome}
+        />
+        
+        {/* Modal pós-fechamento */}
+        <PostCloseRundownModal
+          isOpen={isPostCloseModalOpen}
+          onClose={() => setIsPostCloseModalOpen(false)}
+          currentTelejornal={currentTelejornal}
+          onCreateNew={handleCreateNewRundown}
+          onViewByDate={handleViewByDate}
+        />
+        
+        {/* Modal para visualizar espelhos salvos por data */}
+        <SavedRundownsModal
+          isOpen={isSavedRundownsModalOpen}
+          onClose={() => setIsSavedRundownsModalOpen(false)}
+          telejornalId={selectedJournal || ""}
+          targetDate={selectedViewDate}
+        />
+      </div>
     </QueryClientProvider>
   );
 };

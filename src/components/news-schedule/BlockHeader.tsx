@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Pencil, Trash2, Check, X, Copy } from "lucide-react";
+import { PlusCircle, Pencil, Trash2, Check, X } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import {
@@ -31,7 +31,6 @@ interface BlockHeaderProps {
   canAddItem?: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
-  onCopyBlock?: () => void;
 }
 
 export const BlockHeader = ({ 
@@ -43,8 +42,7 @@ export const BlockHeader = ({
   isEspelhoOpen,
   canAddItem = true,
   onRenameBlock,
-  onDeleteBlock,
-  onCopyBlock
+  onDeleteBlock
 }: BlockHeaderProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingName, setEditingName] = useState(blockName);
@@ -140,37 +138,6 @@ export const BlockHeader = ({
                   {!canAddItem && isEspelhoOpen && (
                     <TooltipContent>
                       Sem permissão para renomear
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-              
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={onCopyBlock}
-                      disabled={!isEspelhoOpen || !canAddItem}
-                      className="h-8 w-8 p-0 text-blue-600 hover:text-blue-800"
-                    >
-                      <Copy className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  {!isEspelhoOpen && (
-                    <TooltipContent>
-                      Abra o espelho para copiar
-                    </TooltipContent>
-                  )}
-                  {!canAddItem && isEspelhoOpen && (
-                    <TooltipContent>
-                      Sem permissão para copiar
-                    </TooltipContent>
-                  )}
-                  {isEspelhoOpen && canAddItem && (
-                    <TooltipContent>
-                      Copiar bloco com todas as matérias
                     </TooltipContent>
                   )}
                 </Tooltip>
