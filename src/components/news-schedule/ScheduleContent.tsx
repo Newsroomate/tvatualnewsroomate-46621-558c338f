@@ -22,6 +22,12 @@ interface ScheduleContentProps {
   onDuplicateItem: (item: Materia) => void;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
+  onCopyBlock?: (block: Bloco & { items: Materia[], totalTime: number }) => void;
+  onCopyItem?: (item: Materia) => void;
+  onPasteBlock?: () => void;
+  onPasteItem?: (blockId: string) => void;
+  hasClipboardData?: boolean;
+  clipboardType?: 'block' | 'item' | null;
 }
 
 export const ScheduleContent = ({
@@ -39,7 +45,13 @@ export const ScheduleContent = ({
   onDeleteItem,
   onDuplicateItem,
   onRenameBlock,
-  onDeleteBlock
+  onDeleteBlock,
+  onCopyBlock,
+  onCopyItem,
+  onPasteBlock,
+  onPasteItem,
+  hasClipboardData,
+  clipboardType
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -113,6 +125,10 @@ export const ScheduleContent = ({
           isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
           onRenameBlock={onRenameBlock}
           onDeleteBlock={onDeleteBlock}
+          onCopyBlock={onCopyBlock}
+          onPasteBlock={onPasteBlock}
+          hasClipboardData={hasClipboardData}
+          clipboardType={clipboardType}
         />
       ))}
     </>
