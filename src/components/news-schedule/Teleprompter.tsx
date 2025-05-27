@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Play, Pause, Download } from "lucide-react";
+import { Play, Pause, Download, Maximize, Minimize, Plus, Minus } from "lucide-react";
 import { Materia, Telejornal } from "@/types";
 import jsPDF from 'jspdf';
 
@@ -17,6 +17,8 @@ export const Teleprompter = ({ isOpen, onClose, materias, telejornal }: Teleprom
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState([50]); // Speed from 1 to 100
   const [scrollPosition, setScrollPosition] = useState(0);
+  const [isMaximized, setIsMaximized] = useState(false);
+  const [fontSize, setFontSize] = useState(24); // Default font size in pixels
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -71,6 +73,18 @@ export const Teleprompter = ({ isOpen, onClose, materias, telejornal }: Teleprom
   const resetPosition = () => {
     setScrollPosition(0);
     setIsPlaying(false);
+  };
+
+  const toggleMaximize = () => {
+    setIsMaximized(!isMaximized);
+  };
+
+  const increaseFontSize = () => {
+    setFontSize(prev => Math.min(prev + 2, 48)); // Max font size 48px
+  };
+
+  const decreaseFontSize = () => {
+    setFontSize(prev => Math.max(prev - 2, 12)); // Min font size 12px
   };
 
   const exportToPDF = () => {
@@ -129,7 +143,7 @@ export const Teleprompter = ({ isOpen, onClose, materias, telejornal }: Teleprom
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+      <DialogContent className={`${isMaximized ? 'max-w-[100vw] h-[100vh] w-[100vw] m-0' : 'max-w-4xl h-[80vh]'} flex flex-col transition-all duration-300`}>
         <DialogHeader>
           <DialogTitle>
             Teleprompter - {telejornal?.nome || "Telejornal"}
@@ -163,6 +177,41 @@ export const Teleprompter = ({ isOpen, onClose, materias, telejornal }: Teleprom
             </div>
             <span className="text-sm text-gray-600">{speed[0]}%</span>
           </div>
+
+          {/* Font size controls */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Fonte:</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={decreaseFontSize}
+              disabled={fontSize <= 12}
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-gray-600 min-w-[40px] text-center">{fontSize}px</span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={increaseFontSize}
+              disabled={fontSize >= 48}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+
+          {/* Maximize/Minimize controls */}
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={toggleMaximize}
+          >
+            {isMaximized ? (
+              <Minimize className="h-4 w-4" />
+            ) : (
+              <Maximize className="h-4 w-4" />
+            )}
+          </Button>
           
           <Button
             variant="outline"
@@ -188,7 +237,7 @@ export const Teleprompter = ({ isOpen, onClose, materias, telejornal }: Teleprom
           ref={contentRef}
           className="flex-1 overflow-y-auto bg-black text-white p-8"
           style={{ 
-            fontSize: '24px',
+            fontSize: `${fontSize}px`,
             lineHeight: '1.8',
             scrollBehavior: 'smooth'
           }}
