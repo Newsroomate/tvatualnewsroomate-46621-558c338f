@@ -93,6 +93,7 @@ export type Database = {
           created_at: string | null
           duracao: number | null
           equipamento: string | null
+          gc: string | null
           horario_exibicao: string | null
           id: string
           local_gravacao: string | null
@@ -112,6 +113,7 @@ export type Database = {
           created_at?: string | null
           duracao?: number | null
           equipamento?: string | null
+          gc?: string | null
           horario_exibicao?: string | null
           id?: string
           local_gravacao?: string | null
@@ -131,6 +133,7 @@ export type Database = {
           created_at?: string | null
           duracao?: number | null
           equipamento?: string | null
+          gc?: string | null
           horario_exibicao?: string | null
           id?: string
           local_gravacao?: string | null
