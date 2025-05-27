@@ -1,3 +1,4 @@
+
 export interface Telejornal {
   id: string;
   created_at?: string;
@@ -70,6 +71,7 @@ export interface Pauta {
   horario?: string;
   entrevistado?: string;
   produtor?: string;
+  user_id?: string;
 }
 
 export interface PautaCreateInput {
@@ -81,6 +83,7 @@ export interface PautaCreateInput {
   produtor?: string;
   status?: string;
   data_cobertura?: string;
+  user_id?: string;
 }
 
 export interface CloseRundownDialogProps {

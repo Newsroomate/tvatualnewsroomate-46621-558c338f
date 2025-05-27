@@ -17,9 +17,20 @@ export const fetchPautas = async () => {
 };
 
 export const createPauta = async (pauta: PautaCreateInput) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    throw new Error('Usuário não autenticado');
+  }
+
+  const pautaWithUserId = {
+    ...pauta,
+    user_id: user.id
+  };
+
   const { data, error } = await supabase
     .from('pautas')
-    .insert(pauta)
+    .insert(pautaWithUserId)
     .select()
     .single();
 
