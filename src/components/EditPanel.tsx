@@ -31,6 +31,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         reporter: item.reporter,
         status: item.status,
         cabeca: item.cabeca || '',
+        gc: item.gc || '', // Include GC field
         texto: item.texto || '',
         local_gravacao: item.local_gravacao || '',
         pagina: item.pagina,

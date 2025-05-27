@@ -1,9 +1,9 @@
-
 import { TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Download } from "lucide-react";
 import { Materia } from "@/types";
 import { useDurationCalculator } from "./DurationCalculator";
 
@@ -32,6 +32,29 @@ export const EditorTab = ({
     formData.texto || ''
   );
 
+  const handleExportGC = () => {
+    const retranca = formData.retranca || '';
+    const gc = formData.gc || '';
+    
+    if (!retranca && !gc) {
+      alert('Não há conteúdo para exportar.');
+      return;
+    }
+
+    const content = `RETRANCA: ${retranca}\n\nGC:\n${gc}`;
+    
+    // Create and download the file
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${retranca || 'materia'}_GC.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <TabsContent value="editor" className="p-4 space-y-4">
       <div className="space-y-1.5">
@@ -51,6 +74,29 @@ export const EditorTab = ({
           value={formData.cabeca || ''} 
           onChange={onInputChange} 
           placeholder="Texto da cabeça do VT que será lido pelo apresentador."
+        />
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="flex justify-between items-center">
+          <Label htmlFor="gc">GC (Gerador de Caracteres)</Label>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={handleExportGC}
+            disabled={!formData.retranca && !formData.gc}
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Exportar GC
+          </Button>
+        </div>
+        <Textarea 
+          id="gc" 
+          rows={4} 
+          value={formData.gc || ''} 
+          onChange={onInputChange} 
+          placeholder="Texto do GC que será exibido na tela durante a matéria."
         />
       </div>
       

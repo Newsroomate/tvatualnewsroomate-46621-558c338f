@@ -1,4 +1,3 @@
-
 export interface Telejornal {
   id: string;
   created_at?: string;
@@ -33,6 +32,7 @@ export interface Materia {
   duracao: number;
   texto?: string;
   cabeca?: string;
+  gc?: string;  // New GC field
   status?: string;
   pagina?: string;
   reporter?: string;
@@ -60,6 +60,7 @@ export interface MateriaCreateInput {
   status?: string;
   texto?: string;
   cabeca?: string;
+  gc?: string;  // New GC field
 }
 
 export interface Pauta {
