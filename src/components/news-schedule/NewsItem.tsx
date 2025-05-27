@@ -15,6 +15,7 @@ interface NewsItemProps {
   onEdit: (item: Materia) => void;
   onDelete: (item: Materia) => void;
   onDuplicate: (item: Materia) => void;
+  onCopy?: (item: Materia) => void;
   provided: any;
   snapshot: any;
   isEspelhoOpen: boolean;
@@ -27,6 +28,7 @@ export const NewsItem = ({
   onEdit, 
   onDelete,
   onDuplicate,
+  onCopy,
   provided, 
   snapshot,
   isEspelhoOpen,
@@ -131,6 +133,39 @@ export const NewsItem = ({
               )}
             </Tooltip>
           </TooltipProvider>
+          
+          {onCopy && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    onClick={() => onCopy(item)}
+                    disabled={!isEspelhoOpen || !canModify}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                {!isEspelhoOpen && (
+                  <TooltipContent>
+                    Abra o espelho para copiar
+                  </TooltipContent>
+                )}
+                {!canModify && isEspelhoOpen && (
+                  <TooltipContent>
+                    Sem permissão para copiar
+                  </TooltipContent>
+                )}
+                {isEspelhoOpen && canModify && (
+                  <TooltipContent>
+                    Copiar matéria para outro telejornal
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          )}
           
           <TooltipProvider>
             <Tooltip>

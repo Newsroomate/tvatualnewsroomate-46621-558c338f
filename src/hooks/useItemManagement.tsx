@@ -4,6 +4,7 @@ import { useItemCreation } from "./useItemCreation";
 import { useItemDuplication } from "./useItemDuplication";
 import { useItemDeletion } from "./useItemDeletion";
 import { useItemRenumbering } from "./useItemRenumbering";
+import { useClipboardOperations } from "./useClipboardOperations";
 
 interface UseItemManagementProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
@@ -42,6 +43,14 @@ export const useItemManagement = ({
     confirmRenumberItems
   } = useItemRenumbering({ blocks, setBlocks, currentTelejornal });
 
+  const {
+    copyBlock,
+    copyMateria,
+    pasteClipboardItem,
+    hasClipboardData,
+    clipboardItem
+  } = useClipboardOperations({ blocks, setBlocks, currentTelejornal });
+
   return {
     newItemBlock,
     setNewItemBlock,
@@ -56,6 +65,11 @@ export const useItemManagement = ({
     handleDeleteMateria,
     confirmDeleteMateria,
     handleRenumberItems,
-    confirmRenumberItems
+    confirmRenumberItems,
+    copyBlock,
+    copyMateria,
+    pasteClipboardItem,
+    hasClipboardData,
+    clipboardItem
   };
 };

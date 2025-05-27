@@ -1,9 +1,10 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, Clipboard } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal, Materia } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useClipboard } from "@/context/ClipboardContext";
 
 interface ScheduleHeaderProps {
   currentTelejornal: Telejornal | null;
@@ -13,6 +14,7 @@ interface ScheduleHeaderProps {
   onAddBlock?: () => void;
   onViewTeleprompter?: () => void;
   materias?: Materia[];
+  onPasteClipboard?: () => void;
 }
 
 export const ScheduleHeader = ({
@@ -22,8 +24,20 @@ export const ScheduleHeader = ({
   hasBlocks,
   onAddBlock,
   onViewTeleprompter,
-  materias = []
+  materias = [],
+  onPasteClipboard
 }: ScheduleHeaderProps) => {
+  const { hasClipboardData, clipboardItem } = useClipboard();
+
+  const getClipboardTooltip = () => {
+    if (!hasClipboardData) return "Nenhum conteúdo copiado";
+    
+    if (clipboardItem?.type === 'block') {
+      return `Colar bloco "${(clipboardItem.data as any).nome}" de ${clipboardItem.sourceTelejornalName}`;
+    } else {
+      return `Colar matéria "${(clipboardItem.data as any).retranca}" de ${clipboardItem.sourceTelejornalName}`;
+    }
+  };
 
   return <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
       <div>
@@ -54,6 +68,30 @@ export const ScheduleHeader = ({
           <Eye className="h-4 w-4 mr-2" />
           Visualizar Teleprompter
         </Button>
+
+        {hasClipboardData && (
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onPasteClipboard}
+                    disabled={!currentTelejornal?.espelho_aberto}
+                    className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100"
+                  >
+                    <Clipboard className="h-4 w-4 mr-2" />
+                    Colar
+                  </Button>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {getClipboardTooltip()}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        )}
         
         <TooltipProvider>
           <Tooltip>
