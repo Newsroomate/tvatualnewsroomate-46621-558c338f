@@ -20,9 +20,9 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 20;
     let yPosition = 30;
-    const lineHeight = 6;
+    const lineHeight = 8;
 
-    // Sort blocks by ordem and then get all materias in the correct order
+    // Sort blocks by ordem and then get all materias in the correct order (same logic as TeleprompterContent)
     const sortedBlocks = [...blocks].sort((a, b) => a.ordem - b.ordem);
     
     // Create a flat list of materias in the correct order
@@ -42,7 +42,7 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
     });
 
     // Function to check if we need a new page
-    const checkNewPage = (requiredSpace: number = lineHeight * 3) => {
+    const checkNewPage = (requiredSpace: number = lineHeight * 4) => {
       if (yPosition + requiredSpace > pageHeight - margin) {
         doc.addPage();
         yPosition = margin;
@@ -50,9 +50,13 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
     };
 
     // Document title
-    doc.setFontSize(18);
+    doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
-    doc.text(`TELEPROMPTER - ${telejornal.nome}`, pageWidth / 2, yPosition, { align: 'center' });
+    doc.text(`TELEPROMPTER`, pageWidth / 2, yPosition, { align: 'center' });
+    yPosition += lineHeight;
+    
+    doc.setFontSize(16);
+    doc.text(`${telejornal.nome}`, pageWidth / 2, yPosition, { align: 'center' });
     yPosition += lineHeight * 2;
 
     // Date and time
@@ -75,46 +79,52 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
       orderedMaterias.forEach((materia, index) => {
         // Check if we need to show block name
         if (index === 0 || orderedMaterias[index - 1]?.bloco_id !== materia.bloco_id) {
-          checkNewPage(lineHeight * 4);
+          checkNewPage(lineHeight * 6);
           
           // Block name indicator
-          doc.setFontSize(12);
+          doc.setFontSize(14);
           doc.setFont("helvetica", "bold");
           doc.setTextColor(0, 100, 200); // Blue color
           doc.text(`BLOCO: ${materia.blockName}`, margin, yPosition);
-          yPosition += lineHeight * 1.5;
+          yPosition += lineHeight * 2;
           
           // Block separator line
           doc.setLineWidth(0.3);
-          doc.setTextColor(0, 0, 0); // Reset to black
+          doc.setTextColor(100, 100, 100); // Gray color
           doc.line(margin, yPosition, pageWidth - margin, yPosition);
           yPosition += lineHeight;
         }
 
-        checkNewPage(lineHeight * 6);
+        checkNewPage(lineHeight * 8);
 
-        // Retranca in yellow/gold (simulated with bold)
-        doc.setFontSize(14);
+        // Retranca in bold (simulating yellow color with bold text)
+        doc.setFontSize(16);
         doc.setFont("helvetica", "bold");
-        doc.setTextColor(200, 150, 0); // Gold color
+        doc.setTextColor(0, 0, 0); // Black color for better printing
         const retrancaText = materia.retranca || `Matéria ${materia.ordem}`;
-        doc.text(retrancaText, margin, yPosition);
-        yPosition += lineHeight * 1.5;
-
-        // Reset color to black
-        doc.setTextColor(0, 0, 0);
+        
+        // Split long retranca text if needed
+        const maxWidth = pageWidth - (margin * 2);
+        const retrancaLines = doc.splitTextToSize(retrancaText, maxWidth);
+        
+        retrancaLines.forEach((line: string) => {
+          doc.text(line, margin, yPosition);
+          yPosition += lineHeight;
+        });
+        
+        yPosition += lineHeight * 0.5;
 
         // Cabeça (head) if exists
         if (materia.cabeca) {
-          doc.setFontSize(12);
+          doc.setFontSize(14);
           doc.setFont("helvetica", "normal");
+          doc.setTextColor(0, 0, 0); // Black color
           
           // Split long text into multiple lines
-          const maxWidth = pageWidth - (margin * 2);
           const cabecaLines = doc.splitTextToSize(materia.cabeca, maxWidth);
           
           // Check if we need a new page for the cabeca
-          checkNewPage(lineHeight * cabecaLines.length + lineHeight);
+          checkNewPage(lineHeight * cabecaLines.length + lineHeight * 2);
           
           cabecaLines.forEach((line: string) => {
             doc.text(line, margin, yPosition);
@@ -123,13 +133,13 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
         }
 
         // Add spacing between items
-        yPosition += lineHeight * 1.5;
+        yPosition += lineHeight * 2;
 
-        // Light separator line between items
+        // Light separator line between items (except for the last one)
         if (index < orderedMaterias.length - 1) {
           doc.setLineWidth(0.1);
-          doc.setTextColor(150, 150, 150); // Light gray
-          doc.line(margin, yPosition, pageWidth - margin, yPosition);
+          doc.setTextColor(200, 200, 200); // Very light gray
+          doc.line(margin + 20, yPosition, pageWidth - margin - 20, yPosition);
           doc.setTextColor(0, 0, 0); // Reset to black
           yPosition += lineHeight;
         }
@@ -142,7 +152,7 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
       doc.setPage(i);
       doc.setFontSize(10);
       doc.setFont("helvetica", "normal");
-      doc.setTextColor(100, 100, 100); // Gray
+      doc.setTextColor(150, 150, 150); // Gray
       doc.text(
         `Página ${i} de ${totalPages}`,
         pageWidth / 2,
@@ -154,7 +164,8 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
     // Generate filename
     const telejornalName = telejornal.nome.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const dateFormatted = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-    const filename = `teleprompter_${telejornalName}_${dateFormatted}.pdf`;
+    const timeFormatted = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(/:/g, 'h');
+    const filename = `teleprompter_${telejornalName}_${dateFormatted}_${timeFormatted}.pdf`;
 
     // Save the PDF
     doc.save(filename);

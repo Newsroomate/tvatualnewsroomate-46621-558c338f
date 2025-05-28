@@ -40,8 +40,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
           lineHeight: '1.8',
           scrollBehavior: 'smooth',
           height: '100%',
-          paddingLeft: '4rem', // Margem lateral esquerda (equivalente a 2 TABs)
-          paddingRight: '4rem', // Margem lateral direita (equivalente a 2 TABs)
+          paddingLeft: '16rem', // Margem lateral esquerda aumentada (equivalente a 8 TABs)
+          paddingRight: '16rem', // Margem lateral direita aumentada (equivalente a 8 TABs)
           paddingTop: '2rem',
           paddingBottom: '2rem'
         }}
