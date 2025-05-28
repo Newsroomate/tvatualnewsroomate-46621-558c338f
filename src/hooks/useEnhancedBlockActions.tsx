@@ -3,8 +3,8 @@ import { Bloco, Materia } from "@/types";
 
 interface UseEnhancedBlockActionsProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
-  handleAddBlock: () => Promise<any>;
-  handleAddFirstBlock: () => Promise<any>;
+  handleAddBlock: () => Promise<void>;
+  handleAddFirstBlock: () => Promise<void>;
   handleAddItem: (blockId: string) => void;
   scrollToBottom: () => void;
   scrollToBlock: (blockId: string) => void;
