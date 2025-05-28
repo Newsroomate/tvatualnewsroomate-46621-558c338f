@@ -7,9 +7,7 @@ interface ExportGCButtonProps {
   formData: Partial<Materia>;
 }
 
-export const ExportGCButton = ({
-  formData
-}: ExportGCButtonProps) => {
+export const ExportGCButton = ({ formData }: ExportGCButtonProps) => {
   const handleExportGC = () => {
     const retranca = formData.retranca || '';
     const gc = formData.gc || '';
@@ -18,13 +16,11 @@ export const ExportGCButton = ({
       alert('Não há conteúdo para exportar.');
       return;
     }
-    
-    const content = `RETRANCA: ${retranca}\n\nGC:\n${gc}`;
 
+    const content = `RETRANCA: ${retranca}\n\nGC:\n${gc}`;
+    
     // Create and download the file
-    const blob = new Blob([content], {
-      type: 'text/plain;charset=utf-8'
-    });
+    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -36,9 +32,10 @@ export const ExportGCButton = ({
   };
 
   return (
-    <Button 
-      variant="outline" 
-      size="sm" 
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
       onClick={handleExportGC}
       disabled={!formData.retranca && !formData.gc}
     >
