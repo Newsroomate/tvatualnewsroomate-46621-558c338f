@@ -271,6 +271,7 @@ export const NewsSchedule = ({
         onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
         onExportClipRetranca={handleExportClipRetranca}
+        blocks={blocks}
       />
 
       {/* Main area with blocks */}

@@ -1,9 +1,10 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye, FileText } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download } from "lucide-react";
 import { formatTime } from "./utils";
-import { Telejornal, Materia } from "@/types";
+import { Telejornal, Materia, Bloco } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { generateGCTextFile } from "@/utils/gc-txt-utils";
 
 interface ScheduleHeaderProps {
   currentTelejornal: Telejornal | null;
@@ -14,6 +15,7 @@ interface ScheduleHeaderProps {
   onViewTeleprompter?: () => void;
   onExportClipRetranca?: () => void;
   materias?: Materia[];
+  blocks?: (Bloco & { items: Materia[] })[];
 }
 
 export const ScheduleHeader = ({
@@ -24,8 +26,13 @@ export const ScheduleHeader = ({
   onAddBlock,
   onViewTeleprompter,
   onExportClipRetranca,
-  materias = []
+  materias = [],
+  blocks = []
 }: ScheduleHeaderProps) => {
+
+  const handleExportGC = () => {
+    generateGCTextFile(blocks, currentTelejornal);
+  };
 
   return <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
       <div>
@@ -45,6 +52,16 @@ export const ScheduleHeader = ({
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Adicionar Novo Bloco
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleExportGC}
+          disabled={!currentTelejornal || !hasBlocks}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Exportar GC
         </Button>
         
         <Button 
