@@ -54,7 +54,7 @@ export const EditorFormFields = ({ formData, onInputChange }: EditorFormFieldsPr
           rows={10} 
           value={formData.texto || ''} 
           onChange={onInputChange} 
-          placeholder="Texto completo da matéria que será exibido no teleprompter."
+          placeholder="Texto completo da matéria."
         />
       </div>
     </>
