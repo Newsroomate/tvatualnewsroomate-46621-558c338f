@@ -18,7 +18,6 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState([50]); // Speed from 1 to 100
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [isMaximized, setIsMaximized] = useState(false);
   const [fontSize, setFontSize] = useState(24); // Default font size in pixels
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -73,10 +72,6 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     setIsPlaying(false);
   };
 
-  const toggleMaximize = () => {
-    setIsMaximized(!isMaximized);
-  };
-
   const increaseFontSize = () => {
     setFontSize(prev => Math.min(prev + 2, 48)); // Max font size 48px
   };
@@ -90,7 +85,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className={`${isMaximized ? 'max-w-[100vw] h-[100vh] w-[100vw] m-0' : 'max-w-4xl h-[80vh]'} flex flex-col transition-all duration-300`}>
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>
             Teleprompter - {telejornal?.nome || "Telejornal"}
@@ -108,9 +103,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
           />
 
           <TeleprompterViewControls
-            isMaximized={isMaximized}
             fontSize={fontSize}
-            onToggleMaximize={toggleMaximize}
             onIncreaseFontSize={increaseFontSize}
             onDecreaseFontSize={decreaseFontSize}
           />

@@ -14,6 +14,7 @@ const TeleprompterWindow = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [fontSize, setFontSize] = useState(24);
   const contentRef = useRef<HTMLDivElement>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Listen for data from parent window
   useEffect(() => {
@@ -46,14 +47,12 @@ const TeleprompterWindow = () => {
     };
   }, []);
 
-  // Auto-scroll logic
+  // Auto-scroll logic melhorado
   useEffect(() => {
-    let intervalRef: NodeJS.Timeout | null = null;
-
     if (isPlaying && contentRef.current) {
-      const scrollSpeed = speed[0] / 10;
+      const scrollSpeed = speed[0] / 10; // Convert speed to pixels per interval
       
-      intervalRef = setInterval(() => {
+      intervalRef.current = setInterval(() => {
         setScrollPosition(prev => {
           const contentElement = contentRef.current;
           if (!contentElement) return prev;
@@ -78,11 +77,16 @@ const TeleprompterWindow = () => {
           return newPosition;
         });
       }, 100);
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
     }
 
     return () => {
-      if (intervalRef) {
-        clearInterval(intervalRef);
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
       }
     };
   }, [isPlaying, speed]);
@@ -148,9 +152,7 @@ const TeleprompterWindow = () => {
         />
 
         <TeleprompterViewControls
-          isMaximized={true}
           fontSize={fontSize}
-          onToggleMaximize={() => {}} // Not needed in separate window
           onIncreaseFontSize={increaseFontSize}
           onDecreaseFontSize={decreaseFontSize}
         />

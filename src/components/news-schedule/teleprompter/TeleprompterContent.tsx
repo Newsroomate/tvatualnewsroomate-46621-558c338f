@@ -37,13 +37,16 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
         ref={ref}
         className="teleprompter-content flex-1 overflow-y-auto bg-black text-white p-8"
         style={{ 
-          fontSize: `${fontSize}px`,
           lineHeight: '1.8',
-          scrollBehavior: 'smooth'
+          scrollBehavior: 'smooth',
+          height: '100%'
         }}
       >
         {orderedMaterias.length === 0 ? (
-          <div className="text-center text-gray-400 mt-20">
+          <div 
+            className="text-center text-gray-400 mt-20"
+            style={{ fontSize: `${fontSize}px` }}
+          >
             Nenhuma matéria encontrada para este telejornal
           </div>
         ) : (
@@ -52,19 +55,28 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
               <div key={`${materia.bloco_id}-${materia.id}`} className="space-y-4">
                 {/* Block name indicator (optional, can be commented out) */}
                 {index === 0 || orderedMaterias[index - 1]?.bloco_id !== materia.bloco_id ? (
-                  <div className="text-blue-400 text-sm font-medium mb-2">
+                  <div 
+                    className="text-blue-400 font-medium mb-2"
+                    style={{ fontSize: `${fontSize * 0.7}px` }}
+                  >
                     {materia.blockName}
                   </div>
                 ) : null}
                 
-                {/* Retranca em amarelo - aparece primeiro */}
-                <div className="text-yellow-400 font-bold text-2xl">
+                {/* Retranca em amarelo - aplicando fontSize dinâmico */}
+                <div 
+                  className="text-yellow-400 font-bold"
+                  style={{ fontSize: `${fontSize}px` }}
+                >
                   {materia.retranca || `Matéria ${materia.ordem}`}
                 </div>
                 
-                {/* Cabeça em branco - aparece depois */}
+                {/* Cabeça em branco - aplicando fontSize dinâmico */}
                 {materia.cabeca && (
-                  <div className="text-white font-medium">
+                  <div 
+                    className="text-white font-medium"
+                    style={{ fontSize: `${fontSize}px` }}
+                  >
                     {materia.cabeca}
                   </div>
                 )}
