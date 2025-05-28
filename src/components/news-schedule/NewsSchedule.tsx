@@ -121,7 +121,8 @@ export const NewsSchedule = ({
   const allMaterias = blocks.flatMap(block => block.items);
 
   const handleViewTeleprompter = () => {
-    openTeleprompter(allMaterias, currentTelejornal);
+    console.log("Opening teleprompter with blocks:", blocks);
+    openTeleprompter(blocks, currentTelejornal);
   };
 
   const handleExportClipRetranca = () => {
@@ -267,8 +268,9 @@ export const NewsSchedule = ({
 
   // Update teleprompter data when blocks change
   useEffect(() => {
-    updateTeleprompterData(allMaterias);
-  }, [allMaterias, updateTeleprompterData]);
+    console.log("Blocks changed, updating teleprompter:", blocks);
+    updateTeleprompterData(blocks);
+  }, [blocks, updateTeleprompterData]);
 
   const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
 

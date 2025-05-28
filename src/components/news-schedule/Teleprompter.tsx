@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Materia, Telejornal } from "@/types";
+import { Materia, Telejornal, Bloco } from "@/types";
 import { TeleprompterControls } from "./teleprompter/TeleprompterControls";
 import { TeleprompterViewControls } from "./teleprompter/TeleprompterViewControls";
 import { TeleprompterExport } from "./teleprompter/TeleprompterExport";
@@ -10,11 +10,11 @@ import { TeleprompterContent } from "./teleprompter/TeleprompterContent";
 interface TeleprompterProps {
   isOpen: boolean;
   onClose: () => void;
-  materias: Materia[];
+  blocks: (Bloco & { items: Materia[] })[];
   telejornal: Telejornal | null;
 }
 
-export const Teleprompter = ({ isOpen, onClose, materias, telejornal }: TeleprompterProps) => {
+export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: TeleprompterProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState([50]); // Speed from 1 to 100
   const [scrollPosition, setScrollPosition] = useState(0);
@@ -85,6 +85,9 @@ export const Teleprompter = ({ isOpen, onClose, materias, telejornal }: Teleprom
     setFontSize(prev => Math.max(prev - 2, 12)); // Min font size 12px
   };
 
+  // Get all materias for export functionality
+  const allMaterias = blocks.flatMap(block => block.items);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`${isMaximized ? 'max-w-[100vw] h-[100vh] w-[100vw] m-0' : 'max-w-4xl h-[80vh]'} flex flex-col transition-all duration-300`}>
@@ -113,7 +116,7 @@ export const Teleprompter = ({ isOpen, onClose, materias, telejornal }: Teleprom
           />
 
           <TeleprompterExport
-            materias={materias}
+            materias={allMaterias}
             telejornal={telejornal}
           />
         </div>
@@ -121,7 +124,7 @@ export const Teleprompter = ({ isOpen, onClose, materias, telejornal }: Teleprom
         {/* Teleprompter Content */}
         <TeleprompterContent
           ref={contentRef}
-          materias={materias}
+          blocks={blocks}
           fontSize={fontSize}
         />
       </DialogContent>

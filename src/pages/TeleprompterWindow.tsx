@@ -1,28 +1,36 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TeleprompterControls } from "@/components/news-schedule/teleprompter/TeleprompterControls";
 import { TeleprompterViewControls } from "@/components/news-schedule/teleprompter/TeleprompterViewControls";
 import { TeleprompterExport } from "@/components/news-schedule/teleprompter/TeleprompterExport";
 import { TeleprompterContent } from "@/components/news-schedule/teleprompter/TeleprompterContent";
-import { Materia, Telejornal } from "@/types";
+import { Materia, Telejornal, Bloco } from "@/types";
 
 const TeleprompterWindow = () => {
-  const [materias, setMaterias] = useState<Materia[]>([]);
+  const [blocks, setBlocks] = useState<(Bloco & { items: Materia[] })[]>([]);
   const [telejornal, setTelejornal] = useState<Telejornal | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState([50]);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [fontSize, setFontSize] = useState(24);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   // Listen for data from parent window
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
+      console.log("Teleprompter window received message:", event.data);
+      
       if (event.data.type === 'TELEPROMPTER_DATA') {
-        setMaterias(event.data.materias || []);
+        setBlocks(event.data.blocks || []);
         setTelejornal(event.data.telejornal || null);
+        console.log("Updated teleprompter data:", {
+          blocks: event.data.blocks,
+          telejornal: event.data.telejornal
+        });
       }
       if (event.data.type === 'TELEPROMPTER_UPDATE') {
-        setMaterias(event.data.materias || []);
+        setBlocks(event.data.blocks || []);
+        console.log("Updated teleprompter blocks:", event.data.blocks);
       }
     };
 
@@ -42,20 +50,32 @@ const TeleprompterWindow = () => {
   useEffect(() => {
     let intervalRef: NodeJS.Timeout | null = null;
 
-    if (isPlaying) {
+    if (isPlaying && contentRef.current) {
       const scrollSpeed = speed[0] / 10;
       
       intervalRef = setInterval(() => {
         setScrollPosition(prev => {
-          const contentElement = document.querySelector('.teleprompter-content');
-          const maxScroll = contentElement?.scrollHeight || 0;
+          const contentElement = contentRef.current;
+          if (!contentElement) return prev;
           
-          if (prev + scrollSpeed >= maxScroll) {
+          const maxScroll = contentElement.scrollHeight - contentElement.clientHeight;
+          const newPosition = prev + scrollSpeed;
+          
+          console.log("Scroll update:", {
+            currentPosition: prev,
+            newPosition,
+            maxScroll,
+            scrollHeight: contentElement.scrollHeight,
+            clientHeight: contentElement.clientHeight
+          });
+          
+          if (newPosition >= maxScroll) {
+            console.log("Reached end of content, stopping playback");
             setIsPlaying(false);
-            return 0;
+            return prev; // Stay at current position when reaching end
           }
           
-          return prev + scrollSpeed;
+          return newPosition;
         });
       }, 100);
     }
@@ -69,32 +89,45 @@ const TeleprompterWindow = () => {
 
   // Apply scroll position
   useEffect(() => {
-    const contentElement = document.querySelector('.teleprompter-content');
-    if (contentElement) {
-      contentElement.scrollTop = scrollPosition;
+    if (contentRef.current) {
+      contentRef.current.scrollTop = scrollPosition;
     }
   }, [scrollPosition]);
 
   const handlePlayPause = () => {
+    console.log("Play/Pause toggled:", !isPlaying);
     setIsPlaying(!isPlaying);
   };
 
   const handleSpeedChange = (value: number[]) => {
+    console.log("Speed changed to:", value[0]);
     setSpeed(value);
   };
 
   const resetPosition = () => {
+    console.log("Resetting position to top");
     setScrollPosition(0);
     setIsPlaying(false);
   };
 
   const increaseFontSize = () => {
-    setFontSize(prev => Math.min(prev + 2, 48));
+    setFontSize(prev => {
+      const newSize = Math.min(prev + 2, 48);
+      console.log("Font size increased to:", newSize);
+      return newSize;
+    });
   };
 
   const decreaseFontSize = () => {
-    setFontSize(prev => Math.max(prev - 2, 12));
+    setFontSize(prev => {
+      const newSize = Math.max(prev - 2, 12);
+      console.log("Font size decreased to:", newSize);
+      return newSize;
+    });
   };
+
+  // Get all materias for export functionality
+  const allMaterias = blocks.flatMap(block => block.items);
 
   return (
     <div className="h-screen flex flex-col bg-white">
@@ -123,7 +156,7 @@ const TeleprompterWindow = () => {
         />
 
         <TeleprompterExport
-          materias={materias}
+          materias={allMaterias}
           telejornal={telejornal}
         />
 
@@ -137,12 +170,11 @@ const TeleprompterWindow = () => {
 
       {/* Teleprompter Content */}
       <div className="flex-1 overflow-hidden">
-        <div className="teleprompter-content h-full">
-          <TeleprompterContent
-            materias={materias}
-            fontSize={fontSize}
-          />
-        </div>
+        <TeleprompterContent
+          ref={contentRef}
+          blocks={blocks}
+          fontSize={fontSize}
+        />
       </div>
     </div>
   );

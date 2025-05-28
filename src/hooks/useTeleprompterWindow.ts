@@ -1,18 +1,25 @@
 
 import { useState, useEffect, useRef } from "react";
-import { Materia, Telejornal } from "@/types";
+import { Materia, Telejornal, Bloco } from "@/types";
+
+interface TeleprompterData {
+  blocks: (Bloco & { items: Materia[] })[];
+  telejornal: Telejornal | null;
+}
 
 export const useTeleprompterWindow = () => {
   const [isOpen, setIsOpen] = useState(false);
   const windowRef = useRef<Window | null>(null);
 
-  const openTeleprompter = (materias: Materia[], telejornal: Telejornal | null) => {
+  const openTeleprompter = (blocks: (Bloco & { items: Materia[] })[], telejornal: Telejornal | null) => {
+    console.log("Opening teleprompter with blocks:", blocks);
+    
     if (windowRef.current && !windowRef.current.closed) {
       // Window already exists, just focus it and update data
       windowRef.current.focus();
       windowRef.current.postMessage({
         type: 'TELEPROMPTER_DATA',
-        materias,
+        blocks,
         telejornal
       }, '*');
       return;
@@ -40,7 +47,7 @@ export const useTeleprompterWindow = () => {
         try {
           newWindow.postMessage({
             type: 'TELEPROMPTER_DATA',
-            materias,
+            blocks,
             telejornal
           }, '*');
         } catch (error) {
@@ -56,11 +63,12 @@ export const useTeleprompterWindow = () => {
     }
   };
 
-  const updateTeleprompterData = (materias: Materia[]) => {
+  const updateTeleprompterData = (blocks: (Bloco & { items: Materia[] })[]) => {
     if (windowRef.current && !windowRef.current.closed) {
+      console.log("Updating teleprompter with blocks:", blocks);
       windowRef.current.postMessage({
         type: 'TELEPROMPTER_UPDATE',
-        materias
+        blocks
       }, '*');
     }
   };
@@ -78,6 +86,7 @@ export const useTeleprompterWindow = () => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'TELEPROMPTER_READY' && windowRef.current) {
         // Window is ready, we can send data now
+        console.log("Teleprompter window is ready");
       }
     };
 
