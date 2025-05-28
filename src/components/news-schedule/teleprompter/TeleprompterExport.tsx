@@ -12,8 +12,11 @@ interface TeleprompterExportProps {
 export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportProps) => {
   const exportToPDF = () => {
     if (!telejornal || !blocks.length) {
+      console.log("Cannot export PDF: missing telejornal or blocks");
       return;
     }
+
+    console.log("Starting PDF export with:", { telejornal: telejornal.nome, blocksCount: blocks.length });
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -40,6 +43,8 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
         });
       });
     });
+
+    console.log("Ordered materias for PDF:", orderedMaterias.length);
 
     // Function to check if we need a new page
     const checkNewPage = (requiredSpace: number = lineHeight * 4) => {
@@ -169,14 +174,19 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
 
     // Save the PDF
     doc.save(filename);
+    console.log("PDF export completed:", filename);
   };
+
+  // Check if export is possible
+  const canExport = telejornal && blocks.length > 0;
 
   return (
     <Button
       variant="outline"
       size="sm"
       onClick={exportToPDF}
-      disabled={!telejornal || !blocks.length}
+      disabled={!canExport}
+      title={!canExport ? "Não há conteúdo para exportar" : "Exportar conteúdo do teleprompter em PDF"}
     >
       <Download className="h-4 w-4 mr-2" />
       Exportar PDF
