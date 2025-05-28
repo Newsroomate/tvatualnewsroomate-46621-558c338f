@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Materia, Telejornal, Bloco } from "@/types";
@@ -16,9 +15,9 @@ interface TeleprompterProps {
 
 export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: TeleprompterProps) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [speed, setSpeed] = useState([50]); // Speed from 1 to 100
+  const [speed, setSpeed] = useState([50]);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [fontSize, setFontSize] = useState(24); // Default font size in pixels
+  const [fontSize, setFontSize] = useState(24);
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -73,7 +72,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   };
 
   const increaseFontSize = () => {
-    setFontSize(prev => Math.min(prev + 2, 48)); // Max font size 48px
+    setFontSize(prev => Math.min(prev + 2, 100)); // Max font size 100px
   };
 
   const decreaseFontSize = () => {

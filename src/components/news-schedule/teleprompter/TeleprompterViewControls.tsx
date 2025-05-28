@@ -24,12 +24,12 @@ export const TeleprompterViewControls = ({
       >
         <Minus className="h-4 w-4" />
       </Button>
-      <span className="text-sm text-gray-600 min-w-[40px] text-center">{fontSize}px</span>
+      <span className="text-sm text-gray-600 min-w-[50px] text-center">{fontSize}px</span>
       <Button
         variant="outline"
         size="sm"
         onClick={onIncreaseFontSize}
-        disabled={fontSize >= 48}
+        disabled={fontSize >= 100}
       >
         <Plus className="h-4 w-4" />
       </Button>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { TeleprompterControls } from "@/components/news-schedule/teleprompter/TeleprompterControls";
 import { TeleprompterViewControls } from "@/components/news-schedule/teleprompter/TeleprompterViewControls";
@@ -116,7 +115,7 @@ const TeleprompterWindow = () => {
 
   const increaseFontSize = () => {
     setFontSize(prev => {
-      const newSize = Math.min(prev + 2, 48);
+      const newSize = Math.min(prev + 2, 100); // Max font size 100px
       console.log("Font size increased to:", newSize);
       return newSize;
     });
@@ -124,7 +123,7 @@ const TeleprompterWindow = () => {
 
   const decreaseFontSize = () => {
     setFontSize(prev => {
-      const newSize = Math.max(prev - 2, 12);
+      const newSize = Math.max(prev - 2, 12); // Min font size 12px
       console.log("Font size decreased to:", newSize);
       return newSize;
     });

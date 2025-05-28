@@ -35,11 +35,15 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
     return (
       <div 
         ref={ref}
-        className="teleprompter-content flex-1 overflow-y-auto bg-black text-white p-8"
+        className="teleprompter-content flex-1 overflow-y-auto bg-black text-white"
         style={{ 
           lineHeight: '1.8',
           scrollBehavior: 'smooth',
-          height: '100%'
+          height: '100%',
+          paddingLeft: '4rem', // Margem lateral esquerda (equivalente a 2 TABs)
+          paddingRight: '4rem', // Margem lateral direita (equivalente a 2 TABs)
+          paddingTop: '2rem',
+          paddingBottom: '2rem'
         }}
       >
         {orderedMaterias.length === 0 ? (
