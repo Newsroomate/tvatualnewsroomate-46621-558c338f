@@ -54,7 +54,7 @@ export const ScheduleHeader = ({
           disabled={!currentTelejornal || !hasBlocks}
         >
           <FileText className="h-4 w-4 mr-2" />
-          Exportar Clip+Retranca
+          Exportar PLAYOUT
         </Button>
         
         <Button 
