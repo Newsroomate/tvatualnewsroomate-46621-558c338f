@@ -10,6 +10,7 @@ interface TeleprompterData {
 export const useTeleprompterWindow = () => {
   const [isOpen, setIsOpen] = useState(false);
   const windowRef = useRef<Window | null>(null);
+  const dataToSendRef = useRef<TeleprompterData | null>(null);
 
   const openTeleprompter = (blocks: (Bloco & { items: Materia[] })[], telejornal: Telejornal | null) => {
     console.log("Opening teleprompter with blocks:", blocks);
@@ -26,46 +27,67 @@ export const useTeleprompterWindow = () => {
 
     console.log("Ordered data for teleprompter:", orderedData);
     
+    // Store data to send
+    dataToSendRef.current = orderedData;
+    
     if (windowRef.current && !windowRef.current.closed) {
       // Tab already exists, just focus it and update data
       windowRef.current.focus();
-      windowRef.current.postMessage({
-        type: 'TELEPROMPTER_DATA',
-        ...orderedData
-      }, '*');
+      
+      // Send data immediately since window is already loaded
+      try {
+        windowRef.current.postMessage({
+          type: 'TELEPROMPTER_DATA',
+          ...orderedData
+        }, '*');
+        console.log("Data sent to existing teleprompter window");
+      } catch (error) {
+        console.error("Error sending data to existing window:", error);
+      }
       return;
     }
 
-    // Open new tab (no window configuration parameters)
+    // Open new tab
     const newTab = window.open('/teleprompter', '_blank');
 
     if (newTab) {
       windowRef.current = newTab;
       setIsOpen(true);
 
-      // Wait for tab to load then send data
-      const checkReady = () => {
+      // Wait for the window to load and then send data
+      const sendDataWhenReady = () => {
         if (newTab.closed) {
           setIsOpen(false);
           windowRef.current = null;
+          dataToSendRef.current = null;
           return;
         }
 
         try {
-          newTab.postMessage({
-            type: 'TELEPROMPTER_DATA',
-            ...orderedData
-          }, '*');
+          // Check if window is ready by trying to access its location
+          if (newTab.location.href.includes('/teleprompter')) {
+            newTab.postMessage({
+              type: 'TELEPROMPTER_DATA',
+              ...orderedData
+            }, '*');
+            console.log("Data sent to new teleprompter window");
+            dataToSendRef.current = null; // Clear after sending
+          } else {
+            // Window not ready yet, try again
+            setTimeout(sendDataWhenReady, 200);
+          }
         } catch (error) {
-          // Tab might not be ready yet, try again
-          setTimeout(checkReady, 100);
+          // Cross-origin error means window is still loading, try again
+          setTimeout(sendDataWhenReady, 200);
         }
       };
 
-      setTimeout(checkReady, 500);
+      // Start checking after a short delay
+      setTimeout(sendDataWhenReady, 500);
     } else {
       // Popup blocked - fallback to alert
       alert('O teleprompter não pôde ser aberto. Verifique se o bloqueador de pop-ups está ativo e permita pop-ups para este site.');
+      dataToSendRef.current = null;
     }
   };
 
@@ -80,10 +102,14 @@ export const useTeleprompterWindow = () => {
         items: [...block.items].sort((a, b) => a.ordem - b.ordem)
       }));
 
-      windowRef.current.postMessage({
-        type: 'TELEPROMPTER_UPDATE',
-        blocks: orderedBlocks
-      }, '*');
+      try {
+        windowRef.current.postMessage({
+          type: 'TELEPROMPTER_UPDATE',
+          blocks: orderedBlocks
+        }, '*');
+      } catch (error) {
+        console.error("Error updating teleprompter data:", error);
+      }
     }
   };
 
@@ -93,14 +119,25 @@ export const useTeleprompterWindow = () => {
     }
     setIsOpen(false);
     windowRef.current = null;
+    dataToSendRef.current = null;
   };
 
   // Listen for messages from teleprompter window
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      if (event.data.type === 'TELEPROMPTER_READY' && windowRef.current) {
-        // Window is ready, we can send data now
-        console.log("Teleprompter window is ready");
+      if (event.data.type === 'TELEPROMPTER_READY' && windowRef.current && dataToSendRef.current) {
+        // Window is ready and we have data to send
+        console.log("Teleprompter window is ready, sending data immediately");
+        
+        try {
+          windowRef.current.postMessage({
+            type: 'TELEPROMPTER_DATA',
+            ...dataToSendRef.current
+          }, '*');
+          dataToSendRef.current = null; // Clear after sending
+        } catch (error) {
+          console.error("Error sending data on ready:", error);
+        }
       }
     };
 
@@ -119,6 +156,7 @@ export const useTeleprompterWindow = () => {
       if (windowRef.current?.closed) {
         setIsOpen(false);
         windowRef.current = null;
+        dataToSendRef.current = null;
       }
     }, 1000);
 
