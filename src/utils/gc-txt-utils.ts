@@ -10,9 +10,9 @@ export const generateGCTextFile = (blocks: (Bloco & { items: Materia[] })[], tel
   let content = `TELEJORNAL: ${telejornal.nome}\n`;
   content += `DATA: ${new Date().toLocaleDateString('pt-BR')}\n`;
   content += `HORÁRIO: ${telejornal.horario || 'Não definido'}\n\n`;
-  content += "=" * 60 + "\n";
+  content += "=".repeat(60) + "\n";
   content += "CONTEÚDO GC - GERADOR DE CARACTERES\n";
-  content += "=" * 60 + "\n\n";
+  content += "=".repeat(60) + "\n\n";
 
   let totalMaterias = 0;
 
@@ -20,7 +20,7 @@ export const generateGCTextFile = (blocks: (Bloco & { items: Materia[] })[], tel
     if (bloco.items.length === 0) return;
 
     content += `BLOCO ${blocoIndex + 1}: ${bloco.nome}\n`;
-    content += "-" * 40 + "\n\n";
+    content += "-".repeat(40) + "\n\n";
 
     // Ordenar matérias por ordem
     const sortedMaterias = [...bloco.items].sort((a, b) => a.ordem - b.ordem);
@@ -47,10 +47,10 @@ export const generateGCTextFile = (blocks: (Bloco & { items: Materia[] })[], tel
     content += "\n";
   });
 
-  content += "=" * 60 + "\n";
+  content += "=".repeat(60) + "\n";
   content += `TOTAL DE MATÉRIAS: ${totalMaterias}\n`;
   content += `GERADO EM: ${new Date().toLocaleString('pt-BR')}\n`;
-  content += "=" * 60;
+  content += "=".repeat(60);
 
   // Criar e baixar o arquivo
   const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
