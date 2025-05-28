@@ -14,44 +14,50 @@ export const useTeleprompterWindow = () => {
   const openTeleprompter = (blocks: (Bloco & { items: Materia[] })[], telejornal: Telejornal | null) => {
     console.log("Opening teleprompter with blocks:", blocks);
     
+    // Prepare ordered data for teleprompter
+    const sortedBlocks = [...blocks].sort((a, b) => a.ordem - b.ordem);
+    const orderedData = {
+      blocks: sortedBlocks.map(block => ({
+        ...block,
+        items: [...block.items].sort((a, b) => a.ordem - b.ordem)
+      })),
+      telejornal
+    };
+
+    console.log("Ordered data for teleprompter:", orderedData);
+    
     if (windowRef.current && !windowRef.current.closed) {
-      // Window already exists, just focus it and update data
+      // Tab already exists, just focus it and update data
       windowRef.current.focus();
       windowRef.current.postMessage({
         type: 'TELEPROMPTER_DATA',
-        blocks,
-        telejornal
+        ...orderedData
       }, '*');
       return;
     }
 
-    // Open new window
-    const newWindow = window.open(
-      '/teleprompter',
-      'teleprompter',
-      'width=1200,height=800,scrollbars=yes,resizable=yes'
-    );
+    // Open new tab (no window configuration parameters)
+    const newTab = window.open('/teleprompter', '_blank');
 
-    if (newWindow) {
-      windowRef.current = newWindow;
+    if (newTab) {
+      windowRef.current = newTab;
       setIsOpen(true);
 
-      // Wait for window to load then send data
+      // Wait for tab to load then send data
       const checkReady = () => {
-        if (newWindow.closed) {
+        if (newTab.closed) {
           setIsOpen(false);
           windowRef.current = null;
           return;
         }
 
         try {
-          newWindow.postMessage({
+          newTab.postMessage({
             type: 'TELEPROMPTER_DATA',
-            blocks,
-            telejornal
+            ...orderedData
           }, '*');
         } catch (error) {
-          // Window might not be ready yet, try again
+          // Tab might not be ready yet, try again
           setTimeout(checkReady, 100);
         }
       };
@@ -66,9 +72,17 @@ export const useTeleprompterWindow = () => {
   const updateTeleprompterData = (blocks: (Bloco & { items: Materia[] })[]) => {
     if (windowRef.current && !windowRef.current.closed) {
       console.log("Updating teleprompter with blocks:", blocks);
+      
+      // Prepare ordered data for update
+      const sortedBlocks = [...blocks].sort((a, b) => a.ordem - b.ordem);
+      const orderedBlocks = sortedBlocks.map(block => ({
+        ...block,
+        items: [...block.items].sort((a, b) => a.ordem - b.ordem)
+      }));
+
       windowRef.current.postMessage({
         type: 'TELEPROMPTER_UPDATE',
-        blocks
+        blocks: orderedBlocks
       }, '*');
     }
   };
