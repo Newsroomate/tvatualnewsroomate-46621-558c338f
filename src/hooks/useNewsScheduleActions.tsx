@@ -1,7 +1,7 @@
 
 import { Bloco, Materia, Telejornal } from "@/types";
 import { generateClipRetrancaPDF } from "@/utils/clip-retranca-pdf-utils";
-import { generateGCPDF } from "@/utils/gc-pdf-utils";
+import { generateGCTXT } from "@/utils/gc-txt-utils";
 
 interface UseNewsScheduleActionsProps {
   currentTelejornal: Telejornal | null;
@@ -32,9 +32,9 @@ export const useNewsScheduleActions = ({
     if (!currentTelejornal || blocks.length === 0) return;
     
     try {
-      generateGCPDF(blocks, currentTelejornal);
+      generateGCTXT(blocks, currentTelejornal);
     } catch (error) {
-      console.error("Erro ao exportar GC PDF:", error);
+      console.error("Erro ao exportar GC TXT:", error);
     }
   };
 
