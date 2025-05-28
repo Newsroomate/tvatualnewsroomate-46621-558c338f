@@ -26,6 +26,7 @@ import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useBlockManagement } from "@/hooks/useBlockManagement";
 import { useItemManagement } from "@/hooks/useItemManagement";
 import { generateClipRetrancaPDF } from "@/utils/clip-retranca-pdf-utils";
+import { generateGCPDF } from "@/utils/gc-pdf-utils";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -124,6 +125,16 @@ export const NewsSchedule = ({
       generateClipRetrancaPDF(blocks, currentTelejornal);
     } catch (error) {
       console.error("Erro ao exportar PDF:", error);
+    }
+  };
+
+  const handleExportGC = () => {
+    if (!currentTelejornal || blocks.length === 0) return;
+    
+    try {
+      generateGCPDF(blocks, currentTelejornal);
+    } catch (error) {
+      console.error("Erro ao exportar GC PDF:", error);
     }
   };
 
@@ -271,6 +282,7 @@ export const NewsSchedule = ({
         onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
         onExportClipRetranca={handleExportClipRetranca}
+        onExportGC={handleExportGC}
       />
 
       {/* Main area with blocks */}
