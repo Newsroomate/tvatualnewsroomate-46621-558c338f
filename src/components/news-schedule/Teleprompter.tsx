@@ -109,7 +109,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
           />
 
           <TeleprompterExport
-            materias={allMaterias}
+            blocks={blocks}
             telejornal={telejornal}
           />
         </div>

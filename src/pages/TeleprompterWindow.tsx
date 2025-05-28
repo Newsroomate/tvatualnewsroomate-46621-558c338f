@@ -158,7 +158,7 @@ const TeleprompterWindow = () => {
         />
 
         <TeleprompterExport
-          materias={allMaterias}
+          blocks={blocks}
           telejornal={telejornal}
         />
 
