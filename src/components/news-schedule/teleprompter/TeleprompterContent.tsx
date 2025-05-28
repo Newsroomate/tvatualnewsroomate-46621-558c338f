@@ -15,7 +15,7 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
     return (
       <div 
         ref={ref}
-        className="flex-1 overflow-y-auto bg-black text-white p-8"
+        className="teleprompter-content flex-1 overflow-y-auto bg-black text-white p-8"
         style={{ 
           fontSize: `${fontSize}px`,
           lineHeight: '1.8',

@@ -26,6 +26,7 @@ import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useBlockManagement } from "@/hooks/useBlockManagement";
 import { useItemManagement } from "@/hooks/useItemManagement";
 import { generateClipRetrancaPDF } from "@/utils/clip-retranca-pdf-utils";
+import { useTeleprompterWindow } from "@/hooks/useTeleprompterWindow";
 
 interface NewsScheduleProps {
   selectedJournal: string | null;
@@ -109,12 +110,18 @@ export const NewsSchedule = ({
     setBlocks, 
     isEspelhoAberto: !!currentTelejornal?.espelho_aberto 
   });
+  
+  const { 
+    openTeleprompter, 
+    updateTeleprompterData, 
+    closeTeleprompter 
+  } = useTeleprompterWindow();
 
   // Get all materias from all blocks for teleprompter
   const allMaterias = blocks.flatMap(block => block.items);
 
   const handleViewTeleprompter = () => {
-    setShowTeleprompter(true);
+    openTeleprompter(allMaterias, currentTelejornal);
   };
 
   const handleExportClipRetranca = () => {
@@ -258,6 +265,11 @@ export const NewsSchedule = ({
     setTotalJournalTime(total);
   }, [blocks]);
 
+  // Update teleprompter data when blocks change
+  useEffect(() => {
+    updateTeleprompterData(allMaterias);
+  }, [allMaterias, updateTeleprompterData]);
+
   const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
 
   return (
@@ -299,14 +311,6 @@ export const NewsSchedule = ({
           />
         </div>
       </DragDropContext>
-
-      {/* Teleprompter Modal */}
-      <Teleprompter
-        isOpen={showTeleprompter}
-        onClose={() => setShowTeleprompter(false)}
-        materias={allMaterias}
-        telejornal={currentTelejornal}
-      />
 
       {/* Delete confirmation dialog */}
       <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
