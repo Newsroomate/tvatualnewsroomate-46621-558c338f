@@ -1,19 +1,24 @@
+
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { Materia } from "@/types";
+
 interface ExportGCButtonProps {
   formData: Partial<Materia>;
 }
+
 export const ExportGCButton = ({
   formData
 }: ExportGCButtonProps) => {
   const handleExportGC = () => {
     const retranca = formData.retranca || '';
     const gc = formData.gc || '';
+    
     if (!retranca && !gc) {
       alert('Não há conteúdo para exportar.');
       return;
     }
+    
     const content = `RETRANCA: ${retranca}\n\nGC:\n${gc}`;
 
     // Create and download the file
@@ -29,5 +34,16 @@ export const ExportGCButton = ({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
   };
-  return;
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleExportGC}
+      disabled={!formData.retranca && !formData.gc}
+    >
+      <Download className="h-4 w-4 mr-2" />
+      Exportar GC
+    </Button>
+  );
 };
