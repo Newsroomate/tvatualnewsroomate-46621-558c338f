@@ -36,7 +36,7 @@ export const useBlockManagement = ({
     const novoBloco = await createBloco(novoBlocoInput);
     console.log(`Block created: ${novoBloco.nome} with order ${novoBloco.ordem}`);
 
-    // Buscar dados do último bloco do espelho anterior
+    // SEMPRE buscar dados do último bloco do espelho anterior
     const lastBlockData = await getLastBlockFromPreviousRundown(telejornalId);
     
     let createdMaterias: Materia[] = [];
@@ -82,6 +82,13 @@ export const useBlockManagement = ({
         description: `Bloco "${blockNameToUse}" criado com ${createdMaterias.length} matérias do espelho anterior`,
         variant: "default"
       });
+    } else {
+      console.log("Nenhum bloco anterior encontrado ou bloco anterior vazio");
+      toast({
+        title: "Bloco criado",
+        description: `Bloco "${blockNameToUse}" criado (nenhum bloco anterior encontrado)`,
+        variant: "default"
+      });
     }
 
     // Calcular tempo total
@@ -116,7 +123,7 @@ export const useBlockManagement = ({
       
       console.log("No existing blocks found, creating first block with previous rundown data");
       
-      // Create the new block with data from previous rundown
+      // SEMPRE criar o novo bloco com dados do espelho anterior
       const newBlockWithData = await createBlockWithLastBlockData(selectedJournal, "Bloco 1", 1);
       
       console.log("First block created successfully with previous data:", newBlockWithData);

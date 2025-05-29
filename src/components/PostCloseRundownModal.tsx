@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,7 @@ interface PostCloseRundownModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentTelejornal: Telejornal | null;
-  onCreateNew: (loadLastBlock?: boolean) => void;
+  onCreateNew: () => void;
   onViewByDate: (date: Date) => void;
 }
 
@@ -27,8 +26,8 @@ export const PostCloseRundownModal = ({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const handleCreateNewWithLastBlock = () => {
-    onCreateNew(true); // Flag para carregar o último bloco
+  const handleCreateNew = () => {
+    onCreateNew(); // SEMPRE carrega o último bloco agora
     onClose();
   };
 
@@ -53,7 +52,7 @@ export const PostCloseRundownModal = ({
           
           <div className="space-y-3">
             <Button 
-              onClick={handleCreateNewWithLastBlock}
+              onClick={handleCreateNew}
               className="w-full justify-start"
               variant="outline"
             >

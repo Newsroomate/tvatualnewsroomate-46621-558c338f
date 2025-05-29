@@ -159,7 +159,7 @@ export const NewsSchedule = ({
     }, 100);
   };
 
-  // Enhanced handleAddFirstBlock with auto-scroll
+  // Enhanced handleAddFirstBlock with auto-scroll - SEMPRE carrega o último bloco
   const handleAddFirstBlockWithScroll = async () => {
     const previousBlockCount = blocks.length;
     await handleAddFirstBlock();
@@ -225,7 +225,7 @@ export const NewsSchedule = ({
     loadBlocos();
   }, [blocosQuery.data, selectedJournal, setBlocks]);
 
-  // Handle auto-creation of first block, separated from the blocks data processing effect
+  // Handle auto-creation of first block with last block data
   useEffect(() => {
     // Skip if no telejornal selected, espelho is not open, or we're already creating a block
     if (!selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
@@ -237,15 +237,16 @@ export const NewsSchedule = ({
       return;
     }
 
-    const createInitialBlock = async () => {
-      // Only create a block if there are no blocks and we haven't already tried
+    const createInitialBlockWithLastData = async () => {
+      // SEMPRE cria o bloco inicial com dados do último bloco quando não há blocos
       if (blocosQuery.data.length === 0 && !blockCreationInProgress.current) {
         setIsCreatingFirstBlock(true);
         blockCreationInProgress.current = true;
         
-        console.log("Attempting to create initial block for telejornal:", selectedJournal);
+        console.log("Criando bloco inicial com dados do último bloco para telejornal:", selectedJournal);
         
         try {
+          // SEMPRE usa handleAddFirstBlock que carrega o último bloco automaticamente
           await handleAddFirstBlock();
         } catch (error) {
           console.error("Erro ao criar o bloco inicial:", error);
@@ -257,7 +258,7 @@ export const NewsSchedule = ({
       }
     };
     
-    createInitialBlock();
+    createInitialBlockWithLastData();
   }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, handleAddFirstBlock, blockCreationInProgress]);
 
   // Recalculate total journal time when blocks change
