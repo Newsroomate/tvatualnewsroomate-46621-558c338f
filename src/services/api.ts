@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Telejornal, Bloco, Materia, Pauta, PautaCreateInput } from "@/types";
 import { TablesInsert } from "@/integrations/supabase/types";
@@ -251,3 +250,6 @@ export { fetchClosedRundowns } from "./espelhos-api";
 
 // Export the blocos-api functions including deleteAllBlocos
 export { deleteAllBlocos } from "./blocos-api";
+
+// Export the snapshots-api functions
+export { fetchClosedRundownSnapshots } from "./snapshots-api";

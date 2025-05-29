@@ -1,13 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { fetchTelejornais } from "@/services/api";
-import { fetchClosedRundowns, ClosedRundown } from "@/services/espelhos-api";
+import { fetchClosedRundownSnapshots, ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { Telejornal } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
 import { FilterSection } from "./FilterSection";
-import { RundownTable } from "./RundownTable";
-import { ReadOnlyView } from "./ReadOnlyView";
+import { ClosedRundownContent } from "./ClosedRundownContent";
 
 interface GeneralScheduleModalProps {
   isOpen: boolean;
@@ -17,15 +17,12 @@ interface GeneralScheduleModalProps {
 export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalProps) => {
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   const [selectedJornal, setSelectedJornal] = useState<string>("all");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
   const [startTime, setStartTime] = useState<string>("");
   const [endTime, setEndTime] = useState<string>("");
   const [showTimeRange, setShowTimeRange] = useState<boolean>(false);
-  const [closedRundowns, setClosedRundowns] = useState<ClosedRundown[]>([]);
-  const [filteredRundowns, setFilteredRundowns] = useState<ClosedRundown[]>([]);
-  const [isReadOnlyMode, setIsReadOnlyMode] = useState<boolean>(false);
-  const [selectedRundown, setSelectedRundown] = useState<ClosedRundown | null>(null);
+  const [closedSnapshots, setClosedSnapshots] = useState<ClosedRundownSnapshot[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   
   const { toast } = useToast();
@@ -33,13 +30,13 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
   useEffect(() => {
     if (isOpen) {
       loadTelejornais();
-      loadClosedRundowns();
+      loadClosedSnapshots();
     }
   }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
-      loadClosedRundowns();
+      loadClosedSnapshots();
     }
   }, [selectedJornal, selectedDate, selectedTime, startTime, endTime, showTimeRange, isOpen]);
 
@@ -57,10 +54,10 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
     }
   };
 
-  const loadClosedRundowns = async () => {
+  const loadClosedSnapshots = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchClosedRundowns(
+      const data = await fetchClosedRundownSnapshots(
         selectedJornal === "all" ? undefined : selectedJornal, 
         selectedDate, 
         selectedTime,
@@ -68,8 +65,7 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
         showTimeRange ? endTime : undefined
       );
       
-      setClosedRundowns(data);
-      setFilteredRundowns(data);
+      setClosedSnapshots(data);
       
       if (data.length === 0) {
         console.log("Nenhum espelho fechado encontrado com os filtros selecionados");
@@ -87,29 +83,6 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
       setIsLoading(false);
     }
   };
-
-  const handleVisualizarEspelho = async (rundown: ClosedRundown) => {
-    setSelectedRundown(rundown);
-    setIsReadOnlyMode(true);
-  };
-
-  const closeReadOnlyMode = () => {
-    setIsReadOnlyMode(false);
-    setSelectedRundown(null);
-  };
-
-  if (isReadOnlyMode && selectedRundown) {
-    return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-4xl h-auto max-h-[80vh] overflow-hidden flex flex-col">
-          <ReadOnlyView 
-            selectedRundown={selectedRundown} 
-            onClose={closeReadOnlyMode} 
-          />
-        </DialogContent>
-      </Dialog>
-    );
-  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -130,12 +103,12 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
           setShowTimeRange={setShowTimeRange}
         />
         
-        <RundownTable 
-          isLoading={isLoading}
-          filteredRundowns={filteredRundowns}
-          onVisualizarEspelho={handleVisualizarEspelho}
-          onClose={onClose}
-        />
+        <div className="overflow-auto flex-grow">
+          <ClosedRundownContent 
+            snapshots={closedSnapshots}
+            isLoading={isLoading}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );
