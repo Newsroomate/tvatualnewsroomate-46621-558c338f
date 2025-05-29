@@ -72,12 +72,14 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
       
       {snapshots.map((snapshot) => {
         const isExpanded = expandedSnapshots.has(snapshot.id);
-        const totalMaterias = snapshot.estrutura_completa.blocos.reduce(
-          (sum, bloco) => sum + bloco.materias.length, 0
+        const blocos = snapshot.estrutura_completa.blocos || [];
+        const totalMaterias = blocos.reduce(
+          (sum, bloco) => sum + (bloco.items?.length || bloco.materias?.length || 0), 0
         );
-        const totalDuracao = snapshot.estrutura_completa.blocos.reduce(
-          (sum, bloco) => sum + bloco.materias.reduce((blockSum, materia) => blockSum + materia.duracao, 0), 0
-        );
+        const totalDuracao = blocos.reduce((sum, bloco) => {
+          const items = bloco.items || bloco.materias || [];
+          return sum + items.reduce((blockSum: number, item: any) => blockSum + (item.duracao || 0), 0);
+        }, 0);
 
         return (
           <Card key={snapshot.id} className="w-full">
@@ -106,7 +108,7 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
                   )}
                 </div>
                 <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <span>{snapshot.estrutura_completa.blocos.length} blocos</span>
+                  <span>{blocos.length} blocos</span>
                   <span>•</span>
                   <span>{totalMaterias} matérias</span>
                   <span>•</span>
@@ -118,9 +120,10 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
             {isExpanded && (
               <CardContent className="pt-0">
                 <div className="space-y-4">
-                  {snapshot.estrutura_completa.blocos.map((bloco) => {
+                  {blocos.map((bloco) => {
                     const isBlockExpanded = expandedBlocks.has(bloco.id);
-                    const blocoDuracao = bloco.materias.reduce((sum, materia) => sum + materia.duracao, 0);
+                    const items = bloco.items || bloco.materias || [];
+                    const blocoDuracao = items.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
 
                     return (
                       <div key={bloco.id} className="border rounded-lg p-3 bg-gray-50">
@@ -140,13 +143,13 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
                             </Badge>
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {bloco.materias.length} matérias • {formatTime(blocoDuracao)}
+                            {items.length} matérias • {formatTime(blocoDuracao)}
                           </div>
                         </div>
 
                         {isBlockExpanded && (
                           <div className="space-y-2 ml-6">
-                            {bloco.materias.map((materia) => (
+                            {items.map((materia: any) => (
                               <div key={materia.id} className="bg-white border rounded p-3 text-sm">
                                 <div className="flex items-start justify-between mb-2">
                                   <div className="flex-1">
@@ -173,7 +176,7 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
                                       )}
                                       <span className="flex items-center">
                                         <Clock className="h-3 w-3 mr-1" />
-                                        {formatTime(materia.duracao)}
+                                        {formatTime(materia.duracao || 0)}
                                       </span>
                                     </div>
                                   </div>
