@@ -44,8 +44,7 @@ export const EditPanelTabs = ({
       />
       
       <TeleprompterTab
-        cabeca={formData.cabeca || ''}
-        texto={formData.texto || ''}
+        formData={formData}
       />
     </Tabs>
   );
