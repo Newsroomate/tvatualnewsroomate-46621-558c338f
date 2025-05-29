@@ -13,7 +13,7 @@ interface PostCloseRundownModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentTelejornal: Telejornal | null;
-  onCreateNew: () => void;
+  onCreateNew: (loadLastBlock?: boolean) => void;
   onViewByDate: (date: Date) => void;
 }
 
@@ -27,8 +27,8 @@ export const PostCloseRundownModal = ({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
 
-  const handleCreateNew = () => {
-    onCreateNew();
+  const handleCreateNewWithLastBlock = () => {
+    onCreateNew(true); // Flag para carregar o último bloco
     onClose();
   };
 
@@ -53,7 +53,7 @@ export const PostCloseRundownModal = ({
           
           <div className="space-y-3">
             <Button 
-              onClick={handleCreateNew}
+              onClick={handleCreateNewWithLastBlock}
               className="w-full justify-start"
               variant="outline"
             >

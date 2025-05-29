@@ -1,3 +1,4 @@
+
 import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia, Telejornal } from "@/types";
@@ -39,9 +40,16 @@ export const useBlockManagement = ({
     const lastBlockData = await getLastBlockFromPreviousRundown(telejornalId);
     
     let createdMaterias: Materia[] = [];
+    let blockNameToUse = blockName;
     
     if (lastBlockData && lastBlockData.materias.length > 0) {
       console.log(`Carregando ${lastBlockData.materias.length} matérias do bloco anterior: ${lastBlockData.nome}`);
+      
+      // Usar o nome do último bloco
+      blockNameToUse = lastBlockData.nome;
+      
+      // Atualizar o nome do bloco criado
+      await updateBloco(novoBloco.id, { nome: blockNameToUse });
       
       // Criar as matérias do último bloco no novo bloco
       for (let i = 0; i < lastBlockData.materias.length; i++) {
@@ -71,7 +79,7 @@ export const useBlockManagement = ({
       
       toast({
         title: "Bloco carregado",
-        description: `Bloco "${blockName}" criado com ${createdMaterias.length} matérias do espelho anterior`,
+        description: `Bloco "${blockNameToUse}" criado com ${createdMaterias.length} matérias do espelho anterior`,
         variant: "default"
       });
     }
@@ -81,6 +89,7 @@ export const useBlockManagement = ({
 
     return {
       ...novoBloco,
+      nome: blockNameToUse,
       items: createdMaterias,
       totalTime
     };

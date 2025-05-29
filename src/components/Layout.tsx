@@ -197,7 +197,7 @@ const Layout = () => {
     }
   };
 
-  const handleCreateNewRundown = async () => {
+  const handleCreateNewRundown = async (loadLastBlock: boolean = false) => {
     if (!selectedJournal || !currentTelejornal) return;
 
     try {
@@ -218,9 +218,12 @@ const Layout = () => {
         espelho_aberto: true
       });
       
+      // If loadLastBlock is true, the first block creation will be handled
+      // automatically by the NewsSchedule component with the last block data
+      
       toast({
         title: "Novo espelho criado",
-        description: `Novo espelho de ${currentTelejornal.nome} criado e aberto`,
+        description: `Novo espelho de ${currentTelejornal.nome} criado e aberto${loadLastBlock ? ' com o último bloco carregado' : ''}`,
         variant: "default"
       });
       
