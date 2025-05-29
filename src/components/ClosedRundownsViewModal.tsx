@@ -37,18 +37,11 @@ export const ClosedRundownsViewModal = ({
   const loadClosedRundowns = async () => {
     setIsLoading(true);
     try {
-      const dateString = format(selectedDate, 'yyyy-MM-dd');
-      const data = await fetchClosedRundowns();
+      const data = await fetchClosedRundowns(telejornalId, selectedDate);
       
-      // Filter by telejornal and date
-      const filteredData = data.filter(rundown => 
-        rundown.telejornal_id === telejornalId && 
-        rundown.data_referencia === dateString
-      );
+      setClosedRundowns(data);
       
-      setClosedRundowns(filteredData);
-      
-      if (filteredData.length === 0) {
+      if (data.length === 0) {
         toast({
           title: "Nenhum espelho encontrado",
           description: `Não há espelhos fechados para ${telejornalName} na data ${format(selectedDate, 'dd/MM/yyyy')}`,

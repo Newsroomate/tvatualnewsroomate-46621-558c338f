@@ -4,11 +4,33 @@ import { format } from "date-fns";
 
 export interface ClosedRundown {
   id: string;
+  telejornal_id: string;
+  data_referencia: string;
+  nome: string;
   jornal: string;
   data: Date;
   dataFormatted: string;
   hora: string;
   status: string;
+  estrutura?: {
+    blocos: Array<{
+      id: string;
+      nome: string;
+      ordem: number;
+      items: Array<{
+        id: string;
+        retranca: string;
+        clip?: string;
+        duracao: number;
+        pagina?: string;
+        reporter?: string;
+        status?: string;
+        texto?: string;
+        cabeca?: string;
+        ordem: number;
+      }>;
+    }>;
+  };
 }
 
 export async function fetchClosedRundowns(
@@ -27,36 +49,24 @@ export async function fetchClosedRundowns(
   });
 
   let query = supabase
-    .from("telejornais")
-    .select("id, nome, created_at, horario, espelho_aberto")
-    .eq("espelho_aberto", false);
+    .from("espelhos_salvos")
+    .select(`
+      id,
+      telejornal_id,
+      data_referencia,
+      nome,
+      estrutura,
+      created_at,
+      telejornais!inner(nome, horario)
+    `);
 
   if (telejornalId && telejornalId !== "all") {
-    query = query.eq("id", telejornalId);
+    query = query.eq("telejornal_id", telejornalId);
   }
 
   if (selectedDate) {
     const dateString = format(selectedDate, "yyyy-MM-dd");
-    query = query.gte("created_at", `${dateString}T00:00:00`)
-      .lt("created_at", `${dateString}T23:59:59`);
-  }
-
-  // Filter by time if specified
-  if (selectedTime && !startTime && !endTime) {
-    // Extract hour and minute from the time string (HH:MM format)
-    const [hour, minute] = selectedTime.split(":");
-    if (hour && minute && selectedDate) {
-      const dateString = format(selectedDate, "yyyy-MM-dd");
-      const timePoint = `${dateString}T${hour}:${minute}:00`;
-      
-      // Find journals with the exact hour specified
-      query = query.eq("horario", selectedTime);
-    }
-  }
-
-  // Filter by time range if both start and end times are specified
-  if (startTime && endTime && selectedDate) {
-    query = query.gte("horario", startTime).lte("horario", endTime);
+    query = query.eq("data_referencia", dateString);
   }
 
   const { data, error } = await query;
@@ -67,15 +77,19 @@ export async function fetchClosedRundowns(
   }
 
   // Map the data to the ClosedRundown format
-  return data.map(journal => {
-    const createdDate = new Date(journal.created_at || "");
+  return data.map(rundown => {
+    const createdDate = new Date(rundown.created_at || "");
     return {
-      id: journal.id,
-      jornal: journal.nome,
+      id: rundown.id,
+      telejornal_id: rundown.telejornal_id,
+      data_referencia: rundown.data_referencia,
+      nome: rundown.nome,
+      jornal: rundown.telejornais?.nome || "",
       data: createdDate,
       dataFormatted: format(createdDate, "dd/MM/yyyy"),
-      hora: journal.horario || "",
-      status: "Fechado"
+      hora: rundown.telejornais?.horario || "",
+      status: "Fechado",
+      estrutura: rundown.estrutura
     };
   });
 }
