@@ -25,8 +25,6 @@ export const useBlockManagement = ({
   const { toast } = useToast();
 
   const createBlockWithLastBlockData = async (telejornalId: string, blockName: string, order: number) => {
-    console.log(`Criando bloco "${blockName}" com dados do espelho anterior para telejornal: ${telejornalId}`);
-    
     // Criar o bloco
     const novoBlocoInput = {
       telejornal_id: telejornalId,
@@ -35,9 +33,9 @@ export const useBlockManagement = ({
     };
     
     const novoBloco = await createBloco(novoBlocoInput);
-    console.log(`Bloco criado: ${novoBloco.nome} com ordem ${novoBloco.ordem}`);
+    console.log(`Block created: ${novoBloco.nome} with order ${novoBloco.ordem}`);
 
-    // Buscar dados do último bloco do espelho anterior deste telejornal específico
+    // Buscar dados do último bloco do espelho anterior
     const lastBlockData = await getLastBlockFromPreviousRundown(telejornalId);
     
     let createdMaterias: Materia[] = [];
@@ -72,15 +70,8 @@ export const useBlockManagement = ({
       }
       
       toast({
-        title: "Espelho aberto",
-        description: `Novo espelho criado com o bloco "${lastBlockData.nome}" (${createdMaterias.length} matérias) do espelho anterior`,
-        variant: "default"
-      });
-    } else {
-      console.log('Nenhum bloco anterior encontrado, criando bloco vazio');
-      toast({
-        title: "Espelho aberto",
-        description: `Novo espelho de "${currentTelejornal?.nome}" criado com bloco inicial`,
+        title: "Bloco carregado",
+        description: `Bloco "${blockName}" criado com ${createdMaterias.length} matérias do espelho anterior`,
         variant: "default"
       });
     }
@@ -96,59 +87,55 @@ export const useBlockManagement = ({
   };
 
   const handleAddFirstBlock = async () => {
-    if (!selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current) {
-      console.log("Cannot create first block - conditions not met");
+    if (!selectedJournal || !currentTelejornal?.espelho_aberto) {
+      console.log("Cannot create first block - journal not selected or espelho not open");
       return;
     }
     
     try {
-      blockCreationInProgress.current = true;
-      setIsCreatingFirstBlock(true);
-      
-      // Verificar se já existem blocos
+      // Double check to make sure we don't have blocks already
       const existingBlocks = await blocosQuery.refetch();
       
-      console.log(`Verificando blocos existentes para telejornal ${selectedJournal}:`, existingBlocks.data);
+      console.log(`Checking for existing blocks for telejornal ${selectedJournal}:`, existingBlocks.data);
       
-      // Se blocos já existem, apenas atualizar o estado
+      // If blocks already exist, just return without creating a new one
       if (existingBlocks && existingBlocks.data && existingBlocks.data.length > 0) {
-        console.log("Blocos já existem para este jornal, carregando dados existentes");
+        console.log("Blocks already exist for this journal, skipping creation");
+        setBlocks(blocks => blocks.length ? blocks : existingBlocks.data.map(b => ({ ...b, items: [], totalTime: 0 })));
         return;
       }
       
-      console.log("Nenhum bloco existente encontrado, criando primeiro bloco com dados do espelho anterior");
+      console.log("No existing blocks found, creating first block with previous rundown data");
       
-      // Criar o novo bloco com dados do espelho anterior
+      // Create the new block with data from previous rundown
       const newBlockWithData = await createBlockWithLastBlockData(selectedJournal, "Bloco 1", 1);
       
-      console.log("Primeiro bloco criado com sucesso:", newBlockWithData);
+      console.log("First block created successfully with previous data:", newBlockWithData);
       
-      // Atualizar a UI imediatamente
+      // Immediately update the UI
       setBlocks([newBlockWithData]);
       
-      // Forçar refresh da query de blocos
-      await blocosQuery.refetch();
+      // Force refresh the blocks query
+      blocosQuery.refetch();
       
       return newBlockWithData;
     } catch (error) {
       console.error("Erro ao adicionar bloco inicial:", error);
       
-      // Se for erro de chave duplicada, tentar buscar os blocos novamente
+      // If the error is a duplicate key error, we can try to fetch the blocks again
       if (error instanceof Error && error.message.includes("duplicate key value")) {
-        console.log("Erro de duplicação detectado, buscando blocos novamente");
-        await blocosQuery.refetch();
+        console.log("Duplicate error detected, attempting to refetch blocks");
+        blocosQuery.refetch();
       } else {
+        // For other errors, show a toast
         toast({
           title: "Erro",
-          description: "Não foi possível criar o bloco inicial",
+          description: "Não foi possível adicionar o bloco inicial",
           variant: "destructive"
         });
       }
       
       throw error;
-    } finally {
-      blockCreationInProgress.current = false;
-      setIsCreatingFirstBlock(false);
     }
   };
 
