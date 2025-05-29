@@ -8,7 +8,7 @@ import { CalendarIcon, FileText, Search } from "lucide-react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Telejornal } from "@/types";
-import { ClosedRundownsViewModal } from "./ClosedRundownsViewModal";
+import { GeneralScheduleModal } from "./general-schedule/GeneralScheduleModal";
 
 interface PostCloseRundownModalProps {
   isOpen: boolean;
@@ -27,7 +27,7 @@ export const PostCloseRundownModal = ({
 }: PostCloseRundownModalProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showClosedRundownsModal, setShowClosedRundownsModal] = useState(false);
+  const [showGeneralScheduleModal, setShowGeneralScheduleModal] = useState(false);
 
   const handleCreateNew = () => {
     onCreateNew(); // SEMPRE carrega o último bloco agora
@@ -36,12 +36,12 @@ export const PostCloseRundownModal = ({
 
   const handleViewByDate = () => {
     if (selectedDate && currentTelejornal) {
-      setShowClosedRundownsModal(true);
+      setShowGeneralScheduleModal(true);
     }
   };
 
-  const handleCloseClosedRundownsModal = () => {
-    setShowClosedRundownsModal(false);
+  const handleCloseGeneralScheduleModal = () => {
+    setShowGeneralScheduleModal(false);
   };
 
   return (
@@ -124,15 +124,10 @@ export const PostCloseRundownModal = ({
         </DialogContent>
       </Dialog>
 
-      {currentTelejornal && selectedDate && (
-        <ClosedRundownsViewModal
-          isOpen={showClosedRundownsModal}
-          onClose={handleCloseClosedRundownsModal}
-          telejornalId={currentTelejornal.id}
-          selectedDate={selectedDate}
-          telejornalName={currentTelejornal.nome}
-        />
-      )}
+      <GeneralScheduleModal
+        isOpen={showGeneralScheduleModal}
+        onClose={handleCloseGeneralScheduleModal}
+      />
     </>
   );
 };
