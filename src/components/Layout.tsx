@@ -201,7 +201,7 @@ const Layout = () => {
     if (!selectedJournal || !currentTelejornal) return;
 
     try {
-      console.log("Criando novo espelho...");
+      console.log("Criando novo espelho com último bloco do espelho anterior...");
       
       // Delete all current blocks and materias
       await deleteAllBlocos(selectedJournal);
@@ -218,13 +218,10 @@ const Layout = () => {
         espelho_aberto: true
       });
       
-      toast({
-        title: "Novo espelho criado",
-        description: `Novo espelho de ${currentTelejornal.nome} criado e aberto`,
-        variant: "default"
-      });
+      // Close the modal first
+      setIsPostCloseModalOpen(false);
       
-      // Refresh data
+      // Refresh data to trigger the first block creation with previous rundown data
       queryClient.invalidateQueries({ queryKey: ['telejornais'] });
       queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
       

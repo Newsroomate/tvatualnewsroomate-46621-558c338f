@@ -161,15 +161,25 @@ export const NewsSchedule = ({
 
   // Enhanced handleAddFirstBlock with auto-scroll
   const handleAddFirstBlockWithScroll = async () => {
-    const previousBlockCount = blocks.length;
-    await handleAddFirstBlock();
+    if (!selectedJournal || !currentTelejornal?.espelho_aberto) {
+      console.log("Cannot create first block - conditions not met");
+      return;
+    }
     
-    // Wait a bit for the DOM to update, then scroll
-    setTimeout(() => {
-      if (blocks.length > previousBlockCount) {
-        scrollToBottom();
-      }
-    }, 100);
+    const previousBlockCount = blocks.length;
+    
+    try {
+      await handleAddFirstBlock();
+      
+      // Wait a bit for the DOM to update, then scroll
+      setTimeout(() => {
+        if (blocks.length > previousBlockCount) {
+          scrollToBottom();
+        }
+      }, 100);
+    } catch (error) {
+      console.error("Erro ao criar primeiro bloco:", error);
+    }
   };
 
   // Enhanced handleAddItem with auto-scroll
@@ -214,8 +224,6 @@ export const NewsSchedule = ({
         );
         
         setBlocks(blocosComItems);
-        
-        // Reset the flag since we've processed the data
         setBlockCreationAttempted(true);
       } catch (error) {
         console.error("Erro ao carregar blocos e matérias:", error);
@@ -225,7 +233,7 @@ export const NewsSchedule = ({
     loadBlocos();
   }, [blocosQuery.data, selectedJournal, setBlocks]);
 
-  // Handle auto-creation of first block, separated from the blocks data processing effect
+  // Handle auto-creation of first block when opening a new rundown
   useEffect(() => {
     // Skip if no telejornal selected, espelho is not open, or we're already creating a block
     if (!selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
@@ -240,25 +248,18 @@ export const NewsSchedule = ({
     const createInitialBlock = async () => {
       // Only create a block if there are no blocks and we haven't already tried
       if (blocosQuery.data.length === 0 && !blockCreationInProgress.current) {
-        setIsCreatingFirstBlock(true);
-        blockCreationInProgress.current = true;
-        
-        console.log("Attempting to create initial block for telejornal:", selectedJournal);
+        console.log("Criando bloco inicial automaticamente para telejornal:", selectedJournal);
         
         try {
-          await handleAddFirstBlock();
+          await handleAddFirstBlockWithScroll();
         } catch (error) {
-          console.error("Erro ao criar o bloco inicial:", error);
-          // Error handling already done in handleAddFirstBlock
-        } finally {
-          blockCreationInProgress.current = false;
-          setIsCreatingFirstBlock(false);
+          console.error("Erro ao criar o bloco inicial automaticamente:", error);
         }
       }
     };
     
     createInitialBlock();
-  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, handleAddFirstBlock, blockCreationInProgress]);
+  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, blockCreationInProgress, handleAddFirstBlockWithScroll]);
 
   // Recalculate total journal time when blocks change
   useEffect(() => {
