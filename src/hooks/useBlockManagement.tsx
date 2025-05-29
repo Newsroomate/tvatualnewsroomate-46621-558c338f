@@ -2,6 +2,8 @@ import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { createBloco, updateBloco, deleteBloco } from "@/services/blocos-api";
+import { createMateria } from "@/services/materias-api";
+import { getLastBlockFromPreviousRundown } from "@/services/last-block-api";
 
 interface UseBlockManagementProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
@@ -22,6 +24,68 @@ export const useBlockManagement = ({
   const blockCreationInProgress = useRef(false);
   const { toast } = useToast();
 
+  const createBlockWithLastBlockData = async (telejornalId: string, blockName: string, order: number) => {
+    // Criar o bloco
+    const novoBlocoInput = {
+      telejornal_id: telejornalId,
+      nome: blockName,
+      ordem: order
+    };
+    
+    const novoBloco = await createBloco(novoBlocoInput);
+    console.log(`Block created: ${novoBloco.nome} with order ${novoBloco.ordem}`);
+
+    // Buscar dados do último bloco do espelho anterior
+    const lastBlockData = await getLastBlockFromPreviousRundown(telejornalId);
+    
+    let createdMaterias: Materia[] = [];
+    
+    if (lastBlockData && lastBlockData.materias.length > 0) {
+      console.log(`Carregando ${lastBlockData.materias.length} matérias do bloco anterior: ${lastBlockData.nome}`);
+      
+      // Criar as matérias do último bloco no novo bloco
+      for (let i = 0; i < lastBlockData.materias.length; i++) {
+        const materiaData = lastBlockData.materias[i];
+        try {
+          const newMateria = await createMateria({
+            bloco_id: novoBloco.id,
+            ordem: i + 1,
+            retranca: materiaData.retranca || 'Sem título',
+            clip: materiaData.clip || '',
+            duracao: materiaData.duracao || 0,
+            pagina: materiaData.pagina || '',
+            reporter: materiaData.reporter || '',
+            status: materiaData.status || 'draft',
+            texto: materiaData.texto || '',
+            cabeca: materiaData.cabeca || ''
+          });
+          
+          createdMaterias.push({
+            ...newMateria,
+            titulo: newMateria.retranca || "Sem título"
+          });
+        } catch (error) {
+          console.error('Erro ao criar matéria:', error);
+        }
+      }
+      
+      toast({
+        title: "Bloco carregado",
+        description: `Bloco "${blockName}" criado com ${createdMaterias.length} matérias do espelho anterior`,
+        variant: "default"
+      });
+    }
+
+    // Calcular tempo total
+    const totalTime = createdMaterias.reduce((sum, item) => sum + (item.duracao || 0), 0);
+
+    return {
+      ...novoBloco,
+      items: createdMaterias,
+      totalTime
+    };
+  };
+
   const handleAddFirstBlock = async () => {
     if (!selectedJournal || !currentTelejornal?.espelho_aberto) {
       console.log("Cannot create first block - journal not selected or espelho not open");
@@ -41,29 +105,20 @@ export const useBlockManagement = ({
         return;
       }
       
-      console.log("No existing blocks found, creating first block");
+      console.log("No existing blocks found, creating first block with previous rundown data");
       
-      // Create the new block
-      const novoBlocoInput = {
-        telejornal_id: selectedJournal,
-        nome: "Bloco 1",
-        ordem: 1
-      };
+      // Create the new block with data from previous rundown
+      const newBlockWithData = await createBlockWithLastBlockData(selectedJournal, "Bloco 1", 1);
       
-      const novoBloco = await createBloco(novoBlocoInput);
-      console.log("First block created successfully:", novoBloco);
+      console.log("First block created successfully with previous data:", newBlockWithData);
       
       // Immediately update the UI
-      setBlocks([{ 
-        ...novoBloco, 
-        items: [],
-        totalTime: 0
-      }]);
+      setBlocks([newBlockWithData]);
       
       // Force refresh the blocks query
       blocosQuery.refetch();
       
-      return novoBloco;
+      return newBlockWithData;
     } catch (error) {
       console.error("Erro ao adicionar bloco inicial:", error);
       
