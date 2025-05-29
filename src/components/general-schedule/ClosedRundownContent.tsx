@@ -74,11 +74,11 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
         const isExpanded = expandedSnapshots.has(snapshot.id);
         const blocos = snapshot.estrutura_completa.blocos || [];
         const totalMaterias = blocos.reduce(
-          (sum, bloco) => sum + (bloco.items?.length || bloco.materias?.length || 0), 0
+          (sum, bloco) => sum + (bloco.materias?.length || 0), 0
         );
         const totalDuracao = blocos.reduce((sum, bloco) => {
-          const items = bloco.items || bloco.materias || [];
-          return sum + items.reduce((blockSum: number, item: any) => blockSum + (item.duracao || 0), 0);
+          const materias = bloco.materias || [];
+          return sum + materias.reduce((blockSum: number, item: any) => blockSum + (item.duracao || 0), 0);
         }, 0);
 
         return (
@@ -122,8 +122,8 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
                 <div className="space-y-4">
                   {blocos.map((bloco) => {
                     const isBlockExpanded = expandedBlocks.has(bloco.id);
-                    const items = bloco.items || bloco.materias || [];
-                    const blocoDuracao = items.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
+                    const materias = bloco.materias || [];
+                    const blocoDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
 
                     return (
                       <div key={bloco.id} className="border rounded-lg p-3 bg-gray-50">
@@ -143,13 +143,13 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
                             </Badge>
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {items.length} matérias • {formatTime(blocoDuracao)}
+                            {materias.length} matérias • {formatTime(blocoDuracao)}
                           </div>
                         </div>
 
                         {isBlockExpanded && (
                           <div className="space-y-2 ml-6">
-                            {items.map((materia: any) => (
+                            {materias.map((materia: any) => (
                               <div key={materia.id} className="bg-white border rounded p-3 text-sm">
                                 <div className="flex items-start justify-between mb-2">
                                   <div className="flex-1">
