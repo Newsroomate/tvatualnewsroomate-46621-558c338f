@@ -5,6 +5,7 @@ import { formatTime } from "./utils";
 import { Telejornal, Materia, Bloco } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { generateGCTextFile } from "@/utils/gc-txt-utils";
+import { exportPlayoutPDF } from "@/utils/playout-export-utils";
 
 interface ScheduleHeaderProps {
   currentTelejornal: Telejornal | null;
@@ -32,6 +33,10 @@ export const ScheduleHeader = ({
 
   const handleExportGC = () => {
     generateGCTextFile(blocks, currentTelejornal);
+  };
+
+  const handleExportPlayout = () => {
+    exportPlayoutPDF(blocks, currentTelejornal);
   };
 
   return <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
@@ -67,7 +72,7 @@ export const ScheduleHeader = ({
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={onExportClipRetranca}
+          onClick={handleExportPlayout}
           disabled={!currentTelejornal || !hasBlocks}
         >
           <FileText className="h-4 w-4 mr-2" />

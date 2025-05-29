@@ -25,7 +25,6 @@ import { Teleprompter } from "./Teleprompter";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useBlockManagement } from "@/hooks/useBlockManagement";
 import { useItemManagement } from "@/hooks/useItemManagement";
-import { exportClipRetrancaPDF } from "@/utils/clip-retranca-pdf-utils";
 import { useTeleprompterWindow } from "@/hooks/useTeleprompterWindow";
 
 interface NewsScheduleProps {
@@ -123,16 +122,6 @@ export const NewsSchedule = ({
   const handleViewTeleprompter = () => {
     console.log("Opening teleprompter with blocks:", blocks);
     openTeleprompter(blocks, currentTelejornal);
-  };
-
-  const handleExportClipRetranca = () => {
-    if (!currentTelejornal || blocks.length === 0) return;
-    
-    try {
-      exportClipRetrancaPDF(blocks, currentTelejornal);
-    } catch (error) {
-      console.error("Erro ao exportar PDF:", error);
-    }
   };
 
   // Function to scroll to bottom with smooth animation
@@ -285,7 +274,6 @@ export const NewsSchedule = ({
         hasBlocks={blocks.length > 0}
         onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
-        onExportClipRetranca={handleExportClipRetranca}
         blocks={blocks}
       />
 
