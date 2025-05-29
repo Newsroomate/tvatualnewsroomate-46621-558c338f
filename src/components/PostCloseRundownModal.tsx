@@ -43,13 +43,12 @@ export const PostCloseRundownModal = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Espelho Fechado</DialogTitle>
+          <DialogTitle>Abrir Espelho</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            O espelho de <strong>{currentTelejornal?.nome}</strong> foi fechado com sucesso. 
-            O que você gostaria de fazer agora?
+            O que você gostaria de fazer com o espelho de <strong>{currentTelejornal?.nome}</strong>?
           </p>
           
           <div className="space-y-3">

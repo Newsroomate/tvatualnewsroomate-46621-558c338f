@@ -150,38 +150,10 @@ const Layout = () => {
       return;
     }
     
-    // Se o espelho está fechado e o usuário deseja abri-lo, fazer a operação diretamente
-    try {
-      // Inverter o estado atual do espelho para este telejornal específico
-      const novoEstadoEspelho = !currentTelejornal.espelho_aberto; // true neste caso
-      
-      // Atualizar o telejornal no banco de dados
-      await updateTelejornal(selectedJournal, {
-        ...currentTelejornal,
-        espelho_aberto: novoEstadoEspelho
-      });
-      
-      // Atualizar o estado local
-      setCurrentTelejornal({
-        ...currentTelejornal,
-        espelho_aberto: novoEstadoEspelho
-      });
-      
-      toast({
-        title: "Espelho aberto",
-        description: `Espelho de ${currentTelejornal.nome} aberto com sucesso`,
-        variant: "default"
-      });
-      
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['telejornais'] });
-    } catch (error) {
-      console.error("Erro ao atualizar status do espelho:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível alterar o status do espelho",
-        variant: "destructive"
-      });
+    // Se o espelho está fechado e o usuário deseja abri-lo, mostrar modal de opções
+    if (!currentTelejornal.espelho_aberto) {
+      setIsPostCloseModalOpen(true);
+      return;
     }
   };
 
@@ -212,9 +184,6 @@ const Layout = () => {
       
       // Fechar o diálogo
       setIsCloseRundownDialogOpen(false);
-      
-      // Mostrar modal pós-fechamento
-      setIsPostCloseModalOpen(true);
       
       // Refresh data
       queryClient.invalidateQueries({ queryKey: ['telejornais'] });
@@ -319,7 +288,7 @@ const Layout = () => {
                       : "bg-green-100 text-green-700 hover:bg-green-200"
                   }`}
                 >
-                  {currentTelejornal?.espelho_aberto ? "Fechar Espelho" : "Abrir Espelho"}
+                  {currentTelejornal?.espelho_aberto ? "Fechar Espelho" : "Abrir Espelho Agora"}
                 </button>
               )}
             </div>
@@ -356,7 +325,7 @@ const Layout = () => {
           telejornalNome={currentTelejornal?.nome}
         />
         
-        {/* Modal pós-fechamento */}
+        {/* Modal para abrir espelho (antes era pós-fechamento) */}
         <PostCloseRundownModal
           isOpen={isPostCloseModalOpen}
           onClose={() => setIsPostCloseModalOpen(false)}
