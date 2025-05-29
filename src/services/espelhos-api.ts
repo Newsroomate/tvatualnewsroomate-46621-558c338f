@@ -89,7 +89,7 @@ export async function fetchClosedRundowns(
       dataFormatted: format(createdDate, "dd/MM/yyyy"),
       hora: rundown.telejornais?.horario || "",
       status: "Fechado",
-      estrutura: rundown.estrutura
+      estrutura: rundown.estrutura as ClosedRundown['estrutura']
     };
   });
 }
