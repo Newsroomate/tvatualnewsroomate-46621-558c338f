@@ -19,19 +19,19 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
         <TooltipProvider>
-          <AuthProvider>
-            <ClipboardProvider>
-              <Toaster />
-              <BrowserRouter>
+          <BrowserRouter>
+            <AuthProvider>
+              <ClipboardProvider>
+                <Toaster />
                 <Routes>
                   <Route path="/" element={<Index />} />
                   <Route path="/auth" element={<Auth />} />
                   <Route path="/teleprompter" element={<TeleprompterWindow />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
-              </BrowserRouter>
-            </ClipboardProvider>
-          </AuthProvider>
+              </ClipboardProvider>
+            </AuthProvider>
+          </BrowserRouter>
         </TooltipProvider>
       </ThemeProvider>
     </QueryClientProvider>
