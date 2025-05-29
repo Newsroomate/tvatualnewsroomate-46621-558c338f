@@ -106,7 +106,6 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion }: Snapsh
                   blocoIndex={blocoIndex}
                   isExpanded={isBlockExpanded}
                   onToggleExpansion={() => toggleBlockExpansion(bloco.id || `bloco-${blocoIndex}`)}
-                  sourceTelejornal={snapshot.nome_telejornal}
                 />
               );
             })}

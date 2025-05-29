@@ -96,8 +96,7 @@ export const NewsSchedule = ({
     handleAddFirstBlock, 
     handleAddBlock,
     handleRenameBlock,
-    handleDeleteBlock,
-    handlePasteBlock
+    handleDeleteBlock
   } = useBlockManagement({ 
     blocks, 
     setBlocks, 
@@ -192,19 +191,6 @@ export const NewsSchedule = ({
             inline: 'nearest'
           });
         }
-      }
-    }, 100);
-  };
-
-  // Enhanced handlePasteBlock with auto-scroll
-  const handlePasteBlockWithScroll = async () => {
-    const previousBlockCount = blocks.length;
-    await handlePasteBlock();
-    
-    // Wait a bit for the DOM to update, then scroll to bottom
-    setTimeout(() => {
-      if (blocks.length > previousBlockCount) {
-        scrollToBottom();
       }
     }, 100);
   };
@@ -324,7 +310,6 @@ export const NewsSchedule = ({
             onDuplicateItem={handleDuplicateItem}
             onRenameBlock={handleRenameBlock}
             onDeleteBlock={handleDeleteBlock}
-            onPasteBlock={handlePasteBlockWithScroll}
           />
         </div>
       </DragDropContext>

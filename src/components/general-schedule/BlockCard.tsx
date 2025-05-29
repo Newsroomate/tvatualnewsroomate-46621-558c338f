@@ -2,18 +2,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight, Copy } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatTime } from "../news-schedule/utils";
 import { MaterialCard } from "./MaterialCard";
-import { useClipboard } from "@/context/ClipboardContext";
-import { useToast } from "@/hooks/use-toast";
 
 interface BlockCardProps {
   bloco: any;
   blocoIndex: number;
   isExpanded: boolean;
   onToggleExpansion: () => void;
-  sourceTelejornal?: string;
 }
 
 const getMateriasList = (bloco: any) => {
@@ -26,50 +23,9 @@ const getMateriasList = (bloco: any) => {
   return [];
 };
 
-export const BlockCard = ({ 
-  bloco, 
-  blocoIndex, 
-  isExpanded, 
-  onToggleExpansion, 
-  sourceTelejornal 
-}: BlockCardProps) => {
+export const BlockCard = ({ bloco, blocoIndex, isExpanded, onToggleExpansion }: BlockCardProps) => {
   const materias = getMateriasList(bloco);
   const blocoDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
-  const { copyBlock } = useClipboard();
-  const { toast } = useToast();
-
-  const handleCopyBlock = () => {
-    const blockToCopy = {
-      id: bloco.id,
-      nome: bloco.nome,
-      ordem: bloco.ordem,
-      materias: materias.map((materia: any) => ({
-        id: materia.id,
-        retranca: materia.retranca,
-        clip: materia.clip,
-        duracao: materia.duracao,
-        texto: materia.texto,
-        cabeca: materia.cabeca,
-        gc: materia.gc,
-        status: materia.status,
-        pagina: materia.pagina,
-        reporter: materia.reporter,
-        ordem: materia.ordem,
-        tags: materia.tags,
-        local_gravacao: materia.local_gravacao,
-        equipamento: materia.equipamento
-      })),
-      source_telejornal: sourceTelejornal,
-      copied_at: new Date().toISOString()
-    };
-
-    copyBlock(blockToCopy);
-    
-    toast({
-      title: "Bloco copiado",
-      description: `Bloco "${bloco.nome}" com ${materias.length} matérias foi copiado para a área de transferência.`,
-    });
-  };
 
   console.log(`Bloco ${bloco.nome}:`, {
     materias: materias.length,
@@ -94,19 +50,8 @@ export const BlockCard = ({
             Bloco {bloco.ordem}
           </Badge>
         </div>
-        <div className="flex items-center space-x-2">
-          <div className="text-xs text-muted-foreground">
-            {materias.length} matérias • {formatTime(blocoDuracao)}
-          </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCopyBlock}
-            className="p-1 h-6 w-6"
-            title="Copiar bloco inteiro"
-          >
-            <Copy className="h-3 w-3" />
-          </Button>
+        <div className="text-xs text-muted-foreground">
+          {materias.length} matérias • {formatTime(blocoDuracao)}
         </div>
       </div>
 

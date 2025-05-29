@@ -3,7 +3,6 @@ import { Bloco, Materia, Telejornal } from "@/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Lock } from "lucide-react";
 import { NewsBlock } from "./NewsBlock";
-import { PasteBlockSection } from "./PasteBlockSection";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
 
@@ -23,7 +22,6 @@ interface ScheduleContentProps {
   onDuplicateItem: (item: Materia) => void;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
-  onPasteBlock: () => void;
 }
 
 export const ScheduleContent = ({
@@ -41,8 +39,7 @@ export const ScheduleContent = ({
   onDeleteItem,
   onDuplicateItem,
   onRenameBlock,
-  onDeleteBlock,
-  onPasteBlock
+  onDeleteBlock
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -104,12 +101,6 @@ export const ScheduleContent = ({
   // Render blocks
   return (
     <>
-      {/* Paste block section - show at the top if there's clipboard data */}
-      <PasteBlockSection 
-        onPasteBlock={onPasteBlock}
-        isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
-      />
-      
       {blocks.map((block) => (
         <NewsBlock
           key={block.id}

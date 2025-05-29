@@ -2,9 +2,6 @@ import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { createBloco, updateBloco, deleteBloco } from "@/services/blocos-api";
-import { createMateria } from "@/services/api";
-import { useClipboard } from "@/context/ClipboardContext";
-import { findHighestPageNumber } from "@/components/news-schedule/utils";
 
 interface UseBlockManagementProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
@@ -24,89 +21,6 @@ export const useBlockManagement = ({
   const [isCreatingFirstBlock, setIsCreatingFirstBlock] = useState(false);
   const blockCreationInProgress = useRef(false);
   const { toast } = useToast();
-  const { copiedBlock, clearClipboard } = useClipboard();
-
-  const handlePasteBlock = async () => {
-    if (!selectedJournal || !currentTelejornal?.espelho_aberto || !copiedBlock) {
-      toast({
-        title: "Erro",
-        description: "Não é possível colar o bloco. Verifique se o espelho está aberto e se há um bloco copiado.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    try {
-      // Calculate the next order number for the new block
-      const nextOrder = blocks.length + 1;
-      
-      // Create the new block
-      const novoBlocoInput = {
-        telejornal_id: selectedJournal,
-        nome: copiedBlock.nome,
-        ordem: nextOrder
-      };
-      
-      const novoBloco = await createBloco(novoBlocoInput);
-      console.log(`Pasted block created: ${novoBloco.nome} with order ${novoBloco.ordem}`);
-      
-      // Create all the materias for the new block
-      const materiasToCreate = copiedBlock.materias.map((materia, index) => {
-        const nextPage = (findHighestPageNumber(blocks) + index + 1).toString();
-        
-        return {
-          bloco_id: novoBloco.id,
-          pagina: nextPage,
-          retranca: materia.retranca,
-          clip: materia.clip || "",
-          duracao: materia.duracao || 0,
-          status: materia.status || "draft" as const,
-          reporter: materia.reporter || "",
-          ordem: index + 1,
-          texto: materia.texto || "",
-          cabeca: materia.cabeca || "",
-          gc: materia.gc || "",
-          tags: materia.tags || [],
-          local_gravacao: materia.local_gravacao || "",
-          equipamento: materia.equipamento || ""
-        };
-      });
-      
-      // Create all materias
-      const createdMaterias = await Promise.all(
-        materiasToCreate.map(materia => createMateria(materia))
-      );
-      
-      // Calculate total time for the new block
-      const totalTime = createdMaterias.reduce((sum, materia) => sum + materia.duracao, 0);
-      
-      // Update UI with the new block and its materias
-      setBlocks([...blocks, { 
-        ...novoBloco, 
-        items: createdMaterias,
-        totalTime
-      }]);
-      
-      // Clear the clipboard after successful paste
-      clearClipboard();
-      
-      toast({
-        title: "Bloco colado com sucesso",
-        description: `Bloco "${copiedBlock.nome}" com ${copiedBlock.materias.length} matérias foi adicionado ao final do espelho.`,
-      });
-      
-      // Refresh the blocks query
-      blocosQuery.refetch();
-      
-    } catch (error) {
-      console.error("Erro ao colar bloco:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível colar o bloco",
-        variant: "destructive"
-      });
-    }
-  };
 
   const handleAddFirstBlock = async () => {
     if (!selectedJournal || !currentTelejornal?.espelho_aberto) {
@@ -311,7 +225,6 @@ export const useBlockManagement = ({
     handleAddFirstBlock,
     handleAddBlock,
     handleRenameBlock,
-    handleDeleteBlock,
-    handlePasteBlock
+    handleDeleteBlock
   };
 };
