@@ -8,21 +8,15 @@ interface UseItemDeletionProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
   setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
   currentTelejornal: Telejornal | null;
-  deleteConfirmOpen: boolean;
-  setDeleteConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  materiaToDelete: Materia | null;
-  setMateriaToDelete: React.Dispatch<React.SetStateAction<Materia | null>>;
 }
 
 export const useItemDeletion = ({
   blocks,
   setBlocks,
-  currentTelejornal,
-  deleteConfirmOpen,
-  setDeleteConfirmOpen,
-  materiaToDelete,
-  setMateriaToDelete
+  currentTelejornal
 }: UseItemDeletionProps) => {
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [materiaToDelete, setMateriaToDelete] = useState<Materia | null>(null);
   const { toast } = useToast();
 
   const handleDeleteMateria = (item: Materia) => {
@@ -72,6 +66,10 @@ export const useItemDeletion = ({
   };
 
   return {
+    deleteConfirmOpen,
+    setDeleteConfirmOpen,
+    materiaToDelete,
+    setMateriaToDelete,
     handleDeleteMateria,
     confirmDeleteMateria
   };

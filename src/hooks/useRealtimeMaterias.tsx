@@ -3,22 +3,23 @@ import { useState, useEffect } from "react";
 import { Bloco, Materia } from "@/types";
 import { fetchMateriasByBloco } from "@/services/api";
 import { supabase } from "@/integrations/supabase/client";
-import { calculateBlockTotalTime } from "@/components/news-schedule/utils";
 
 interface UseRealtimeMateriasProps {
-  setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
-  setTotalJournalTime: React.Dispatch<React.SetStateAction<number>>;
-  enabled: boolean;
+  selectedJournal: string | null;
+  newItemBlock: string | null;
+  materiaToDelete: Materia | null;
 }
 
 export const useRealtimeMaterias = ({
-  setBlocks,
-  setTotalJournalTime,
-  enabled
+  selectedJournal,
+  newItemBlock,
+  materiaToDelete
 }: UseRealtimeMateriasProps) => {
+  const [blocks, setBlocks] = useState<(Bloco & { items: Materia[], totalTime: number })[]>([]);
+
   // Set up realtime subscription for materias table
   useEffect(() => {
-    if (!enabled) return;
+    if (!selectedJournal) return;
     
     const channel = supabase
       .channel('materias-changes')
@@ -30,33 +31,35 @@ export const useRealtimeMaterias = ({
         }, 
         async (payload) => {
           console.log('Realtime change received:', payload);
+
+          // Only process changes if we have blocks loaded
+          if (blocks.length === 0) return;
           
           try {
             // Handle INSERT events (new materia created)
             if (payload.eventType === 'INSERT') {
               const newMateria = payload.new as Materia;
               
+              // If we're already in the process of creating this item, skip to avoid duplicate UI updates
+              if (newItemBlock === newMateria.bloco_id) {
+                console.log('Skipping INSERT event for materia we just created');
+                return;
+              }
+              
               // Add the new materia to its block
               setBlocks(currentBlocks => {
-                const updatedBlocks = currentBlocks.map(block => {
+                return currentBlocks.map(block => {
                   if (block.id === newMateria.bloco_id) {
                     // Add the new item and recalculate total time
                     const updatedItems = [...block.items, newMateria];
-                    const totalTime = calculateBlockTotalTime(updatedItems);
                     return {
                       ...block,
                       items: updatedItems,
-                      totalTime
+                      totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
                     };
                   }
                   return block;
                 });
-                
-                // Update total journal time
-                const totalTime = updatedBlocks.reduce((sum, block) => sum + block.totalTime, 0);
-                setTotalJournalTime(totalTime);
-                
-                return updatedBlocks;
               });
             }
             
@@ -65,7 +68,7 @@ export const useRealtimeMaterias = ({
               const updatedMateria = payload.new as Materia;
               
               setBlocks(currentBlocks => {
-                const updatedBlocks = currentBlocks.map(block => {
+                return currentBlocks.map(block => {
                   // Find the materia in any block
                   const materiaIndex = block.items.findIndex(item => item.id === updatedMateria.id);
                   
@@ -80,7 +83,7 @@ export const useRealtimeMaterias = ({
                       return {
                         ...block,
                         items: updatedItems,
-                        totalTime: calculateBlockTotalTime(updatedItems)
+                        totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
                       };
                     } else {
                       // Just update the materia in place
@@ -89,7 +92,7 @@ export const useRealtimeMaterias = ({
                       return {
                         ...block,
                         items: updatedItems,
-                        totalTime: calculateBlockTotalTime(updatedItems)
+                        totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
                       };
                     }
                   }
@@ -101,18 +104,12 @@ export const useRealtimeMaterias = ({
                     return {
                       ...block,
                       items: updatedItems,
-                      totalTime: calculateBlockTotalTime(updatedItems)
+                      totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
                     };
                   }
                   
                   return block;
                 });
-                
-                // Update total journal time
-                const totalTime = updatedBlocks.reduce((sum, block) => sum + block.totalTime, 0);
-                setTotalJournalTime(totalTime);
-                
-                return updatedBlocks;
               });
             }
             
@@ -120,9 +117,15 @@ export const useRealtimeMaterias = ({
             else if (payload.eventType === 'DELETE') {
               const deletedMateriaId = payload.old.id;
               
+              // If we're already in the process of deleting this item, skip to avoid duplicate UI updates
+              if (materiaToDelete && materiaToDelete.id === deletedMateriaId) {
+                console.log('Skipping DELETE event for materia we just deleted');
+                return;
+              }
+              
               // Remove the deleted materia from its block
               setBlocks(currentBlocks => {
-                const updatedBlocks = currentBlocks.map(block => {
+                return currentBlocks.map(block => {
                   const materiaIndex = block.items.findIndex(item => item.id === deletedMateriaId);
                   
                   if (materiaIndex !== -1) {
@@ -132,18 +135,12 @@ export const useRealtimeMaterias = ({
                     return {
                       ...block,
                       items: updatedItems,
-                      totalTime: calculateBlockTotalTime(updatedItems)
+                      totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
                     };
                   }
                   
                   return block;
                 });
-                
-                // Update total journal time
-                const totalTime = updatedBlocks.reduce((sum, block) => sum + block.totalTime, 0);
-                setTotalJournalTime(totalTime);
-                
-                return updatedBlocks;
               });
             }
           } catch (error) {
@@ -153,9 +150,11 @@ export const useRealtimeMaterias = ({
       )
       .subscribe();
       
-    // Clean up the subscription on unmount or when enabled changes
+    // Clean up the subscription on unmount or when selectedJournal changes
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [enabled, setBlocks, setTotalJournalTime]);
+  }, [selectedJournal, blocks, newItemBlock, materiaToDelete]);
+
+  return { blocks, setBlocks };
 };

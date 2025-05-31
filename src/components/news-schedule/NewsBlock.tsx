@@ -15,7 +15,6 @@ interface NewsBlockProps {
   isEspelhoOpen: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
-  journalPrefix?: string;
 }
 
 export const NewsBlock = ({
@@ -27,8 +26,7 @@ export const NewsBlock = ({
   onDuplicateItem,
   isEspelhoOpen,
   onRenameBlock,
-  onDeleteBlock,
-  journalPrefix = "default"
+  onDeleteBlock
 }: NewsBlockProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -58,7 +56,6 @@ export const NewsBlock = ({
         onDuplicateItem={onDuplicateItem}
         isEspelhoOpen={isEspelhoOpen}
         canModifyItems={canModify}
-        journalPrefix={journalPrefix}
       />
     </div>
   );
