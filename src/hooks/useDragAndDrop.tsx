@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia } from "@/types";
 import { updateMateriasOrdem } from "@/services/api";
@@ -7,9 +8,10 @@ interface UseDragAndDropProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
   setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
   isEspelhoAberto: boolean;
+  onCrossMoveMateria?: (materia: Materia, targetBlockId: string) => Promise<void>;
 }
 
-export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAndDropProps) => {
+export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto, onCrossMoveMateria }: UseDragAndDropProps) => {
   const { toast } = useToast();
 
   const handleDragEnd = async (result: any) => {
@@ -31,12 +33,28 @@ export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAn
       return;
     }
     
-    // Find source and destination blocks
     const sourceBlockId = source.droppableId;
     const destBlockId = destination.droppableId;
     
-    const sourceBlock = blocks.find(b => b.id === sourceBlockId);
-    const destBlock = blocks.find(b => b.id === destBlockId);
+    // Check if this is a cross-journal drag (different telejornal prefixes)
+    const sourceJornalId = sourceBlockId.split('-')[0];
+    const destJornalId = destBlockId.split('-')[0];
+    const actualSourceBlockId = sourceBlockId.split('-').slice(1).join('-');
+    const actualDestBlockId = destBlockId.split('-').slice(1).join('-');
+    
+    // If moving between different journals, use the cross-move handler
+    if (sourceJornalId !== destJornalId && onCrossMoveMateria) {
+      const sourceBlock = blocks.find(b => b.id === actualSourceBlockId);
+      if (sourceBlock && sourceBlock.items[source.index]) {
+        const materiaToMove = sourceBlock.items[source.index];
+        await onCrossMoveMateria(materiaToMove, actualDestBlockId);
+        return;
+      }
+    }
+    
+    // Find source and destination blocks
+    const sourceBlock = blocks.find(b => b.id === actualSourceBlockId);
+    const destBlock = blocks.find(b => b.id === actualDestBlockId);
     
     if (!sourceBlock || !destBlock) return;
     
@@ -49,16 +67,16 @@ export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAn
     // Create updated versions of the source and destination blocks
     const updatedBlocks = newBlocks.map(block => {
       // Handle source block
-      if (block.id === sourceBlockId) {
+      if (block.id === actualSourceBlockId) {
         const newItems = [...block.items];
         newItems.splice(source.index, 1);
         
         // If moving within the same block, we need to update all items' ordem
-        if (sourceBlockId === destBlockId) {
+        if (actualSourceBlockId === actualDestBlockId) {
           // Re-insert the item at the destination index
           newItems.splice(destination.index, 0, {
             ...movedItem,
-            bloco_id: destBlockId,
+            bloco_id: actualDestBlockId,
           });
           
           // Update ordem for all items in the block
@@ -86,13 +104,13 @@ export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAn
       }
       
       // Handle destination block (if different from source)
-      if (block.id === destBlockId && sourceBlockId !== destBlockId) {
+      if (block.id === actualDestBlockId && actualSourceBlockId !== actualDestBlockId) {
         const newItems = [...block.items];
         
         // Insert the moved item at the destination index
         newItems.splice(destination.index, 0, {
           ...movedItem,
-          bloco_id: destBlockId,
+          bloco_id: actualDestBlockId,
         });
         
         // Update ordem for all items in the destination block
@@ -119,8 +137,8 @@ export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAn
       const itemsToUpdate: Partial<Materia>[] = [];
       
       // If same block, update all items in that block
-      if (sourceBlockId === destBlockId) {
-        const updatedBlock = updatedBlocks.find(b => b.id === sourceBlockId);
+      if (actualSourceBlockId === actualDestBlockId) {
+        const updatedBlock = updatedBlocks.find(b => b.id === actualSourceBlockId);
         if (updatedBlock) {
           itemsToUpdate.push(...updatedBlock.items.map(item => ({
             id: item.id,
@@ -131,8 +149,8 @@ export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAn
         }
       } else {
         // If different blocks, update items in both blocks
-        const updatedSourceBlock = updatedBlocks.find(b => b.id === sourceBlockId);
-        const updatedDestBlock = updatedBlocks.find(b => b.id === destBlockId);
+        const updatedSourceBlock = updatedBlocks.find(b => b.id === actualSourceBlockId);
+        const updatedDestBlock = updatedBlocks.find(b => b.id === actualDestBlockId);
         
         if (updatedSourceBlock) {
           itemsToUpdate.push(...updatedSourceBlock.items.map(item => ({
