@@ -2,7 +2,16 @@
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia } from "@/types";
 import { updateMateriasOrdem } from "@/services/api";
-import { calculateBlockTotalTime } from "@/components/news-schedule/utils";
+import { 
+  determineJournalFromDroppableId, 
+  extractBlockId, 
+  getBlocksForJournal, 
+  findBlock, 
+  isCrossJournalTransfer 
+} from "@/utils/crossPanelDragUtils";
+import { calculateNextPageNumber, shouldUpdatePageNumber } from "@/utils/pageNumberCalculator";
+import { updateSourceBlocks, updateDestinationBlocks, collectItemsToUpdate } from "@/utils/blockUpdateUtils";
+import { updateUIState, revertUIState } from "@/utils/dragDropStateUpdater";
 
 interface UseCrossPanelDragAndDropProps {
   primaryBlocks: (Bloco & { items: Materia[], totalTime: number })[];
@@ -45,10 +54,8 @@ export const useCrossPanelDragAndDrop = ({
     }
     
     // Determine which journal the source and destination belong to
-    const sourceJournal = source.droppableId.includes('primary-') ? 'primary' : 
-                         source.droppableId.includes('secondary-') ? 'secondary' : null;
-    const destJournal = destination.droppableId.includes('primary-') ? 'primary' : 
-                       destination.droppableId.includes('secondary-') ? 'secondary' : null;
+    const sourceJournal = determineJournalFromDroppableId(source.droppableId);
+    const destJournal = determineJournalFromDroppableId(destination.droppableId);
     
     if (!sourceJournal || !destJournal) {
       console.log("Could not determine source or destination journal");
@@ -56,15 +63,15 @@ export const useCrossPanelDragAndDrop = ({
     }
     
     // Extract block IDs (remove journal prefix)
-    const sourceBlockId = source.droppableId.replace(/^(primary|secondary)-/, '');
-    const destBlockId = destination.droppableId.replace(/^(primary|secondary)-/, '');
+    const sourceBlockId = extractBlockId(source.droppableId);
+    const destBlockId = extractBlockId(destination.droppableId);
     
     // Get the appropriate blocks arrays
-    const sourceBlocks = sourceJournal === 'primary' ? primaryBlocks : secondaryBlocks;
-    const destBlocks = destJournal === 'primary' ? primaryBlocks : secondaryBlocks;
+    const sourceBlocks = getBlocksForJournal(sourceJournal, primaryBlocks, secondaryBlocks);
+    const destBlocks = getBlocksForJournal(destJournal, primaryBlocks, secondaryBlocks);
     
-    const sourceBlock = sourceBlocks.find(b => b.id === sourceBlockId);
-    const destBlock = destBlocks.find(b => b.id === destBlockId);
+    const sourceBlock = findBlock(sourceBlocks, sourceBlockId);
+    const destBlock = findBlock(destBlocks, destBlockId);
     
     if (!sourceBlock || !destBlock) {
       console.log("Could not find source or destination block");
@@ -77,109 +84,28 @@ export const useCrossPanelDragAndDrop = ({
     
     // Calculate next page number for cross-journal transfers
     let nextPageNumber = movedItem.pagina;
-    if (sourceJournal !== destJournal) {
-      // Find the highest page number in the destination journal
-      const allDestItems = destBlocks.flatMap(block => block.items);
-      const pageNumbers = allDestItems
-        .map(item => parseInt(item.pagina || '0'))
-        .filter(num => !isNaN(num));
-      
-      const maxPageNumber = pageNumbers.length > 0 ? Math.max(...pageNumbers) : 0;
-      nextPageNumber = (maxPageNumber + 1).toString();
-      
+    if (shouldUpdatePageNumber(sourceJournal, destJournal)) {
+      nextPageNumber = calculateNextPageNumber(destBlocks, movedItem.pagina);
       console.log(`Cross-journal transfer detected. New page number: ${nextPageNumber}`);
     }
     
     try {
-      // Update source blocks
-      let updatedSourceBlocks = sourceBlocks.map(block => {
-        if (block.id === sourceBlockId) {
-          const newItems = [...block.items];
-          newItems.splice(source.index, 1);
-          
-          // Update ordem for remaining items
-          const updatedItems = newItems.map((item, index) => ({
-            ...item,
-            ordem: index + 1
-          }));
-          
-          return {
-            ...block,
-            items: updatedItems,
-            totalTime: calculateBlockTotalTime(updatedItems)
-          };
-        }
-        return block;
-      });
-      
-      // Update destination blocks
-      let updatedDestBlocks = destBlocks.map(block => {
-        if (block.id === destBlockId) {
-          const newItems = [...block.items];
-          
-          // Insert the moved item at the destination index with updated properties
-          newItems.splice(destination.index, 0, {
-            ...movedItem,
-            bloco_id: destBlockId,
-            pagina: nextPageNumber
-          });
-          
-          // Update ordem for all items in the destination block
-          const updatedItems = newItems.map((item, index) => ({
-            ...item,
-            ordem: index + 1
-          }));
-          
-          return {
-            ...block,
-            items: updatedItems,
-            totalTime: calculateBlockTotalTime(updatedItems)
-          };
-        }
-        return block;
-      });
+      // Update source and destination blocks
+      const updatedSourceBlocks = updateSourceBlocks(sourceBlocks, sourceBlockId, source.index);
+      const updatedDestBlocks = updateDestinationBlocks(destBlocks, destBlockId, destination.index, movedItem, nextPageNumber);
       
       // Update UI state immediately for better UX
-      if (sourceJournal === 'primary') {
-        setPrimaryBlocks(updatedSourceBlocks);
-      } else {
-        setSecondaryBlocks(updatedSourceBlocks);
-      }
-      
-      if (destJournal === 'primary') {
-        setPrimaryBlocks(updatedDestBlocks);
-      } else {
-        setSecondaryBlocks(updatedDestBlocks);
-      }
+      updateUIState(sourceJournal, destJournal, updatedSourceBlocks, updatedDestBlocks, setPrimaryBlocks, setSecondaryBlocks);
       
       // Collect all items that need updates
-      const itemsToUpdate: Partial<Materia>[] = [];
-      
-      // Add source block items (if different from destination)
-      if (sourceJournal !== destJournal || sourceBlockId !== destBlockId) {
-        const updatedSourceBlock = updatedSourceBlocks.find(b => b.id === sourceBlockId);
-        if (updatedSourceBlock) {
-          itemsToUpdate.push(...updatedSourceBlock.items.map(item => ({
-            id: item.id,
-            bloco_id: item.bloco_id,
-            ordem: item.ordem,
-            retranca: item.retranca,
-            pagina: item.pagina
-          })));
-        }
-      }
-      
-      // Add destination block items
-      const updatedDestBlock = updatedDestBlocks.find(b => b.id === destBlockId);
-      if (updatedDestBlock) {
-        itemsToUpdate.push(...updatedDestBlock.items.map(item => ({
-          id: item.id,
-          bloco_id: item.bloco_id,
-          ordem: item.ordem,
-          retranca: item.retranca,
-          pagina: item.pagina
-        })));
-      }
+      const itemsToUpdate = collectItemsToUpdate(
+        sourceJournal, 
+        destJournal, 
+        sourceBlockId, 
+        destBlockId, 
+        updatedSourceBlocks, 
+        updatedDestBlocks
+      );
       
       // Update all changed items in one batch operation
       if (itemsToUpdate.length > 0) {
@@ -187,7 +113,7 @@ export const useCrossPanelDragAndDrop = ({
         await updateMateriasOrdem(itemsToUpdate);
         console.log('Updated items ordem successfully');
         
-        if (sourceJournal !== destJournal) {
+        if (isCrossJournalTransfer(sourceJournal, destJournal)) {
           toast({
             title: "Matéria transferida com sucesso",
             description: `Matéria "${movedItem.retranca}" movida entre telejornais. Nova numeração: ${nextPageNumber}`,
@@ -206,17 +132,7 @@ export const useCrossPanelDragAndDrop = ({
       console.error("Error updating item positions:", error);
       
       // Revert UI changes on error
-      if (sourceJournal === 'primary') {
-        setPrimaryBlocks(primaryBlocks);
-      } else {
-        setSecondaryBlocks(secondaryBlocks);
-      }
-      
-      if (destJournal === 'primary') {
-        setPrimaryBlocks(primaryBlocks);
-      } else {
-        setSecondaryBlocks(secondaryBlocks);
-      }
+      revertUIState(sourceJournal, destJournal, primaryBlocks, secondaryBlocks, setPrimaryBlocks, setSecondaryBlocks);
       
       toast({
         title: "Erro ao transferir matéria",
