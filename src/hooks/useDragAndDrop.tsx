@@ -1,19 +1,25 @@
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia } from "@/types";
-import { updateMateriasOrdem } from "@/services/api";
+import { updateMateriasOrdem, updateMateria } from "@/services/api";
 import { calculateBlockTotalTime } from "@/components/news-schedule/utils";
 
 interface UseDragAndDropProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
   setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
   isEspelhoAberto: boolean;
+  allowCrossJournalTransfer?: boolean;
 }
 
-export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAndDropProps) => {
+export const useDragAndDrop = ({ 
+  blocks, 
+  setBlocks, 
+  isEspelhoAberto, 
+  allowCrossJournalTransfer = false 
+}: UseDragAndDropProps) => {
   const { toast } = useToast();
 
   const handleDragEnd = async (result: any) => {
-    if (!isEspelhoAberto) {
+    if (!isEspelhoAberto && !allowCrossJournalTransfer) {
       toast({
         title: "Espelho fechado",
         description: "Você precisa abrir o espelho para reordenar matérias.",
@@ -22,7 +28,7 @@ export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAn
       return;
     }
     
-    const { source, destination } = result;
+    const { source, destination, draggableId } = result;
     
     // Dropped outside the list or no movement
     if (!destination || 
@@ -38,7 +44,32 @@ export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAn
     const sourceBlock = blocks.find(b => b.id === sourceBlockId);
     const destBlock = blocks.find(b => b.id === destBlockId);
     
-    if (!sourceBlock || !destBlock) return;
+    // If blocks are not found in current context, this might be a cross-journal transfer
+    if (!sourceBlock || !destBlock) {
+      if (allowCrossJournalTransfer) {
+        try {
+          // Update the materia to move it to the target block
+          await updateMateria(draggableId, {
+            bloco_id: destBlockId
+          });
+          
+          toast({
+            title: "Matéria transferida",
+            description: "Matéria movida entre telejornais com sucesso",
+            variant: "default"
+          });
+          
+        } catch (error) {
+          console.error("Error transferring materia:", error);
+          toast({
+            title: "Erro na transferência",
+            description: "Não foi possível transferir a matéria entre jornais",
+            variant: "destructive"
+          });
+        }
+      }
+      return;
+    }
     
     // Clone current blocks state
     const newBlocks = [...blocks];
