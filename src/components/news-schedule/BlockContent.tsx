@@ -24,9 +24,9 @@ export const BlockContent = ({
   canModifyItems = true,
   journalPrefix = "default"
 }: BlockContentProps) => {
-  // Create prefixed droppable ID for dual view support
+  // Create droppable ID with journal prefix for cross-panel drag and drop
   const droppableId = journalPrefix !== "default" ? `${journalPrefix}-${blockId}` : blockId;
-
+  
   return (
     <div className="overflow-x-auto">
       <Droppable droppableId={droppableId}>

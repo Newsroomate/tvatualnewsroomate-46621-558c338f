@@ -45,7 +45,6 @@ export const ScheduleContent = ({
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
 
-  // If no journal selected
   if (!selectedJournal) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -54,7 +53,6 @@ export const ScheduleContent = ({
     );
   }
 
-  // If loading
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -63,7 +61,6 @@ export const ScheduleContent = ({
     );
   }
 
-  // If espelho is closed
   if (!currentTelejornal?.espelho_aberto) {
     return (
       <div className="flex flex-col items-center justify-center h-32 gap-3">
@@ -78,7 +75,6 @@ export const ScheduleContent = ({
     );
   }
 
-  // Creating first block
   if (blocks.length === 0 && isCreatingFirstBlock) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -87,7 +83,6 @@ export const ScheduleContent = ({
     );
   }
 
-  // No blocks
   if (blocks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-32 gap-3">
@@ -99,7 +94,6 @@ export const ScheduleContent = ({
     );
   }
 
-  // Render blocks
   return (
     <>
       {blocks.map((block) => (

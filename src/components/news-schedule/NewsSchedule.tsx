@@ -14,9 +14,6 @@ interface NewsScheduleProps {
   currentTelejornal: Telejornal | null;
   onOpenRundown: () => void;
   journalPrefix?: string;
-  isDualView?: boolean;
-  externalBlocks?: (Bloco & { items: Materia[], totalTime: number })[];
-  setExternalBlocks?: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
 }
 
 export const NewsSchedule = ({ 
@@ -24,10 +21,7 @@ export const NewsSchedule = ({
   onEditItem, 
   currentTelejornal, 
   onOpenRundown,
-  journalPrefix = "default",
-  isDualView = false,
-  externalBlocks,
-  setExternalBlocks
+  journalPrefix = "default"
 }: NewsScheduleProps) => {
   const {
     blocks,
@@ -55,8 +49,7 @@ export const NewsSchedule = ({
     selectedJournal, 
     currentTelejornal, 
     onEditItem,
-    externalBlocks,
-    setExternalBlocks
+    journalPrefix 
   });
 
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
@@ -79,6 +72,7 @@ export const NewsSchedule = ({
     openTeleprompter(blocks, currentTelejornal);
   };
 
+  // Only render DragDropContext if this is NOT a dual view (journalPrefix is default)
   const content = (
     <div className="flex flex-col h-full">
       {/* Header with journal info and total time */}
@@ -129,15 +123,15 @@ export const NewsSchedule = ({
     </div>
   );
 
-  // If in dual view, don't wrap with DragDropContext (parent handles it)
-  if (isDualView) {
-    return content;
+  // If this is a single journal view (not dual), wrap in DragDropContext
+  if (journalPrefix === "default") {
+    return (
+      <DragDropContext onDragEnd={handleDragEnd}>
+        {content}
+      </DragDropContext>
+    );
   }
 
-  // Single view - wrap with DragDropContext
-  return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      {content}
-    </DragDropContext>
-  );
+  // If this is part of dual view, don't wrap in DragDropContext (parent will handle it)
+  return content;
 };

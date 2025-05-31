@@ -1,11 +1,13 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { NewsSchedule } from "./news-schedule/NewsSchedule";
-import { Telejornal, Materia } from "@/types";
+import { Telejornal, Materia, Bloco } from "@/types";
 import { useCrossPanelDragAndDrop } from "@/hooks/useCrossPanelDragAndDrop";
-import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
+import { fetchBlocosByTelejornal, fetchMateriasByBloco } from "@/services/api";
+import { calculateBlockTotalTime } from "./news-schedule/utils";
+import { useQuery } from "@tanstack/react-query";
 
 interface DualViewLayoutProps {
   primaryJournal: string;
@@ -24,48 +26,80 @@ export const DualViewLayout = ({
   secondaryTelejornal,
   onOpenRundown
 }: DualViewLayoutProps) => {
-  // Use separate realtime hooks for each journal
-  const { blocks: primaryBlocks, setBlocks: setPrimaryBlocks } = useRealtimeMaterias({
-    selectedJournal: primaryJournal,
-    newItemBlock: null,
-    materiaToDelete: null
+  const [primaryBlocks, setPrimaryBlocks] = useState<(Bloco & { items: Materia[], totalTime: number })[]>([]);
+  const [secondaryBlocks, setSecondaryBlocks] = useState<(Bloco & { items: Materia[], totalTime: number })[]>([]);
+
+  // Fetch primary journal blocks
+  const { data: primaryBlocosData } = useQuery({
+    queryKey: ['blocos', primaryJournal],
+    queryFn: () => fetchBlocosByTelejornal(primaryJournal),
+    enabled: !!primaryJournal,
   });
 
-  const { blocks: secondaryBlocks, setBlocks: setSecondaryBlocks } = useRealtimeMaterias({
-    selectedJournal: secondaryJournal,
-    newItemBlock: null,
-    materiaToDelete: null
+  // Fetch secondary journal blocks
+  const { data: secondaryBlocosData } = useQuery({
+    queryKey: ['blocos', secondaryJournal],
+    queryFn: () => fetchBlocosByTelejornal(secondaryJournal),
+    enabled: !!secondaryJournal,
   });
 
-  // Use cross-panel drag and drop hook
+  // Load primary blocks with materias
+  useEffect(() => {
+    if (primaryBlocosData) {
+      const loadBlocosWithMaterias = async () => {
+        const blocosWithMaterias = await Promise.all(
+          primaryBlocosData.map(async (bloco) => {
+            const materias = await fetchMateriasByBloco(bloco.id);
+            const totalTime = calculateBlockTotalTime(materias);
+            return { ...bloco, items: materias, totalTime };
+          })
+        );
+        setPrimaryBlocks(blocosWithMaterias);
+      };
+      loadBlocosWithMaterias();
+    }
+  }, [primaryBlocosData]);
+
+  // Load secondary blocks with materias
+  useEffect(() => {
+    if (secondaryBlocosData) {
+      const loadBlocosWithMaterias = async () => {
+        const blocosWithMaterias = await Promise.all(
+          secondaryBlocosData.map(async (bloco) => {
+            const materias = await fetchMateriasByBloco(bloco.id);
+            const totalTime = calculateBlockTotalTime(materias);
+            return { ...bloco, items: materias, totalTime };
+          })
+        );
+        setSecondaryBlocks(blocosWithMaterias);
+      };
+      loadBlocosWithMaterias();
+    }
+  }, [secondaryBlocosData]);
+
   const { handleCrossPanelDragEnd } = useCrossPanelDragAndDrop({
     primaryBlocks,
-    secondaryBlocks,
     setPrimaryBlocks,
+    secondaryBlocks,
     setSecondaryBlocks,
-    primaryTelejornal,
-    secondaryTelejornal
+    primaryJournal,
+    secondaryJournal,
+    isEspelhoAberto: !!(primaryTelejornal?.espelho_aberto || secondaryTelejornal?.espelho_aberto)
   });
 
-  const handleDragEnd = async (result: any) => {
-    // First check if it's a cross-panel drag
-    const wasHandled = await handleCrossPanelDragEnd(result);
-    
-    // If not handled by cross-panel logic, let individual NewsSchedule components handle it
-    // This will be handled by their individual drag and drop hooks
-    if (!wasHandled) {
-      console.log("Regular within-panel drag - will be handled by individual NewsSchedule components");
-    }
-  };
-
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <DragDropContext onDragEnd={handleCrossPanelDragEnd}>
       <ResizablePanelGroup direction="vertical" className="h-full">
         <ResizablePanel defaultSize={50} minSize={20}>
           <div className="h-full border-b">
             <div className="bg-blue-50 p-2 border-b">
               <h3 className="text-sm font-medium text-blue-800">
                 {primaryTelejornal?.nome || "Telejornal Principal"}
+                {primaryTelejornal?.espelho_aberto && (
+                  <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                    ABERTO
+                  </span>
+                )}
               </h3>
             </div>
             <NewsSchedule
@@ -74,9 +108,6 @@ export const DualViewLayout = ({
               currentTelejornal={primaryTelejornal}
               onOpenRundown={onOpenRundown}
               journalPrefix="primary"
-              isDualView={true}
-              externalBlocks={primaryBlocks}
-              setExternalBlocks={setPrimaryBlocks}
             />
           </div>
         </ResizablePanel>
@@ -88,6 +119,11 @@ export const DualViewLayout = ({
             <div className="bg-green-50 p-2 border-b">
               <h3 className="text-sm font-medium text-green-800">
                 {secondaryTelejornal?.nome || "Telejornal Secundário"}
+                {secondaryTelejornal?.espelho_aberto && (
+                  <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                    ABERTO
+                  </span>
+                )}
               </h3>
             </div>
             <NewsSchedule
@@ -96,9 +132,6 @@ export const DualViewLayout = ({
               currentTelejornal={secondaryTelejornal}
               onOpenRundown={onOpenRundown}
               journalPrefix="secondary"
-              isDualView={true}
-              externalBlocks={secondaryBlocks}
-              setExternalBlocks={setSecondaryBlocks}
             />
           </div>
         </ResizablePanel>

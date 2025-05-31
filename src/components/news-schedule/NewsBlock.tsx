@@ -1,8 +1,9 @@
 
-import { useState } from "react";
 import { Bloco, Materia } from "@/types";
 import { BlockHeader } from "./BlockHeader";
 import { BlockContent } from "./BlockContent";
+import { useAuth } from "@/context/AuthContext";
+import { canModifyMaterias } from "@/utils/permission";
 
 interface NewsBlockProps {
   block: Bloco & { items: Materia[], totalTime: number };
@@ -29,21 +30,23 @@ export const NewsBlock = ({
   onDeleteBlock,
   journalPrefix = "default"
 }: NewsBlockProps) => {
-  const [isAddingItem, setIsAddingItem] = useState(false);
-
-  const handleAddItem = () => {
-    setIsAddingItem(true);
-    onAddItem(block.id);
-    setTimeout(() => setIsAddingItem(false), 1000);
-  };
-
+  const { profile } = useAuth();
+  const canModify = canModifyMaterias(profile);
+  
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
+    <div 
+      key={block.id} 
+      data-block-id={block.id}
+      className="border border-gray-200 rounded-lg shadow-sm"
+    >
       <BlockHeader
-        block={block}
-        onAddItem={handleAddItem}
+        blockName={block.nome}
+        totalTime={block.totalTime}
+        onAddItem={() => onAddItem(block.id)}
+        newItemBlock={newItemBlock}
+        blockId={block.id}
         isEspelhoOpen={isEspelhoOpen}
-        isAddingItem={isAddingItem || newItemBlock === block.id}
+        canAddItem={canModify}
         onRenameBlock={onRenameBlock}
         onDeleteBlock={onDeleteBlock}
       />
@@ -54,6 +57,7 @@ export const NewsBlock = ({
         onDeleteItem={onDeleteItem}
         onDuplicateItem={onDuplicateItem}
         isEspelhoOpen={isEspelhoOpen}
+        canModifyItems={canModify}
         journalPrefix={journalPrefix}
       />
     </div>

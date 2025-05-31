@@ -9,14 +9,17 @@ interface UseItemCreationProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
   setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
   currentTelejornal: Telejornal | null;
+  newItemBlock: string | null;
+  setNewItemBlock: React.Dispatch<React.SetStateAction<string | null>>;
 }
 
 export const useItemCreation = ({
   blocks,
   setBlocks,
-  currentTelejornal
+  currentTelejornal,
+  newItemBlock,
+  setNewItemBlock
 }: UseItemCreationProps) => {
-  const [newItemBlock, setNewItemBlock] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleAddItem = async (blocoId: string) => {
@@ -78,8 +81,6 @@ export const useItemCreation = ({
   };
 
   return {
-    newItemBlock,
-    setNewItemBlock,
     handleAddItem
   };
 };

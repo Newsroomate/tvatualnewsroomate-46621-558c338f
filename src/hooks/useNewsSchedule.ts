@@ -1,181 +1,100 @@
-import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { 
-  fetchBlocosByTelejornal, 
-  fetchMateriasByBloco, 
-  fetchTelejornais
-} from "@/services/api";
-import { Bloco, Materia, Telejornal } from "@/types";
-import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
-import { useBlockManagement } from "@/hooks/useBlockManagement";
-import { useItemManagement } from "@/hooks/useItemManagement";
-import { useDragAndDrop } from "@/hooks/useDragAndDrop";
-import { useTeleprompterWindow } from "@/hooks/useTeleprompterWindow";
+
+import { Materia, Telejornal } from "@/types";
+import { useBlocksState } from "./useBlocksState";
+import { useNewsScheduleState } from "./useNewsScheduleState";
+import { useBlockManagement } from "./useBlockManagement";
+import { useItemManagement } from "./useItemManagement";
+import { useDragAndDrop } from "./useDragAndDrop";
+import { useRealtimeMaterias } from "./useRealtimeMaterias";
+import { useTeleprompterWindow } from "./useTeleprompterWindow";
 
 interface UseNewsScheduleProps {
   selectedJournal: string | null;
   currentTelejornal: Telejornal | null;
-  onEditItem: (materia: Materia) => void;
-  externalBlocks?: (Bloco & { items: Materia[], totalTime: number })[];
-  setExternalBlocks?: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
+  onEditItem: (item: Materia) => void;
+  journalPrefix?: string;
 }
 
 export const useNewsSchedule = ({ 
   selectedJournal, 
   currentTelejornal, 
   onEditItem,
-  externalBlocks,
-  setExternalBlocks
+  journalPrefix = "default"
 }: UseNewsScheduleProps) => {
-  const [totalJournalTime, setTotalJournalTime] = useState(0);
-  const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
-  // Fetch telejornais
-  const telejornaisQuery = useQuery({
-    queryKey: ['telejornais'],
-    queryFn: fetchTelejornais,
-  });
+  // Block state management
+  const {
+    blocks,
+    setBlocks,
+    totalJournalTime,
+    setTotalJournalTime,
+    isLoading,
+    blocosQuery
+  } = useBlocksState({ selectedJournal });
 
-  // Fetch blocks for the selected journal
-  const blocosQuery = useQuery({
-    queryKey: ['blocos', selectedJournal],
-    queryFn: () => selectedJournal ? fetchBlocosByTelejornal(selectedJournal) : Promise.resolve([]),
-    enabled: !!selectedJournal,
-  });
-
-  // Use external blocks if provided (for dual view), otherwise use realtime hook
-  const { blocks: realtimeBlocks, setBlocks: setRealtimeBlocks } = useRealtimeMaterias({
-    selectedJournal,
-    newItemBlock: null,
-    materiaToDelete: null
-  });
-
-  const blocks = externalBlocks || realtimeBlocks;
-  const setBlocks = setExternalBlocks || setRealtimeBlocks;
-
-  // Use the custom hooks for item, block, and drag-drop management
-  const { 
-    newItemBlock, 
-    setNewItemBlock, 
-    deleteConfirmOpen, 
-    setDeleteConfirmOpen,
-    materiaToDelete, 
-    setMateriaToDelete,
-    renumberConfirmOpen, 
-    setRenumberConfirmOpen,
-    handleAddItem,
-    handleDuplicateItem,
-    handleDeleteMateria, 
-    confirmDeleteMateria,
-    handleRenumberItems, 
-    confirmRenumberItems 
-  } = useItemManagement({ 
-    blocks, 
-    setBlocks, 
-    currentTelejornal 
-  });
-
-  const { 
-    isCreatingFirstBlock, 
+  // UI state management
+  const {
+    isCreatingFirstBlock,
     setIsCreatingFirstBlock,
-    blockCreationInProgress,
-    handleAddFirstBlock, 
+    newItemBlock,
+    setNewItemBlock,
+    deleteConfirmOpen,
+    setDeleteConfirmOpen,
+    materiaToDelete,
+    setMateriaToDelete,
+    renumberConfirmOpen,
+    setRenumberConfirmOpen
+  } = useNewsScheduleState();
+
+  // Initialize realtime subscription for materias
+  useRealtimeMaterias({
+    setBlocks,
+    setTotalJournalTime,
+    enabled: !!selectedJournal && !!currentTelejornal
+  });
+
+  // Hooks for block and item management
+  const {
+    handleAddFirstBlock,
     handleAddBlock,
     handleRenameBlock,
     handleDeleteBlock
   } = useBlockManagement({ 
     blocks, 
     setBlocks, 
-    selectedJournal, 
+    selectedJournal,
     currentTelejornal, 
-    blocosQuery 
+    blocosQuery
+  });
+
+  const {
+    handleAddItem,
+    handleDuplicateItem,
+    handleDeleteMateria,
+    confirmDeleteMateria,
+    handleRenumberItems,
+    confirmRenumberItems
+  } = useItemManagement({ 
+    blocks, 
+    setBlocks, 
+    currentTelejornal,
+    newItemBlock,
+    setNewItemBlock,
+    deleteConfirmOpen,
+    setDeleteConfirmOpen,
+    materiaToDelete,
+    setMateriaToDelete,
+    renumberConfirmOpen,
+    setRenumberConfirmOpen
   });
 
   const { handleDragEnd } = useDragAndDrop({ 
     blocks, 
     setBlocks, 
-    isEspelhoAberto: !!currentTelejornal?.espelho_aberto 
+    isEspelhoAberto: !!currentTelejornal?.espelho_aberto,
+    journalPrefix
   });
-  
-  const { 
-    openTeleprompter, 
-    updateTeleprompterData, 
-    closeTeleprompter 
-  } = useTeleprompterWindow();
 
-  // Process blocks data when it changes (only for non-external blocks)
-  useEffect(() => {
-    if (externalBlocks || !blocosQuery.data || !selectedJournal) return;
-    
-    const loadBlocos = async () => {
-      try {
-        const blocosComItems = await Promise.all(
-          blocosQuery.data.map(async (bloco) => {
-            const materias = await fetchMateriasByBloco(bloco.id);
-            const totalTime = materias.reduce((sum, item) => sum + item.duracao, 0);
-            return {
-              ...bloco,
-              items: materias,
-              totalTime
-            };
-          })
-        );
-        
-        setBlocks(blocosComItems);
-        setBlockCreationAttempted(true);
-      } catch (error) {
-        console.error("Erro ao carregar blocos e matérias:", error);
-      }
-    };
-    
-    loadBlocos();
-  }, [blocosQuery.data, selectedJournal, setBlocks, externalBlocks]);
-
-  // Handle auto-creation of first block with last block data (only for non-external blocks)
-  useEffect(() => {
-    if (externalBlocks || !selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
-      return;
-    }
-    
-    if (!blocosQuery.data || !blockCreationAttempted) {
-      return;
-    }
-
-    const createInitialBlockWithLastData = async () => {
-      if (blocosQuery.data.length === 0 && !blockCreationInProgress.current) {
-        setIsCreatingFirstBlock(true);
-        blockCreationInProgress.current = true;
-        
-        console.log("Criando bloco inicial com dados do último bloco para telejornal:", selectedJournal);
-        
-        try {
-          await handleAddFirstBlock();
-        } catch (error) {
-          console.error("Erro ao criar o bloco inicial:", error);
-        } finally {
-          blockCreationInProgress.current = false;
-          setIsCreatingFirstBlock(false);
-        }
-      }
-    };
-    
-    createInitialBlockWithLastData();
-  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, handleAddFirstBlock, blockCreationInProgress, externalBlocks]);
-
-  // Recalculate total journal time when blocks change
-  useEffect(() => {
-    const total = blocks.reduce((sum, block) => sum + block.totalTime, 0);
-    setTotalJournalTime(total);
-  }, [blocks]);
-
-  // Update teleprompter data when blocks change
-  useEffect(() => {
-    console.log("Blocks changed, updating teleprompter:", blocks);
-    updateTeleprompterData(blocks);
-  }, [blocks, updateTeleprompterData]);
-
-  const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
+  const { openTeleprompter } = useTeleprompterWindow();
 
   return {
     blocks,
@@ -185,10 +104,8 @@ export const useNewsSchedule = ({
     newItemBlock,
     deleteConfirmOpen,
     setDeleteConfirmOpen,
-    materiaToDelete,
     renumberConfirmOpen,
     setRenumberConfirmOpen,
-    scrollContainerRef,
     handleAddItem,
     handleDuplicateItem,
     handleDeleteMateria,
