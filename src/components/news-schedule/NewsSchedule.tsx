@@ -14,6 +14,8 @@ interface NewsScheduleProps {
   currentTelejornal: Telejornal | null;
   onOpenRundown: () => void;
   journalPrefix?: string;
+  externalBlocks?: (Bloco & { items: Materia[], totalTime: number })[];
+  setExternalBlocks?: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
 }
 
 export const NewsSchedule = ({ 
@@ -21,7 +23,9 @@ export const NewsSchedule = ({
   onEditItem, 
   currentTelejornal, 
   onOpenRundown,
-  journalPrefix = "default"
+  journalPrefix = "default",
+  externalBlocks,
+  setExternalBlocks
 }: NewsScheduleProps) => {
   const {
     blocks,
@@ -49,7 +53,9 @@ export const NewsSchedule = ({
     selectedJournal, 
     currentTelejornal, 
     onEditItem,
-    journalPrefix 
+    journalPrefix,
+    externalBlocks,
+    setExternalBlocks
   });
 
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();

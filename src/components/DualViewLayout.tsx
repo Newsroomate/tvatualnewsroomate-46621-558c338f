@@ -108,6 +108,8 @@ export const DualViewLayout = ({
               currentTelejornal={primaryTelejornal}
               onOpenRundown={onOpenRundown}
               journalPrefix="primary"
+              externalBlocks={primaryBlocks}
+              setExternalBlocks={setPrimaryBlocks}
             />
           </div>
         </ResizablePanel>
@@ -132,6 +134,8 @@ export const DualViewLayout = ({
               currentTelejornal={secondaryTelejornal}
               onOpenRundown={onOpenRundown}
               journalPrefix="secondary"
+              externalBlocks={secondaryBlocks}
+              setExternalBlocks={setSecondaryBlocks}
             />
           </div>
         </ResizablePanel>

@@ -1,5 +1,5 @@
 
-import { Materia, Telejornal } from "@/types";
+import { Materia, Telejornal, Bloco } from "@/types";
 import { useBlocksState } from "./useBlocksState";
 import { useNewsScheduleState } from "./useNewsScheduleState";
 import { useBlockManagement } from "./useBlockManagement";
@@ -7,29 +7,38 @@ import { useItemManagement } from "./useItemManagement";
 import { useDragAndDrop } from "./useDragAndDrop";
 import { useRealtimeMaterias } from "./useRealtimeMaterias";
 import { useTeleprompterWindow } from "./useTeleprompterWindow";
+import { useEffect } from "react";
 
 interface UseNewsScheduleProps {
   selectedJournal: string | null;
   currentTelejornal: Telejornal | null;
   onEditItem: (item: Materia) => void;
   journalPrefix?: string;
+  externalBlocks?: (Bloco & { items: Materia[], totalTime: number })[];
+  setExternalBlocks?: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
 }
 
 export const useNewsSchedule = ({ 
   selectedJournal, 
   currentTelejornal, 
   onEditItem,
-  journalPrefix = "default"
+  journalPrefix = "default",
+  externalBlocks,
+  setExternalBlocks
 }: UseNewsScheduleProps) => {
   // Block state management
   const {
-    blocks,
-    setBlocks,
+    blocks: internalBlocks,
+    setBlocks: setInternalBlocks,
     totalJournalTime,
     setTotalJournalTime,
     isLoading,
     blocosQuery
   } = useBlocksState({ selectedJournal });
+
+  // Use external blocks if provided (dual view), otherwise use internal blocks
+  const blocks = externalBlocks || internalBlocks;
+  const setBlocks = setExternalBlocks || setInternalBlocks;
 
   // UI state management
   const {
@@ -47,10 +56,17 @@ export const useNewsSchedule = ({
 
   // Initialize realtime subscription for materias
   useRealtimeMaterias({
-    setBlocks,
+    setBlocks: setExternalBlocks || setInternalBlocks,
     setTotalJournalTime,
     enabled: !!selectedJournal && !!currentTelejornal
   });
+
+  // Sync internal blocks to external blocks if in dual view
+  useEffect(() => {
+    if (externalBlocks && setExternalBlocks && internalBlocks.length > 0) {
+      setExternalBlocks(internalBlocks);
+    }
+  }, [internalBlocks, externalBlocks, setExternalBlocks]);
 
   // Hooks for block and item management
   const {
