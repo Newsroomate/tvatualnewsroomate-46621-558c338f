@@ -1,4 +1,3 @@
-
 import { Bloco, Materia, Telejornal } from "@/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Lock } from "lucide-react";
@@ -22,6 +21,7 @@ interface ScheduleContentProps {
   onDuplicateItem: (item: Materia) => void;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
+  journalPrefix?: string;
 }
 
 export const ScheduleContent = ({
@@ -39,7 +39,8 @@ export const ScheduleContent = ({
   onDeleteItem,
   onDuplicateItem,
   onRenameBlock,
-  onDeleteBlock
+  onDeleteBlock,
+  journalPrefix
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
