@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Materia } from "@/types";
 import { updateMateria } from "@/services/materias-api";
@@ -5,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EditPanelHeader } from "./edit-panel/EditPanelHeader";
 import { EditPanelTabs } from "./edit-panel/EditPanelTabs";
 import { useDurationCalculator } from "./edit-panel/DurationCalculator";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 interface EditPanelProps {
   isOpen: boolean;
@@ -99,19 +101,62 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   };
 
   return (
-    <div className="fixed top-0 right-0 w-[400px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20 overflow-y-auto">
-      <EditPanelHeader item={item} onClose={onClose} />
-      
-      <EditPanelTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        formData={formData}
-        onInputChange={handleInputChange}
-        onTagsChange={handleTagsChange}
-        onSave={handleSave}
-        onClose={onClose}
-        isSaving={isSaving}
-      />
+    <div className="fixed top-0 right-0 w-[800px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20">
+      <ResizablePanelGroup direction="horizontal" className="h-full">
+        <ResizablePanel defaultSize={60} minSize={30}>
+          <div className="h-full overflow-y-auto">
+            <EditPanelHeader item={item} onClose={onClose} />
+            
+            <EditPanelTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              formData={formData}
+              onInputChange={handleInputChange}
+              onTagsChange={handleTagsChange}
+              onSave={handleSave}
+              onClose={onClose}
+              isSaving={isSaving}
+            />
+          </div>
+        </ResizablePanel>
+        
+        <ResizableHandle withHandle />
+        
+        <ResizablePanel defaultSize={40} minSize={20}>
+          <div className="h-full p-4 bg-gray-50 overflow-y-auto">
+            <h4 className="font-medium text-sm text-gray-700 mb-3">Área de Visualização</h4>
+            <div className="space-y-4">
+              {formData.retranca && (
+                <div className="bg-white p-3 rounded border">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">RETRANCA</h5>
+                  <p className="text-sm">{formData.retranca}</p>
+                </div>
+              )}
+              
+              {formData.cabeca && (
+                <div className="bg-white p-3 rounded border">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">CABEÇA</h5>
+                  <p className="text-sm whitespace-pre-wrap">{formData.cabeca}</p>
+                </div>
+              )}
+              
+              {formData.gc && (
+                <div className="bg-white p-3 rounded border">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">GC</h5>
+                  <p className="text-sm whitespace-pre-wrap">{formData.gc}</p>
+                </div>
+              )}
+              
+              {formData.texto && (
+                <div className="bg-white p-3 rounded border">
+                  <h5 className="text-xs font-medium text-gray-600 mb-1">TEXTO</h5>
+                  <p className="text-sm whitespace-pre-wrap">{formData.texto}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
