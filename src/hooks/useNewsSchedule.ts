@@ -7,8 +7,7 @@ import {
   fetchMateriasByBloco, 
   createBloco, 
   updateBloco, 
-  deleteBloco,
-  fetchLastBlocoCadastrado
+  deleteBloco
 } from "@/services/api";
 import { useBlockManagement } from "./useBlockManagement";
 import { useItemManagement } from "./useItemManagement";
@@ -36,7 +35,7 @@ export const useNewsSchedule = ({
   const queryClient = useQueryClient();
 
   // Fetch blocks data
-  const { data: blocosData, isLoading } = useQuery({
+  const { data: blocosData, isLoading, ...blocosQuery } = useQuery({
     queryKey: ['blocos', selectedJournal],
     queryFn: () => selectedJournal ? fetchBlocosByTelejornal(selectedJournal) : Promise.resolve([]),
     enabled: !!selectedJournal,
@@ -65,7 +64,6 @@ export const useNewsSchedule = ({
 
   // Initialize realtime subscription for materias
   useRealtimeMaterias({
-    blocks,
     setBlocks,
     setTotalJournalTime,
     enabled: !!selectedJournal && !!currentTelejornal
@@ -73,20 +71,19 @@ export const useNewsSchedule = ({
 
   // Hooks for block and item management
   const {
-    renameDialogOpen,
-    setRenameDialogOpen,
-    blockToRename,
-    setBlockToRename,
-    newBlockName,
-    setNewBlockName,
+    isCreatingFirstBlock: blockManagementCreating,
+    setIsCreatingFirstBlock: setBlockManagementCreating,
+    blockCreationInProgress,
+    handleAddFirstBlock,
+    handleAddBlock,
     handleRenameBlock,
-    confirmRenameBlock,
     handleDeleteBlock
   } = useBlockManagement({ 
     blocks, 
     setBlocks, 
+    selectedJournal,
     currentTelejornal, 
-    queryClient 
+    blocosQuery: { ...blocosQuery, refetch: blocosQuery.refetch }
   });
 
   const {
@@ -119,69 +116,11 @@ export const useNewsSchedule = ({
 
   const { openTeleprompter } = useTeleprompterWindow();
 
-  const handleAddFirstBlock = async () => {
-    if (!selectedJournal || !currentTelejornal || !currentTelejornal.espelho_aberto) {
-      return;
-    }
-
-    setIsCreatingFirstBlock(true);
-    
-    try {
-      // Get data from last registered block for initialization
-      let initialData = null;
-      try {
-        initialData = await fetchLastBlocoCadastrado();
-        console.log("Last block data found:", initialData);
-      } catch (error) {
-        console.log("No last block found, will create empty block");
-      }
-
-      // Create first block with initial data
-      const firstBlock = await createBloco({
-        nome: initialData?.nome || "BLOCO 1",
-        telejornal_id: selectedJournal,
-        ordem: 1
-      });
-
-      console.log("First block created:", firstBlock);
-
-      // Refresh blocks data
-      queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
-    } catch (error) {
-      console.error("Error creating first block:", error);
-    } finally {
-      setIsCreatingFirstBlock(false);
-    }
-  };
-
-  const handleAddBlock = async () => {
-    if (!selectedJournal || !currentTelejornal || !currentTelejornal.espelho_aberto) {
-      return;
-    }
-
-    try {
-      // Create new block with next ordem
-      const newOrder = blocks.length + 1;
-      const newBlock = await createBloco({
-        nome: `BLOCO ${newOrder}`,
-        telejornal_id: selectedJournal,
-        ordem: newOrder
-      });
-
-      console.log("New block created:", newBlock);
-
-      // Refresh blocks data
-      queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
-    } catch (error) {
-      console.error("Error creating block:", error);
-    }
-  };
-
   return {
     blocks,
     totalJournalTime,
     isLoading,
-    isCreatingFirstBlock,
+    isCreatingFirstBlock: blockManagementCreating,
     newItemBlock,
     deleteConfirmOpen,
     setDeleteConfirmOpen,
