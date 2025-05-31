@@ -32,7 +32,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         reporter: item.reporter,
         status: item.status,
         cabeca: item.cabeca || '',
-        gc: item.gc || '', // Include GC field
+        gc: item.gc || '',
         texto: item.texto || '',
         local_gravacao: item.local_gravacao || '',
         pagina: item.pagina,
@@ -101,11 +101,11 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   };
 
   return (
-    <div className="fixed top-0 right-0 w-[800px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20">
+    <div className="fixed top-0 right-0 w-[500px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20 overflow-hidden">
       <EditPanelHeader item={item} onClose={onClose} />
       
-      <ResizablePanelGroup direction="horizontal" className="h-[calc(100%-4rem)]">
-        <ResizablePanel defaultSize={50} minSize={30}>
+      <ResizablePanelGroup direction="vertical" className="h-[calc(100%-4rem)]">
+        <ResizablePanel defaultSize={60} minSize={30}>
           <div className="h-full overflow-y-auto">
             <EditPanelTabs
               activeTab={activeTab}
@@ -122,42 +122,21 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         
         <ResizableHandle withHandle />
         
-        <ResizablePanel defaultSize={50} minSize={30}>
-          <div className="h-full bg-gray-50 border-l border-gray-200 overflow-y-auto">
-            <div className="p-4">
-              <h3 className="text-lg font-semibold mb-4">Pré-visualização</h3>
-              <div className="space-y-4">
-                <div className="bg-white p-4 rounded-lg border">
-                  <h4 className="font-medium text-gray-700 mb-2">Retranca</h4>
-                  <p className="text-sm text-gray-900">{formData.retranca || 'Não informado'}</p>
-                </div>
-                
-                <div className="bg-white p-4 rounded-lg border">
-                  <h4 className="font-medium text-gray-700 mb-2">Cabeça</h4>
-                  <p className="text-sm text-gray-900 whitespace-pre-wrap">{formData.cabeca || 'Não informado'}</p>
-                </div>
-                
-                <div className="bg-white p-4 rounded-lg border">
-                  <h4 className="font-medium text-gray-700 mb-2">GC</h4>
-                  <p className="text-sm text-gray-900 whitespace-pre-wrap">{formData.gc || 'Não informado'}</p>
-                </div>
-                
-                <div className="bg-white p-4 rounded-lg border">
-                  <h4 className="font-medium text-gray-700 mb-2">Corpo da Matéria</h4>
-                  <p className="text-sm text-gray-900 whitespace-pre-wrap">{formData.texto || 'Não informado'}</p>
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h4 className="font-medium text-gray-700 mb-2">Duração</h4>
-                    <p className="text-sm text-gray-900">{formData.duracao ? `${formData.duracao}s` : 'Não informado'}</p>
-                  </div>
-                  <div className="bg-white p-4 rounded-lg border">
-                    <h4 className="font-medium text-gray-700 mb-2">Repórter</h4>
-                    <p className="text-sm text-gray-900">{formData.reporter || 'Não informado'}</p>
+        <ResizablePanel defaultSize={40} minSize={20}>
+          <div className="h-full p-4 bg-gray-50 border-t">
+            <h4 className="font-medium text-sm text-gray-700 mb-2">Área de Visualização</h4>
+            <div className="text-sm text-gray-600">
+              <p><strong>Retranca:</strong> {formData.retranca}</p>
+              <p><strong>Duração:</strong> {formData.duracao}s</p>
+              <p><strong>Status:</strong> {formData.status}</p>
+              {formData.cabeca && (
+                <div className="mt-4">
+                  <p><strong>Cabeça:</strong></p>
+                  <div className="bg-white p-2 rounded border text-xs mt-1">
+                    {formData.cabeca}
                   </div>
                 </div>
-              </div>
+              )}
             </div>
           </div>
         </ResizablePanel>
