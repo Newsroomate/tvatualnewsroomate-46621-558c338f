@@ -8,14 +8,17 @@ interface UseItemRenumberingProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
   setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
   currentTelejornal: Telejornal | null;
+  renumberConfirmOpen: boolean;
+  setRenumberConfirmOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const useItemRenumbering = ({
   blocks,
   setBlocks,
-  currentTelejornal
+  currentTelejornal,
+  renumberConfirmOpen,
+  setRenumberConfirmOpen
 }: UseItemRenumberingProps) => {
-  const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
   const { toast } = useToast();
 
   const handleRenumberItems = async () => {
@@ -101,8 +104,6 @@ export const useItemRenumbering = ({
   };
 
   return {
-    renumberConfirmOpen,
-    setRenumberConfirmOpen,
     handleRenumberItems,
     confirmRenumberItems
   };
