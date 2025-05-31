@@ -8,12 +8,19 @@ import { useNewsSchedule } from "@/hooks/useNewsSchedule";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
 
+type BlockWithItems = Bloco & { 
+  items: Materia[];
+  totalTime: number;
+};
+
 interface NewsScheduleProps {
   selectedJournal: string | null;
   onEditItem: (Materia) => void;
   currentTelejornal: Telejornal | null;
   onOpenRundown: () => void;
   journalPrefix?: string;
+  externalBlocks?: BlockWithItems[];
+  onBlocksChange?: (blocks: BlockWithItems[]) => void;
 }
 
 export const NewsSchedule = ({ 
@@ -21,10 +28,14 @@ export const NewsSchedule = ({
   onEditItem, 
   currentTelejornal, 
   onOpenRundown,
-  journalPrefix = "default"
+  journalPrefix = "default",
+  externalBlocks,
+  onBlocksChange
 }: NewsScheduleProps) => {
+  const isDualView = !!externalBlocks && !!onBlocksChange;
+  
   const {
-    blocks,
+    blocks: internalBlocks,
     totalJournalTime,
     isLoading,
     isCreatingFirstBlock,
@@ -45,8 +56,17 @@ export const NewsSchedule = ({
     handleDeleteBlock,
     handleDragEnd,
     openTeleprompter
-  } = useNewsSchedule({ selectedJournal, currentTelejornal, onEditItem });
+  } = useNewsSchedule({ 
+    selectedJournal, 
+    currentTelejornal, 
+    onEditItem,
+    externalBlocks: isDualView ? externalBlocks : undefined,
+    onBlocksChange: isDualView ? onBlocksChange : undefined
+  });
 
+  // Use external blocks in dual view mode, otherwise use internal blocks
+  const blocks = isDualView ? externalBlocks : internalBlocks;
+  
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
 
   const {
@@ -63,8 +83,13 @@ export const NewsSchedule = ({
   });
 
   const handleViewTeleprompter = () => {
-    console.log("Opening teleprompter with blocks:", blocks);
+    console.log(`[${journalPrefix}] Opening teleprompter with blocks:`, blocks);
     openTeleprompter(blocks, currentTelejornal);
+  };
+
+  const handleDragEndWithLogging = (result: any) => {
+    console.log(`[${journalPrefix}] Handling drag end:`, result);
+    handleDragEnd(result);
   };
 
   return (
@@ -81,7 +106,7 @@ export const NewsSchedule = ({
       />
 
       {/* Main area with blocks */}
-      <DragDropContext onDragEnd={handleDragEnd}>
+      <DragDropContext onDragEnd={handleDragEndWithLogging}>
         <div 
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto p-4 space-y-6"

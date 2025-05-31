@@ -17,6 +17,7 @@ interface UseRealtimeMateriasProps {
 
 /**
  * Custom hook to handle realtime subscriptions for materias
+ * Note: This hook is disabled when selectedJournal is null (dual view mode)
  */
 export const useRealtimeMaterias = ({
   selectedJournal,
@@ -27,12 +28,15 @@ export const useRealtimeMaterias = ({
   
   // Setup realtime subscription for materias updates
   useEffect(() => {
-    if (!selectedJournal) return;
+    if (!selectedJournal) {
+      console.log('Realtime materias disabled (dual view mode or no journal selected)');
+      return;
+    }
     
-    console.log('Setting up realtime subscription for materias table');
+    console.log('Setting up standard realtime subscription for materias table');
     
     const handleMateriaUpdate = (updatedMateria: Materia) => {
-      console.log('Processing materia update:', updatedMateria);
+      console.log('Processing standard materia update:', updatedMateria);
       
       setBlocks(currentBlocks => {
         // Create new blocks array to ensure React detects the state change
@@ -72,13 +76,13 @@ export const useRealtimeMaterias = ({
     
     // Subscribe to all materias changes related to the current telejornal's blocks
     const channel = supabase
-      .channel('public:materias-changes')
+      .channel(`standard-materias-changes-${selectedJournal}`)
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
         table: 'materias',
       }, (payload) => {
-        console.log('Materia updated via realtime:', payload);
+        console.log('Standard materia updated via realtime:', payload);
         const updatedMateria = payload.new as Materia;
         handleMateriaUpdate(updatedMateria);
       })
@@ -87,11 +91,10 @@ export const useRealtimeMaterias = ({
         schema: 'public',
         table: 'materias'
       }, (payload) => {
-        console.log('Materia inserted:', payload);
+        console.log('Standard materia inserted:', payload);
         const newMateria = payload.new as Materia;
         
         // Only process if this was not triggered by the current client
-        // (avoids duplicate items when we're the ones who created it)
         if (newItemBlock !== newMateria.bloco_id) {
           handleMateriaUpdate(newMateria);
         }
@@ -101,7 +104,7 @@ export const useRealtimeMaterias = ({
         schema: 'public',
         table: 'materias'
       }, (payload) => {
-        console.log('Materia deleted:', payload);
+        console.log('Standard materia deleted:', payload);
         const deletedMateria = payload.old as Materia;
         
         // Only process if this was not triggered by the current client
@@ -124,12 +127,12 @@ export const useRealtimeMaterias = ({
         }
       })
       .subscribe((status) => {
-        console.log('Realtime subscription status for materias:', status);
+        console.log('Standard realtime subscription status for materias:', status);
       });
     
     // Clean up subscription on unmount or when selectedJournal changes
     return () => {
-      console.log('Cleaning up realtime subscription');
+      console.log('Cleaning up standard realtime subscription');
       supabase.removeChannel(channel);
     };
   }, [selectedJournal, newItemBlock, materiaToDelete]);

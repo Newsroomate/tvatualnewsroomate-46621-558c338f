@@ -13,20 +13,31 @@ import { useItemManagement } from "@/hooks/useItemManagement";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useTeleprompterWindow } from "@/hooks/useTeleprompterWindow";
 
+type BlockWithItems = Bloco & { 
+  items: Materia[];
+  totalTime: number;
+};
+
 interface UseNewsScheduleProps {
   selectedJournal: string | null;
   currentTelejornal: Telejornal | null;
   onEditItem: (materia: Materia) => void;
+  externalBlocks?: BlockWithItems[];
+  onBlocksChange?: (blocks: BlockWithItems[]) => void;
 }
 
 export const useNewsSchedule = ({ 
   selectedJournal, 
   currentTelejornal, 
-  onEditItem 
+  onEditItem,
+  externalBlocks,
+  onBlocksChange
 }: UseNewsScheduleProps) => {
   const [totalJournalTime, setTotalJournalTime] = useState(0);
   const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  
+  const isDualView = !!externalBlocks && !!onBlocksChange;
   
   // Fetch telejornais
   const telejornaisQuery = useQuery({
@@ -34,19 +45,23 @@ export const useNewsSchedule = ({
     queryFn: fetchTelejornais,
   });
 
-  // Fetch blocks for the selected journal
+  // Fetch blocks for the selected journal (only if not in dual view mode)
   const blocosQuery = useQuery({
     queryKey: ['blocos', selectedJournal],
     queryFn: () => selectedJournal ? fetchBlocosByTelejornal(selectedJournal) : Promise.resolve([]),
-    enabled: !!selectedJournal,
+    enabled: !!selectedJournal && !isDualView,
   });
 
-  // Use our custom hooks for realtime updates and state management
-  const { blocks, setBlocks } = useRealtimeMaterias({
-    selectedJournal,
+  // Use realtime updates only for non-dual view mode
+  const { blocks: realtimeBlocks, setBlocks: setRealtimeBlocks } = useRealtimeMaterias({
+    selectedJournal: isDualView ? null : selectedJournal,
     newItemBlock: null,
     materiaToDelete: null
   });
+
+  // In dual view mode, use external blocks; otherwise use realtime blocks
+  const blocks = isDualView ? externalBlocks : realtimeBlocks;
+  const setBlocks = isDualView ? onBlocksChange : setRealtimeBlocks;
 
   // Use the custom hooks for item, block, and drag-drop management
   const { 
@@ -83,7 +98,7 @@ export const useNewsSchedule = ({
     setBlocks, 
     selectedJournal, 
     currentTelejornal, 
-    blocosQuery 
+    blocosQuery: isDualView ? { data: [] } : blocosQuery 
   });
 
   const { handleDragEnd } = useDragAndDrop({ 
@@ -98,9 +113,9 @@ export const useNewsSchedule = ({
     closeTeleprompter 
   } = useTeleprompterWindow();
 
-  // Process blocks data when it changes
+  // Process blocks data when it changes (only for non-dual view)
   useEffect(() => {
-    if (!blocosQuery.data || !selectedJournal) return;
+    if (isDualView || !blocosQuery.data || !selectedJournal) return;
     
     const loadBlocos = async () => {
       try {
@@ -116,7 +131,7 @@ export const useNewsSchedule = ({
           })
         );
         
-        setBlocks(blocosComItems);
+        setRealtimeBlocks(blocosComItems);
         setBlockCreationAttempted(true);
       } catch (error) {
         console.error("Erro ao carregar blocos e matérias:", error);
@@ -124,11 +139,11 @@ export const useNewsSchedule = ({
     };
     
     loadBlocos();
-  }, [blocosQuery.data, selectedJournal, setBlocks]);
+  }, [blocosQuery.data, selectedJournal, setRealtimeBlocks, isDualView]);
 
-  // Handle auto-creation of first block with last block data
+  // Handle auto-creation of first block (only for non-dual view)
   useEffect(() => {
-    if (!selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
+    if (isDualView || !selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
       return;
     }
     
@@ -141,7 +156,7 @@ export const useNewsSchedule = ({
         setIsCreatingFirstBlock(true);
         blockCreationInProgress.current = true;
         
-        console.log("Criando bloco inicial com dados do último bloco para telejornal:", selectedJournal);
+        console.log("Criando bloco inicial para telejornal:", selectedJournal);
         
         try {
           await handleAddFirstBlock();
@@ -155,7 +170,7 @@ export const useNewsSchedule = ({
     };
     
     createInitialBlockWithLastData();
-  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, handleAddFirstBlock, blockCreationInProgress]);
+  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, handleAddFirstBlock, blockCreationInProgress, isDualView]);
 
   // Recalculate total journal time when blocks change
   useEffect(() => {
@@ -169,7 +184,7 @@ export const useNewsSchedule = ({
     updateTeleprompterData(blocks);
   }, [blocks, updateTeleprompterData]);
 
-  const isLoading = telejornaisQuery.isLoading || blocosQuery.isLoading;
+  const isLoading = telejornaisQuery.isLoading || (!isDualView && blocosQuery.isLoading);
 
   return {
     blocks,
