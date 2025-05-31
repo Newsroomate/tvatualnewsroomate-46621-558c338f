@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Materia } from "@/types";
 import { updateMateria } from "@/services/materias-api";
 import { useToast } from "@/hooks/use-toast";
@@ -17,25 +16,8 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const [activeTab, setActiveTab] = useState("editor");
   const [formData, setFormData] = useState<Partial<Materia>>({});
   const [isSaving, setIsSaving] = useState(false);
-  const [dimensions, setDimensions] = useState({ width: 800, height: 600 });
-  const [position, setPosition] = useState({ x: 0, y: 0 });
-  const [isResizing, setIsResizing] = useState(false);
-  const [resizeDirection, setResizeDirection] = useState<string>('');
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  
-  const panelRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
   const { calculateCabecaDuration } = useDurationCalculator();
-
-  // Center the modal when it opens
-  useEffect(() => {
-    if (isOpen) {
-      const centerX = (window.innerWidth - dimensions.width) / 2;
-      const centerY = (window.innerHeight - dimensions.height) / 2;
-      setPosition({ x: Math.max(0, centerX), y: Math.max(0, centerY) });
-    }
-  }, [isOpen, dimensions.width, dimensions.height]);
 
   // Initialize form data when item changes
   useEffect(() => {
@@ -48,7 +30,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         reporter: item.reporter,
         status: item.status,
         cabeca: item.cabeca || '',
-        gc: item.gc || '',
+        gc: item.gc || '', // Include GC field
         texto: item.texto || '',
         local_gravacao: item.local_gravacao || '',
         pagina: item.pagina,
@@ -59,12 +41,13 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
     }
   }, [item]);
 
-  // Update duration whenever cabeca field changes
+  // Update duration whenever cabeca field changes (only based on cabeca words)
   useEffect(() => {
     const cabeca = formData.cabeca || '';
     
     const estimatedDuration = calculateCabecaDuration(cabeca);
     
+    // Only update if there's content in cabeca and the duration has changed
     if (cabeca && estimatedDuration !== formData.duracao) {
       setFormData(prev => ({
         ...prev,
@@ -72,77 +55,6 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
       }));
     }
   }, [formData.cabeca, calculateCabecaDuration]);
-
-  const handleMouseDown = (e: React.MouseEvent, direction: string) => {
-    e.preventDefault();
-    setIsResizing(true);
-    setResizeDirection(direction);
-  };
-
-  const handleHeaderMouseDown = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget || (e.target as HTMLElement).closest('.drag-handle')) {
-      e.preventDefault();
-      setIsDragging(true);
-      setDragStart({
-        x: e.clientX - position.x,
-        y: e.clientY - position.y
-      });
-    }
-  };
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isResizing && panelRef.current) {
-        const rect = panelRef.current.getBoundingClientRect();
-        let newWidth = dimensions.width;
-        let newHeight = dimensions.height;
-        let newX = position.x;
-        let newY = position.y;
-
-        if (resizeDirection.includes('right')) {
-          newWidth = Math.max(400, e.clientX - rect.left);
-        }
-        if (resizeDirection.includes('left')) {
-          const deltaX = rect.left - e.clientX;
-          newWidth = Math.max(400, dimensions.width + deltaX);
-          newX = Math.min(position.x, e.clientX);
-        }
-        if (resizeDirection.includes('bottom')) {
-          newHeight = Math.max(300, e.clientY - rect.top);
-        }
-        if (resizeDirection.includes('top')) {
-          const deltaY = rect.top - e.clientY;
-          newHeight = Math.max(300, dimensions.height + deltaY);
-          newY = Math.min(position.y, e.clientY);
-        }
-
-        setDimensions({ width: newWidth, height: newHeight });
-        setPosition({ x: newX, y: newY });
-      }
-
-      if (isDragging) {
-        const newX = Math.max(0, Math.min(window.innerWidth - dimensions.width, e.clientX - dragStart.x));
-        const newY = Math.max(0, Math.min(window.innerHeight - dimensions.height, e.clientY - dragStart.y));
-        setPosition({ x: newX, y: newY });
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-      setResizeDirection('');
-      setIsDragging(false);
-    };
-
-    if (isResizing || isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing, isDragging, resizeDirection, position, dimensions, dragStart]);
 
   if (!isOpen || !item) return null;
 
@@ -187,79 +99,19 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   };
 
   return (
-    <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
+    <div className="fixed top-0 right-0 w-[400px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20 overflow-y-auto">
+      <EditPanelHeader item={item} onClose={onClose} />
       
-      {/* Resizable Modal */}
-      <div
-        ref={panelRef}
-        className="fixed bg-white border border-gray-300 shadow-2xl z-50 overflow-hidden"
-        style={{
-          left: position.x,
-          top: position.y,
-          width: dimensions.width,
-          height: dimensions.height,
-          cursor: isDragging ? 'grabbing' : 'auto'
-        }}
-      >
-        {/* Resize handles */}
-        <div
-          className="absolute top-0 left-0 w-2 h-full cursor-w-resize hover:bg-blue-200 opacity-0 hover:opacity-50"
-          onMouseDown={(e) => handleMouseDown(e, 'left')}
-        />
-        <div
-          className="absolute top-0 right-0 w-2 h-full cursor-e-resize hover:bg-blue-200 opacity-0 hover:opacity-50"
-          onMouseDown={(e) => handleMouseDown(e, 'right')}
-        />
-        <div
-          className="absolute top-0 left-0 w-full h-2 cursor-n-resize hover:bg-blue-200 opacity-0 hover:opacity-50"
-          onMouseDown={(e) => handleMouseDown(e, 'top')}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-full h-2 cursor-s-resize hover:bg-blue-200 opacity-0 hover:opacity-50"
-          onMouseDown={(e) => handleMouseDown(e, 'bottom')}
-        />
-        <div
-          className="absolute top-0 left-0 w-4 h-4 cursor-nw-resize hover:bg-blue-200 opacity-0 hover:opacity-50"
-          onMouseDown={(e) => handleMouseDown(e, 'top-left')}
-        />
-        <div
-          className="absolute top-0 right-0 w-4 h-4 cursor-ne-resize hover:bg-blue-200 opacity-0 hover:opacity-50"
-          onMouseDown={(e) => handleMouseDown(e, 'top-right')}
-        />
-        <div
-          className="absolute bottom-0 left-0 w-4 h-4 cursor-sw-resize hover:bg-blue-200 opacity-0 hover:opacity-50"
-          onMouseDown={(e) => handleMouseDown(e, 'bottom-left')}
-        />
-        <div
-          className="absolute bottom-0 right-0 w-4 h-4 cursor-se-resize hover:bg-blue-200 opacity-0 hover:opacity-50"
-          onMouseDown={(e) => handleMouseDown(e, 'bottom-right')}
-        />
-
-        {/* Content */}
-        <div className="h-full flex flex-col">
-          <div 
-            className="drag-handle cursor-grab active:cursor-grabbing"
-            onMouseDown={handleHeaderMouseDown}
-          >
-            <EditPanelHeader item={item} onClose={onClose} />
-          </div>
-          
-          <div className="flex-1 overflow-hidden">
-            <EditPanelTabs
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              formData={formData}
-              onInputChange={handleInputChange}
-              onTagsChange={handleTagsChange}
-              onSave={handleSave}
-              onClose={onClose}
-              isSaving={isSaving}
-            />
-          </div>
-        </div>
-      </div>
-    </>
+      <EditPanelTabs
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        formData={formData}
+        onInputChange={handleInputChange}
+        onTagsChange={handleTagsChange}
+        onSave={handleSave}
+        onClose={onClose}
+        isSaving={isSaving}
+      />
+    </div>
   );
 };
