@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia } from "@/types";
 import { updateMateriasOrdem } from "@/services/api";
@@ -7,12 +8,38 @@ interface UseDragAndDropProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
   setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
   isEspelhoAberto: boolean;
+  isDualView?: boolean;
 }
 
-export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAndDropProps) => {
+export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto, isDualView = false }: UseDragAndDropProps) => {
   const { toast } = useToast();
 
   const handleDragEnd = async (result: any) => {
+    // In dual view mode, cross-panel drag and drop is handled by useCrossPanelDragAndDrop
+    // Only handle intra-panel moves here
+    if (isDualView) {
+      const { source, destination } = result;
+      
+      if (!destination || 
+          (source.droppableId === destination.droppableId && 
+           source.index === destination.index)) {
+        return;
+      }
+      
+      const sourceBlockId = source.droppableId;
+      const destBlockId = destination.droppableId;
+      
+      // Check if this is a cross-panel move (different telejornals)
+      const sourceBlock = blocks.find(b => b.id === sourceBlockId);
+      const destBlock = blocks.find(b => b.id === destBlockId);
+      
+      // If either block is not found in current blocks, it's a cross-panel move
+      // Let the cross-panel handler deal with it
+      if (!sourceBlock || !destBlock) {
+        return;
+      }
+    }
+    
     if (!isEspelhoAberto) {
       toast({
         title: "Espelho fechado",

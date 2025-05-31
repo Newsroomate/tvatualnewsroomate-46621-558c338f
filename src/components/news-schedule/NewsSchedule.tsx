@@ -21,6 +21,7 @@ interface NewsScheduleProps {
   journalPrefix?: string;
   externalBlocks?: BlockWithItems[];
   onBlocksChange?: (blocks: BlockWithItems[]) => void;
+  isDualView?: boolean;
 }
 
 export const NewsSchedule = ({ 
@@ -30,9 +31,10 @@ export const NewsSchedule = ({
   onOpenRundown,
   journalPrefix = "default",
   externalBlocks,
-  onBlocksChange
+  onBlocksChange,
+  isDualView = false
 }: NewsScheduleProps) => {
-  const isDualView = !!externalBlocks && !!onBlocksChange;
+  const isDualViewMode = !!externalBlocks && !!onBlocksChange;
   
   const {
     blocks: internalBlocks,
@@ -60,12 +62,12 @@ export const NewsSchedule = ({
     selectedJournal, 
     currentTelejornal, 
     onEditItem,
-    externalBlocks: isDualView ? externalBlocks : undefined,
-    onBlocksChange: isDualView ? onBlocksChange : undefined
+    externalBlocks: isDualViewMode ? externalBlocks : undefined,
+    onBlocksChange: isDualViewMode ? onBlocksChange : undefined
   });
 
   // Use external blocks in dual view mode, otherwise use internal blocks
-  const blocks = isDualView ? externalBlocks : internalBlocks;
+  const blocks = isDualViewMode ? externalBlocks : internalBlocks;
   
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
 
@@ -92,8 +94,8 @@ export const NewsSchedule = ({
     handleDragEnd(result);
   };
 
-  return (
-    <div className="flex flex-col h-full">
+  const scheduleContent = (
+    <>
       {/* Header with journal info and total time */}
       <ScheduleHeader
         currentTelejornal={currentTelejornal}
@@ -106,31 +108,29 @@ export const NewsSchedule = ({
       />
 
       {/* Main area with blocks */}
-      <DragDropContext onDragEnd={handleDragEndWithLogging}>
-        <div 
-          ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto p-4 space-y-6"
-        >
-          <ScheduleContent
-            selectedJournal={selectedJournal}
-            currentTelejornal={currentTelejornal}
-            blocks={blocks}
-            isLoading={isLoading}
-            isCreatingFirstBlock={isCreatingFirstBlock}
-            newItemBlock={newItemBlock}
-            onOpenRundown={onOpenRundown}
-            onAddFirstBlock={handleAddFirstBlockWithScroll}
-            onAddBlock={handleAddBlockWithScroll}
-            onAddItem={handleAddItemWithScroll}
-            onEditItem={onEditItem}
-            onDeleteItem={handleDeleteMateria}
-            onDuplicateItem={handleDuplicateItem}
-            onRenameBlock={handleRenameBlock}
-            onDeleteBlock={handleDeleteBlock}
-            journalPrefix={journalPrefix}
-          />
-        </div>
-      </DragDropContext>
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-6"
+      >
+        <ScheduleContent
+          selectedJournal={selectedJournal}
+          currentTelejornal={currentTelejornal}
+          blocks={blocks}
+          isLoading={isLoading}
+          isCreatingFirstBlock={isCreatingFirstBlock}
+          newItemBlock={newItemBlock}
+          onOpenRundown={onOpenRundown}
+          onAddFirstBlock={handleAddFirstBlockWithScroll}
+          onAddBlock={handleAddBlockWithScroll}
+          onAddItem={handleAddItemWithScroll}
+          onEditItem={onEditItem}
+          onDeleteItem={handleDeleteMateria}
+          onDuplicateItem={handleDuplicateItem}
+          onRenameBlock={handleRenameBlock}
+          onDeleteBlock={handleDeleteBlock}
+          journalPrefix={journalPrefix}
+        />
+      </div>
 
       {/* Confirmation Dialogs */}
       <ConfirmationDialogs
@@ -141,6 +141,20 @@ export const NewsSchedule = ({
         confirmDeleteMateria={confirmDeleteMateria}
         confirmRenumberItems={confirmRenumberItems}
       />
+    </>
+  );
+
+  return (
+    <div className="flex flex-col h-full">
+      {isDualView ? (
+        // In dual view, don't wrap with DragDropContext as it's handled by DualViewLayout
+        scheduleContent
+      ) : (
+        // In single view, wrap with DragDropContext for internal drag and drop
+        <DragDropContext onDragEnd={handleDragEndWithLogging}>
+          {scheduleContent}
+        </DragDropContext>
+      )}
     </div>
   );
 };

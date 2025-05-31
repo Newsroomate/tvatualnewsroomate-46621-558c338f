@@ -104,7 +104,8 @@ export const useNewsSchedule = ({
   const { handleDragEnd } = useDragAndDrop({ 
     blocks, 
     setBlocks, 
-    isEspelhoAberto: !!currentTelejornal?.espelho_aberto 
+    isEspelhoAberto: !!currentTelejornal?.espelho_aberto,
+    isDualView
   });
   
   const { 

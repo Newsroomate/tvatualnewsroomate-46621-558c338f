@@ -1,9 +1,11 @@
 
 import { useState, useEffect } from "react";
+import { DragDropContext } from "@hello-pangea/dnd";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { NewsSchedule } from "./news-schedule/NewsSchedule";
 import { Telejornal, Materia } from "@/types";
 import { useDualViewRealtime } from "@/hooks/useDualViewRealtime";
+import { useCrossPanelDragAndDrop } from "@/hooks/useCrossPanelDragAndDrop";
 import { useQuery } from "@tanstack/react-query";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco } from "@/services/api";
 
@@ -33,6 +35,15 @@ export const DualViewLayout = ({
   } = useDualViewRealtime({
     primaryJournalId: primaryJournal,
     secondaryJournalId: secondaryJournal
+  });
+
+  const { handleCrossPanelDragEnd } = useCrossPanelDragAndDrop({
+    primaryBlocks,
+    secondaryBlocks,
+    setPrimaryBlocks,
+    setSecondaryBlocks,
+    primaryTelejornal,
+    secondaryTelejornal
   });
 
   // Fetch blocks for primary journal
@@ -112,57 +123,66 @@ export const DualViewLayout = ({
     }
   }, [lastUpdateSource]);
 
+  const handleDragEnd = (result: any) => {
+    console.log('Dual view drag end:', result);
+    handleCrossPanelDragEnd(result);
+  };
+
   return (
-    <ResizablePanelGroup direction="vertical" className="h-full">
-      <ResizablePanel defaultSize={50} minSize={20}>
-        <div className="h-full border-b">
-          <div className="bg-blue-50 p-2 border-b flex justify-between items-center">
-            <h3 className="text-sm font-medium text-blue-800">
-              {primaryTelejornal?.nome || "Telejornal Principal"}
-            </h3>
-            {lastUpdateSource && (
-              <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
-                ↻ Sincronizado
-              </div>
-            )}
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <ResizablePanelGroup direction="vertical" className="h-full">
+        <ResizablePanel defaultSize={50} minSize={20}>
+          <div className="h-full border-b">
+            <div className="bg-blue-50 p-2 border-b flex justify-between items-center">
+              <h3 className="text-sm font-medium text-blue-800">
+                {primaryTelejornal?.nome || "Telejornal Principal"}
+              </h3>
+              {lastUpdateSource && (
+                <div className="text-xs text-blue-600 bg-blue-100 px-2 py-1 rounded">
+                  ↻ Sincronizado
+                </div>
+              )}
+            </div>
+            <NewsSchedule
+              selectedJournal={primaryJournal}
+              onEditItem={onEditItem}
+              currentTelejornal={primaryTelejornal}
+              onOpenRundown={onOpenRundown}
+              journalPrefix="primary"
+              externalBlocks={primaryBlocks}
+              onBlocksChange={setPrimaryBlocks}
+              isDualView={true}
+            />
           </div>
-          <NewsSchedule
-            selectedJournal={primaryJournal}
-            onEditItem={onEditItem}
-            currentTelejornal={primaryTelejornal}
-            onOpenRundown={onOpenRundown}
-            journalPrefix="primary"
-            externalBlocks={primaryBlocks}
-            onBlocksChange={setPrimaryBlocks}
-          />
-        </div>
-      </ResizablePanel>
-      
-      <ResizableHandle withHandle />
-      
-      <ResizablePanel defaultSize={50} minSize={20}>
-        <div className="h-full">
-          <div className="bg-green-50 p-2 border-b flex justify-between items-center">
-            <h3 className="text-sm font-medium text-green-800">
-              {secondaryTelejornal?.nome || "Telejornal Secundário"}
-            </h3>
-            {lastUpdateSource && (
-              <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
-                ↻ Sincronizado
-              </div>
-            )}
+        </ResizablePanel>
+        
+        <ResizableHandle withHandle />
+        
+        <ResizablePanel defaultSize={50} minSize={20}>
+          <div className="h-full">
+            <div className="bg-green-50 p-2 border-b flex justify-between items-center">
+              <h3 className="text-sm font-medium text-green-800">
+                {secondaryTelejornal?.nome || "Telejornal Secundário"}
+              </h3>
+              {lastUpdateSource && (
+                <div className="text-xs text-green-600 bg-green-100 px-2 py-1 rounded">
+                  ↻ Sincronizado
+                </div>
+              )}
+            </div>
+            <NewsSchedule
+              selectedJournal={secondaryJournal}
+              onEditItem={onEditItem}
+              currentTelejornal={secondaryTelejornal}
+              onOpenRundown={onOpenRundown}
+              journalPrefix="secondary"
+              externalBlocks={secondaryBlocks}
+              onBlocksChange={setSecondaryBlocks}
+              isDualView={true}
+            />
           </div>
-          <NewsSchedule
-            selectedJournal={secondaryJournal}
-            onEditItem={onEditItem}
-            currentTelejornal={secondaryTelejornal}
-            onOpenRundown={onOpenRundown}
-            journalPrefix="secondary"
-            externalBlocks={secondaryBlocks}
-            onBlocksChange={setSecondaryBlocks}
-          />
-        </div>
-      </ResizablePanel>
-    </ResizablePanelGroup>
+        </ResizablePanel>
+      </ResizablePanelGroup>
+    </DragDropContext>
   );
 };
