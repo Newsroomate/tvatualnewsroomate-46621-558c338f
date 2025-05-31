@@ -1,4 +1,3 @@
-
 import { Bloco, Materia, Telejornal } from "@/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Lock } from "lucide-react";
@@ -22,6 +21,7 @@ interface ScheduleContentProps {
   onDuplicateItem: (item: Materia) => void;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
+  journalPrefix?: string;
 }
 
 export const ScheduleContent = ({
@@ -39,12 +39,12 @@ export const ScheduleContent = ({
   onDeleteItem,
   onDuplicateItem,
   onRenameBlock,
-  onDeleteBlock
+  onDeleteBlock,
+  journalPrefix = "default"
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
 
-  // If no journal selected
   if (!selectedJournal) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -53,7 +53,6 @@ export const ScheduleContent = ({
     );
   }
 
-  // If loading
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -62,7 +61,6 @@ export const ScheduleContent = ({
     );
   }
 
-  // If espelho is closed
   if (!currentTelejornal?.espelho_aberto) {
     return (
       <div className="flex flex-col items-center justify-center h-32 gap-3">
@@ -77,7 +75,6 @@ export const ScheduleContent = ({
     );
   }
 
-  // Creating first block
   if (blocks.length === 0 && isCreatingFirstBlock) {
     return (
       <div className="flex items-center justify-center h-32">
@@ -86,7 +83,6 @@ export const ScheduleContent = ({
     );
   }
 
-  // No blocks
   if (blocks.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-32 gap-3">
@@ -98,7 +94,6 @@ export const ScheduleContent = ({
     );
   }
 
-  // Render blocks
   return (
     <>
       {blocks.map((block) => (
@@ -113,6 +108,7 @@ export const ScheduleContent = ({
           isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
           onRenameBlock={onRenameBlock}
           onDeleteBlock={onDeleteBlock}
+          journalPrefix={journalPrefix}
         />
       ))}
     </>

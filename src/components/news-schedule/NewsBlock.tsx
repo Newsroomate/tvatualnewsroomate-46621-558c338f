@@ -1,4 +1,3 @@
-
 import { Bloco, Materia } from "@/types";
 import { BlockHeader } from "./BlockHeader";
 import { BlockContent } from "./BlockContent";
@@ -15,6 +14,7 @@ interface NewsBlockProps {
   isEspelhoOpen: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
+  journalPrefix?: string;
 }
 
 export const NewsBlock = ({
@@ -26,7 +26,8 @@ export const NewsBlock = ({
   onDuplicateItem,
   isEspelhoOpen,
   onRenameBlock,
-  onDeleteBlock
+  onDeleteBlock,
+  journalPrefix = "default"
 }: NewsBlockProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
