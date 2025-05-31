@@ -1,3 +1,4 @@
+
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia } from "@/types";
 import { updateMateriasOrdem } from "@/services/api";
@@ -7,9 +8,15 @@ interface UseDragAndDropProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
   setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
   isEspelhoAberto: boolean;
+  journalPrefix?: string;
 }
 
-export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAndDropProps) => {
+export const useDragAndDrop = ({ 
+  blocks, 
+  setBlocks, 
+  isEspelhoAberto, 
+  journalPrefix = "default" 
+}: UseDragAndDropProps) => {
   const { toast } = useToast();
 
   const handleDragEnd = async (result: any) => {
@@ -31,10 +38,27 @@ export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAn
       return;
     }
     
-    // Find source and destination blocks
-    const sourceBlockId = source.droppableId;
-    const destBlockId = destination.droppableId;
+    // Check if this is a cross-panel drag (different journal prefixes)
+    const sourceJournal = source.droppableId.includes('primary-') ? 'primary' : 
+                         source.droppableId.includes('secondary-') ? 'secondary' : 'single';
+    const destJournal = destination.droppableId.includes('primary-') ? 'primary' : 
+                       destination.droppableId.includes('secondary-') ? 'secondary' : 'single';
     
+    // If this is a cross-panel drag, let the parent DragDropContext handle it
+    if (sourceJournal !== destJournal && (sourceJournal !== 'single' || destJournal !== 'single')) {
+      return;
+    }
+    
+    // Extract actual block IDs (remove journal prefix if present)
+    let sourceBlockId = source.droppableId;
+    let destBlockId = destination.droppableId;
+    
+    if (journalPrefix && journalPrefix !== "default") {
+      sourceBlockId = sourceBlockId.replace(`${journalPrefix}-`, '');
+      destBlockId = destBlockId.replace(`${journalPrefix}-`, '');
+    }
+    
+    // Find source and destination blocks
     const sourceBlock = blocks.find(b => b.id === sourceBlockId);
     const destBlock = blocks.find(b => b.id === destBlockId);
     

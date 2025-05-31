@@ -1,3 +1,4 @@
+
 import { Bloco, Materia } from "@/types";
 import { BlockHeader } from "./BlockHeader";
 import { BlockContent } from "./BlockContent";
@@ -57,6 +58,7 @@ export const NewsBlock = ({
         onDuplicateItem={onDuplicateItem}
         isEspelhoOpen={isEspelhoOpen}
         canModifyItems={canModify}
+        journalPrefix={journalPrefix}
       />
     </div>
   );
