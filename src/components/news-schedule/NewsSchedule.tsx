@@ -14,6 +14,9 @@ interface NewsScheduleProps {
   currentTelejornal: Telejornal | null;
   onOpenRundown: () => void;
   journalPrefix?: string;
+  isDualView?: boolean;
+  externalBlocks?: (Bloco & { items: Materia[], totalTime: number })[];
+  setExternalBlocks?: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
 }
 
 export const NewsSchedule = ({ 
@@ -21,7 +24,10 @@ export const NewsSchedule = ({
   onEditItem, 
   currentTelejornal, 
   onOpenRundown,
-  journalPrefix = "default"
+  journalPrefix = "default",
+  isDualView = false,
+  externalBlocks,
+  setExternalBlocks
 }: NewsScheduleProps) => {
   const {
     blocks,
@@ -45,7 +51,13 @@ export const NewsSchedule = ({
     handleDeleteBlock,
     handleDragEnd,
     openTeleprompter
-  } = useNewsSchedule({ selectedJournal, currentTelejornal, onEditItem });
+  } = useNewsSchedule({ 
+    selectedJournal, 
+    currentTelejornal, 
+    onEditItem,
+    externalBlocks,
+    setExternalBlocks
+  });
 
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
 
@@ -67,7 +79,7 @@ export const NewsSchedule = ({
     openTeleprompter(blocks, currentTelejornal);
   };
 
-  return (
+  const content = (
     <div className="flex flex-col h-full">
       {/* Header with journal info and total time */}
       <ScheduleHeader
@@ -81,31 +93,29 @@ export const NewsSchedule = ({
       />
 
       {/* Main area with blocks */}
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div 
-          ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto p-4 space-y-6"
-        >
-          <ScheduleContent
-            selectedJournal={selectedJournal}
-            currentTelejornal={currentTelejornal}
-            blocks={blocks}
-            isLoading={isLoading}
-            isCreatingFirstBlock={isCreatingFirstBlock}
-            newItemBlock={newItemBlock}
-            onOpenRundown={onOpenRundown}
-            onAddFirstBlock={handleAddFirstBlockWithScroll}
-            onAddBlock={handleAddBlockWithScroll}
-            onAddItem={handleAddItemWithScroll}
-            onEditItem={onEditItem}
-            onDeleteItem={handleDeleteMateria}
-            onDuplicateItem={handleDuplicateItem}
-            onRenameBlock={handleRenameBlock}
-            onDeleteBlock={handleDeleteBlock}
-            journalPrefix={journalPrefix}
-          />
-        </div>
-      </DragDropContext>
+      <div 
+        ref={scrollContainerRef}
+        className="flex-1 overflow-y-auto p-4 space-y-6"
+      >
+        <ScheduleContent
+          selectedJournal={selectedJournal}
+          currentTelejornal={currentTelejornal}
+          blocks={blocks}
+          isLoading={isLoading}
+          isCreatingFirstBlock={isCreatingFirstBlock}
+          newItemBlock={newItemBlock}
+          onOpenRundown={onOpenRundown}
+          onAddFirstBlock={handleAddFirstBlockWithScroll}
+          onAddBlock={handleAddBlockWithScroll}
+          onAddItem={handleAddItemWithScroll}
+          onEditItem={onEditItem}
+          onDeleteItem={handleDeleteMateria}
+          onDuplicateItem={handleDuplicateItem}
+          onRenameBlock={handleRenameBlock}
+          onDeleteBlock={handleDeleteBlock}
+          journalPrefix={journalPrefix}
+        />
+      </div>
 
       {/* Confirmation Dialogs */}
       <ConfirmationDialogs
@@ -117,5 +127,17 @@ export const NewsSchedule = ({
         confirmRenumberItems={confirmRenumberItems}
       />
     </div>
+  );
+
+  // If in dual view, don't wrap with DragDropContext (parent handles it)
+  if (isDualView) {
+    return content;
+  }
+
+  // Single view - wrap with DragDropContext
+  return (
+    <DragDropContext onDragEnd={handleDragEnd}>
+      {content}
+    </DragDropContext>
   );
 };

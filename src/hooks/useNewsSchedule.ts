@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { 
@@ -17,12 +16,16 @@ interface UseNewsScheduleProps {
   selectedJournal: string | null;
   currentTelejornal: Telejornal | null;
   onEditItem: (materia: Materia) => void;
+  externalBlocks?: (Bloco & { items: Materia[], totalTime: number })[];
+  setExternalBlocks?: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
 }
 
 export const useNewsSchedule = ({ 
   selectedJournal, 
   currentTelejornal, 
-  onEditItem 
+  onEditItem,
+  externalBlocks,
+  setExternalBlocks
 }: UseNewsScheduleProps) => {
   const [totalJournalTime, setTotalJournalTime] = useState(0);
   const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
@@ -41,12 +44,15 @@ export const useNewsSchedule = ({
     enabled: !!selectedJournal,
   });
 
-  // Use our custom hooks for realtime updates and state management
-  const { blocks, setBlocks } = useRealtimeMaterias({
+  // Use external blocks if provided (for dual view), otherwise use realtime hook
+  const { blocks: realtimeBlocks, setBlocks: setRealtimeBlocks } = useRealtimeMaterias({
     selectedJournal,
     newItemBlock: null,
     materiaToDelete: null
   });
+
+  const blocks = externalBlocks || realtimeBlocks;
+  const setBlocks = setExternalBlocks || setRealtimeBlocks;
 
   // Use the custom hooks for item, block, and drag-drop management
   const { 
@@ -98,9 +104,9 @@ export const useNewsSchedule = ({
     closeTeleprompter 
   } = useTeleprompterWindow();
 
-  // Process blocks data when it changes
+  // Process blocks data when it changes (only for non-external blocks)
   useEffect(() => {
-    if (!blocosQuery.data || !selectedJournal) return;
+    if (externalBlocks || !blocosQuery.data || !selectedJournal) return;
     
     const loadBlocos = async () => {
       try {
@@ -124,11 +130,11 @@ export const useNewsSchedule = ({
     };
     
     loadBlocos();
-  }, [blocosQuery.data, selectedJournal, setBlocks]);
+  }, [blocosQuery.data, selectedJournal, setBlocks, externalBlocks]);
 
-  // Handle auto-creation of first block with last block data
+  // Handle auto-creation of first block with last block data (only for non-external blocks)
   useEffect(() => {
-    if (!selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
+    if (externalBlocks || !selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
       return;
     }
     
@@ -155,7 +161,7 @@ export const useNewsSchedule = ({
     };
     
     createInitialBlockWithLastData();
-  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, handleAddFirstBlock, blockCreationInProgress]);
+  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, handleAddFirstBlock, blockCreationInProgress, externalBlocks]);
 
   // Recalculate total journal time when blocks change
   useEffect(() => {
