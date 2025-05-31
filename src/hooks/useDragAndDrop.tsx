@@ -9,9 +9,16 @@ interface UseDragAndDropProps {
   setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
   isEspelhoAberto: boolean;
   onCrossMoveMateria?: (materia: Materia, targetBlockId: string) => Promise<void>;
+  journalPrefix?: string;
 }
 
-export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto, onCrossMoveMateria }: UseDragAndDropProps) => {
+export const useDragAndDrop = ({ 
+  blocks, 
+  setBlocks, 
+  isEspelhoAberto, 
+  onCrossMoveMateria,
+  journalPrefix 
+}: UseDragAndDropProps) => {
   const { toast } = useToast();
 
   const handleDragEnd = async (result: any) => {

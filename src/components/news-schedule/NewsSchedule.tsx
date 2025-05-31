@@ -13,13 +13,17 @@ interface NewsScheduleProps {
   onEditItem: (Materia) => void;
   currentTelejornal: Telejornal | null;
   onOpenRundown: () => void;
+  journalPrefix?: string;
+  onCrossMoveMateria?: (materia: Materia, targetBlockId: string) => Promise<void>;
 }
 
 export const NewsSchedule = ({ 
   selectedJournal, 
   onEditItem, 
   currentTelejornal, 
-  onOpenRundown 
+  onOpenRundown,
+  journalPrefix,
+  onCrossMoveMateria
 }: NewsScheduleProps) => {
   const {
     blocks,
@@ -43,7 +47,13 @@ export const NewsSchedule = ({
     handleDeleteBlock,
     handleDragEnd,
     openTeleprompter
-  } = useNewsSchedule({ selectedJournal, currentTelejornal, onEditItem });
+  } = useNewsSchedule({ 
+    selectedJournal, 
+    currentTelejornal, 
+    onEditItem,
+    journalPrefix,
+    onCrossMoveMateria
+  });
 
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
 
@@ -100,6 +110,7 @@ export const NewsSchedule = ({
             onDuplicateItem={handleDuplicateItem}
             onRenameBlock={handleRenameBlock}
             onDeleteBlock={handleDeleteBlock}
+            journalPrefix={journalPrefix}
           />
         </div>
       </DragDropContext>

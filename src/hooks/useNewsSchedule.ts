@@ -17,12 +17,16 @@ interface UseNewsScheduleProps {
   selectedJournal: string | null;
   currentTelejornal: Telejornal | null;
   onEditItem: (materia: Materia) => void;
+  journalPrefix?: string;
+  onCrossMoveMateria?: (materia: Materia, targetBlockId: string) => Promise<void>;
 }
 
 export const useNewsSchedule = ({ 
   selectedJournal, 
   currentTelejornal, 
-  onEditItem 
+  onEditItem,
+  journalPrefix,
+  onCrossMoveMateria
 }: UseNewsScheduleProps) => {
   const [totalJournalTime, setTotalJournalTime] = useState(0);
   const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
@@ -89,7 +93,9 @@ export const useNewsSchedule = ({
   const { handleDragEnd } = useDragAndDrop({ 
     blocks, 
     setBlocks, 
-    isEspelhoAberto: !!currentTelejornal?.espelho_aberto 
+    isEspelhoAberto: !!currentTelejornal?.espelho_aberto,
+    onCrossMoveMateria,
+    journalPrefix
   });
   
   const { 
