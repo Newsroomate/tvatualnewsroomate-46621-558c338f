@@ -73,6 +73,7 @@ export const useCrossPanelDragAndDrop = ({
     
     // Get the item being moved
     const movedItem = {...sourceBlock.items[source.index]};
+    console.log('Moving item:', movedItem);
     
     // Calculate next page number for cross-journal transfers
     let nextPageNumber = movedItem.pagina;
@@ -85,6 +86,8 @@ export const useCrossPanelDragAndDrop = ({
       
       const maxPageNumber = pageNumbers.length > 0 ? Math.max(...pageNumbers) : 0;
       nextPageNumber = (maxPageNumber + 1).toString();
+      
+      console.log(`Cross-journal transfer detected. New page number: ${nextPageNumber}`);
     }
     
     try {
@@ -180,13 +183,20 @@ export const useCrossPanelDragAndDrop = ({
       
       // Update all changed items in one batch operation
       if (itemsToUpdate.length > 0) {
+        console.log('Updating items in database:', itemsToUpdate);
         await updateMateriasOrdem(itemsToUpdate);
-        console.log('Updated items ordem successfully:', itemsToUpdate);
+        console.log('Updated items ordem successfully');
         
         if (sourceJournal !== destJournal) {
           toast({
-            title: "Matéria transferida",
-            description: `Matéria movida entre telejornais. Nova numeração: ${nextPageNumber}`,
+            title: "Matéria transferida com sucesso",
+            description: `Matéria "${movedItem.retranca}" movida entre telejornais. Nova numeração: ${nextPageNumber}`,
+            variant: "default"
+          });
+        } else {
+          toast({
+            title: "Matéria reordenada",
+            description: `Matéria "${movedItem.retranca}" reordenada no mesmo telejornal`,
             variant: "default"
           });
         }
@@ -194,9 +204,23 @@ export const useCrossPanelDragAndDrop = ({
       
     } catch (error) {
       console.error("Error updating item positions:", error);
+      
+      // Revert UI changes on error
+      if (sourceJournal === 'primary') {
+        setPrimaryBlocks(primaryBlocks);
+      } else {
+        setSecondaryBlocks(secondaryBlocks);
+      }
+      
+      if (destJournal === 'primary') {
+        setPrimaryBlocks(primaryBlocks);
+      } else {
+        setSecondaryBlocks(secondaryBlocks);
+      }
+      
       toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a posição das matérias",
+        title: "Erro ao transferir matéria",
+        description: "Não foi possível mover a matéria. Tente novamente.",
         variant: "destructive"
       });
     }

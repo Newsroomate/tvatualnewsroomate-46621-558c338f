@@ -46,6 +46,7 @@ export const useDragAndDrop = ({
     
     // If this is a cross-panel drag, let the parent DragDropContext handle it
     if (sourceJournal !== destJournal && (sourceJournal !== 'single' || destJournal !== 'single')) {
+      console.log('Cross-panel drag detected, letting parent handle it');
       return;
     }
     
@@ -62,13 +63,17 @@ export const useDragAndDrop = ({
     const sourceBlock = blocks.find(b => b.id === sourceBlockId);
     const destBlock = blocks.find(b => b.id === destBlockId);
     
-    if (!sourceBlock || !destBlock) return;
+    if (!sourceBlock || !destBlock) {
+      console.log('Could not find source or destination block');
+      return;
+    }
     
     // Clone current blocks state
     const newBlocks = [...blocks];
     
     // Get the item being moved
     const movedItem = {...sourceBlock.items[source.index]};
+    console.log('Moving item within same journal:', movedItem);
     
     // Create updated versions of the source and destination blocks
     const updatedBlocks = newBlocks.map(block => {
@@ -179,15 +184,26 @@ export const useDragAndDrop = ({
       
       // Update all changed items in one batch operation
       if (itemsToUpdate.length > 0) {
+        console.log('Updating items ordem in database:', itemsToUpdate);
         await updateMateriasOrdem(itemsToUpdate);
-        console.log('Updated items ordem successfully:', itemsToUpdate);
+        console.log('Updated items ordem successfully');
+        
+        toast({
+          title: "Matéria reordenada",
+          description: `Matéria "${movedItem.retranca}" reordenada com sucesso`,
+          variant: "default"
+        });
       }
       
     } catch (error) {
       console.error("Error updating item positions:", error);
+      
+      // Revert changes on error
+      setBlocks(blocks);
+      
       toast({
-        title: "Erro",
-        description: "Não foi possível atualizar a posição das matérias",
+        title: "Erro ao reordenar",
+        description: "Não foi possível reordenar a matéria. Tente novamente.",
         variant: "destructive"
       });
     }

@@ -95,6 +95,11 @@ export const DualViewLayout = ({
             <div className="bg-blue-50 p-2 border-b">
               <h3 className="text-sm font-medium text-blue-800">
                 {primaryTelejornal?.nome || "Telejornal Principal"}
+                {primaryTelejornal?.espelho_aberto && (
+                  <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                    ABERTO
+                  </span>
+                )}
               </h3>
             </div>
             <NewsSchedule
@@ -114,6 +119,11 @@ export const DualViewLayout = ({
             <div className="bg-green-50 p-2 border-b">
               <h3 className="text-sm font-medium text-green-800">
                 {secondaryTelejornal?.nome || "Telejornal Secundário"}
+                {secondaryTelejornal?.espelho_aberto && (
+                  <span className="ml-2 text-xs bg-green-100 text-green-700 px-2 py-1 rounded">
+                    ABERTO
+                  </span>
+                )}
               </h3>
             </div>
             <NewsSchedule
