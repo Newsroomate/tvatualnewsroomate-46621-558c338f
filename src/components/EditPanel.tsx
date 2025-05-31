@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Materia } from "@/types";
 import { updateMateria } from "@/services/materias-api";
@@ -5,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EditPanelHeader } from "./edit-panel/EditPanelHeader";
 import { EditPanelTabs } from "./edit-panel/EditPanelTabs";
 import { useDurationCalculator } from "./edit-panel/DurationCalculator";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 interface EditPanelProps {
   isOpen: boolean;
@@ -99,19 +101,67 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   };
 
   return (
-    <div className="fixed top-0 right-0 w-[400px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20 overflow-y-auto">
+    <div className="fixed top-0 right-0 w-[800px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20">
       <EditPanelHeader item={item} onClose={onClose} />
       
-      <EditPanelTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        formData={formData}
-        onInputChange={handleInputChange}
-        onTagsChange={handleTagsChange}
-        onSave={handleSave}
-        onClose={onClose}
-        isSaving={isSaving}
-      />
+      <ResizablePanelGroup direction="horizontal" className="h-[calc(100%-4rem)]">
+        <ResizablePanel defaultSize={50} minSize={30}>
+          <div className="h-full overflow-y-auto">
+            <EditPanelTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              formData={formData}
+              onInputChange={handleInputChange}
+              onTagsChange={handleTagsChange}
+              onSave={handleSave}
+              onClose={onClose}
+              isSaving={isSaving}
+            />
+          </div>
+        </ResizablePanel>
+        
+        <ResizableHandle withHandle />
+        
+        <ResizablePanel defaultSize={50} minSize={30}>
+          <div className="h-full bg-gray-50 border-l border-gray-200 overflow-y-auto">
+            <div className="p-4">
+              <h3 className="text-lg font-semibold mb-4">Pré-visualização</h3>
+              <div className="space-y-4">
+                <div className="bg-white p-4 rounded-lg border">
+                  <h4 className="font-medium text-gray-700 mb-2">Retranca</h4>
+                  <p className="text-sm text-gray-900">{formData.retranca || 'Não informado'}</p>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border">
+                  <h4 className="font-medium text-gray-700 mb-2">Cabeça</h4>
+                  <p className="text-sm text-gray-900 whitespace-pre-wrap">{formData.cabeca || 'Não informado'}</p>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border">
+                  <h4 className="font-medium text-gray-700 mb-2">GC</h4>
+                  <p className="text-sm text-gray-900 whitespace-pre-wrap">{formData.gc || 'Não informado'}</p>
+                </div>
+                
+                <div className="bg-white p-4 rounded-lg border">
+                  <h4 className="font-medium text-gray-700 mb-2">Corpo da Matéria</h4>
+                  <p className="text-sm text-gray-900 whitespace-pre-wrap">{formData.texto || 'Não informado'}</p>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-white p-4 rounded-lg border">
+                    <h4 className="font-medium text-gray-700 mb-2">Duração</h4>
+                    <p className="text-sm text-gray-900">{formData.duracao ? `${formData.duracao}s` : 'Não informado'}</p>
+                  </div>
+                  <div className="bg-white p-4 rounded-lg border">
+                    <h4 className="font-medium text-gray-700 mb-2">Repórter</h4>
+                    <p className="text-sm text-gray-900">{formData.reporter || 'Não informado'}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
