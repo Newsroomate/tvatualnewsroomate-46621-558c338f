@@ -13,13 +13,15 @@ interface NewsScheduleProps {
   onEditItem: (Materia) => void;
   currentTelejornal: Telejornal | null;
   onOpenRundown: () => void;
+  journalPrefix?: string;
 }
 
 export const NewsSchedule = ({ 
   selectedJournal, 
   onEditItem, 
   currentTelejornal, 
-  onOpenRundown 
+  onOpenRundown,
+  journalPrefix = "default"
 }: NewsScheduleProps) => {
   const {
     blocks,
@@ -100,6 +102,7 @@ export const NewsSchedule = ({
             onDuplicateItem={handleDuplicateItem}
             onRenameBlock={handleRenameBlock}
             onDeleteBlock={handleDeleteBlock}
+            journalPrefix={journalPrefix}
           />
         </div>
       </DragDropContext>
