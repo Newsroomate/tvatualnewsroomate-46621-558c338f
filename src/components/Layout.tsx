@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
 import { NewsSchedule } from "./news-schedule/NewsSchedule";
-import { DualViewLayout } from "./DualViewLayout";
+import { DualScheduleView } from "./news-schedule/DualScheduleView";
+import { DualJournalSelector } from "./news-schedule/DualJournalSelector";
 import { EditPanel } from "./EditPanel";
 import { Materia, Telejornal } from "@/types/index";
 import { updateTelejornal, fetchTelejornal } from "@/services/api";
@@ -14,6 +15,7 @@ import { PostCloseRundownModal } from "./PostCloseRundownModal";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
+import { useDualSchedule } from "@/hooks/useDualSchedule";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -36,11 +38,19 @@ const Layout = () => {
   const [isPostCloseModalOpen, setIsPostCloseModalOpen] = useState(false);
   const [isSavedRundownsModalOpen, setIsSavedRundownsModalOpen] = useState(false);
   const [selectedViewDate, setSelectedViewDate] = useState<Date>(new Date());
-  
-  // Dual view state
-  const [isDualViewActive, setIsDualViewActive] = useState(false);
-  const [secondaryJournal, setSecondaryJournal] = useState<string | null>(null);
-  const [secondaryTelejornal, setSecondaryTelejornal] = useState<Telejornal | null>(null);
+
+  // Dual mode state
+  const [primaryJournalId, setPrimaryJournalId] = useState<string | null>(null);
+  const [secondaryJournalId, setSecondaryJournalId] = useState<string | null>(null);
+
+  const { 
+    primaryTelejornal, 
+    secondaryTelejornal, 
+    isDualMode 
+  } = useDualSchedule({ 
+    primaryJournalId, 
+    secondaryJournalId 
+  });
 
   const handleSelectJournal = (journalId: string) => {
     setSelectedJournal(journalId);
@@ -57,19 +67,15 @@ const Layout = () => {
     }
   };
 
-  const handleToggleDualView = (enabled: boolean, secondJournalId?: string) => {
-    setIsDualViewActive(enabled);
-    
-    if (enabled && secondJournalId) {
-      setSecondaryJournal(secondJournalId);
-      // Fetch secondary telejornal details
-      fetchTelejornal(secondJournalId).then(journal => {
-        setSecondaryTelejornal(journal);
-      });
-    } else {
-      setSecondaryJournal(null);
-      setSecondaryTelejornal(null);
-    }
+  const handleEnableDualMode = (primaryId: string, secondaryId: string) => {
+    setPrimaryJournalId(primaryId);
+    setSecondaryJournalId(secondaryId);
+    setSelectedJournal(null); // Clear single journal selection
+  };
+
+  const handleDisableDualMode = () => {
+    setPrimaryJournalId(null);
+    setSecondaryJournalId(null);
   };
 
   const handleEditItem = (item: Materia) => {
@@ -271,51 +277,58 @@ const Layout = () => {
     <QueryClientProvider client={queryClient}>
       <div className="flex h-screen overflow-hidden">
         {/* Left Sidebar */}
-        <LeftSidebar 
-          selectedJournal={selectedJournal}
-          onSelectJournal={handleSelectJournal}
-          onToggleDualView={handleToggleDualView}
-        />
+        <div className="w-80 border-r flex flex-col">
+          <LeftSidebar 
+            selectedJournal={selectedJournal}
+            onSelectJournal={handleSelectJournal}
+          />
+          
+          {/* Dual Journal Selector */}
+          <div className="p-4 border-t">
+            <DualJournalSelector
+              onEnableDualMode={handleEnableDualMode}
+              onDisableDualMode={handleDisableDualMode}
+              isDualMode={isDualMode}
+              primaryJournalId={primaryJournalId}
+              secondaryJournalId={secondaryJournalId}
+            />
+          </div>
+        </div>
 
         {/* Main Content Area */}
         <div className={`flex-1 flex flex-col overflow-hidden ${isEditPanelOpen ? 'mr-[400px]' : ''}`}>
           {/* Rundown Status Bar */}
-          {selectedJournal && (
+          {(selectedJournal || isDualMode) && (
             <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
               <div>
-                {isDualViewActive ? (
-                  <div className="text-sm space-y-1">
-                    <div>
-                      <span className="font-medium">Visualização Dual Ativa</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Principal: {currentTelejornal?.nome} | Secundário: {secondaryTelejornal?.nome}
-                    </div>
+                {isDualMode ? (
+                  <div className="text-sm">
+                    <span className="font-medium">Modo Duplo:</span>{' '}
+                    <span className="text-blue-600">{primaryTelejornal?.nome}</span>
+                    {' & '}
+                    <span className="text-green-600">{secondaryTelejornal?.nome}</span>
+                  </div>
+                ) : currentTelejornal ? (
+                  <div className="text-sm">
+                    <span className="font-medium">
+                      Espelho {currentTelejornal.espelho_aberto ? (
+                        <span className="text-green-600">ABERTO</span>
+                      ) : (
+                        <span className="text-red-600">FECHADO</span>
+                      )}:
+                    </span> {' '}
+                    {currentTelejornal.nome} {currentTelejornal.espelho_aberto && (
+                      <>- ({new Date().toLocaleDateString('pt-BR')})</>
+                    )}
                   </div>
                 ) : (
-                  currentTelejornal && (
-                    <div className="text-sm">
-                      <span className="font-medium">
-                        Espelho {currentTelejornal.espelho_aberto ? (
-                          <span className="text-green-600">ABERTO</span>
-                        ) : (
-                          <span className="text-red-600">FECHADO</span>
-                        )}:
-                      </span> {' '}
-                      {currentTelejornal.nome} {currentTelejornal.espelho_aberto && (
-                        <>- ({new Date().toLocaleDateString('pt-BR')})</>
-                      )}
-                    </div>
-                  )
-                )}
-                {!currentTelejornal && !isDualViewActive && (
                   <div className="text-sm text-muted-foreground">
                     Nenhum espelho selecionado
                   </div>
                 )}
               </div>
               
-              {canCreateEspelhos(profile) && !isDualViewActive && (
+              {!isDualMode && canCreateEspelhos(profile) && (
                 <button 
                   onClick={handleToggleRundown}
                   className={`px-4 py-1 rounded-md text-xs font-medium ${
@@ -330,22 +343,22 @@ const Layout = () => {
             </div>
           )}
           
-          {!selectedJournal && (
+          {!selectedJournal && !isDualMode && (
             <div className="bg-muted px-4 py-2 border-b">
               <div className="text-sm text-muted-foreground">
-                Nenhum espelho aberto no momento
+                Selecione um telejornal ou ative o modo duplo
               </div>
             </div>
           )}
 
-          {/* Content Area - Single or Dual View */}
-          {isDualViewActive && selectedJournal && secondaryJournal ? (
-            <DualViewLayout
-              primaryJournal={selectedJournal}
-              secondaryJournal={secondaryJournal}
-              onEditItem={handleEditItem}
-              primaryTelejornal={currentTelejornal}
+          {/* Content Area */}
+          {isDualMode ? (
+            <DualScheduleView
+              primaryJournalId={primaryJournalId!}
+              secondaryJournalId={secondaryJournalId!}
+              primaryTelejornal={primaryTelejornal}
               secondaryTelejornal={secondaryTelejornal}
+              onEditItem={handleEditItem}
               onOpenRundown={handleToggleRundown}
             />
           ) : (
