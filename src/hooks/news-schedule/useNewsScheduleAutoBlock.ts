@@ -9,7 +9,7 @@ interface UseNewsScheduleAutoBlockProps {
   blockCreationAttempted: boolean;
   isCreatingFirstBlock: boolean;
   blocosQuery: { data?: Bloco[] };
-  handleAddFirstBlock: () => Promise<void>;
+  handleAddFirstBlock: () => Promise<any>; // Changed from Promise<void> to Promise<any>
 }
 
 export const useNewsScheduleAutoBlock = ({
