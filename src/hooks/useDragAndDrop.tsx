@@ -1,4 +1,3 @@
-
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia } from "@/types";
 import { updateMateriasOrdem } from "@/services/api";
@@ -8,17 +7,9 @@ interface UseDragAndDropProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
   setBlocks: React.Dispatch<React.SetStateAction<(Bloco & { items: Materia[], totalTime: number })[]>>;
   isEspelhoAberto: boolean;
-  onCrossMoveMateria?: (materia: Materia, targetBlockId: string) => Promise<void>;
-  journalPrefix?: string;
 }
 
-export const useDragAndDrop = ({ 
-  blocks, 
-  setBlocks, 
-  isEspelhoAberto, 
-  onCrossMoveMateria,
-  journalPrefix 
-}: UseDragAndDropProps) => {
+export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto }: UseDragAndDropProps) => {
   const { toast } = useToast();
 
   const handleDragEnd = async (result: any) => {
@@ -40,58 +31,14 @@ export const useDragAndDrop = ({
       return;
     }
     
-    const sourceDroppableId = source.droppableId;
-    const destDroppableId = destination.droppableId;
-    
-    // Parse droppable IDs to extract journal prefix and block ID
-    const parseDroppableId = (droppableId: string) => {
-      const parts = droppableId.split('-');
-      if (parts.length > 1) {
-        const prefix = parts[0];
-        const blockId = parts.slice(1).join('-');
-        return { prefix, blockId };
-      }
-      return { prefix: null, blockId: droppableId };
-    };
-    
-    const sourceInfo = parseDroppableId(sourceDroppableId);
-    const destInfo = parseDroppableId(destDroppableId);
-    
-    const sourceBlockId = sourceInfo.blockId;
-    const destBlockId = destInfo.blockId;
-    
-    // Check if this is a cross-journal drag (different prefixes)
-    if (sourceInfo.prefix !== destInfo.prefix && onCrossMoveMateria) {
-      const sourceBlock = blocks.find(b => b.id === sourceBlockId);
-      if (sourceBlock && sourceBlock.items[source.index]) {
-        const materiaToMove = sourceBlock.items[source.index];
-        try {
-          await onCrossMoveMateria(materiaToMove, destBlockId);
-          toast({
-            title: "Matéria transferida",
-            description: "A matéria foi movida com sucesso entre os espelhos.",
-            variant: "default"
-          });
-        } catch (error) {
-          console.error("Erro ao mover matéria entre jornais:", error);
-          toast({
-            title: "Erro",
-            description: "Não foi possível mover a matéria entre espelhos.",
-            variant: "destructive"
-          });
-        }
-        return;
-      }
-    }
-    
     // Find source and destination blocks
+    const sourceBlockId = source.droppableId;
+    const destBlockId = destination.droppableId;
+    
     const sourceBlock = blocks.find(b => b.id === sourceBlockId);
     const destBlock = blocks.find(b => b.id === destBlockId);
     
-    if (!sourceBlock || !destBlock) {
-      console.error("Source or destination block not found", { sourceBlockId, destBlockId, blocks });
-      return;
-    }
+    if (!sourceBlock || !destBlock) return;
     
     // Clone current blocks state
     const newBlocks = [...blocks];
@@ -128,15 +75,13 @@ export const useDragAndDrop = ({
         }
         
         // If moved to a different block, just remove from source
-        const updatedSourceItems = newItems.map((item, index) => ({
-          ...item,
-          ordem: index + 1
-        }));
-        
         return {
           ...block,
-          items: updatedSourceItems,
-          totalTime: calculateBlockTotalTime(updatedSourceItems)
+          items: newItems.map((item, index) => ({
+            ...item,
+            ordem: index + 1
+          })),
+          totalTime: calculateBlockTotalTime(newItems)
         };
       }
       
@@ -212,12 +157,6 @@ export const useDragAndDrop = ({
       if (itemsToUpdate.length > 0) {
         await updateMateriasOrdem(itemsToUpdate);
         console.log('Updated items ordem successfully:', itemsToUpdate);
-        
-        toast({
-          title: "Matérias reordenadas",
-          description: "A ordem das matérias foi atualizada com sucesso.",
-          variant: "default"
-        });
       }
       
     } catch (error) {
@@ -227,9 +166,6 @@ export const useDragAndDrop = ({
         description: "Não foi possível atualizar a posição das matérias",
         variant: "destructive"
       });
-      
-      // Revert the UI state on error
-      setBlocks(blocks);
     }
   };
 

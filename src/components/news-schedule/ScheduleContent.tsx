@@ -22,7 +22,6 @@ interface ScheduleContentProps {
   onDuplicateItem: (item: Materia) => void;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
-  journalPrefix?: string;
 }
 
 export const ScheduleContent = ({
@@ -40,8 +39,7 @@ export const ScheduleContent = ({
   onDeleteItem,
   onDuplicateItem,
   onRenameBlock,
-  onDeleteBlock,
-  journalPrefix
+  onDeleteBlock
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -115,7 +113,6 @@ export const ScheduleContent = ({
           isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
           onRenameBlock={onRenameBlock}
           onDeleteBlock={onDeleteBlock}
-          journalPrefix={journalPrefix}
         />
       ))}
     </>

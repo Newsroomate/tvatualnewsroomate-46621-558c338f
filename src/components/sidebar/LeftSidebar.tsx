@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
@@ -10,27 +11,15 @@ import { TelejornalModal } from "@/components/TelejornalModal";
 import { supabase } from "@/integrations/supabase/client";
 import { TelejornalSection } from "./TelejornalSection";
 import { PautaSection } from "./PautaSection";
-import { DualViewMenuButton } from "./DualViewMenuButton";
-import { DualJournalSelector } from "@/components/news-schedule/DualJournalSelector";
 
 interface LeftSidebarProps {
   selectedJournal: string | null;
   onSelectJournal: (journalId: string) => void;
-  isDualViewActive?: boolean;
-  secondaryJournal?: string | null;
-  onActivateDualView?: () => void;
-  onDeactivateDualView?: () => void;
-  onSelectSecondaryJournal?: (journalId: string) => void;
 }
 
 export const LeftSidebar = ({
   selectedJournal,
-  onSelectJournal,
-  isDualViewActive = false,
-  secondaryJournal = null,
-  onActivateDualView = () => {},
-  onDeactivateDualView = () => {},
-  onSelectSecondaryJournal = () => {}
+  onSelectJournal
 }: LeftSidebarProps) => {
   const [isGeneralScheduleOpen, setIsGeneralScheduleOpen] = useState(false);
   const [isPautaModalOpen, setIsPautaModalOpen] = useState(false);
@@ -164,20 +153,6 @@ export const LeftSidebar = ({
         <h2 className="text-lg font-semibold">Newsroomate</h2>
       </div>
       
-      {/* Menu Button */}
-      <DualViewMenuButton onActivateDualView={onActivateDualView} />
-      
-      {/* Dual View Selector - Only show when dual view is active */}
-      {isDualViewActive && (
-        <DualJournalSelector
-          telejornais={telejornais}
-          primaryJournal={selectedJournal}
-          secondaryJournal={secondaryJournal}
-          onSelectSecondaryJournal={onSelectSecondaryJournal}
-          onDeactivateDualView={onDeactivateDualView}
-        />
-      )}
-
       {/* Bottom Button - Moved up to be more visible */}
       <div className="p-4 border-b border-gray-200">
         <Button variant="outline" className="w-full" onClick={handleOpenGeneralSchedule}>

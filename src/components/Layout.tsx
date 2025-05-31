@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
 import { NewsSchedule } from "./news-schedule/NewsSchedule";
-import { DualScheduleView } from "./news-schedule/DualScheduleView";
 import { EditPanel } from "./EditPanel";
 import { Materia, Telejornal } from "@/types/index";
 import { updateTelejornal, fetchTelejornal } from "@/services/api";
@@ -14,7 +13,6 @@ import { PostCloseRundownModal } from "./PostCloseRundownModal";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
-import { useDualSchedule } from "@/hooks/useDualSchedule";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -31,23 +29,12 @@ const Layout = () => {
   const [selectedItem, setSelectedItem] = useState<Materia | null>(null);
   const [isEditPanelOpen, setIsEditPanelOpen] = useState(false);
   const [currentTelejornal, setCurrentTelejornal] = useState<Telejornal | null>(null);
-  const [secondaryTelejornal, setSecondaryTelejornal] = useState<Telejornal | null>(null);
   const [isCloseRundownDialogOpen, setIsCloseRundownDialogOpen] = useState(false);
   const { toast } = useToast();
   const { profile } = useAuth();
   const [isPostCloseModalOpen, setIsPostCloseModalOpen] = useState(false);
   const [isSavedRundownsModalOpen, setIsSavedRundownsModalOpen] = useState(false);
   const [selectedViewDate, setSelectedViewDate] = useState<Date>(new Date());
-
-  // Use dual schedule hook
-  const {
-    isDualViewActive,
-    secondaryJournal,
-    activateDualView,
-    deactivateDualView,
-    selectSecondaryJournal,
-    moveMateriaToOtherJournal
-  } = useDualSchedule();
 
   const handleSelectJournal = (journalId: string) => {
     setSelectedJournal(journalId);
@@ -62,25 +49,6 @@ const Layout = () => {
     } else {
       setCurrentTelejornal(null);
     }
-  };
-
-  // Handle secondary journal selection
-  const handleSelectSecondaryJournal = (journalId: string) => {
-    selectSecondaryJournal(journalId);
-    
-    if (journalId) {
-      fetchTelejornal(journalId).then(journal => {
-        setSecondaryTelejornal(journal);
-      });
-    } else {
-      setSecondaryTelejornal(null);
-    }
-  };
-
-  // Handle dual view deactivation
-  const handleDeactivateDualView = () => {
-    deactivateDualView();
-    setSecondaryTelejornal(null);
   };
 
   const handleEditItem = (item: Materia) => {
@@ -285,11 +253,6 @@ const Layout = () => {
         <LeftSidebar 
           selectedJournal={selectedJournal}
           onSelectJournal={handleSelectJournal}
-          isDualViewActive={isDualViewActive}
-          secondaryJournal={secondaryJournal}
-          onActivateDualView={activateDualView}
-          onDeactivateDualView={handleDeactivateDualView}
-          onSelectSecondaryJournal={handleSelectSecondaryJournal}
         />
 
         {/* Main Content Area */}
@@ -309,9 +272,6 @@ const Layout = () => {
                     </span> {' '}
                     {currentTelejornal.nome} {currentTelejornal.espelho_aberto && (
                       <>- ({new Date().toLocaleDateString('pt-BR')})</>
-                    )}
-                    {isDualViewActive && secondaryTelejornal && (
-                      <span className="ml-4 text-green-600">| Modo Duplo Ativo</span>
                     )}
                   </div>
                 )}
@@ -345,25 +305,12 @@ const Layout = () => {
             </div>
           )}
 
-          {/* Content - Either single or dual view */}
-          {isDualViewActive ? (
-            <DualScheduleView
-              primaryJournal={selectedJournal}
-              secondaryJournal={secondaryJournal}
-              primaryTelejornal={currentTelejornal}
-              secondaryTelejornal={secondaryTelejornal}
-              onEditItem={handleEditItem}
-              onOpenRundown={handleToggleRundown}
-              onCrossMoveMateria={moveMateriaToOtherJournal}
-            />
-          ) : (
-            <NewsSchedule
-              selectedJournal={selectedJournal}
-              onEditItem={handleEditItem}
-              currentTelejornal={currentTelejornal}
-              onOpenRundown={handleToggleRundown}
-            />
-          )}
+          <NewsSchedule
+            selectedJournal={selectedJournal}
+            onEditItem={handleEditItem}
+            currentTelejornal={currentTelejornal}
+            onOpenRundown={handleToggleRundown}
+          />
         </div>
 
         {/* Right Edit Panel (Slide in/out) */}

@@ -11,7 +11,6 @@ interface BlockContentProps {
   onDuplicateItem: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModifyItems?: boolean;
-  journalPrefix?: string;
 }
 
 export const BlockContent = ({ 
@@ -21,15 +20,11 @@ export const BlockContent = ({
   onDeleteItem,
   onDuplicateItem,
   isEspelhoOpen,
-  canModifyItems = true,
-  journalPrefix
+  canModifyItems = true
 }: BlockContentProps) => {
-  // Create a unique droppableId that includes the journal prefix for cross-journal drag & drop
-  const droppableId = journalPrefix ? `${journalPrefix}-${blockId}` : blockId;
-
   return (
     <div className="overflow-x-auto">
-      <Droppable droppableId={droppableId}>
+      <Droppable droppableId={blockId}>
         {(provided) => (
           <div
             ref={provided.innerRef}
