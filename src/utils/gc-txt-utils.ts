@@ -31,14 +31,14 @@ export const generateGCTextFile = (blocks: (Bloco & { items: Materia[] })[], tel
       content += `${materia.ordem.toString().padStart(2, '0')}. RETRANCA: ${materia.retranca || 'Sem retranca'}\n`;
       
       if (materia.gc && materia.gc.trim()) {
-        content += `    GC:\n`;
-        // Indenta cada linha do GC
+        content += `GC:\n`;
+        // Cada linha do GC sem recuo, alinhada à esquerda
         const gcLines = materia.gc.split('\n');
         gcLines.forEach(line => {
-          content += `    ${line}\n`;
+          content += `${line}\n`;
         });
       } else {
-        content += `    GC: [NÃO DEFINIDO]\n`;
+        content += `GC: [NÃO DEFINIDO]\n`;
       }
       
       content += "\n";
