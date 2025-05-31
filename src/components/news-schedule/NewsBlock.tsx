@@ -1,9 +1,8 @@
 
+import { useState } from "react";
 import { Bloco, Materia } from "@/types";
 import { BlockHeader } from "./BlockHeader";
 import { BlockContent } from "./BlockContent";
-import { useAuth } from "@/context/AuthContext";
-import { canModifyMaterias } from "@/utils/permission";
 
 interface NewsBlockProps {
   block: Bloco & { items: Materia[], totalTime: number };
@@ -15,6 +14,7 @@ interface NewsBlockProps {
   isEspelhoOpen: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
+  journalPrefix?: string;
 }
 
 export const NewsBlock = ({
@@ -26,25 +26,24 @@ export const NewsBlock = ({
   onDuplicateItem,
   isEspelhoOpen,
   onRenameBlock,
-  onDeleteBlock
+  onDeleteBlock,
+  journalPrefix = "default"
 }: NewsBlockProps) => {
-  const { profile } = useAuth();
-  const canModify = canModifyMaterias(profile);
-  
+  const [isAddingItem, setIsAddingItem] = useState(false);
+
+  const handleAddItem = () => {
+    setIsAddingItem(true);
+    onAddItem(block.id);
+    setTimeout(() => setIsAddingItem(false), 1000);
+  };
+
   return (
-    <div 
-      key={block.id} 
-      data-block-id={block.id}
-      className="border border-gray-200 rounded-lg shadow-sm"
-    >
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200">
       <BlockHeader
-        blockName={block.nome}
-        totalTime={block.totalTime}
-        onAddItem={() => onAddItem(block.id)}
-        newItemBlock={newItemBlock}
-        blockId={block.id}
+        block={block}
+        onAddItem={handleAddItem}
         isEspelhoOpen={isEspelhoOpen}
-        canAddItem={canModify}
+        isAddingItem={isAddingItem || newItemBlock === block.id}
         onRenameBlock={onRenameBlock}
         onDeleteBlock={onDeleteBlock}
       />
@@ -55,7 +54,7 @@ export const NewsBlock = ({
         onDeleteItem={onDeleteItem}
         onDuplicateItem={onDuplicateItem}
         isEspelhoOpen={isEspelhoOpen}
-        canModifyItems={canModify}
+        journalPrefix={journalPrefix}
       />
     </div>
   );
