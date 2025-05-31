@@ -35,7 +35,12 @@ export const useCrossPanelDragAndDrop = ({
   const { toast } = useToast();
 
   const handleCrossPanelDragEnd = async (result: any) => {
+    console.log('=== Cross-panel drag operation started ===');
+    console.log('Drag result:', result);
+    console.log('Mirror open status:', isEspelhoAberto);
+    
     if (!isEspelhoAberto) {
+      console.log('Mirror is closed, aborting drag operation');
       toast({
         title: "Espelho fechado",
         description: "Você precisa abrir o espelho para reordenar matérias.",
@@ -50,12 +55,15 @@ export const useCrossPanelDragAndDrop = ({
     if (!destination || 
         (source.droppableId === destination.droppableId && 
          source.index === destination.index)) {
+      console.log('No valid destination or no movement detected');
       return;
     }
     
     // Determine which journal the source and destination belong to
     const sourceJournal = determineJournalFromDroppableId(source.droppableId);
     const destJournal = determineJournalFromDroppableId(destination.droppableId);
+    
+    console.log('Journal mapping:', { sourceJournal, destJournal });
     
     if (!sourceJournal || !destJournal) {
       console.log("Could not determine source or destination journal");
@@ -66,33 +74,50 @@ export const useCrossPanelDragAndDrop = ({
     const sourceBlockId = extractBlockId(source.droppableId);
     const destBlockId = extractBlockId(destination.droppableId);
     
+    console.log('Block IDs:', { sourceBlockId, destBlockId });
+    
     // Get the appropriate blocks arrays
     const sourceBlocks = getBlocksForJournal(sourceJournal, primaryBlocks, secondaryBlocks);
     const destBlocks = getBlocksForJournal(destJournal, primaryBlocks, secondaryBlocks);
+    
+    console.log('Source blocks count:', sourceBlocks.length);
+    console.log('Destination blocks count:', destBlocks.length);
     
     const sourceBlock = findBlock(sourceBlocks, sourceBlockId);
     const destBlock = findBlock(destBlocks, destBlockId);
     
     if (!sourceBlock || !destBlock) {
       console.log("Could not find source or destination block");
+      console.log('Source block found:', !!sourceBlock);
+      console.log('Destination block found:', !!destBlock);
       return;
     }
     
     // Get the item being moved
     const movedItem = {...sourceBlock.items[source.index]};
-    console.log('Moving item:', movedItem);
+    console.log('Moving item:', {
+      id: movedItem.id,
+      retranca: movedItem.retranca,
+      pagina: movedItem.pagina,
+      currentBlockId: movedItem.bloco_id
+    });
     
     // Calculate next page number for cross-journal transfers
     let nextPageNumber = movedItem.pagina;
     if (shouldUpdatePageNumber(sourceJournal, destJournal)) {
       nextPageNumber = calculateNextPageNumber(destBlocks, movedItem.pagina);
-      console.log(`Cross-journal transfer detected. New page number: ${nextPageNumber}`);
+      console.log(`Cross-journal transfer detected. Old page: ${movedItem.pagina}, New page: ${nextPageNumber}`);
     }
     
     try {
+      console.log('=== Starting block updates ===');
+      
       // Update source and destination blocks
       const updatedSourceBlocks = updateSourceBlocks(sourceBlocks, sourceBlockId, source.index);
       const updatedDestBlocks = updateDestinationBlocks(destBlocks, destBlockId, destination.index, movedItem, nextPageNumber);
+      
+      console.log('Updated source blocks:', updatedSourceBlocks.length);
+      console.log('Updated destination blocks:', updatedDestBlocks.length);
       
       // Update UI state immediately for better UX
       updateUIState(sourceJournal, destJournal, updatedSourceBlocks, updatedDestBlocks, setPrimaryBlocks, setSecondaryBlocks);
@@ -107,11 +132,21 @@ export const useCrossPanelDragAndDrop = ({
         updatedDestBlocks
       );
       
+      console.log(`Found ${itemsToUpdate.length} items to update in database`);
+      
       // Update all changed items in one batch operation
       if (itemsToUpdate.length > 0) {
-        console.log('Updating items in database:', itemsToUpdate);
+        console.log('=== Starting database update ===');
+        console.log('Items to update:', itemsToUpdate.map(item => ({ 
+          id: item.id, 
+          retranca: item.retranca, 
+          pagina: item.pagina, 
+          bloco_id: item.bloco_id,
+          ordem: item.ordem 
+        })));
+        
         await updateMateriasOrdem(itemsToUpdate);
-        console.log('Updated items ordem successfully');
+        console.log('Database update completed successfully');
         
         if (isCrossJournalTransfer(sourceJournal, destJournal)) {
           toast({
@@ -128,8 +163,11 @@ export const useCrossPanelDragAndDrop = ({
         }
       }
       
+      console.log('=== Cross-panel drag operation completed successfully ===');
+      
     } catch (error) {
-      console.error("Error updating item positions:", error);
+      console.error("=== Error in cross-panel drag operation ===");
+      console.error("Error details:", error);
       
       // Revert UI changes on error
       revertUIState(sourceJournal, destJournal, primaryBlocks, secondaryBlocks, setPrimaryBlocks, setSecondaryBlocks);
