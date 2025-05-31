@@ -1,17 +1,18 @@
 
-import { useState, useEffect, useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { 
-  fetchBlocosByTelejornal, 
-  fetchMateriasByBloco, 
-  fetchTelejornais
-} from "@/services/api";
+import { useState } from "react";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { useRealtimeMaterias } from "@/hooks/useRealtimeMaterias";
 import { useBlockManagement } from "@/hooks/useBlockManagement";
 import { useItemManagement } from "@/hooks/useItemManagement";
 import { useDragAndDrop } from "@/hooks/useDragAndDrop";
 import { useTeleprompterWindow } from "@/hooks/useTeleprompterWindow";
+import {
+  useNewsScheduleState,
+  useNewsScheduleQueries,
+  useNewsScheduleBlocksLoader,
+  useNewsScheduleAutoBlock,
+  useNewsScheduleEffects
+} from "@/hooks/news-schedule";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -33,23 +34,19 @@ export const useNewsSchedule = ({
   externalBlocks,
   onBlocksChange
 }: UseNewsScheduleProps) => {
-  const [totalJournalTime, setTotalJournalTime] = useState(0);
-  const [blockCreationAttempted, setBlockCreationAttempted] = useState(false);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
-  
   const isDualView = !!externalBlocks && !!onBlocksChange;
   
-  // Fetch telejornais
-  const telejornaisQuery = useQuery({
-    queryKey: ['telejornais'],
-    queryFn: fetchTelejornais,
-  });
+  const {
+    totalJournalTime,
+    setTotalJournalTime,
+    blockCreationAttempted,
+    setBlockCreationAttempted,
+    scrollContainerRef
+  } = useNewsScheduleState();
 
-  // Fetch blocks for the selected journal (only if not in dual view mode)
-  const blocosQuery = useQuery({
-    queryKey: ['blocos', selectedJournal],
-    queryFn: () => selectedJournal ? fetchBlocosByTelejornal(selectedJournal) : Promise.resolve([]),
-    enabled: !!selectedJournal && !isDualView,
+  const { isLoading, blocosQuery } = useNewsScheduleQueries({
+    selectedJournal,
+    isDualView
   });
 
   // Use realtime updates only for non-dual view mode
@@ -62,6 +59,14 @@ export const useNewsSchedule = ({
   // In dual view mode, use external blocks; otherwise use realtime blocks
   const blocks = isDualView ? externalBlocks : realtimeBlocks;
   const setBlocks = isDualView ? onBlocksChange : setRealtimeBlocks;
+
+  useNewsScheduleBlocksLoader({
+    isDualView,
+    blocosQuery,
+    selectedJournal,
+    setRealtimeBlocks,
+    setBlockCreationAttempted
+  });
 
   // Use the custom hooks for item, block, and drag-drop management
   const { 
@@ -101,6 +106,20 @@ export const useNewsSchedule = ({
     blocosQuery: isDualView ? { data: [] } : blocosQuery 
   });
 
+  const { 
+    isCreatingFirstBlock: autoBlockCreating,
+    setIsCreatingFirstBlock: setAutoBlockCreating,
+    blockCreationInProgress: autoBlockProgress
+  } = useNewsScheduleAutoBlock({
+    isDualView,
+    selectedJournal,
+    currentTelejornal,
+    blockCreationAttempted,
+    isCreatingFirstBlock,
+    blocosQuery,
+    handleAddFirstBlock
+  });
+
   const { handleDragEnd } = useDragAndDrop({ 
     blocks, 
     setBlocks, 
@@ -114,84 +133,17 @@ export const useNewsSchedule = ({
     closeTeleprompter 
   } = useTeleprompterWindow();
 
-  // Process blocks data when it changes (only for non-dual view)
-  useEffect(() => {
-    if (isDualView || !blocosQuery.data || !selectedJournal) return;
-    
-    const loadBlocos = async () => {
-      try {
-        const blocosComItems = await Promise.all(
-          blocosQuery.data.map(async (bloco) => {
-            const materias = await fetchMateriasByBloco(bloco.id);
-            const totalTime = materias.reduce((sum, item) => sum + item.duracao, 0);
-            return {
-              ...bloco,
-              items: materias,
-              totalTime
-            };
-          })
-        );
-        
-        setRealtimeBlocks(blocosComItems);
-        setBlockCreationAttempted(true);
-      } catch (error) {
-        console.error("Erro ao carregar blocos e matérias:", error);
-      }
-    };
-    
-    loadBlocos();
-  }, [blocosQuery.data, selectedJournal, setRealtimeBlocks, isDualView]);
-
-  // Handle auto-creation of first block (only for non-dual view)
-  useEffect(() => {
-    if (isDualView || !selectedJournal || !currentTelejornal?.espelho_aberto || blockCreationInProgress.current || isCreatingFirstBlock) {
-      return;
-    }
-    
-    if (!blocosQuery.data || !blockCreationAttempted) {
-      return;
-    }
-
-    const createInitialBlockWithLastData = async () => {
-      if (blocosQuery.data.length === 0 && !blockCreationInProgress.current) {
-        setIsCreatingFirstBlock(true);
-        blockCreationInProgress.current = true;
-        
-        console.log("Criando bloco inicial para telejornal:", selectedJournal);
-        
-        try {
-          await handleAddFirstBlock();
-        } catch (error) {
-          console.error("Erro ao criar o bloco inicial:", error);
-        } finally {
-          blockCreationInProgress.current = false;
-          setIsCreatingFirstBlock(false);
-        }
-      }
-    };
-    
-    createInitialBlockWithLastData();
-  }, [selectedJournal, currentTelejornal?.espelho_aberto, blocosQuery.data, blockCreationAttempted, isCreatingFirstBlock, handleAddFirstBlock, blockCreationInProgress, isDualView]);
-
-  // Recalculate total journal time when blocks change
-  useEffect(() => {
-    const total = blocks.reduce((sum, block) => sum + block.totalTime, 0);
-    setTotalJournalTime(total);
-  }, [blocks]);
-
-  // Update teleprompter data when blocks change
-  useEffect(() => {
-    console.log("Blocks changed, updating teleprompter:", blocks);
-    updateTeleprompterData(blocks);
-  }, [blocks, updateTeleprompterData]);
-
-  const isLoading = telejornaisQuery.isLoading || (!isDualView && blocosQuery.isLoading);
+  useNewsScheduleEffects({
+    blocks,
+    setTotalJournalTime,
+    updateTeleprompterData
+  });
 
   return {
     blocks,
     totalJournalTime,
     isLoading,
-    isCreatingFirstBlock,
+    isCreatingFirstBlock: autoBlockCreating || isCreatingFirstBlock,
     newItemBlock,
     deleteConfirmOpen,
     setDeleteConfirmOpen,
