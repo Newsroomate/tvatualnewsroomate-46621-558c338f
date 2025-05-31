@@ -1,20 +1,12 @@
 
-import { useState, useEffect } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Bloco, Materia, Telejornal } from "@/types";
-import { 
-  fetchBlocosByTelejornal, 
-  fetchMateriasByBloco, 
-  createBloco, 
-  updateBloco, 
-  deleteBloco
-} from "@/services/api";
+import { Materia, Telejornal } from "@/types";
+import { useBlocksState } from "./useBlocksState";
+import { useNewsScheduleState } from "./useNewsScheduleState";
 import { useBlockManagement } from "./useBlockManagement";
 import { useItemManagement } from "./useItemManagement";
 import { useDragAndDrop } from "./useDragAndDrop";
 import { useRealtimeMaterias } from "./useRealtimeMaterias";
 import { useTeleprompterWindow } from "./useTeleprompterWindow";
-import { calculateBlockTotalTime } from "@/components/news-schedule/utils";
 
 interface UseNewsScheduleProps {
   selectedJournal: string | null;
@@ -29,38 +21,29 @@ export const useNewsSchedule = ({
   onEditItem,
   journalPrefix = "default"
 }: UseNewsScheduleProps) => {
-  const [blocks, setBlocks] = useState<(Bloco & { items: Materia[], totalTime: number })[]>([]);
-  const [totalJournalTime, setTotalJournalTime] = useState(0);
-  const [isCreatingFirstBlock, setIsCreatingFirstBlock] = useState(false);
-  const queryClient = useQueryClient();
+  // Block state management
+  const {
+    blocks,
+    setBlocks,
+    totalJournalTime,
+    setTotalJournalTime,
+    isLoading,
+    blocosQuery
+  } = useBlocksState({ selectedJournal });
 
-  // Fetch blocks data
-  const { data: blocosData, isLoading, ...blocosQuery } = useQuery({
-    queryKey: ['blocos', selectedJournal],
-    queryFn: () => selectedJournal ? fetchBlocosByTelejornal(selectedJournal) : Promise.resolve([]),
-    enabled: !!selectedJournal,
-  });
-
-  // Load blocks with materias when blocosData changes
-  useEffect(() => {
-    if (blocosData) {
-      const loadBlocosWithMaterias = async () => {
-        const blocosWithMaterias = await Promise.all(
-          blocosData.map(async (bloco) => {
-            const materias = await fetchMateriasByBloco(bloco.id);
-            const totalTime = calculateBlockTotalTime(materias);
-            return { ...bloco, items: materias, totalTime };
-          })
-        );
-        setBlocks(blocosWithMaterias);
-        
-        // Calculate total journal time
-        const totalTime = blocosWithMaterias.reduce((sum, block) => sum + block.totalTime, 0);
-        setTotalJournalTime(totalTime);
-      };
-      loadBlocosWithMaterias();
-    }
-  }, [blocosData]);
+  // UI state management
+  const {
+    isCreatingFirstBlock,
+    setIsCreatingFirstBlock,
+    newItemBlock,
+    setNewItemBlock,
+    deleteConfirmOpen,
+    setDeleteConfirmOpen,
+    materiaToDelete,
+    setMateriaToDelete,
+    renumberConfirmOpen,
+    setRenumberConfirmOpen
+  } = useNewsScheduleState();
 
   // Initialize realtime subscription for materias
   useRealtimeMaterias({
@@ -71,9 +54,6 @@ export const useNewsSchedule = ({
 
   // Hooks for block and item management
   const {
-    isCreatingFirstBlock: blockManagementCreating,
-    setIsCreatingFirstBlock: setBlockManagementCreating,
-    blockCreationInProgress,
     handleAddFirstBlock,
     handleAddBlock,
     handleRenameBlock,
@@ -83,18 +63,10 @@ export const useNewsSchedule = ({
     setBlocks, 
     selectedJournal,
     currentTelejornal, 
-    blocosQuery: { ...blocosQuery, refetch: blocosQuery.refetch }
+    blocosQuery
   });
 
   const {
-    newItemBlock,
-    setNewItemBlock,
-    deleteConfirmOpen,
-    setDeleteConfirmOpen,
-    materiaToDelete,
-    setMateriaToDelete,
-    renumberConfirmOpen,
-    setRenumberConfirmOpen,
     handleAddItem,
     handleDuplicateItem,
     handleDeleteMateria,
@@ -104,7 +76,15 @@ export const useNewsSchedule = ({
   } = useItemManagement({ 
     blocks, 
     setBlocks, 
-    currentTelejornal 
+    currentTelejornal,
+    newItemBlock,
+    setNewItemBlock,
+    deleteConfirmOpen,
+    setDeleteConfirmOpen,
+    materiaToDelete,
+    setMateriaToDelete,
+    renumberConfirmOpen,
+    setRenumberConfirmOpen
   });
 
   const { handleDragEnd } = useDragAndDrop({ 
@@ -120,7 +100,7 @@ export const useNewsSchedule = ({
     blocks,
     totalJournalTime,
     isLoading,
-    isCreatingFirstBlock: blockManagementCreating,
+    isCreatingFirstBlock,
     newItemBlock,
     deleteConfirmOpen,
     setDeleteConfirmOpen,
