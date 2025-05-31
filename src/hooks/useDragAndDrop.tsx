@@ -40,30 +40,58 @@ export const useDragAndDrop = ({
       return;
     }
     
-    const sourceBlockId = source.droppableId;
-    const destBlockId = destination.droppableId;
+    const sourceDroppableId = source.droppableId;
+    const destDroppableId = destination.droppableId;
     
-    // Check if this is a cross-journal drag (different telejornal prefixes)
-    const sourceJornalId = sourceBlockId.split('-')[0];
-    const destJornalId = destBlockId.split('-')[0];
-    const actualSourceBlockId = sourceBlockId.split('-').slice(1).join('-');
-    const actualDestBlockId = destBlockId.split('-').slice(1).join('-');
+    // Parse droppable IDs to extract journal prefix and block ID
+    const parseDroppableId = (droppableId: string) => {
+      const parts = droppableId.split('-');
+      if (parts.length > 1) {
+        const prefix = parts[0];
+        const blockId = parts.slice(1).join('-');
+        return { prefix, blockId };
+      }
+      return { prefix: null, blockId: droppableId };
+    };
     
-    // If moving between different journals, use the cross-move handler
-    if (sourceJornalId !== destJornalId && onCrossMoveMateria) {
-      const sourceBlock = blocks.find(b => b.id === actualSourceBlockId);
+    const sourceInfo = parseDroppableId(sourceDroppableId);
+    const destInfo = parseDroppableId(destDroppableId);
+    
+    const sourceBlockId = sourceInfo.blockId;
+    const destBlockId = destInfo.blockId;
+    
+    // Check if this is a cross-journal drag (different prefixes)
+    if (sourceInfo.prefix !== destInfo.prefix && onCrossMoveMateria) {
+      const sourceBlock = blocks.find(b => b.id === sourceBlockId);
       if (sourceBlock && sourceBlock.items[source.index]) {
         const materiaToMove = sourceBlock.items[source.index];
-        await onCrossMoveMateria(materiaToMove, actualDestBlockId);
+        try {
+          await onCrossMoveMateria(materiaToMove, destBlockId);
+          toast({
+            title: "Matéria transferida",
+            description: "A matéria foi movida com sucesso entre os espelhos.",
+            variant: "default"
+          });
+        } catch (error) {
+          console.error("Erro ao mover matéria entre jornais:", error);
+          toast({
+            title: "Erro",
+            description: "Não foi possível mover a matéria entre espelhos.",
+            variant: "destructive"
+          });
+        }
         return;
       }
     }
     
     // Find source and destination blocks
-    const sourceBlock = blocks.find(b => b.id === actualSourceBlockId);
-    const destBlock = blocks.find(b => b.id === actualDestBlockId);
+    const sourceBlock = blocks.find(b => b.id === sourceBlockId);
+    const destBlock = blocks.find(b => b.id === destBlockId);
     
-    if (!sourceBlock || !destBlock) return;
+    if (!sourceBlock || !destBlock) {
+      console.error("Source or destination block not found", { sourceBlockId, destBlockId, blocks });
+      return;
+    }
     
     // Clone current blocks state
     const newBlocks = [...blocks];
@@ -74,16 +102,16 @@ export const useDragAndDrop = ({
     // Create updated versions of the source and destination blocks
     const updatedBlocks = newBlocks.map(block => {
       // Handle source block
-      if (block.id === actualSourceBlockId) {
+      if (block.id === sourceBlockId) {
         const newItems = [...block.items];
         newItems.splice(source.index, 1);
         
         // If moving within the same block, we need to update all items' ordem
-        if (actualSourceBlockId === actualDestBlockId) {
+        if (sourceBlockId === destBlockId) {
           // Re-insert the item at the destination index
           newItems.splice(destination.index, 0, {
             ...movedItem,
-            bloco_id: actualDestBlockId,
+            bloco_id: destBlockId,
           });
           
           // Update ordem for all items in the block
@@ -100,24 +128,26 @@ export const useDragAndDrop = ({
         }
         
         // If moved to a different block, just remove from source
+        const updatedSourceItems = newItems.map((item, index) => ({
+          ...item,
+          ordem: index + 1
+        }));
+        
         return {
           ...block,
-          items: newItems.map((item, index) => ({
-            ...item,
-            ordem: index + 1
-          })),
-          totalTime: calculateBlockTotalTime(newItems)
+          items: updatedSourceItems,
+          totalTime: calculateBlockTotalTime(updatedSourceItems)
         };
       }
       
       // Handle destination block (if different from source)
-      if (block.id === actualDestBlockId && actualSourceBlockId !== actualDestBlockId) {
+      if (block.id === destBlockId && sourceBlockId !== destBlockId) {
         const newItems = [...block.items];
         
         // Insert the moved item at the destination index
         newItems.splice(destination.index, 0, {
           ...movedItem,
-          bloco_id: actualDestBlockId,
+          bloco_id: destBlockId,
         });
         
         // Update ordem for all items in the destination block
@@ -144,8 +174,8 @@ export const useDragAndDrop = ({
       const itemsToUpdate: Partial<Materia>[] = [];
       
       // If same block, update all items in that block
-      if (actualSourceBlockId === actualDestBlockId) {
-        const updatedBlock = updatedBlocks.find(b => b.id === actualSourceBlockId);
+      if (sourceBlockId === destBlockId) {
+        const updatedBlock = updatedBlocks.find(b => b.id === sourceBlockId);
         if (updatedBlock) {
           itemsToUpdate.push(...updatedBlock.items.map(item => ({
             id: item.id,
@@ -156,8 +186,8 @@ export const useDragAndDrop = ({
         }
       } else {
         // If different blocks, update items in both blocks
-        const updatedSourceBlock = updatedBlocks.find(b => b.id === actualSourceBlockId);
-        const updatedDestBlock = updatedBlocks.find(b => b.id === actualDestBlockId);
+        const updatedSourceBlock = updatedBlocks.find(b => b.id === sourceBlockId);
+        const updatedDestBlock = updatedBlocks.find(b => b.id === destBlockId);
         
         if (updatedSourceBlock) {
           itemsToUpdate.push(...updatedSourceBlock.items.map(item => ({
@@ -182,6 +212,12 @@ export const useDragAndDrop = ({
       if (itemsToUpdate.length > 0) {
         await updateMateriasOrdem(itemsToUpdate);
         console.log('Updated items ordem successfully:', itemsToUpdate);
+        
+        toast({
+          title: "Matérias reordenadas",
+          description: "A ordem das matérias foi atualizada com sucesso.",
+          variant: "default"
+        });
       }
       
     } catch (error) {
@@ -191,6 +227,9 @@ export const useDragAndDrop = ({
         description: "Não foi possível atualizar a posição das matérias",
         variant: "destructive"
       });
+      
+      // Revert the UI state on error
+      setBlocks(blocks);
     }
   };
 

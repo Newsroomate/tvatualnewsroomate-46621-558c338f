@@ -1,3 +1,4 @@
+
 import { Bloco, Materia, Telejornal } from "@/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Lock } from "lucide-react";
@@ -114,6 +115,7 @@ export const ScheduleContent = ({
           isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
           onRenameBlock={onRenameBlock}
           onDeleteBlock={onDeleteBlock}
+          journalPrefix={journalPrefix}
         />
       ))}
     </>
