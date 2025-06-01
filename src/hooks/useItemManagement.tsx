@@ -31,8 +31,10 @@ export const useItemManagement = ({
     setDeleteConfirmOpen,
     materiaToDelete,
     setMateriaToDelete,
+    isDeleting,
     handleDeleteMateria,
-    confirmDeleteMateria
+    confirmDeleteMateria,
+    handleBatchDeleteMaterias
   } = useItemDeletion({ blocks, setBlocks, currentTelejornal });
 
   const {
@@ -49,12 +51,14 @@ export const useItemManagement = ({
     setDeleteConfirmOpen,
     materiaToDelete,
     setMateriaToDelete,
+    isDeleting,
     renumberConfirmOpen,
     setRenumberConfirmOpen,
     handleAddItem,
     handleDuplicateItem,
     handleDeleteMateria,
     confirmDeleteMateria,
+    handleBatchDeleteMaterias,
     handleRenumberItems,
     confirmRenumberItems
   };

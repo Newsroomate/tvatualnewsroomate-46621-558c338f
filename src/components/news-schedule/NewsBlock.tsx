@@ -13,10 +13,12 @@ interface NewsBlockProps {
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
   onDuplicateItem: (item: Materia) => void;
+  onBatchDeleteItems: (items: Materia[]) => void;
   isEspelhoOpen: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
   journalPrefix?: string;
+  isDeleting?: boolean;
 }
 
 export const NewsBlock = ({
@@ -26,10 +28,12 @@ export const NewsBlock = ({
   onEditItem,
   onDeleteItem,
   onDuplicateItem,
+  onBatchDeleteItems,
   isEspelhoOpen,
   onRenameBlock,
   onDeleteBlock,
-  journalPrefix = "default"
+  journalPrefix = "default",
+  isDeleting = false
 }: NewsBlockProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -49,16 +53,14 @@ export const NewsBlock = ({
   } = useBatchSelection(block.items);
 
   const handleDeleteSelected = () => {
-    // Delete all selected items
-    selectedItems.forEach(itemId => {
-      const item = block.items.find(item => item.id === itemId);
-      if (item) {
-        onDeleteItem(item);
-      }
-    });
+    // Get the actual materia objects for the selected IDs
+    const materiasToDelete = block.items.filter(item => selectedItems.includes(item.id));
     
-    // Clear selection after deletion
-    setSelectedItems(new Set());
+    if (materiasToDelete.length > 0) {
+      onBatchDeleteItems(materiasToDelete);
+      // Clear selection after initiating deletion
+      setSelectedItems(new Set());
+    }
   };
 
   const handleCancelBatch = () => {
@@ -91,6 +93,7 @@ export const NewsBlock = ({
         onClearSelection={clearSelection}
         onDeleteSelected={handleDeleteSelected}
         onCancelBatch={handleCancelBatch}
+        isDeleting={isDeleting}
       />
       <BlockContent
         blockId={block.id}
