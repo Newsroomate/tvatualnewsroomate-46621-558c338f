@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, Menu } from "lucide-react";
+import { Menu, FileText } from "lucide-react";
 import { fetchTelejornais } from "@/services/api";
 import { fetchPautas } from "@/services/pautas-api";
 import { Telejornal, Pauta } from "@/types";
@@ -174,16 +174,11 @@ export const LeftSidebar = ({
         <h2 className="text-lg font-semibold">Newsroomate</h2>
       </div>
       
-      {/* Menu Button and Espelho Geral Button */}
-      <div className="p-4 border-b border-gray-200 space-y-2">
+      {/* Menu Button */}
+      <div className="p-4 border-b border-gray-200">
         <Button variant="outline" className="w-full" onClick={handleToggleDualViewMenu}>
           <Menu className="h-4 w-4 mr-2" />
           Menu
-        </Button>
-        
-        <Button variant="outline" className="w-full" onClick={handleOpenGeneralSchedule}>
-          <FileText className="h-4 w-4 mr-2" />
-          Espelho Geral
         </Button>
       </div>
 
@@ -208,11 +203,10 @@ export const LeftSidebar = ({
       </div>
 
       {/* Modals */}
-      <GeneralScheduleModal isOpen={isGeneralScheduleOpen} onClose={() => setIsGeneralScheduleOpen(false)} />
       <PautaModal isOpen={isPautaModalOpen} onClose={() => setIsPautaModalOpen(false)} onPautaCreated={loadData} />
       <TelejornalModal isOpen={isTelejornalModalOpen} onClose={() => setIsTelejornalModalOpen(false)} onTelejornalCreated={loadData} />
       
-      {/* Dual View Menu */}
+      {/* Dual View Menu (agora incluindo Espelho Geral) */}
       <DualViewMenu
         isOpen={isDualViewMenuOpen}
         onClose={() => setIsDualViewMenuOpen(false)}
