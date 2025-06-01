@@ -32,6 +32,8 @@ interface BlockHeaderProps {
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
   // Batch selection props
+  isBatchMode?: boolean;
+  onToggleBatchMode?: () => void;
   selectedCount?: number;
   totalCount?: number;
   onSelectAll?: () => void;
@@ -49,6 +51,8 @@ export const BlockHeader = ({
   canAddItem = true,
   onRenameBlock,
   onDeleteBlock,
+  isBatchMode = false,
+  onToggleBatchMode = () => {},
   selectedCount = 0,
   totalCount = 0,
   onSelectAll = () => {},
@@ -183,8 +187,8 @@ export const BlockHeader = ({
 
               {/* Batch Actions */}
               <BatchActions
-                isOpen={batchActionsOpen}
-                onOpenChange={setBatchActionsOpen}
+                isBatchMode={isBatchMode}
+                onToggleBatchMode={onToggleBatchMode}
                 selectedCount={selectedCount}
                 totalCount={totalCount}
                 onSelectAll={onSelectAll}

@@ -19,8 +19,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 interface BatchActionsProps {
-  isOpen: boolean;
-  onOpenChange: (open: boolean) => void;
+  isBatchMode: boolean;
+  onToggleBatchMode: () => void;
   selectedCount: number;
   totalCount: number;
   onSelectAll: () => void;
@@ -30,8 +30,8 @@ interface BatchActionsProps {
 }
 
 export const BatchActions = ({
-  isOpen,
-  onOpenChange,
+  isBatchMode,
+  onToggleBatchMode,
   selectedCount,
   totalCount,
   onSelectAll,
@@ -39,90 +39,119 @@ export const BatchActions = ({
   onDeleteSelected,
   isEnabled
 }: BatchActionsProps) => {
+  const [isOpen, setIsOpen] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleDeleteClick = () => {
     setShowDeleteDialog(true);
-    onOpenChange(false);
+    setIsOpen(false);
   };
 
   const handleConfirmDelete = () => {
     onDeleteSelected();
     setShowDeleteDialog(false);
+    onToggleBatchMode(); // Exit batch mode after deletion
   };
 
   const allSelected = selectedCount === totalCount && totalCount > 0;
 
+  if (!isBatchMode) {
+    return (
+      <Button
+        size="sm"
+        variant="outline"
+        onClick={onToggleBatchMode}
+        disabled={!isEnabled || totalCount === 0}
+        className="h-8"
+      >
+        <CheckSquare className="h-4 w-4 mr-1" />
+        Ações em Lote
+      </Button>
+    );
+  }
+
   return (
     <>
-      <Popover open={isOpen} onOpenChange={onOpenChange}>
-        <PopoverTrigger asChild>
-          <Button
-            size="sm"
-            variant="outline"
-            disabled={!isEnabled || totalCount === 0}
-            className="h-8"
-          >
-            <CheckSquare className="h-4 w-4 mr-1" />
-            Ações em Lote
-            {selectedCount > 0 && (
-              <span className="ml-1 bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-xs">
-                {selectedCount}
-              </span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-48 p-2" align="end">
-          <div className="space-y-2">
-            <div className="text-sm font-medium text-gray-700 mb-2">
-              {selectedCount} de {totalCount} selecionadas
-            </div>
-            
+      <div className="flex items-center gap-2">
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={onToggleBatchMode}
+          className="h-8"
+        >
+          <X className="h-4 w-4 mr-1" />
+          Sair do Modo
+        </Button>
+
+        <Popover open={isOpen} onOpenChange={setIsOpen}>
+          <PopoverTrigger asChild>
             <Button
               size="sm"
-              variant="ghost"
-              onClick={allSelected ? onClearSelection : onSelectAll}
-              className="w-full justify-start h-8"
+              variant="outline"
+              disabled={!isEnabled || totalCount === 0}
+              className="h-8"
             >
-              {allSelected ? (
-                <>
-                  <Square className="h-4 w-4 mr-2" />
-                  Desmarcar Todas
-                </>
-              ) : (
-                <>
-                  <CheckSquare className="h-4 w-4 mr-2" />
-                  Selecionar Todas
-                </>
+              <CheckSquare className="h-4 w-4 mr-1" />
+              Ações
+              {selectedCount > 0 && (
+                <span className="ml-1 bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded text-xs">
+                  {selectedCount}
+                </span>
               )}
             </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-48 p-2" align="end">
+            <div className="space-y-2">
+              <div className="text-sm font-medium text-gray-700 mb-2">
+                {selectedCount} de {totalCount} selecionadas
+              </div>
+              
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={allSelected ? onClearSelection : onSelectAll}
+                className="w-full justify-start h-8"
+              >
+                {allSelected ? (
+                  <>
+                    <Square className="h-4 w-4 mr-2" />
+                    Desmarcar Todas
+                  </>
+                ) : (
+                  <>
+                    <CheckSquare className="h-4 w-4 mr-2" />
+                    Selecionar Todas
+                  </>
+                )}
+              </Button>
 
-            {selectedCount > 0 && (
-              <>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={onClearSelection}
-                  className="w-full justify-start h-8"
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Limpar Seleção
-                </Button>
-                
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={handleDeleteClick}
-                  className="w-full justify-start h-8 text-red-600 hover:text-red-800 hover:bg-red-50"
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Excluir Selecionadas
-                </Button>
-              </>
-            )}
-          </div>
-        </PopoverContent>
-      </Popover>
+              {selectedCount > 0 && (
+                <>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={onClearSelection}
+                    className="w-full justify-start h-8"
+                  >
+                    <X className="h-4 w-4 mr-2" />
+                    Limpar Seleção
+                  </Button>
+                  
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleDeleteClick}
+                    className="w-full justify-start h-8 text-red-600 hover:text-red-800 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir Selecionadas
+                  </Button>
+                </>
+              )}
+            </div>
+          </PopoverContent>
+        </Popover>
+      </div>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>

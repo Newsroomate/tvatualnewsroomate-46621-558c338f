@@ -39,6 +39,8 @@ export const NewsBlock = ({
   const {
     selectedCount,
     totalCount,
+    isBatchMode,
+    toggleBatchMode,
     selectAll,
     clearSelection,
     isSelected,
@@ -73,6 +75,8 @@ export const NewsBlock = ({
         canAddItem={canModify}
         onRenameBlock={onRenameBlock}
         onDeleteBlock={onDeleteBlock}
+        isBatchMode={isBatchMode}
+        onToggleBatchMode={toggleBatchMode}
         selectedCount={selectedCount}
         totalCount={totalCount}
         onSelectAll={selectAll}
@@ -89,7 +93,8 @@ export const NewsBlock = ({
         canModifyItems={canModify}
         selectedIds={new Set([...Array.from({ length: selectedCount }, (_, i) => getSelectedItems()[i]?.id)].filter(Boolean))}
         onToggleSelection={toggleItemSelection}
-        batchModeEnabled={true}
+        batchModeEnabled={isBatchMode}
+        isSelected={isSelected}
       />
     </div>
   );

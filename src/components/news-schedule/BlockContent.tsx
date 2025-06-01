@@ -14,6 +14,7 @@ interface BlockContentProps {
   selectedIds?: Set<string>;
   onToggleSelection?: (itemId: string) => void;
   batchModeEnabled?: boolean;
+  isSelected?: (itemId: string) => boolean;
 }
 
 export const BlockContent = ({ 
@@ -26,7 +27,8 @@ export const BlockContent = ({
   canModifyItems = true,
   selectedIds = new Set(),
   onToggleSelection = () => {},
-  batchModeEnabled = false
+  batchModeEnabled = false,
+  isSelected = () => false
 }: BlockContentProps) => {
   return (
     <div className="overflow-x-auto">
@@ -77,7 +79,7 @@ export const BlockContent = ({
                           isEspelhoOpen={isEspelhoOpen}
                           onDoubleClick={onEditItem}
                           canModify={canModifyItems}
-                          isSelected={selectedIds.has(item.id)}
+                          isSelected={isSelected(item.id)}
                           onToggleSelection={onToggleSelection}
                           showSelectionCheckbox={batchModeEnabled}
                         />

@@ -38,6 +38,14 @@ export const useBatchSelection = ({ items }: UseBatchSelectionProps) => {
     return items.filter(item => selectedIds.has(item.id));
   }, [items, selectedIds]);
 
+  const toggleBatchMode = useCallback(() => {
+    setIsBatchMode(prev => !prev);
+    // Clear selection when exiting batch mode
+    if (isBatchMode) {
+      clearSelection();
+    }
+  }, [isBatchMode, clearSelection]);
+
   const selectedCount = selectedIds.size;
   const totalCount = items.length;
 
@@ -47,6 +55,7 @@ export const useBatchSelection = ({ items }: UseBatchSelectionProps) => {
     totalCount,
     isBatchMode,
     setIsBatchMode,
+    toggleBatchMode,
     toggleItemSelection,
     selectAll,
     clearSelection,
