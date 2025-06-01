@@ -132,7 +132,7 @@ export const DualViewLayout = ({
     <DragDropContext onDragEnd={handleDragEnd}>
       <ResizablePanelGroup direction="vertical" className="h-full">
         <ResizablePanel defaultSize={50} minSize={20}>
-          <div className="h-full border-b">
+          <div className="h-full border-b flex flex-col">
             <div className="bg-blue-50 p-2 border-b flex justify-between items-center">
               <h3 className="text-sm font-medium text-blue-800">
                 {primaryTelejornal?.nome || "Telejornal Principal"}
@@ -143,23 +143,25 @@ export const DualViewLayout = ({
                 </div>
               )}
             </div>
-            <NewsSchedule
-              selectedJournal={primaryJournal}
-              onEditItem={onEditItem}
-              currentTelejornal={primaryTelejornal}
-              onOpenRundown={onOpenRundown}
-              journalPrefix="primary"
-              externalBlocks={primaryBlocks}
-              onBlocksChange={setPrimaryBlocks}
-              isDualView={true}
-            />
+            <div className="flex-1 overflow-hidden">
+              <NewsSchedule
+                selectedJournal={primaryJournal}
+                onEditItem={onEditItem}
+                currentTelejornal={primaryTelejornal}
+                onOpenRundown={onOpenRundown}
+                journalPrefix="primary"
+                externalBlocks={primaryBlocks}
+                onBlocksChange={setPrimaryBlocks}
+                isDualView={true}
+              />
+            </div>
           </div>
         </ResizablePanel>
         
         <ResizableHandle withHandle />
         
         <ResizablePanel defaultSize={50} minSize={20}>
-          <div className="h-full">
+          <div className="h-full flex flex-col">
             <div className="bg-green-50 p-2 border-b flex justify-between items-center">
               <h3 className="text-sm font-medium text-green-800">
                 {secondaryTelejornal?.nome || "Telejornal Secundário"}
@@ -170,16 +172,18 @@ export const DualViewLayout = ({
                 </div>
               )}
             </div>
-            <NewsSchedule
-              selectedJournal={secondaryJournal}
-              onEditItem={onEditItem}
-              currentTelejornal={secondaryTelejornal}
-              onOpenRundown={onOpenRundown}
-              journalPrefix="secondary"
-              externalBlocks={secondaryBlocks}
-              onBlocksChange={setSecondaryBlocks}
-              isDualView={true}
-            />
+            <div className="flex-1 overflow-hidden">
+              <NewsSchedule
+                selectedJournal={secondaryJournal}
+                onEditItem={onEditItem}
+                currentTelejornal={secondaryTelejornal}
+                onOpenRundown={onOpenRundown}
+                journalPrefix="secondary"
+                externalBlocks={secondaryBlocks}
+                onBlocksChange={setSecondaryBlocks}
+                isDualView={true}
+              />
+            </div>
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>

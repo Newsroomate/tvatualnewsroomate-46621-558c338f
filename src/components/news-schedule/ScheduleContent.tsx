@@ -1,3 +1,4 @@
+
 import { Bloco, Materia, Telejornal } from "@/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Lock } from "lucide-react";
@@ -95,22 +96,27 @@ export const ScheduleContent = ({
   }
 
   return (
-    <>
-      {blocks.map((block) => (
-        <NewsBlock
-          key={block.id}
-          block={block}
-          newItemBlock={newItemBlock}
-          onAddItem={onAddItem}
-          onEditItem={onEditItem}
-          onDeleteItem={onDeleteItem}
-          onDuplicateItem={onDuplicateItem}
-          isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
-          onRenameBlock={onRenameBlock}
-          onDeleteBlock={onDeleteBlock}
-          journalPrefix={journalPrefix}
-        />
+    <div className="space-y-8">
+      {blocks.map((block, index) => (
+        <div key={block.id} className="mb-8">
+          <NewsBlock
+            block={block}
+            newItemBlock={newItemBlock}
+            onAddItem={onAddItem}
+            onEditItem={onEditItem}
+            onDeleteItem={onDeleteItem}
+            onDuplicateItem={onDuplicateItem}
+            isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
+            onRenameBlock={onRenameBlock}
+            onDeleteBlock={onDeleteBlock}
+            journalPrefix={journalPrefix}
+          />
+          {/* Add extra spacing after the last block for better visibility */}
+          {index === blocks.length - 1 && (
+            <div className="h-16" />
+          )}
+        </div>
       ))}
-    </>
+    </div>
   );
 };

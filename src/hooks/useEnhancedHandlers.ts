@@ -19,46 +19,54 @@ export const useEnhancedHandlers = ({
   scrollToBlock
 }: UseEnhancedHandlersProps) => {
 
-  // Enhanced handleAddBlock with auto-scroll
+  // Enhanced handleAddBlock with improved auto-scroll
   const handleAddBlockWithScroll = async () => {
     const previousBlockCount = blocks.length;
     await handleAddBlock();
     
-    // Wait a bit for the DOM to update, then scroll
+    // Wait for DOM update and scroll with better timing
     setTimeout(() => {
       if (blocks.length > previousBlockCount) {
         scrollToBottom();
       }
-    }, 100);
+    }, 200); // Increased timeout for better reliability
   };
 
-  // Enhanced handleAddFirstBlock with auto-scroll
+  // Enhanced handleAddFirstBlock with improved auto-scroll
   const handleAddFirstBlockWithScroll = async () => {
     const previousBlockCount = blocks.length;
     await handleAddFirstBlock();
     
-    // Wait a bit for the DOM to update, then scroll
+    // Wait for DOM update and scroll with better timing
     setTimeout(() => {
       if (blocks.length > previousBlockCount) {
         scrollToBottom();
       }
-    }, 100);
+    }, 200); // Increased timeout for better reliability
   };
 
-  // Enhanced handleAddItem with auto-scroll
+  // Enhanced handleAddItem with improved auto-scroll to specific block
   const handleAddItemWithScroll = (blockId: string) => {
     const targetBlock = blocks.find(block => block.id === blockId);
     const previousItemCount = targetBlock?.items.length || 0;
     
     handleAddItem(blockId);
     
-    // Wait a bit for the DOM to update, then scroll to the block
+    // Wait for DOM update and scroll to the block with better timing
     setTimeout(() => {
       const updatedBlock = blocks.find(block => block.id === blockId);
       if (updatedBlock && updatedBlock.items.length > previousItemCount) {
         scrollToBlock(blockId);
+        
+        // Additional scroll to bottom if this is the last block
+        setTimeout(() => {
+          const isLastBlock = blocks[blocks.length - 1]?.id === blockId;
+          if (isLastBlock) {
+            scrollToBottom();
+          }
+        }, 300);
       }
-    }, 100);
+    }, 200); // Increased timeout for better reliability
   };
 
   return {
