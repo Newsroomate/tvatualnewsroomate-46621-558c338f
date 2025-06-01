@@ -46,10 +46,12 @@ export const NewsSchedule = ({
     setDeleteConfirmOpen,
     renumberConfirmOpen,
     setRenumberConfirmOpen,
+    isDeleting,
     handleAddItem,
     handleDuplicateItem,
     handleDeleteMateria,
     confirmDeleteMateria,
+    handleBatchDeleteMaterias,
     handleRenumberItems,
     confirmRenumberItems,
     handleAddFirstBlock,
@@ -133,6 +135,8 @@ export const NewsSchedule = ({
           onRenameBlock={handleRenameBlock}
           onDeleteBlock={handleDeleteBlock}
           journalPrefix={journalPrefix}
+          onBatchDeleteItems={handleBatchDeleteMaterias}
+          isDeleting={isDeleting}
         />
       </div>
 

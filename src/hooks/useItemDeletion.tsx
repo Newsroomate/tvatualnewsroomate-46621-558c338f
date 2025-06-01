@@ -17,6 +17,7 @@ export const useItemDeletion = ({
 }: UseItemDeletionProps) => {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [materiaToDelete, setMateriaToDelete] = useState<Materia | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
 
   const handleDeleteMateria = (item: Materia) => {
@@ -65,12 +66,62 @@ export const useItemDeletion = ({
     }
   };
 
+  const handleBatchDeleteMaterias = async (materiasToDelete: Materia[]) => {
+    // Can't delete items if espelho is not open
+    if (!currentTelejornal?.espelho_aberto) {
+      toast({
+        title: "Espelho fechado",
+        description: "Você precisa abrir o espelho para excluir matérias.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (materiasToDelete.length === 0) return;
+
+    setIsDeleting(true);
+    
+    try {
+      // Delete all selected materias simultaneously
+      await Promise.all(materiasToDelete.map(materia => deleteMateria(materia.id)));
+      
+      // Update UI after successful batch deletion - remove all deleted items at once
+      const deletedIds = new Set(materiasToDelete.map(m => m.id));
+      
+      setBlocks(blocks.map(block => {
+        const updatedItems = block.items.filter(item => !deletedIds.has(item.id));
+        return {
+          ...block,
+          items: updatedItems,
+          totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
+        };
+      }));
+      
+      toast({
+        title: "Sucesso",
+        description: `${materiasToDelete.length} matéria${materiasToDelete.length !== 1 ? 's' : ''} excluída${materiasToDelete.length !== 1 ? 's' : ''} com sucesso.`,
+      });
+      
+    } catch (error) {
+      console.error("Erro ao excluir matérias em lote:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir algumas matérias. Tente novamente.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return {
     deleteConfirmOpen,
     setDeleteConfirmOpen,
     materiaToDelete,
     setMateriaToDelete,
+    isDeleting,
     handleDeleteMateria,
-    confirmDeleteMateria
+    confirmDeleteMateria,
+    handleBatchDeleteMaterias
   };
 };

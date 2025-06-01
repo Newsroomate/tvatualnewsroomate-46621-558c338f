@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Trash2, CheckSquare, Square, X } from "lucide-react";
+import { Trash2, CheckSquare, Square, X, Loader2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +20,7 @@ interface BatchActionsProps {
   onClearSelection: () => void;
   onDeleteSelected: () => void;
   onCancel: () => void;
+  isDeleting?: boolean;
 }
 
 export const BatchActions = ({
@@ -28,7 +29,8 @@ export const BatchActions = ({
   onSelectAll,
   onClearSelection,
   onDeleteSelected,
-  onCancel
+  onCancel,
+  isDeleting = false
 }: BatchActionsProps) => {
   return (
     <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-md p-2">
@@ -41,6 +43,7 @@ export const BatchActions = ({
         variant="ghost"
         onClick={allSelected ? onClearSelection : onSelectAll}
         className="h-8"
+        disabled={isDeleting}
       >
         {allSelected ? (
           <>
@@ -62,9 +65,19 @@ export const BatchActions = ({
               size="sm"
               variant="ghost"
               className="h-8 text-red-600 hover:text-red-800"
+              disabled={isDeleting}
             >
-              <Trash2 className="h-4 w-4 mr-1" />
-              Excluir Selecionadas
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Excluir Selecionadas
+                </>
+              )}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -76,12 +89,22 @@ export const BatchActions = ({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
               <AlertDialogAction 
                 className="bg-red-600 hover:bg-red-700"
                 onClick={onDeleteSelected}
+                disabled={isDeleting}
               >
-                Excluir {selectedCount} Matéria{selectedCount !== 1 ? 's' : ''}
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  <>
+                    Excluir {selectedCount} Matéria{selectedCount !== 1 ? 's' : ''}
+                  </>
+                )}
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
@@ -93,6 +116,7 @@ export const BatchActions = ({
         variant="ghost"
         onClick={onCancel}
         className="h-8 ml-auto"
+        disabled={isDeleting}
       >
         <X className="h-4 w-4" />
       </Button>

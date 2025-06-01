@@ -41,6 +41,7 @@ interface BlockHeaderProps {
   onClearSelection?: () => void;
   onDeleteSelected?: () => void;
   onCancelBatch?: () => void;
+  isDeleting?: boolean;
 }
 
 export const BlockHeader = ({ 
@@ -61,7 +62,8 @@ export const BlockHeader = ({
   onSelectAll,
   onClearSelection,
   onDeleteSelected,
-  onCancelBatch
+  onCancelBatch,
+  isDeleting = false
 }: BlockHeaderProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingName, setEditingName] = useState(blockName);
@@ -116,6 +118,7 @@ export const BlockHeader = ({
               onClearSelection={onClearSelection}
               onDeleteSelected={onDeleteSelected}
               onCancel={onCancelBatch}
+              isDeleting={isDeleting}
             />
           </div>
         )}

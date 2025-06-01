@@ -23,6 +23,8 @@ interface ScheduleContentProps {
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
   journalPrefix?: string;
+  onBatchDeleteItems: (items: Materia[]) => void;
+  isDeleting?: boolean;
 }
 
 export const ScheduleContent = ({
@@ -41,7 +43,9 @@ export const ScheduleContent = ({
   onDuplicateItem,
   onRenameBlock,
   onDeleteBlock,
-  journalPrefix = "default"
+  journalPrefix = "default",
+  onBatchDeleteItems,
+  isDeleting = false
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -110,6 +114,8 @@ export const ScheduleContent = ({
             onRenameBlock={onRenameBlock}
             onDeleteBlock={onDeleteBlock}
             journalPrefix={journalPrefix}
+            onBatchDeleteItems={onBatchDeleteItems}
+            isDeleting={isDeleting}
           />
           {/* Add extra spacing after the last block for better visibility */}
           {index === blocks.length - 1 && (
