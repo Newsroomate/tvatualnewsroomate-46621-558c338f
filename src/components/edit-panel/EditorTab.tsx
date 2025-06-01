@@ -14,6 +14,7 @@ interface EditorTabProps {
   onSave: () => void;
   onClose: () => void;
   isSaving: boolean;
+  disabled?: boolean;
 }
 
 export const EditorTab = ({ 
@@ -22,19 +23,34 @@ export const EditorTab = ({
   onTagsChange, 
   onSave, 
   onClose, 
-  isSaving 
+  isSaving,
+  disabled = false
 }: EditorTabProps) => {
   return (
     <TabsContent value="editor" className="p-4 space-y-4">
-      <EditorFormFields formData={formData} onInputChange={onInputChange} />
-      <EditorDurationField formData={formData} onInputChange={onInputChange} />
+      <EditorFormFields 
+        formData={formData} 
+        onInputChange={onInputChange}
+        disabled={disabled}
+      />
+      <EditorDurationField 
+        formData={formData} 
+        onInputChange={onInputChange}
+        disabled={disabled}
+      />
       <EditorMetaFields 
         formData={formData} 
         onInputChange={onInputChange} 
-        onTagsChange={onTagsChange} 
+        onTagsChange={onTagsChange}
+        disabled={disabled}
       />
       <EditorAttachments />
-      <EditorActions onSave={onSave} onClose={onClose} isSaving={isSaving} />
+      <EditorActions 
+        onSave={onSave} 
+        onClose={onClose} 
+        isSaving={isSaving}
+        disabled={disabled}
+      />
     </TabsContent>
   );
 };

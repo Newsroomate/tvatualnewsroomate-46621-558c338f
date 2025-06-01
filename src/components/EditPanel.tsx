@@ -6,7 +6,10 @@ import { useToast } from "@/hooks/use-toast";
 import { EditPanelHeader } from "./edit-panel/EditPanelHeader";
 import { EditPanelTabs } from "./edit-panel/EditPanelTabs";
 import { useDurationCalculator } from "./edit-panel/DurationCalculator";
+import { useMateriaLock } from "@/hooks/useMateriaLock";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { AlertCircle, Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface EditPanelProps {
   isOpen: boolean;
@@ -20,6 +23,13 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const { calculateCabecaDuration } = useDurationCalculator();
+  
+  // Hook para gerenciar o lock da matéria
+  const { isLocked, isOwnLock, isLocking, canEdit } = useMateriaLock({
+    materiaId: item?.id || null,
+    isOpen,
+    onClose
+  });
 
   // Initialize form data when item changes
   useEffect(() => {
@@ -32,7 +42,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         reporter: item.reporter,
         status: item.status,
         cabeca: item.cabeca || '',
-        gc: item.gc || '', // Include GC field
+        gc: item.gc || '',
         texto: item.texto || '',
         local_gravacao: item.local_gravacao || '',
         pagina: item.pagina,
@@ -61,6 +71,8 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   if (!isOpen || !item) return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    if (!canEdit) return;
+    
     const { id, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -69,11 +81,12 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   };
 
   const handleTagsChange = (tags: string[]) => {
+    if (!canEdit) return;
     setFormData(prev => ({ ...prev, tags }));
   };
 
   const handleSave = async () => {
-    if (!item) return;
+    if (!item || !canEdit) return;
     
     const updateData = {
       ...formData,
@@ -100,6 +113,70 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
     }
   };
 
+  // Mostrar loading enquanto verifica o lock
+  if (isLocking) {
+    return (
+      <div className="fixed top-0 left-0 w-full h-full z-20 pointer-events-none">
+        <ResizablePanelGroup direction="horizontal" className="w-full h-full pointer-events-auto">
+          <ResizablePanel defaultSize={60} minSize={30} className="pointer-events-none" />
+          <ResizableHandle withHandle className="w-2 bg-gray-300 hover:bg-gray-400 transition-colors pointer-events-auto" />
+          <ResizablePanel defaultSize={40} minSize={25} maxSize={70} className="pointer-events-auto">
+            <div className="w-full h-full bg-white border-l border-gray-200 shadow-lg overflow-y-auto flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p className="text-gray-600">Verificando disponibilidade...</p>
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+    );
+  }
+
+  // Mostrar aviso se a matéria estiver bloqueada por outro usuário
+  if (isLocked && !isOwnLock) {
+    return (
+      <div className="fixed top-0 left-0 w-full h-full z-20 pointer-events-none">
+        <ResizablePanelGroup direction="horizontal" className="w-full h-full pointer-events-auto">
+          <ResizablePanel defaultSize={60} minSize={30} className="pointer-events-none" />
+          <ResizableHandle withHandle className="w-2 bg-gray-300 hover:bg-gray-400 transition-colors pointer-events-auto" />
+          <ResizablePanel defaultSize={40} minSize={25} maxSize={70} className="pointer-events-auto">
+            <div className="w-full h-full bg-white border-l border-gray-200 shadow-lg overflow-y-auto">
+              <div className="bg-primary text-primary-foreground p-4 flex justify-between items-center">
+                <h3 className="font-medium">Matéria Bloqueada</h3>
+                <Button variant="ghost" size="sm" onClick={onClose}>
+                  Fechar
+                </Button>
+              </div>
+              
+              <div className="p-8 text-center">
+                <Lock className="w-16 h-16 mx-auto mb-4 text-orange-500" />
+                <h4 className="text-lg font-semibold mb-2">Matéria em Edição</h4>
+                <p className="text-gray-600 mb-4">
+                  Esta matéria está sendo editada por outro usuário no momento.
+                </p>
+                <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-6">
+                  <div className="flex items-center">
+                    <AlertCircle className="w-5 h-5 text-orange-500 mr-2" />
+                    <p className="text-orange-800 text-sm">
+                      <strong>Retranca:</strong> {item.retranca}
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm text-gray-500 mb-6">
+                  Aguarde até que o outro usuário termine a edição ou tente novamente em alguns minutos.
+                </p>
+                <Button onClick={onClose} variant="outline">
+                  Voltar
+                </Button>
+              </div>
+            </div>
+          </ResizablePanel>
+        </ResizablePanelGroup>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed top-0 left-0 w-full h-full z-20 pointer-events-none">
       <ResizablePanelGroup direction="horizontal" className="w-full h-full pointer-events-auto">
@@ -123,16 +200,18 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
           <div className="w-full h-full bg-white border-l border-gray-200 shadow-lg overflow-y-auto">
             <EditPanelHeader item={item} onClose={onClose} />
             
-            <EditPanelTabs
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              formData={formData}
-              onInputChange={handleInputChange}
-              onTagsChange={handleTagsChange}
-              onSave={handleSave}
-              onClose={onClose}
-              isSaving={isSaving}
-            />
+            {canEdit && (
+              <EditPanelTabs
+                activeTab={activeTab}
+                onTabChange={setActiveTab}
+                formData={formData}
+                onInputChange={handleInputChange}
+                onTagsChange={handleTagsChange}
+                onSave={handleSave}
+                onClose={onClose}
+                isSaving={isSaving}
+              />
+            )}
           </div>
         </ResizablePanel>
       </ResizablePanelGroup>
