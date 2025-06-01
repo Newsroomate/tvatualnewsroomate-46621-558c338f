@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil, Copy } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Materia } from "@/types";
 import { formatTime } from "./utils";
 import {
@@ -21,9 +20,6 @@ interface NewsItemProps {
   isEspelhoOpen: boolean;
   onDoubleClick: (item: Materia) => void;
   canModify?: boolean;
-  isSelected?: boolean;
-  onToggleSelection?: (itemId: string) => void;
-  showSelectionCheckbox?: boolean;
 }
 
 export const NewsItem = ({ 
@@ -35,10 +31,7 @@ export const NewsItem = ({
   snapshot,
   isEspelhoOpen,
   onDoubleClick,
-  canModify = true,
-  isSelected = false,
-  onToggleSelection = () => {},
-  showSelectionCheckbox = false
+  canModify = true
 }: NewsItemProps) => {
   // Status color classes
   const getStatusClass = (status: string): string => {
@@ -74,18 +67,9 @@ export const NewsItem = ({
       {...provided.dragHandleProps}
       className={`hover:bg-gray-50 transition-colors ${
         snapshot.isDragging ? "bg-blue-50" : ""
-      } ${isSelected ? "bg-blue-50" : ""}`}
+      }`}
       onDoubleClick={() => onDoubleClick(item)}
     >
-      {showSelectionCheckbox && (
-        <td className="py-2 px-4">
-          <Checkbox
-            checked={isSelected}
-            onCheckedChange={() => onToggleSelection(item.id)}
-            className="h-4 w-4"
-          />
-        </td>
-      )}
       <td className="py-2 px-4">{item.pagina}</td>
       <td className="py-2 px-4 font-medium">{displayRetranca}</td>
       <td className="py-2 px-4 font-mono text-xs">{item.clip || ''}</td>

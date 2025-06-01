@@ -1,10 +1,8 @@
-
 import { Bloco, Materia } from "@/types";
 import { BlockHeader } from "./BlockHeader";
 import { BlockContent } from "./BlockContent";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
-import { useBatchSelection } from "@/hooks/useBatchSelection";
 
 interface NewsBlockProps {
   block: Bloco & { items: Materia[], totalTime: number };
@@ -16,7 +14,6 @@ interface NewsBlockProps {
   isEspelhoOpen: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
-  onBatchDelete?: (items: Materia[]) => void;
   journalPrefix?: string;
 }
 
@@ -30,34 +27,10 @@ export const NewsBlock = ({
   isEspelhoOpen,
   onRenameBlock,
   onDeleteBlock,
-  onBatchDelete,
   journalPrefix = "default"
 }: NewsBlockProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
-  
-  const {
-    selectedCount,
-    totalCount,
-    isBatchMode,
-    toggleBatchMode,
-    selectAll,
-    clearSelection,
-    isSelected,
-    toggleItemSelection,
-    getSelectedItems
-  } = useBatchSelection({ items: block.items });
-
-  const handleBatchDelete = () => {
-    const selectedItems = getSelectedItems();
-    if (onBatchDelete) {
-      onBatchDelete(selectedItems);
-    } else {
-      // Fallback to individual deletions
-      selectedItems.forEach(item => onDeleteItem(item));
-    }
-    clearSelection();
-  };
   
   return (
     <div 
@@ -75,13 +48,6 @@ export const NewsBlock = ({
         canAddItem={canModify}
         onRenameBlock={onRenameBlock}
         onDeleteBlock={onDeleteBlock}
-        isBatchMode={isBatchMode}
-        onToggleBatchMode={toggleBatchMode}
-        selectedCount={selectedCount}
-        totalCount={totalCount}
-        onSelectAll={selectAll}
-        onClearSelection={clearSelection}
-        onDeleteSelected={handleBatchDelete}
       />
       <BlockContent
         blockId={block.id}
@@ -91,10 +57,6 @@ export const NewsBlock = ({
         onDuplicateItem={onDuplicateItem}
         isEspelhoOpen={isEspelhoOpen}
         canModifyItems={canModify}
-        selectedIds={new Set([...Array.from({ length: selectedCount }, (_, i) => getSelectedItems()[i]?.id)].filter(Boolean))}
-        onToggleSelection={toggleItemSelection}
-        batchModeEnabled={isBatchMode}
-        isSelected={isSelected}
       />
     </div>
   );

@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Pencil, Trash2, Check, X } from "lucide-react";
 import { useState } from "react";
@@ -19,7 +20,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { formatTime } from "./utils";
-import { BatchActions } from "./BatchActions";
 
 interface BlockHeaderProps {
   blockName: string;
@@ -31,14 +31,6 @@ interface BlockHeaderProps {
   canAddItem?: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
-  // Batch selection props
-  isBatchMode?: boolean;
-  onToggleBatchMode?: () => void;
-  selectedCount?: number;
-  totalCount?: number;
-  onSelectAll?: () => void;
-  onClearSelection?: () => void;
-  onDeleteSelected?: () => void;
 }
 
 export const BlockHeader = ({ 
@@ -50,19 +42,11 @@ export const BlockHeader = ({
   isEspelhoOpen,
   canAddItem = true,
   onRenameBlock,
-  onDeleteBlock,
-  isBatchMode = false,
-  onToggleBatchMode = () => {},
-  selectedCount = 0,
-  totalCount = 0,
-  onSelectAll = () => {},
-  onClearSelection = () => {},
-  onDeleteSelected = () => {}
+  onDeleteBlock
 }: BlockHeaderProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingName, setEditingName] = useState(blockName);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [batchActionsOpen, setBatchActionsOpen] = useState(false);
 
   const handleStartEdit = () => {
     if (!isEspelhoOpen || !canAddItem) return;
@@ -184,18 +168,6 @@ export const BlockHeader = ({
                   )}
                 </Tooltip>
               </TooltipProvider>
-
-              {/* Batch Actions */}
-              <BatchActions
-                isBatchMode={isBatchMode}
-                onToggleBatchMode={onToggleBatchMode}
-                selectedCount={selectedCount}
-                totalCount={totalCount}
-                onSelectAll={onSelectAll}
-                onClearSelection={onClearSelection}
-                onDeleteSelected={onDeleteSelected}
-                isEnabled={isEspelhoOpen && canAddItem}
-              />
             </div>
           )}
         </div>

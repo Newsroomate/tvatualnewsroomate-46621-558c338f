@@ -11,10 +11,6 @@ interface BlockContentProps {
   onDuplicateItem: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModifyItems?: boolean;
-  selectedIds?: Set<string>;
-  onToggleSelection?: (itemId: string) => void;
-  batchModeEnabled?: boolean;
-  isSelected?: (itemId: string) => boolean;
 }
 
 export const BlockContent = ({ 
@@ -24,11 +20,7 @@ export const BlockContent = ({
   onDeleteItem,
   onDuplicateItem,
   isEspelhoOpen,
-  canModifyItems = true,
-  selectedIds = new Set(),
-  onToggleSelection = () => {},
-  batchModeEnabled = false,
-  isSelected = () => false
+  canModifyItems = true
 }: BlockContentProps) => {
   return (
     <div className="overflow-x-auto">
@@ -41,9 +33,6 @@ export const BlockContent = ({
             <table className="w-full">
               <thead className="bg-gray-50 text-xs uppercase">
                 <tr>
-                  {batchModeEnabled && (
-                    <th className="py-3 px-4 text-left w-10">Sel.</th>
-                  )}
                   <th className="py-3 px-4 text-left">Página</th>
                   <th className="py-3 px-4 text-left">Retranca</th>
                   <th className="py-3 px-4 text-left">Clipe</th>
@@ -56,7 +45,7 @@ export const BlockContent = ({
               <tbody className="divide-y divide-gray-200">
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={batchModeEnabled ? 8 : 7} className="py-4 text-center text-gray-500">
+                    <td colSpan={7} className="py-4 text-center text-gray-500">
                       Nenhuma matéria neste bloco
                     </td>
                   </tr>
@@ -79,9 +68,6 @@ export const BlockContent = ({
                           isEspelhoOpen={isEspelhoOpen}
                           onDoubleClick={onEditItem}
                           canModify={canModifyItems}
-                          isSelected={isSelected(item.id)}
-                          onToggleSelection={onToggleSelection}
-                          showSelectionCheckbox={batchModeEnabled}
                         />
                       )}
                     </Draggable>
