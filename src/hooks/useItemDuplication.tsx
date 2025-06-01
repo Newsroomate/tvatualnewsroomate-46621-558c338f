@@ -1,7 +1,7 @@
 
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia, Telejornal } from "@/types";
-import { createMateria } from "@/services/api";
+import { createMateria, updateMateriasOrdem } from "@/services/materias-api";
 import { findHighestPageNumber } from "@/components/news-schedule/utils";
 
 interface UseItemDuplicationProps {
@@ -35,6 +35,10 @@ export const useItemDuplication = ({
       // Use the highest page number + 1 across all blocks
       const nextPage = (findHighestPageNumber(blocks) + 1).toString();
       
+      // Calculate the position right after the original materia
+      const originalIndex = bloco.items.findIndex(item => item.id === materia.id);
+      const newOrdem = materia.ordem + 1;
+      
       const duplicatedMateriaInput = {
         bloco_id: materia.bloco_id,
         pagina: nextPage,
@@ -43,17 +47,46 @@ export const useItemDuplication = ({
         duracao: materia.duracao || 0,
         status: materia.status || "draft" as const,
         reporter: materia.reporter || "",
-        ordem: bloco.items.length + 1,
+        ordem: newOrdem,
         texto: materia.texto || "",
         cabeca: materia.cabeca || ""
       };
       
+      // Create the duplicated materia
       const duplicatedMateria = await createMateria(duplicatedMateriaInput);
       
-      // Update UI
+      // Update the ordem of existing materias that come after the original
+      const materiasToUpdate = bloco.items
+        .filter(item => item.ordem >= newOrdem && item.id !== materia.id)
+        .map(item => ({
+          id: item.id,
+          ordem: item.ordem + 1,
+          retranca: item.retranca,
+          bloco_id: item.bloco_id
+        }));
+      
+      // Update the ordem in the database if there are materias to update
+      if (materiasToUpdate.length > 0) {
+        await updateMateriasOrdem(materiasToUpdate);
+      }
+      
+      // Update UI - insert the duplicated materia at the correct position
       setBlocks(blocks.map(block => {
         if (block.id === materia.bloco_id) {
-          const updatedItems = [...block.items, duplicatedMateria];
+          // Create new items array with updated ordem values and insert duplicated item
+          const updatedItems = block.items.map(item => {
+            if (item.ordem >= newOrdem && item.id !== materia.id) {
+              return { ...item, ordem: item.ordem + 1 };
+            }
+            return item;
+          });
+          
+          // Insert the duplicated materia at the correct position
+          updatedItems.splice(originalIndex + 1, 0, duplicatedMateria);
+          
+          // Sort by ordem to ensure correct display order
+          updatedItems.sort((a, b) => a.ordem - b.ordem);
+          
           return {
             ...block,
             items: updatedItems,
