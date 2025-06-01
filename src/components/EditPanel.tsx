@@ -1,4 +1,5 @@
 
+
 import { useState, useEffect } from "react";
 import { Materia } from "@/types";
 import { updateMateria } from "@/services/materias-api";
@@ -103,6 +104,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   return (
     <div className="fixed top-0 right-0 h-full z-20 flex">
       <ResizablePanelGroup direction="horizontal" className="min-w-[400px] max-w-[80vw]">
+        <ResizableHandle withHandle className="w-2 bg-gray-300 hover:bg-gray-400 transition-colors" />
         <ResizablePanel defaultSize={100} minSize={30}>
           <div className="h-full bg-white border-l border-gray-200 shadow-lg overflow-y-auto">
             <EditPanelHeader item={item} onClose={onClose} />
@@ -119,8 +121,8 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
             />
           </div>
         </ResizablePanel>
-        <ResizableHandle withHandle className="w-2 bg-gray-300 hover:bg-gray-400 transition-colors" />
       </ResizablePanelGroup>
     </div>
   );
 };
+
