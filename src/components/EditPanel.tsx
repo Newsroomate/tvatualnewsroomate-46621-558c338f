@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Materia } from "@/types";
 import { updateMateria } from "@/services/materias-api";
@@ -5,6 +6,7 @@ import { useToast } from "@/hooks/use-toast";
 import { EditPanelHeader } from "./edit-panel/EditPanelHeader";
 import { EditPanelTabs } from "./edit-panel/EditPanelTabs";
 import { useDurationCalculator } from "./edit-panel/DurationCalculator";
+import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 
 interface EditPanelProps {
   isOpen: boolean;
@@ -99,19 +101,41 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   };
 
   return (
-    <div className="fixed top-0 right-0 w-[400px] h-full bg-white border-l border-gray-200 shadow-lg transition-transform duration-300 ease-in-out z-20 overflow-y-auto">
-      <EditPanelHeader item={item} onClose={onClose} />
-      
-      <EditPanelTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        formData={formData}
-        onInputChange={handleInputChange}
-        onTagsChange={handleTagsChange}
-        onSave={handleSave}
-        onClose={onClose}
-        isSaving={isSaving}
-      />
+    <div className="fixed top-0 left-0 w-full h-full z-20 pointer-events-none">
+      <ResizablePanelGroup direction="horizontal" className="w-full h-full pointer-events-auto">
+        {/* Invisible left panel that represents the main content area */}
+        <ResizablePanel 
+          defaultSize={60} 
+          minSize={30}
+          className="pointer-events-none"
+        />
+        
+        {/* Resizable handle */}
+        <ResizableHandle withHandle className="w-2 bg-gray-300 hover:bg-gray-400 transition-colors pointer-events-auto" />
+        
+        {/* Modal panel on the right */}
+        <ResizablePanel 
+          defaultSize={40} 
+          minSize={25}
+          maxSize={70}
+          className="pointer-events-auto"
+        >
+          <div className="w-full h-full bg-white border-l border-gray-200 shadow-lg overflow-y-auto">
+            <EditPanelHeader item={item} onClose={onClose} />
+            
+            <EditPanelTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              formData={formData}
+              onInputChange={handleInputChange}
+              onTagsChange={handleTagsChange}
+              onSave={handleSave}
+              onClose={onClose}
+              isSaving={isSaving}
+            />
+          </div>
+        </ResizablePanel>
+      </ResizablePanelGroup>
     </div>
   );
 };
