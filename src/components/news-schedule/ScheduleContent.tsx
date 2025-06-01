@@ -1,4 +1,3 @@
-
 import { Bloco, Materia, Telejornal } from "@/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Lock } from "lucide-react";
@@ -20,9 +19,11 @@ interface ScheduleContentProps {
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
   onDuplicateItem: (item: Materia) => void;
+  onBatchDeleteItems: (items: Materia[]) => void;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
   journalPrefix?: string;
+  isDeleting?: boolean;
 }
 
 export const ScheduleContent = ({
@@ -39,9 +40,11 @@ export const ScheduleContent = ({
   onEditItem,
   onDeleteItem,
   onDuplicateItem,
+  onBatchDeleteItems,
   onRenameBlock,
   onDeleteBlock,
-  journalPrefix = "default"
+  journalPrefix = "default",
+  isDeleting = false
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -106,10 +109,12 @@ export const ScheduleContent = ({
             onEditItem={onEditItem}
             onDeleteItem={onDeleteItem}
             onDuplicateItem={onDuplicateItem}
+            onBatchDeleteItems={onBatchDeleteItems}
             isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
             onRenameBlock={onRenameBlock}
             onDeleteBlock={onDeleteBlock}
             journalPrefix={journalPrefix}
+            isDeleting={isDeleting}
           />
           {/* Add extra spacing after the last block for better visibility */}
           {index === blocks.length - 1 && (
