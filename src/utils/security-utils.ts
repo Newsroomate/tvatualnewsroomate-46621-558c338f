@@ -1,6 +1,6 @@
 
 import { UserProfile } from "@/types/auth";
-import { sanitize } from "dompurify";
+import DOMPurify from "dompurify";
 
 // Input validation utilities
 export const validateTextLength = (text: string, maxLength: number = 1000): boolean => {
@@ -12,7 +12,7 @@ export const validateRequired = (value: string | null | undefined): boolean => {
 };
 
 export const sanitizeHtml = (html: string): string => {
-  return sanitize(html, {
+  return DOMPurify.sanitize(html, {
     ALLOWED_TAGS: ['p', 'br', 'strong', 'em', 'u', 'span'],
     ALLOWED_ATTR: []
   });
