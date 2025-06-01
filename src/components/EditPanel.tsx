@@ -24,8 +24,8 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const { toast } = useToast();
   const { calculateCabecaDuration } = useDurationCalculator();
   
-  // Hook para gerenciar o lock da matéria
-  const { isLocked, isOwnLock, isLocking, canEdit } = useMateriaLock({
+  // Hook para gerenciar o lock da matéria (agora sem loading state)
+  const { isLocked, isOwnLock, canEdit } = useMateriaLock({
     materiaId: item?.id || null,
     isOpen,
     onClose
@@ -112,26 +112,6 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
       setIsSaving(false);
     }
   };
-
-  // Mostrar loading enquanto verifica o lock
-  if (isLocking) {
-    return (
-      <div className="fixed top-0 left-0 w-full h-full z-20 pointer-events-none">
-        <ResizablePanelGroup direction="horizontal" className="w-full h-full pointer-events-auto">
-          <ResizablePanel defaultSize={60} minSize={30} className="pointer-events-none" />
-          <ResizableHandle withHandle className="w-2 bg-gray-300 hover:bg-gray-400 transition-colors pointer-events-auto" />
-          <ResizablePanel defaultSize={40} minSize={25} maxSize={70} className="pointer-events-auto">
-            <div className="w-full h-full bg-white border-l border-gray-200 shadow-lg overflow-y-auto flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-gray-600">Verificando disponibilidade...</p>
-              </div>
-            </div>
-          </ResizablePanel>
-        </ResizablePanelGroup>
-      </div>
-    );
-  }
 
   // Mostrar aviso se a matéria estiver bloqueada por outro usuário
   if (isLocked && !isOwnLock) {

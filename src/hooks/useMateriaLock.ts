@@ -21,7 +21,6 @@ export const useMateriaLock = ({ materiaId, isOpen, onClose }: UseMateriaLockPro
   const [isLocked, setIsLocked] = useState(false);
   const [lockOwner, setLockOwner] = useState<string | null>(null);
   const [isOwnLock, setIsOwnLock] = useState(false);
-  const [isLocking, setIsLocking] = useState(false);
   const lockIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const { toast } = useToast();
 
@@ -107,21 +106,18 @@ export const useMateriaLock = ({ materiaId, isOpen, onClose }: UseMateriaLockPro
     }
   };
 
-  // Tentar adquirir o lock quando o modal abrir
+  // Verificação silenciosa em segundo plano quando o modal abrir
   useEffect(() => {
     const acquireLock = async () => {
       if (!materiaId || !isOpen) return;
 
-      setIsLocking(true);
-      
-      // Verificar se já está bloqueada
+      // Verificação rápida e silenciosa
       const lockStatus = await checkLock(materiaId);
       
       if (lockStatus.isLocked && !lockStatus.isOwnLock) {
         setIsLocked(true);
         setLockOwner(lockStatus.lockOwner);
         setIsOwnLock(false);
-        setIsLocking(false);
         
         toast({
           title: "Matéria em edição",
@@ -135,7 +131,6 @@ export const useMateriaLock = ({ materiaId, isOpen, onClose }: UseMateriaLockPro
         setIsLocked(true);
         setIsOwnLock(true);
         setLockOwner(lockStatus.lockOwner);
-        setIsLocking(false);
         return;
       }
 
@@ -174,8 +169,6 @@ export const useMateriaLock = ({ materiaId, isOpen, onClose }: UseMateriaLockPro
           });
         }
       }
-      
-      setIsLocking(false);
     };
 
     acquireLock();
@@ -243,7 +236,6 @@ export const useMateriaLock = ({ materiaId, isOpen, onClose }: UseMateriaLockPro
     isLocked,
     isOwnLock,
     lockOwner,
-    isLocking,
     canEdit: isOwnLock || !isLocked
   };
 };
