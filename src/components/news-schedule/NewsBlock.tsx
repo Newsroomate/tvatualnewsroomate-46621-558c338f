@@ -1,8 +1,10 @@
+
 import { Bloco, Materia } from "@/types";
 import { BlockHeader } from "./BlockHeader";
 import { BlockContent } from "./BlockContent";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
+import { useBatchSelection } from "@/hooks/useBatchSelection";
 
 interface NewsBlockProps {
   block: Bloco & { items: Materia[], totalTime: number };
@@ -32,6 +34,38 @@ export const NewsBlock = ({
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
   
+  // Batch selection functionality
+  const {
+    selectedItems,
+    selectedCount,
+    allSelected,
+    isBatchMode,
+    toggleBatchMode,
+    toggleItemSelection,
+    selectAll,
+    clearSelection,
+    isSelected,
+    setSelectedItems
+  } = useBatchSelection(block.items);
+
+  const handleDeleteSelected = () => {
+    // Delete all selected items
+    selectedItems.forEach(itemId => {
+      const item = block.items.find(item => item.id === itemId);
+      if (item) {
+        onDeleteItem(item);
+      }
+    });
+    
+    // Clear selection after deletion
+    setSelectedItems(new Set());
+  };
+
+  const handleCancelBatch = () => {
+    toggleBatchMode();
+    clearSelection();
+  };
+  
   return (
     <div 
       key={block.id} 
@@ -48,6 +82,15 @@ export const NewsBlock = ({
         canAddItem={canModify}
         onRenameBlock={onRenameBlock}
         onDeleteBlock={onDeleteBlock}
+        // Batch selection props
+        isBatchMode={isBatchMode}
+        onToggleBatchMode={toggleBatchMode}
+        selectedCount={selectedCount}
+        allSelected={allSelected}
+        onSelectAll={selectAll}
+        onClearSelection={clearSelection}
+        onDeleteSelected={handleDeleteSelected}
+        onCancelBatch={handleCancelBatch}
       />
       <BlockContent
         blockId={block.id}
@@ -57,6 +100,10 @@ export const NewsBlock = ({
         onDuplicateItem={onDuplicateItem}
         isEspelhoOpen={isEspelhoOpen}
         canModifyItems={canModify}
+        // Batch selection props
+        isBatchMode={isBatchMode}
+        isSelected={isSelected}
+        onToggleSelection={toggleItemSelection}
       />
     </div>
   );
