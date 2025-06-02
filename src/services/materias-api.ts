@@ -140,6 +140,7 @@ export const updateMateriasOrdem = async (materias: Partial<Materia>[]) => {
     
     // Include any other fields that were provided in the update
     if (materia.clip !== undefined) updateData.clip = materia.clip;
+    if (materia.tempo_clip !== undefined) updateData.tempo_clip = materia.tempo_clip;
     if (materia.duracao !== undefined) updateData.duracao = materia.duracao;
     if (materia.texto !== undefined) updateData.texto = materia.texto;
     if (materia.cabeca !== undefined) updateData.cabeca = materia.cabeca;

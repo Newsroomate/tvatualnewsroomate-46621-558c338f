@@ -103,6 +103,7 @@ export type Database = {
           retranca: string
           status: string | null
           tags: string[] | null
+          tempo_clip: string | null
           texto: string | null
           updated_at: string | null
         }
@@ -123,6 +124,7 @@ export type Database = {
           retranca: string
           status?: string | null
           tags?: string[] | null
+          tempo_clip?: string | null
           texto?: string | null
           updated_at?: string | null
         }
@@ -143,6 +145,7 @@ export type Database = {
           retranca?: string
           status?: string | null
           tags?: string[] | null
+          tempo_clip?: string | null
           texto?: string | null
           updated_at?: string | null
         }
