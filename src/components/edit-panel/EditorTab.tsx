@@ -32,63 +32,6 @@ export const EditorTab = ({
 }: EditorTabProps) => {
   const { profile } = useAuth();
 
-  // Enhanced input change handler with validation
-  const handleSecureInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { id, value } = e.target;
-    
-    // Validate input length based on field
-    let maxLength = 1000; // default
-    switch (id) {
-      case 'retranca':
-        maxLength = 200;
-        break;
-      case 'clip':
-        maxLength = 100;
-        break;
-      case 'reporter':
-        maxLength = 100;
-        break;
-      case 'pagina':
-        maxLength = 50;
-        break;
-      case 'texto':
-      case 'cabeca':
-      case 'gc':
-        maxLength = 5000;
-        break;
-    }
-
-    if (!validateTextLength(value, maxLength)) {
-      toast({
-        title: "Texto muito longo",
-        description: `O campo ${id} não pode ter mais de ${maxLength} caracteres.`,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate required fields
-    if (id === 'retranca' && !validateRequired(value)) {
-      toast({
-        title: "Campo obrigatório",
-        description: "O campo retranca é obrigatório.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Create sanitized event
-    const sanitizedEvent = {
-      ...e,
-      target: {
-        ...e.target,
-        value: value.trim() // Basic sanitization - trim whitespace
-      }
-    };
-
-    onInputChange(sanitizedEvent);
-  };
-
   // Enhanced save handler with authorization and validation
   const handleSecureSave = () => {
     // Check permissions
@@ -112,6 +55,28 @@ export const EditorTab = ({
       return;
     }
 
+    // Validate text lengths
+    const validations = [
+      { field: 'retranca', value: formData.retranca, maxLength: 200 },
+      { field: 'clip', value: formData.clip, maxLength: 100 },
+      { field: 'reporter', value: formData.reporter, maxLength: 100 },
+      { field: 'pagina', value: formData.pagina, maxLength: 50 },
+      { field: 'texto', value: formData.texto, maxLength: 5000 },
+      { field: 'cabeca', value: formData.cabeca, maxLength: 5000 },
+      { field: 'gc', value: formData.gc, maxLength: 5000 },
+    ];
+
+    for (const validation of validations) {
+      if (validation.value && !validateTextLength(validation.value, validation.maxLength)) {
+        toast({
+          title: "Texto muito longo",
+          description: `O campo ${validation.field} não pode ter mais de ${validation.maxLength} caracteres.`,
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     // Validate duration
     if (formData.duracao && (formData.duracao < 0 || formData.duracao > 3600)) {
       toast({
@@ -131,17 +96,17 @@ export const EditorTab = ({
     <TabsContent value="editor" className="p-4 space-y-4">
       <EditorFormFields 
         formData={formData} 
-        onInputChange={handleSecureInputChange}
+        onInputChange={onInputChange}
         disabled={isEditingDisabled}
       />
       <EditorDurationField 
         formData={formData} 
-        onInputChange={handleSecureInputChange}
+        onInputChange={onInputChange}
         disabled={isEditingDisabled}
       />
       <EditorMetaFields 
         formData={formData} 
-        onInputChange={handleSecureInputChange} 
+        onInputChange={onInputChange} 
         onTagsChange={onTagsChange}
         disabled={isEditingDisabled}
       />
