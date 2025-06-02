@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Materia } from "@/types";
 import { updateMateria } from "@/services/materias-api";
@@ -88,10 +87,21 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
   const handleSave = async () => {
     if (!item || !canEdit) return;
     
-    const updateData = {
-      ...formData,
+    // Create clean update data without undefined properties
+    const updateData: Partial<Materia> = {
+      retranca: formData.retranca || item.retranca,
+      clip: formData.clip,
+      duracao: formData.duracao,
+      reporter: formData.reporter,
+      status: formData.status,
+      cabeca: formData.cabeca,
+      gc: formData.gc,
+      texto: formData.texto,
+      local_gravacao: formData.local_gravacao,
+      pagina: formData.pagina,
+      tags: formData.tags,
       ordem: item.ordem,
-      retranca: formData.retranca || item.retranca
+      bloco_id: formData.bloco_id
     };
     
     setIsSaving(true);
