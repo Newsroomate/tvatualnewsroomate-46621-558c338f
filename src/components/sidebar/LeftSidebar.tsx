@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { FileText, Menu } from "lucide-react";
+import { Menu } from "lucide-react";
 import { fetchTelejornais } from "@/services/api";
 import { fetchPautas } from "@/services/pautas-api";
 import { Telejornal, Pauta } from "@/types";
@@ -10,7 +10,7 @@ import { TelejornalModal } from "@/components/TelejornalModal";
 import { supabase } from "@/integrations/supabase/client";
 import { TelejornalSection } from "./TelejornalSection";
 import { PautaSection } from "./PautaSection";
-import { DualViewMenu } from "./DualViewMenu";
+import { MainMenu } from "./MainMenu";
 
 interface LeftSidebarProps {
   selectedJournal: string | null;
@@ -26,7 +26,7 @@ export const LeftSidebar = ({
   const [isGeneralScheduleOpen, setIsGeneralScheduleOpen] = useState(false);
   const [isPautaModalOpen, setIsPautaModalOpen] = useState(false);
   const [isTelejornalModalOpen, setIsTelejornalModalOpen] = useState(false);
-  const [isDualViewMenuOpen, setIsDualViewMenuOpen] = useState(false);
+  const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   const [pautas, setPautas] = useState<Pauta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -150,22 +150,20 @@ export const LeftSidebar = ({
     setIsTelejornalModalOpen(true);
   };
 
-  const handleToggleDualViewMenu = () => {
-    setIsDualViewMenuOpen(!isDualViewMenuOpen);
+  const handleToggleMainMenu = () => {
+    setIsMainMenuOpen(!isMainMenuOpen);
   };
 
   const handleActivateDualView = (secondJournalId: string) => {
     if (onToggleDualView) {
       onToggleDualView(true, secondJournalId);
     }
-    setIsDualViewMenuOpen(false);
   };
 
   const handleDeactivateDualView = () => {
     if (onToggleDualView) {
       onToggleDualView(false);
     }
-    setIsDualViewMenuOpen(false);
   };
 
   return (
@@ -174,16 +172,11 @@ export const LeftSidebar = ({
         <h2 className="text-lg font-semibold">Newsroomate</h2>
       </div>
       
-      {/* Menu Button and Espelho Geral Button */}
-      <div className="p-4 border-b border-gray-200 space-y-2">
-        <Button variant="outline" className="w-full" onClick={handleToggleDualViewMenu}>
+      {/* Menu Button */}
+      <div className="p-4 border-b border-gray-200">
+        <Button variant="outline" className="w-full" onClick={handleToggleMainMenu}>
           <Menu className="h-4 w-4 mr-2" />
           Menu
-        </Button>
-        
-        <Button variant="outline" className="w-full" onClick={handleOpenGeneralSchedule}>
-          <FileText className="h-4 w-4 mr-2" />
-          Espelho Geral
         </Button>
       </div>
 
@@ -212,14 +205,15 @@ export const LeftSidebar = ({
       <PautaModal isOpen={isPautaModalOpen} onClose={() => setIsPautaModalOpen(false)} onPautaCreated={loadData} />
       <TelejornalModal isOpen={isTelejornalModalOpen} onClose={() => setIsTelejornalModalOpen(false)} onTelejornalCreated={loadData} />
       
-      {/* Dual View Menu */}
-      <DualViewMenu
-        isOpen={isDualViewMenuOpen}
-        onClose={() => setIsDualViewMenuOpen(false)}
+      {/* Main Menu */}
+      <MainMenu
+        isOpen={isMainMenuOpen}
+        onClose={() => setIsMainMenuOpen(false)}
         telejornais={telejornais}
         selectedJournal={selectedJournal}
         onActivateDualView={handleActivateDualView}
         onDeactivateDualView={handleDeactivateDualView}
+        onOpenGeneralSchedule={handleOpenGeneralSchedule}
       />
     </div>
   );
