@@ -50,30 +50,32 @@ export const MainMenu = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader className="pb-4">
-          <DialogTitle className="flex items-center gap-2 text-xl">
-            <Settings className="h-5 w-5" />
+      <DialogContent className="sm:max-w-lg bg-white border border-gray-200 shadow-lg">
+        <DialogHeader className="pb-6 border-b border-gray-100">
+          <DialogTitle className="flex items-center gap-3 text-xl font-medium text-gray-800">
+            <Settings className="h-5 w-5 text-gray-600" />
             Menu Principal
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-8">
+        <div className="space-y-6 py-2">
           {/* Espelho Geral Section */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-3">
-              <FileText className="h-4 w-4 text-blue-600" />
-              <h3 className="text-base font-semibold text-gray-900">Espelho Geral</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <FileText className="h-4 w-4 text-gray-600" />
+              </div>
+              <h3 className="text-base font-medium text-gray-800">Espelho Geral</h3>
             </div>
             
-            <div className="bg-blue-50 rounded-lg p-4 space-y-3">
-              <p className="text-sm text-gray-700 leading-relaxed">
+            <div className="bg-gray-50 rounded-lg p-5 space-y-4 border border-gray-100">
+              <p className="text-sm text-gray-600 leading-relaxed">
                 Visualize todos os espelhos fechados do sistema em uma única tela para acompanhamento geral.
               </p>
               
               <Button 
                 onClick={handleOpenGeneralSchedule}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5"
+                className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium py-2.5 transition-colors duration-200"
                 size="default"
               >
                 <Eye className="h-4 w-4 mr-2" />
@@ -83,32 +85,38 @@ export const MainMenu = ({
           </div>
 
           {/* Visual Separator */}
-          <Separator className="my-6" />
+          <Separator className="my-6 bg-gray-200" />
 
           {/* Visualização Dual Section */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Monitor className="h-4 w-4 text-green-600" />
-              <h3 className="text-base font-semibold text-gray-900">Visualização Dual</h3>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-gray-50 rounded-lg">
+                <Monitor className="h-4 w-4 text-gray-600" />
+              </div>
+              <h3 className="text-base font-medium text-gray-800">Visualização Dual</h3>
             </div>
             
-            <div className="bg-green-50 rounded-lg p-4 space-y-4">
-              <p className="text-sm text-gray-700 leading-relaxed">
+            <div className="bg-gray-50 rounded-lg p-5 space-y-5 border border-gray-100">
+              <p className="text-sm text-gray-600 leading-relaxed">
                 Ative a visualização dual para trabalhar com dois telejornais simultaneamente em painéis separados.
               </p>
               
               <div className="space-y-4">
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-800">
+                <div className="space-y-3">
+                  <label className="text-sm font-medium text-gray-700">
                     Selecionar segundo telejornal:
                   </label>
                   <Select value={secondJournalId} onValueChange={setSecondJournalId}>
-                    <SelectTrigger className="w-full bg-white border-gray-300">
+                    <SelectTrigger className="w-full bg-white border-gray-200 text-gray-700 hover:border-gray-300 focus:border-gray-400 transition-colors duration-200">
                       <SelectValue placeholder="Escolha um telejornal para visualização dual" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent className="bg-white border-gray-200 shadow-lg">
                       {availableJournals.map((journal) => (
-                        <SelectItem key={journal.id} value={journal.id}>
+                        <SelectItem 
+                          key={journal.id} 
+                          value={journal.id}
+                          className="text-gray-700 hover:bg-gray-50 focus:bg-gray-50"
+                        >
                           {journal.nome}
                         </SelectItem>
                       ))}
@@ -120,7 +128,7 @@ export const MainMenu = ({
                   <Button 
                     onClick={handleActivateDualView} 
                     disabled={!secondJournalId}
-                    className="bg-green-600 hover:bg-green-700 disabled:bg-gray-300 text-white font-medium py-2.5"
+                    className="bg-gray-700 hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 text-white font-medium py-2.5 transition-colors duration-200"
                     size="default"
                   >
                     <Monitor className="h-4 w-4 mr-2" />
@@ -130,7 +138,7 @@ export const MainMenu = ({
                   <Button 
                     variant="outline" 
                     onClick={handleDeactivateDualView}
-                    className="border-green-600 text-green-600 hover:bg-green-50 font-medium py-2.5"
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 font-medium py-2.5 transition-colors duration-200"
                     size="default"
                   >
                     <MonitorX className="h-4 w-4 mr-2" />
