@@ -97,14 +97,27 @@ export const EditorMetaFields = ({
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label htmlFor="clip">Clip</Label>
-        <Input 
-          id="clip" 
-          value={formData.clip || ''} 
-          onChange={onInputChange}
-          disabled={disabled}
-        />
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="clip">Clip</Label>
+          <Input 
+            id="clip" 
+            value={formData.clip || ''} 
+            onChange={onInputChange}
+            disabled={disabled}
+          />
+        </div>
+        
+        <div className="space-y-1.5">
+          <Label htmlFor="tempo_clip">Tempo do Clip</Label>
+          <Input 
+            id="tempo_clip" 
+            value={formData.tempo_clip || ''} 
+            onChange={onInputChange}
+            disabled={disabled}
+            placeholder="Ex: 2:30"
+          />
+        </div>
       </div>
 
       <div className="space-y-1.5">

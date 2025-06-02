@@ -37,6 +37,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
       setFormData({
         retranca: item.retranca,
         clip: item.clip,
+        tempo_clip: item.tempo_clip,
         duracao: item.duracao,
         reporter: item.reporter,
         status: item.status,
@@ -91,6 +92,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
     const updateData: Partial<Materia> = {
       retranca: formData.retranca || item.retranca,
       clip: formData.clip,
+      tempo_clip: formData.tempo_clip,
       duracao: formData.duracao,
       reporter: formData.reporter,
       status: formData.status,
