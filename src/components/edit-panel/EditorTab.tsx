@@ -34,11 +34,11 @@ export const EditorTab = ({
 
   // Enhanced input change handler with validation
   const handleSecureInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
+    const { id, value } = e.target;
     
     // Validate input length based on field
     let maxLength = 1000; // default
-    switch (name) {
+    switch (id) {
       case 'retranca':
         maxLength = 200;
         break;
@@ -53,6 +53,7 @@ export const EditorTab = ({
         break;
       case 'texto':
       case 'cabeca':
+      case 'gc':
         maxLength = 5000;
         break;
     }
@@ -60,14 +61,14 @@ export const EditorTab = ({
     if (!validateTextLength(value, maxLength)) {
       toast({
         title: "Texto muito longo",
-        description: `O campo ${name} não pode ter mais de ${maxLength} caracteres.`,
+        description: `O campo ${id} não pode ter mais de ${maxLength} caracteres.`,
         variant: "destructive",
       });
       return;
     }
 
     // Validate required fields
-    if (name === 'retranca' && !validateRequired(value)) {
+    if (id === 'retranca' && !validateRequired(value)) {
       toast({
         title: "Campo obrigatório",
         description: "O campo retranca é obrigatório.",
