@@ -14,7 +14,10 @@ export const createModelo = async (modelo: ModeloEspelhoCreateInput): Promise<Mo
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    estrutura: data.estrutura as ModeloEspelho['estrutura']
+  };
 };
 
 export const getModelos = async (): Promise<ModeloEspelho[]> => {
@@ -28,7 +31,10 @@ export const getModelos = async (): Promise<ModeloEspelho[]> => {
     throw error;
   }
 
-  return data || [];
+  return (data || []).map(item => ({
+    ...item,
+    estrutura: item.estrutura as ModeloEspelho['estrutura']
+  }));
 };
 
 export const deleteModelo = async (id: string): Promise<void> => {
@@ -56,5 +62,8 @@ export const updateModelo = async (id: string, updates: Partial<ModeloEspelhoCre
     throw error;
   }
 
-  return data;
+  return {
+    ...data,
+    estrutura: data.estrutura as ModeloEspelho['estrutura']
+  };
 };
