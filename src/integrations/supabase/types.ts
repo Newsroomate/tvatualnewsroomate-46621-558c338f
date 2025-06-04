@@ -194,6 +194,33 @@ export type Database = {
           },
         ]
       }
+      modelos_salvos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          estrutura: Json
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          estrutura: Json
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          estrutura?: Json
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pautas: {
         Row: {
           created_at: string | null
