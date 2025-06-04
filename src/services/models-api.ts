@@ -13,7 +13,11 @@ export const fetchModelos = async (): Promise<EspelhoModelo[]> => {
     throw error;
   }
   
-  return data || [];
+  // Converter Json para o tipo correto
+  return (data || []).map(item => ({
+    ...item,
+    estrutura: item.estrutura as EspelhoModelo['estrutura']
+  }));
 };
 
 export const fetchModelosByTelejornal = async (telejornalId: string): Promise<EspelhoModelo[]> => {
@@ -28,7 +32,11 @@ export const fetchModelosByTelejornal = async (telejornalId: string): Promise<Es
     throw error;
   }
   
-  return data || [];
+  // Converter Json para o tipo correto
+  return (data || []).map(item => ({
+    ...item,
+    estrutura: item.estrutura as EspelhoModelo['estrutura']
+  }));
 };
 
 export const createModelo = async (modelo: EspelhoModeloCreateInput): Promise<EspelhoModelo> => {
@@ -43,7 +51,11 @@ export const createModelo = async (modelo: EspelhoModeloCreateInput): Promise<Es
     throw error;
   }
   
-  return data;
+  // Converter Json para o tipo correto
+  return {
+    ...data,
+    estrutura: data.estrutura as EspelhoModelo['estrutura']
+  };
 };
 
 export const deleteModelo = async (id: string): Promise<void> => {

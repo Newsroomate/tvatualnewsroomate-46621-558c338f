@@ -14,6 +14,7 @@ import { PostCloseRundownModal } from "./PostCloseRundownModal";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
+import { EspelhoModelo } from "@/types";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -262,6 +263,50 @@ const Layout = () => {
     }
   };
 
+  const handleCreateFromModel = async (modelo: EspelhoModelo) => {
+    if (!selectedJournal || !currentTelejornal) return;
+
+    try {
+      console.log("Criando espelho a partir do modelo:", modelo);
+      
+      // Delete all current blocks and materias
+      await deleteAllBlocos(selectedJournal);
+      
+      // Open the rundown
+      await updateTelejornal(selectedJournal, {
+        ...currentTelejornal,
+        espelho_aberto: true
+      });
+      
+      // Update local state
+      setCurrentTelejornal({
+        ...currentTelejornal,
+        espelho_aberto: true
+      });
+      
+      // The model creation logic will be handled by NewsSchedule component
+      // when it detects the modelo in localStorage or state
+      
+      toast({
+        title: "Espelho criado a partir do modelo",
+        description: `Espelho de ${currentTelejornal.nome} criado baseado no modelo "${modelo.nome}"`,
+        variant: "default"
+      });
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['telejornais'] });
+      queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
+      
+    } catch (error) {
+      console.error("Erro ao criar espelho a partir do modelo:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível criar o espelho a partir do modelo",
+        variant: "destructive"
+      });
+    }
+  };
+
   const handleViewByDate = (date: Date) => {
     setSelectedViewDate(date);
     setIsSavedRundownsModalOpen(true);
@@ -379,6 +424,7 @@ const Layout = () => {
           onClose={() => setIsPostCloseModalOpen(false)}
           currentTelejornal={currentTelejornal}
           onCreateNew={handleCreateNewRundown}
+          onCreateFromModel={handleCreateFromModel}
           onViewByDate={handleViewByDate}
         />
         
