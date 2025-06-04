@@ -9,12 +9,16 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Telejornal } from "@/types";
 import { GeneralScheduleModal } from "./general-schedule/GeneralScheduleModal";
+import { UseModelModal } from "./models/UseModelModal";
+import { ModelSelectionModal } from "./models/ModelSelectionModal";
+import { EspelhoModelo } from "@/types/models";
 
 interface PostCloseRundownModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentTelejornal: Telejornal | null;
   onCreateNew: () => void;
+  onCreateFromModel: (modelo: EspelhoModelo) => void;
   onViewByDate: (date: Date) => void;
 }
 
@@ -23,14 +27,30 @@ export const PostCloseRundownModal = ({
   onClose,
   currentTelejornal,
   onCreateNew,
+  onCreateFromModel,
   onViewByDate
 }: PostCloseRundownModalProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGeneralScheduleModal, setShowGeneralScheduleModal] = useState(false);
+  const [showUseModelModal, setShowUseModelModal] = useState(false);
+  const [showModelSelectionModal, setShowModelSelectionModal] = useState(false);
 
   const handleCreateNew = () => {
-    onCreateNew(); // SEMPRE carrega o último bloco agora
+    setShowUseModelModal(true);
+  };
+
+  const handleUseModel = () => {
+    setShowModelSelectionModal(true);
+  };
+
+  const handleCreateFromScratch = () => {
+    onCreateNew();
+    onClose();
+  };
+
+  const handleSelectModel = (modelo: EspelhoModelo) => {
+    onCreateFromModel(modelo);
     onClose();
   };
 
@@ -123,6 +143,19 @@ export const PostCloseRundownModal = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      <UseModelModal
+        isOpen={showUseModelModal}
+        onClose={() => setShowUseModelModal(false)}
+        onUseModel={handleUseModel}
+        onCreateNew={handleCreateFromScratch}
+      />
+
+      <ModelSelectionModal
+        isOpen={showModelSelectionModal}
+        onClose={() => setShowModelSelectionModal(false)}
+        onSelectModel={handleSelectModel}
+      />
 
       <GeneralScheduleModal
         isOpen={showGeneralScheduleModal}
