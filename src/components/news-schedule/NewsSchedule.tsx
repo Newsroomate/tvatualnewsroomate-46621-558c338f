@@ -1,12 +1,16 @@
-
+import { useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { ConfirmationDialogs } from "./ConfirmationDialogs";
+import { SaveModelModal } from "@/components/models/SaveModelModal";
+import { SavedModelsModal } from "@/components/models/SavedModelsModal";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
+import { ModeloEspelho } from "@/types/modelos-espelho";
+import { useToast } from "@/hooks/use-toast";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -35,6 +39,9 @@ export const NewsSchedule = ({
   isDualView = false
 }: NewsScheduleProps) => {
   const isDualViewMode = !!externalBlocks && !!onBlocksChange;
+  const [saveModelModalOpen, setSaveModelModalOpen] = useState(false);
+  const [savedModelsModalOpen, setSavedModelsModalOpen] = useState(false);
+  const { toast } = useToast();
   
   const {
     blocks: internalBlocks,
@@ -96,6 +103,22 @@ export const NewsSchedule = ({
     handleDragEnd(result);
   };
 
+  const handleSaveModel = () => {
+    setSaveModelModalOpen(true);
+  };
+
+  const handleViewSavedModels = () => {
+    setSavedModelsModalOpen(true);
+  };
+
+  const handleSelectModel = (modelo: ModeloEspelho) => {
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "A aplicação de modelos será implementada em breve",
+      variant: "default"
+    });
+  };
+
   const scheduleContent = (
     <>
       {/* Header with journal info and total time */}
@@ -107,6 +130,8 @@ export const NewsSchedule = ({
         onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
         blocks={blocks}
+        onSaveModel={handleSaveModel}
+        onViewSavedModels={handleViewSavedModels}
       />
 
       {/* Main area with blocks - improved scrolling and padding */}
@@ -148,6 +173,21 @@ export const NewsSchedule = ({
         setRenumberConfirmOpen={setRenumberConfirmOpen}
         confirmDeleteMateria={confirmDeleteMateria}
         confirmRenumberItems={confirmRenumberItems}
+      />
+
+      {/* Model Management Modals */}
+      <SaveModelModal
+        isOpen={saveModelModalOpen}
+        onClose={() => setSaveModelModalOpen(false)}
+        blocks={blocks}
+        currentTelejornal={currentTelejornal}
+      />
+
+      <SavedModelsModal
+        isOpen={savedModelsModalOpen}
+        onClose={() => setSavedModelsModalOpen(false)}
+        currentTelejornal={currentTelejornal}
+        onSelectModel={handleSelectModel}
       />
     </>
   );
