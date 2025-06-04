@@ -1,11 +1,11 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Trash2, FileText, Calendar, Eye, Loader2 } from "lucide-react";
+import { Trash2, FileText, Calendar, Eye } from "lucide-react";
 import { ModeloEspelho } from "@/types/modelos-espelho";
 import { fetchModelosEspelho, deleteModeloEspelho } from "@/services/modelos-espelho-api";
-import { applyModelToRundown } from "@/services/modelo-application-api";
 import { Telejornal } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -37,7 +37,6 @@ export const SavedModelsModal = ({
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [modeloToDelete, setModeloToDelete] = useState<ModeloEspelho | null>(null);
   const [selectedModelPreview, setSelectedModelPreview] = useState<ModeloEspelho | null>(null);
-  const [applyingModel, setApplyingModel] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadModelos = async () => {
@@ -80,48 +79,14 @@ export const SavedModelsModal = ({
     }
   };
 
-  const handleUseModel = async (modelo: ModeloEspelho) => {
-    if (!currentTelejornal) {
-      toast({
-        title: "Erro",
-        description: "Nenhum telejornal selecionado",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setApplyingModel(modelo.id);
-    console.log("Aplicando modelo:", modelo.nome, "ao telejornal:", currentTelejornal.nome);
-
-    try {
-      const result = await applyModelToRundown(modelo, currentTelejornal.id);
-      
-      if (result.success) {
-        toast({
-          title: "Modelo aplicado com sucesso",
-          description: `O modelo "${modelo.nome}" foi aplicado e o espelho foi aberto`,
-        });
-        
-        // Chamar o callback original para notificar o componente pai
-        onSelectModel(modelo);
-        onClose();
-      } else {
-        toast({
-          title: "Erro ao aplicar modelo",
-          description: result.message,
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error("Erro ao aplicar modelo:", error);
-      toast({
-        title: "Erro ao aplicar modelo",
-        description: "Não foi possível aplicar o modelo selecionado",
-        variant: "destructive"
-      });
-    } finally {
-      setApplyingModel(null);
-    }
+  const handleUseModel = (modelo: ModeloEspelho) => {
+    console.log("Usando modelo:", modelo.nome);
+    onSelectModel(modelo);
+    toast({
+      title: "Modelo aplicado",
+      description: `O modelo "${modelo.nome}" foi aplicado ao novo espelho`,
+    });
+    onClose();
   };
 
   const formatDate = (dateString: string) => {
@@ -243,7 +208,6 @@ export const SavedModelsModal = ({
                           setDeleteConfirmOpen(true);
                         }}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        disabled={applyingModel === modelo.id}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Excluir
@@ -253,19 +217,9 @@ export const SavedModelsModal = ({
                         size="sm"
                         onClick={() => handleUseModel(modelo)}
                         className="bg-blue-600 hover:bg-blue-700 text-white"
-                        disabled={applyingModel === modelo.id}
                       >
-                        {applyingModel === modelo.id ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                            Aplicando...
-                          </>
-                        ) : (
-                          <>
-                            <FileText className="h-4 w-4 mr-1" />
-                            Usar Modelo
-                          </>
-                        )}
+                        <FileText className="h-4 w-4 mr-1" />
+                        Usar Modelo
                       </Button>
                     </div>
                   </div>
