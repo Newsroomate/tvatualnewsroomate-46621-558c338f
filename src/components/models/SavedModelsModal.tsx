@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, FileText, Calendar, Eye } from "lucide-react";
 import { ModeloEspelho } from "@/types/modelos-espelho";
 import { fetchModelosEspelho, deleteModeloEspelho } from "@/services/modelos-espelho-api";
+import { applyModelToTelejornal } from "@/services/modelo-application-api";
 import { Telejornal } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -34,6 +34,7 @@ export const SavedModelsModal = ({
 }: SavedModelsModalProps) => {
   const [modelos, setModelos] = useState<ModeloEspelho[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isApplyingModel, setIsApplyingModel] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [modeloToDelete, setModeloToDelete] = useState<ModeloEspelho | null>(null);
   const [selectedModelPreview, setSelectedModelPreview] = useState<ModeloEspelho | null>(null);
@@ -79,14 +80,40 @@ export const SavedModelsModal = ({
     }
   };
 
-  const handleUseModel = (modelo: ModeloEspelho) => {
-    console.log("Usando modelo:", modelo.nome);
-    onSelectModel(modelo);
-    toast({
-      title: "Modelo aplicado",
-      description: `O modelo "${modelo.nome}" foi aplicado ao novo espelho`,
-    });
-    onClose();
+  const handleUseModel = async (modelo: ModeloEspelho) => {
+    if (!currentTelejornal) {
+      toast({
+        title: "Erro",
+        description: "Nenhum telejornal selecionado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsApplyingModel(true);
+    console.log("Aplicando modelo:", modelo.nome, "ao telejornal:", currentTelejornal.nome);
+
+    try {
+      const result = await applyModelToTelejornal(modelo, currentTelejornal.id);
+      
+      if (result.success) {
+        // Notificar o componente pai sobre a aplicação do modelo
+        onSelectModel(modelo);
+        onClose();
+        
+        // Recarregar a página para refletir as mudanças
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Erro ao aplicar modelo:", error);
+      toast({
+        title: "Erro ao aplicar modelo",
+        description: "Não foi possível aplicar o modelo ao espelho",
+        variant: "destructive"
+      });
+    } finally {
+      setIsApplyingModel(false);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -132,7 +159,7 @@ export const SavedModelsModal = ({
           ) : (
             <div className="space-y-4">
               <div className="text-sm text-gray-600 mb-4">
-                Selecione um modelo para criar um novo espelho ou gerencie seus modelos salvos:
+                Selecione um modelo para aplicar ao espelho do telejornal <strong>{currentTelejornal?.nome}</strong>:
               </div>
               
               {modelos.map((modelo) => (
@@ -208,6 +235,7 @@ export const SavedModelsModal = ({
                           setDeleteConfirmOpen(true);
                         }}
                         className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                        disabled={isApplyingModel}
                       >
                         <Trash2 className="h-4 w-4 mr-1" />
                         Excluir
@@ -217,9 +245,10 @@ export const SavedModelsModal = ({
                         size="sm"
                         onClick={() => handleUseModel(modelo)}
                         className="bg-blue-600 hover:bg-blue-700 text-white"
+                        disabled={isApplyingModel}
                       >
                         <FileText className="h-4 w-4 mr-1" />
-                        Usar Modelo
+                        {isApplyingModel ? 'Aplicando...' : 'Usar Modelo'}
                       </Button>
                     </div>
                   </div>
@@ -229,7 +258,7 @@ export const SavedModelsModal = ({
           )}
           
           <div className="flex justify-end pt-6 border-t">
-            <Button variant="outline" onClick={onClose}>
+            <Button variant="outline" onClick={onClose} disabled={isApplyingModel}>
               Fechar
             </Button>
           </div>
