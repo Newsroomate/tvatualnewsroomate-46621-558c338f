@@ -26,8 +26,9 @@ export const UseModelModal = ({
   };
 
   const handleCreateFromScratch = () => {
-    onCreateFromScratch();
+    console.log("UseModelModal: Creating from scratch - truly empty rundown");
     onClose();
+    onCreateFromScratch();
   };
 
   const handleCloseModelSelection = () => {

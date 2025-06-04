@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -39,7 +38,8 @@ export const PostCloseRundownModal = ({
   };
 
   const handleCreateFromScratch = () => {
-    onCreateNew(false); // NÃO carrega o último bloco - cria do zero
+    console.log("PostCloseRundownModal: Creating truly empty rundown (not loading last block)");
+    onCreateNew(false); // Pass false to indicate create empty (do NOT load last block)
     setShowUseModelModal(false);
     onClose();
   };

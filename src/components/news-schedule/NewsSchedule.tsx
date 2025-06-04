@@ -1,4 +1,3 @@
-
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { ScheduleHeader } from "./ScheduleHeader";
@@ -101,6 +100,15 @@ export const NewsSchedule = ({
 
   const handleSaveModel = () => {
     setSaveModelModalOpen(true);
+  };
+
+  const handleAddFirstBlockWithScroll = async (createEmpty?: boolean) => {
+    console.log(`NewsSchedule: handleAddFirstBlockWithScroll called with createEmpty=${createEmpty}`);
+    const newBlock = await handleAddFirstBlock(createEmpty);
+    if (newBlock && scrollToBlock) {
+      setTimeout(() => scrollToBlock(newBlock.id), 100);
+    }
+    return newBlock;
   };
 
   const scheduleContent = (
