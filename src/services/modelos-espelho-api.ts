@@ -24,18 +24,36 @@ export const fetchModelosEspelho = async (telejornalId?: string) => {
 };
 
 export const createModeloEspelho = async (modelo: ModeloEspelhoCreateInput) => {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  
+  if (userError || !userData.user) {
+    console.error('Erro ao obter usuário:', userError);
+    toastService.error("Erro de autenticação", "Usuário não autenticado");
+    throw new Error("Usuário não autenticado");
+  }
+
   const { data, error } = await supabase
     .from('modelos_espelho')
     .insert({
       ...modelo,
-      criado_por: (await supabase.auth.getUser()).data.user?.id
+      user_id: userData.user.id
     })
     .select()
     .single();
 
   if (error) {
     console.error('Erro ao criar modelo de espelho:', error);
-    toastService.error("Erro ao salvar modelo", error.message);
+    let errorMessage = "Erro desconhecido";
+    
+    if (error.code === '23505') {
+      errorMessage = "Já existe um modelo com este nome";
+    } else if (error.code === '23503') {
+      errorMessage = "Telejornal não encontrado";
+    } else if (error.message) {
+      errorMessage = error.message;
+    }
+    
+    toastService.error("Erro ao salvar modelo", errorMessage);
     throw error;
   }
 

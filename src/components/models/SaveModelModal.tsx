@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { createModeloEspelho } from "@/services/modelos-espelho-api";
 import { useToast } from "@/hooks/use-toast";
@@ -30,24 +32,19 @@ export const SaveModelModal = ({
   const [nome, setNome] = useState("");
   const [descricao, setDescricao] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
   const handleSave = async () => {
+    setError(null);
+    
     if (!nome.trim()) {
-      toast({
-        title: "Nome obrigatório",
-        description: "Por favor, informe um nome para o modelo",
-        variant: "destructive"
-      });
+      setError("Por favor, informe um nome para o modelo");
       return;
     }
 
     if (blocks.length === 0) {
-      toast({
-        title: "Espelho vazio",
-        description: "Não é possível salvar um modelo sem blocos",
-        variant: "destructive"
-      });
+      setError("Não é possível salvar um modelo sem blocos");
       return;
     }
 
@@ -86,9 +83,11 @@ export const SaveModelModal = ({
       // Reset form
       setNome("");
       setDescricao("");
+      setError(null);
       onClose();
     } catch (error) {
       console.error("Erro ao salvar modelo:", error);
+      setError("Falha ao salvar o modelo. Tente novamente.");
     } finally {
       setIsSaving(false);
     }
@@ -97,6 +96,7 @@ export const SaveModelModal = ({
   const handleClose = () => {
     setNome("");
     setDescricao("");
+    setError(null);
     onClose();
   };
 
@@ -108,6 +108,13 @@ export const SaveModelModal = ({
         </DialogHeader>
         
         <div className="space-y-4">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          
           <div>
             <Label htmlFor="nome">Nome do Modelo *</Label>
             <Input
@@ -116,6 +123,7 @@ export const SaveModelModal = ({
               onChange={(e) => setNome(e.target.value)}
               placeholder="Ex: Modelo Padrão Manhã"
               maxLength={100}
+              disabled={isSaving}
             />
           </div>
           
@@ -128,6 +136,7 @@ export const SaveModelModal = ({
               placeholder="Descreva quando usar este modelo..."
               rows={3}
               maxLength={500}
+              disabled={isSaving}
             />
           </div>
           

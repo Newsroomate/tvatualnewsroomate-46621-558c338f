@@ -44,47 +44,6 @@ export type Database = {
           },
         ]
       }
-      espelhos_salvos: {
-        Row: {
-          created_at: string
-          data_referencia: string
-          data_salvamento: string
-          estrutura: Json
-          id: string
-          nome: string
-          telejornal_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          data_referencia: string
-          data_salvamento?: string
-          estrutura: Json
-          id?: string
-          nome: string
-          telejornal_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          data_referencia?: string
-          data_salvamento?: string
-          estrutura?: Json
-          id?: string
-          nome?: string
-          telejornal_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "espelhos_salvos_telejornal_id_fkey"
-            columns: ["telejornal_id"]
-            isOneToOne: false
-            referencedRelation: "telejornais"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       materias: {
         Row: {
           bloco_id: string | null
@@ -197,33 +156,33 @@ export type Database = {
       modelos_espelho: {
         Row: {
           created_at: string
-          criado_por: string | null
           descricao: string | null
           estrutura: Json
           id: string
           nome: string
           telejornal_id: string | null
           updated_at: string
+          user_id: string
         }
         Insert: {
           created_at?: string
-          criado_por?: string | null
           descricao?: string | null
           estrutura: Json
           id?: string
           nome: string
           telejornal_id?: string | null
           updated_at?: string
+          user_id: string
         }
         Update: {
           created_at?: string
-          criado_por?: string | null
           descricao?: string | null
           estrutura?: Json
           id?: string
           nome?: string
           telejornal_id?: string | null
           updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {
