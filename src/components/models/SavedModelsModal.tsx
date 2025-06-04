@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,13 +12,15 @@ interface SavedModelsModalProps {
   onClose: () => void;
   onUseModel?: (model: SavedModel) => void;
   telejornalId?: string;
+  onModelApplied?: () => void; // New prop for triggering data refresh
 }
 
 export const SavedModelsModal = ({
   isOpen,
   onClose,
   onUseModel,
-  telejornalId
+  telejornalId,
+  onModelApplied
 }: SavedModelsModalProps) => {
   const [models, setModels] = useState<SavedModel[]>([]);
   const [selectedModel, setSelectedModel] = useState<SavedModel | null>(null);
@@ -83,11 +86,19 @@ export const SavedModelsModal = ({
     setIsApplying(model.id);
     try {
       await applyModelToTelejornal(model, telejornalId);
+      
       toast({
         title: "Modelo aplicado",
         description: `O modelo "${model.nome}" foi aplicado com sucesso`,
       });
+      
+      // Trigger immediate data refresh
+      if (onModelApplied) {
+        onModelApplied();
+      }
+      
       onClose();
+      
       if (onUseModel) {
         onUseModel(model);
       }

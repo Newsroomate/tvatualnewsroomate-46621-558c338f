@@ -11,6 +11,7 @@ import { SaveModelModal } from "@/components/models/SaveModelModal";
 import { SavedModelsModal } from "@/components/models/SavedModelsModal";
 import { SavedModel } from "@/services/models-api";
 import { useToast } from "@/hooks/use-toast";
+import { useQueryClient } from "@tanstack/react-query";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -42,6 +43,7 @@ export const NewsSchedule = ({
   const [isSaveModelModalOpen, setIsSaveModelModalOpen] = useState(false);
   const [isSavedModelsModalOpen, setIsSavedModelsModalOpen] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   const {
     blocks: internalBlocks,
@@ -126,12 +128,24 @@ export const NewsSchedule = ({
   };
 
   const handleUseModel = (model: SavedModel) => {
-    // Refresh the data after model is applied
     toast({
       title: "Modelo aplicado",
       description: "O espelho foi atualizado com a estrutura do modelo",
     });
-    // The realtime updates will automatically refresh the blocks
+  };
+
+  const handleModelApplied = () => {
+    // Force immediate refresh of blocks and materias data
+    if (selectedJournal) {
+      console.log("Forcing data refresh after model application");
+      
+      // Invalidate all related queries to force immediate refetch
+      queryClient.invalidateQueries({ queryKey: ["blocos", selectedJournal] });
+      queryClient.invalidateQueries({ queryKey: ["materias"] });
+      
+      // Refetch queries immediately
+      queryClient.refetchQueries({ queryKey: ["blocos", selectedJournal] });
+    }
   };
 
   const scheduleContent = (
@@ -204,6 +218,7 @@ export const NewsSchedule = ({
         onClose={() => setIsSavedModelsModalOpen(false)}
         onUseModel={handleUseModel}
         telejornalId={selectedJournal}
+        onModelApplied={handleModelApplied}
       />
     </>
   );
