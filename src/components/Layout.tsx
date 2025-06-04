@@ -14,6 +14,7 @@ import { PostCloseRundownModal } from "./PostCloseRundownModal";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
+import { ModeloEspelho } from "@/types/models";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -267,6 +268,47 @@ const Layout = () => {
     setIsSavedRundownsModalOpen(true);
   };
 
+  const handleApplyModel = async (modelo: ModeloEspelho) => {
+    if (!selectedJournal || !currentTelejornal) return;
+
+    try {
+      console.log("Applying model to create new rundown:", modelo);
+      
+      // Import the model application service
+      const { applyModeloToTelejornal } = await import("@/services/modelo-application-api");
+      
+      // First delete all current blocks
+      await deleteAllBlocos(selectedJournal);
+      
+      // Apply the model (this will also open the telejornal)
+      await applyModeloToTelejornal(modelo, selectedJournal, currentTelejornal);
+      
+      // Update local state
+      setCurrentTelejornal({
+        ...currentTelejornal,
+        espelho_aberto: true
+      });
+      
+      toast({
+        title: "Modelo aplicado",
+        description: `Espelho criado com base no modelo "${modelo.nome}"`,
+        variant: "default"
+      });
+      
+      // Refresh data
+      queryClient.invalidateQueries({ queryKey: ['telejornais'] });
+      queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
+      
+    } catch (error) {
+      console.error("Erro ao aplicar modelo:", error);
+      toast({
+        title: "Erro ao aplicar modelo",
+        description: "Não foi possível criar o espelho com base no modelo selecionado",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex h-screen overflow-hidden">
@@ -380,6 +422,7 @@ const Layout = () => {
           currentTelejornal={currentTelejornal}
           onCreateNew={handleCreateNewRundown}
           onViewByDate={handleViewByDate}
+          onApplyModel={handleApplyModel}
         />
         
         {/* Modal para visualizar espelhos salvos por data */}

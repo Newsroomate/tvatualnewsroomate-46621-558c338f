@@ -4,17 +4,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { FileText, Layout } from "lucide-react";
 import { ModelSelectionModal } from "./ModelSelectionModal";
+import { ModeloEspelho } from "@/types/models";
 
 interface UseModelModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreateFromScratch: () => void;
+  onModelSelected: (modelo: ModeloEspelho) => void;
 }
 
 export const UseModelModal = ({
   isOpen,
   onClose,
-  onCreateFromScratch
+  onCreateFromScratch,
+  onModelSelected
 }: UseModelModalProps) => {
   const [showModelSelection, setShowModelSelection] = useState(false);
 
@@ -31,9 +34,10 @@ export const UseModelModal = ({
     setShowModelSelection(false);
   };
 
-  const handleModelSelected = () => {
+  const handleModelSelected = (modelo: ModeloEspelho) => {
     setShowModelSelection(false);
     onClose();
+    onModelSelected(modelo);
   };
 
   return (

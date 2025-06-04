@@ -11,7 +11,7 @@ import { format } from "date-fns";
 interface ModelSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onModelSelected: () => void;
+  onModelSelected: (modelo: ModeloEspelho) => void;
 }
 
 export const ModelSelectionModal = ({
@@ -22,6 +22,7 @@ export const ModelSelectionModal = ({
   const [modelos, setModelos] = useState<ModeloEspelho[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState<ModeloEspelho | null>(null);
+  const [isApplying, setIsApplying] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -58,16 +59,31 @@ export const ModelSelectionModal = ({
     setSelectedModel(modelo);
   };
 
-  const handleUseModel = () => {
+  const handleUseModel = async () => {
     if (!selectedModel) return;
     
-    // TODO: Implementar lógica para aplicar o modelo selecionado
-    toast({
-      title: "Modelo aplicado",
-      description: `O modelo "${selectedModel.nome}" foi aplicado com sucesso!`,
-    });
-    
-    onModelSelected();
+    setIsApplying(true);
+    try {
+      console.log("Aplicando modelo:", selectedModel);
+      
+      toast({
+        title: "Aplicando modelo",
+        description: `Aplicando o modelo "${selectedModel.nome}"...`,
+      });
+      
+      // Pass the selected model to the parent component
+      onModelSelected(selectedModel);
+      
+    } catch (error) {
+      console.error("Erro ao aplicar modelo:", error);
+      toast({
+        title: "Erro ao aplicar modelo",
+        description: "Não foi possível aplicar o modelo selecionado",
+        variant: "destructive"
+      });
+    } finally {
+      setIsApplying(false);
+    }
   };
 
   return (
@@ -148,9 +164,16 @@ export const ModelSelectionModal = ({
           </Button>
           <Button 
             onClick={handleUseModel} 
-            disabled={!selectedModel}
+            disabled={!selectedModel || isApplying}
           >
-            Usar Modelo Selecionado
+            {isApplying ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                Aplicando...
+              </>
+            ) : (
+              "Usar Modelo Selecionado"
+            )}
           </Button>
         </div>
       </DialogContent>

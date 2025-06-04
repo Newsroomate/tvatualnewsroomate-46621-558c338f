@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { Telejornal } from "@/types";
 import { GeneralScheduleModal } from "./general-schedule/GeneralScheduleModal";
 import { UseModelModal } from "./models/UseModelModal";
+import { ModeloEspelho } from "@/types/models";
 
 interface PostCloseRundownModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ interface PostCloseRundownModalProps {
   currentTelejornal: Telejornal | null;
   onCreateNew: () => void;
   onViewByDate: (date: Date) => void;
+  onApplyModel: (modelo: ModeloEspelho) => void;
 }
 
 export const PostCloseRundownModal = ({
@@ -24,7 +26,8 @@ export const PostCloseRundownModal = ({
   onClose,
   currentTelejornal,
   onCreateNew,
-  onViewByDate
+  onViewByDate,
+  onApplyModel
 }: PostCloseRundownModalProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -39,6 +42,12 @@ export const PostCloseRundownModal = ({
     onCreateNew(); // SEMPRE carrega o último bloco agora
     setShowUseModelModal(false);
     onClose();
+  };
+
+  const handleModelSelected = (modelo: ModeloEspelho) => {
+    setShowUseModelModal(false);
+    onClose();
+    onApplyModel(modelo);
   };
 
   const handleCloseUseModelModal = () => {
@@ -144,6 +153,7 @@ export const PostCloseRundownModal = ({
         isOpen={showUseModelModal}
         onClose={handleCloseUseModelModal}
         onCreateFromScratch={handleCreateFromScratch}
+        onModelSelected={handleModelSelected}
       />
     </>
   );
