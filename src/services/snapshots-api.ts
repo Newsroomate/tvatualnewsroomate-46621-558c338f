@@ -63,7 +63,7 @@ export const fetchClosedRundownSnapshots = async (
     endTime
   });
 
-  // Por enquanto, vamos buscar os espelhos salvos e transformá-los no formato esperado
+  // Buscar os espelhos salvos e transformá-los no formato esperado
   let query = supabase
     .from("espelhos_salvos")
     .select(`

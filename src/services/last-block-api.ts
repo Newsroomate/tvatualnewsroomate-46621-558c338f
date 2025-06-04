@@ -16,9 +16,14 @@ export const getLastBlockFromPreviousRundown = async (telejornalId: string): Pro
       .eq('telejornal_id', telejornalId)
       .order('data_salvamento', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (error || !lastSnapshot) {
+    if (error) {
+      console.error('Erro ao buscar último snapshot:', error);
+      return null;
+    }
+
+    if (!lastSnapshot) {
       console.log('Nenhum snapshot anterior encontrado para o telejornal:', telejornalId);
       return null;
     }

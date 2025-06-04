@@ -77,7 +77,7 @@ export async function fetchClosedRundowns(
   }
 
   // Map the data to the ClosedRundown format
-  return data.map(rundown => {
+  return (data || []).map((rundown: any) => {
     const createdDate = new Date(rundown.created_at || "");
     return {
       id: rundown.id,

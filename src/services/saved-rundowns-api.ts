@@ -98,7 +98,7 @@ export const fetchAllSavedRundowns = async (
   }
 
   // Convert the raw data to SavedRundown format, ensuring proper type conversion
-  return data?.map(item => ({
+  return data?.map((item: any) => ({
     id: item.id,
     telejornal_id: item.telejornal_id,
     data_salvamento: item.data_salvamento,
