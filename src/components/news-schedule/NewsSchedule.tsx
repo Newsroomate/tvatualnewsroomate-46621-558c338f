@@ -1,11 +1,9 @@
 
-import { useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { ConfirmationDialogs } from "./ConfirmationDialogs";
-import { SaveModelModal } from "@/components/models/SaveModelModal";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
@@ -37,7 +35,6 @@ export const NewsSchedule = ({
   isDualView = false
 }: NewsScheduleProps) => {
   const isDualViewMode = !!externalBlocks && !!onBlocksChange;
-  const [saveModelModalOpen, setSaveModelModalOpen] = useState(false);
   
   const {
     blocks: internalBlocks,
@@ -99,10 +96,6 @@ export const NewsSchedule = ({
     handleDragEnd(result);
   };
 
-  const handleSaveModel = () => {
-    setSaveModelModalOpen(true);
-  };
-
   const scheduleContent = (
     <>
       {/* Header with journal info and total time */}
@@ -114,7 +107,6 @@ export const NewsSchedule = ({
         onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
         blocks={blocks}
-        onSaveModel={handleSaveModel}
       />
 
       {/* Main area with blocks - improved scrolling and padding */}
@@ -156,14 +148,6 @@ export const NewsSchedule = ({
         setRenumberConfirmOpen={setRenumberConfirmOpen}
         confirmDeleteMateria={confirmDeleteMateria}
         confirmRenumberItems={confirmRenumberItems}
-      />
-
-      {/* Model Management Modal */}
-      <SaveModelModal
-        isOpen={saveModelModalOpen}
-        onClose={() => setSaveModelModalOpen(false)}
-        blocks={blocks}
-        currentTelejornal={currentTelejornal}
       />
     </>
   );

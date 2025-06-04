@@ -194,47 +194,6 @@ export type Database = {
           },
         ]
       }
-      modelos_espelho: {
-        Row: {
-          created_at: string
-          descricao: string | null
-          estrutura: Json
-          id: string
-          nome: string
-          telejornal_id: string | null
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          descricao?: string | null
-          estrutura: Json
-          id?: string
-          nome: string
-          telejornal_id?: string | null
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          descricao?: string | null
-          estrutura?: Json
-          id?: string
-          nome?: string
-          telejornal_id?: string | null
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "modelos_espelho_telejornal_id_fkey"
-            columns: ["telejornal_id"]
-            isOneToOne: false
-            referencedRelation: "telejornais"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       pautas: {
         Row: {
           created_at: string | null

@@ -9,8 +9,6 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Telejornal } from "@/types";
 import { GeneralScheduleModal } from "./general-schedule/GeneralScheduleModal";
-import { CreateRundownModal } from "./models/CreateRundownModal";
-import { ModeloEspelho } from "@/types/modelos-espelho";
 
 interface PostCloseRundownModalProps {
   isOpen: boolean;
@@ -18,7 +16,6 @@ interface PostCloseRundownModalProps {
   currentTelejornal: Telejornal | null;
   onCreateNew: () => void;
   onViewByDate: (date: Date) => void;
-  onCreateFromModel?: (modelo: ModeloEspelho) => void;
 }
 
 export const PostCloseRundownModal = ({
@@ -26,22 +23,14 @@ export const PostCloseRundownModal = ({
   onClose,
   currentTelejornal,
   onCreateNew,
-  onViewByDate,
-  onCreateFromModel
+  onViewByDate
 }: PostCloseRundownModalProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGeneralScheduleModal, setShowGeneralScheduleModal] = useState(false);
-  const [showCreateRundownModal, setShowCreateRundownModal] = useState(false);
 
   const handleCreateNew = () => {
-    setShowCreateRundownModal(true);
-  };
-
-  const handleCreateFromModel = (modelo: ModeloEspelho) => {
-    if (onCreateFromModel) {
-      onCreateFromModel(modelo);
-    }
+    onCreateNew(); // SEMPRE carrega o último bloco agora
     onClose();
   };
 
@@ -53,10 +42,6 @@ export const PostCloseRundownModal = ({
 
   const handleCloseGeneralScheduleModal = () => {
     setShowGeneralScheduleModal(false);
-  };
-
-  const handleCloseCreateRundownModal = () => {
-    setShowCreateRundownModal(false);
   };
 
   return (
@@ -142,14 +127,6 @@ export const PostCloseRundownModal = ({
       <GeneralScheduleModal
         isOpen={showGeneralScheduleModal}
         onClose={handleCloseGeneralScheduleModal}
-      />
-
-      <CreateRundownModal
-        isOpen={showCreateRundownModal}
-        onClose={handleCloseCreateRundownModal}
-        currentTelejornal={currentTelejornal}
-        onCreateNew={onCreateNew}
-        onCreateFromModel={handleCreateFromModel}
       />
     </>
   );
