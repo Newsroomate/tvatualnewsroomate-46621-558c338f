@@ -15,9 +15,9 @@ interface ScheduleHeaderProps {
   onAddBlock?: () => void;
   onViewTeleprompter?: () => void;
   onExportClipRetranca?: () => void;
-  onSaveModel?: () => void;
   materias?: Materia[];
   blocks?: (Bloco & { items: Materia[] })[];
+  onSaveModel?: () => void;
 }
 
 export const ScheduleHeader = ({
@@ -28,9 +28,9 @@ export const ScheduleHeader = ({
   onAddBlock,
   onViewTeleprompter,
   onExportClipRetranca,
-  onSaveModel,
   materias = [],
-  blocks = []
+  blocks = [],
+  onSaveModel
 }: ScheduleHeaderProps) => {
 
   const handleExportGC = () => {
@@ -50,7 +50,7 @@ export const ScheduleHeader = ({
           {new Date().toLocaleDateString('pt-BR')}
         </p>
       </div>
-      <div className="flex gap-2 items-center">
+      <div className="flex gap-2 items-center flex-wrap">
         <Button 
           variant="outline" 
           size="sm" 
@@ -61,15 +61,29 @@ export const ScheduleHeader = ({
           Adicionar Novo Bloco
         </Button>
         
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onSaveModel}
-          disabled={!currentTelejornal || !hasBlocks}
-        >
-          <Save className="h-4 w-4 mr-2" />
-          Salvar Modelo
-        </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={onSaveModel}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar Modelo
+                </Button>
+              </div>
+            </TooltipTrigger>
+            {!currentTelejornal?.espelho_aberto && <TooltipContent>
+                Abra o espelho para salvar modelos
+              </TooltipContent>}
+            {!hasBlocks && currentTelejornal?.espelho_aberto && <TooltipContent>
+                Adicione blocos para salvar como modelo
+              </TooltipContent>}
+          </Tooltip>
+        </TooltipProvider>
         
         <Button 
           variant="outline" 

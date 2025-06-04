@@ -1,37 +1,38 @@
 
-export interface EspelhoModelo {
+export interface ModeloEspelho {
   id: string;
-  created_at: string;
-  updated_at: string;
   nome: string;
-  telejornal_id: string | null;
+  descricao?: string;
+  telejornal_id?: string;
   estrutura: {
     blocos: Array<{
       id: string;
       nome: string;
       ordem: number;
-      materias: Array<{
+      items: Array<{
         id: string;
         retranca: string;
-        duracao: number;
-        ordem: number;
         clip?: string;
         tempo_clip?: string;
+        duracao: number;
         pagina?: string;
         reporter?: string;
         status?: string;
         texto?: string;
         cabeca?: string;
         gc?: string;
+        ordem: number;
       }>;
     }>;
   };
-  user_id: string;
+  criado_por?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface EspelhoModeloCreateInput {
+export interface ModeloEspelhoCreateInput {
   nome: string;
-  telejornal_id: string | null;
-  estrutura: EspelhoModelo['estrutura'];
-  user_id: string;
+  descricao?: string;
+  telejornal_id?: string;
+  estrutura: ModeloEspelho['estrutura'];
 }

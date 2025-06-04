@@ -4,139 +4,146 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createModelo } from "@/services/models-api";
-import { Telejornal, Bloco, Materia } from "@/types";
-import { useAuth } from "@/context/AuthContext";
-import { toast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
+import { Bloco, Materia, Telejornal } from "@/types";
+import { createModeloEspelho } from "@/services/modelos-espelho-api";
+import { useToast } from "@/hooks/use-toast";
+
+type BlockWithItems = Bloco & { 
+  items: Materia[];
+  totalTime: number;
+};
 
 interface SaveModelModalProps {
   isOpen: boolean;
   onClose: () => void;
+  blocks: BlockWithItems[];
   currentTelejornal: Telejornal | null;
-  blocks: (Bloco & { items: Materia[], totalTime: number })[];
 }
 
 export const SaveModelModal = ({
   isOpen,
   onClose,
-  currentTelejornal,
-  blocks
+  blocks,
+  currentTelejornal
 }: SaveModelModalProps) => {
-  const [modelName, setModelName] = useState("");
-  const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const [nome, setNome] = useState("");
+  const [descricao, setDescricao] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
-  const createMutation = useMutation({
-    mutationFn: createModelo,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['modelos'] });
-      toast({
-        title: "Modelo salvo",
-        description: "O modelo foi salvo com sucesso.",
-      });
-      setModelName("");
-      onClose();
-    },
-    onError: (error) => {
-      console.error('Erro ao salvar modelo:', error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível salvar o modelo.",
-        variant: "destructive",
-      });
-    }
-  });
-
-  const handleSave = () => {
-    if (!modelName.trim()) {
+  const handleSave = async () => {
+    if (!nome.trim()) {
       toast({
         title: "Nome obrigatório",
-        description: "Por favor, insira um nome para o modelo.",
-        variant: "destructive",
+        description: "Por favor, informe um nome para o modelo",
+        variant: "destructive"
       });
       return;
     }
 
-    if (!user?.id) {
+    if (blocks.length === 0) {
       toast({
-        title: "Erro de autenticação",
-        description: "Usuário não autenticado.",
-        variant: "destructive",
+        title: "Espelho vazio",
+        description: "Não é possível salvar um modelo sem blocos",
+        variant: "destructive"
       });
       return;
     }
 
-    // Criar estrutura do modelo removendo IDs específicos para reutilização
-    const estrutura = {
-      blocos: blocks.map((bloco, blocoIndex) => ({
-        id: `modelo_bloco_${blocoIndex + 1}`,
-        nome: bloco.nome,
-        ordem: bloco.ordem,
-        materias: bloco.items.map((materia, materiaIndex) => ({
-          id: `modelo_materia_${blocoIndex + 1}_${materiaIndex + 1}`,
-          retranca: materia.retranca,
-          duracao: materia.duracao,
-          ordem: materia.ordem,
-          clip: materia.clip,
-          tempo_clip: materia.tempo_clip,
-          pagina: materia.pagina,
-          reporter: materia.reporter,
-          status: materia.status,
-          texto: materia.texto,
-          cabeca: materia.cabeca,
-          gc: materia.gc
-        }))
-      }))
-    };
+    setIsSaving(true);
 
-    createMutation.mutate({
-      nome: modelName.trim(),
-      telejornal_id: currentTelejornal?.id || null,
-      estrutura,
-      user_id: user.id
-    });
+    try {
+      const estrutura = {
+        blocos: blocks.map(block => ({
+          id: block.id,
+          nome: block.nome,
+          ordem: block.ordem,
+          items: block.items.map(item => ({
+            id: item.id,
+            retranca: item.retranca,
+            clip: item.clip,
+            tempo_clip: item.tempo_clip,
+            duracao: item.duracao || 0,
+            pagina: item.pagina,
+            reporter: item.reporter,
+            status: item.status,
+            texto: item.texto,
+            cabeca: item.cabeca,
+            gc: item.gc,
+            ordem: item.ordem
+          }))
+        }))
+      };
+
+      await createModeloEspelho({
+        nome: nome.trim(),
+        descricao: descricao.trim() || undefined,
+        telejornal_id: currentTelejornal?.id,
+        estrutura
+      });
+
+      // Reset form
+      setNome("");
+      setDescricao("");
+      onClose();
+    } catch (error) {
+      console.error("Erro ao salvar modelo:", error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleClose = () => {
-    setModelName("");
+    setNome("");
+    setDescricao("");
     onClose();
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Salvar Modelo</DialogTitle>
+          <DialogTitle>Salvar Modelo de Espelho</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="model-name">Nome do Modelo</Label>
+          <div>
+            <Label htmlFor="nome">Nome do Modelo *</Label>
             <Input
-              id="model-name"
-              value={modelName}
-              onChange={(e) => setModelName(e.target.value)}
-              placeholder="Digite o nome do modelo..."
-              disabled={createMutation.isPending}
+              id="nome"
+              value={nome}
+              onChange={(e) => setNome(e.target.value)}
+              placeholder="Ex: Modelo Padrão Manhã"
+              maxLength={100}
             />
           </div>
           
-          <p className="text-sm text-muted-foreground">
-            Este modelo incluirá {blocks.length} bloco(s) e{' '}
-            {blocks.reduce((total, bloco) => total + bloco.items.length, 0)} matéria(s).
-          </p>
-          
-          <div className="flex justify-between">
-            <Button variant="ghost" onClick={handleClose} disabled={createMutation.isPending}>
-              Cancelar
-            </Button>
-            <Button onClick={handleSave} disabled={createMutation.isPending || !modelName.trim()}>
-              {createMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Salvar Modelo
-            </Button>
+          <div>
+            <Label htmlFor="descricao">Descrição (opcional)</Label>
+            <Textarea
+              id="descricao"
+              value={descricao}
+              onChange={(e) => setDescricao(e.target.value)}
+              placeholder="Descreva quando usar este modelo..."
+              rows={3}
+              maxLength={500}
+            />
           </div>
+          
+          <div className="text-sm text-gray-600">
+            <p><strong>Estrutura atual:</strong></p>
+            <p>{blocks.length} bloco(s) com {blocks.reduce((total, block) => total + block.items.length, 0)} matéria(s)</p>
+          </div>
+        </div>
+        
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button variant="outline" onClick={handleClose} disabled={isSaving}>
+            Cancelar
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving}>
+            {isSaving ? "Salvando..." : "Salvar Modelo"}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

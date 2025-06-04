@@ -5,7 +5,7 @@ import { Bloco, Materia, Telejornal } from "@/types";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { ConfirmationDialogs } from "./ConfirmationDialogs";
-import { SaveModelModal } from "../models/SaveModelModal";
+import { SaveModelModal } from "@/components/models/SaveModelModal";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
@@ -36,8 +36,8 @@ export const NewsSchedule = ({
   onBlocksChange,
   isDualView = false
 }: NewsScheduleProps) => {
-  const [showSaveModelModal, setShowSaveModelModal] = useState(false);
   const isDualViewMode = !!externalBlocks && !!onBlocksChange;
+  const [saveModelModalOpen, setSaveModelModalOpen] = useState(false);
   
   const {
     blocks: internalBlocks,
@@ -100,7 +100,7 @@ export const NewsSchedule = ({
   };
 
   const handleSaveModel = () => {
-    setShowSaveModelModal(true);
+    setSaveModelModalOpen(true);
   };
 
   const scheduleContent = (
@@ -113,8 +113,8 @@ export const NewsSchedule = ({
         hasBlocks={blocks.length > 0}
         onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
-        onSaveModel={handleSaveModel}
         blocks={blocks}
+        onSaveModel={handleSaveModel}
       />
 
       {/* Main area with blocks - improved scrolling and padding */}
@@ -158,12 +158,12 @@ export const NewsSchedule = ({
         confirmRenumberItems={confirmRenumberItems}
       />
 
-      {/* Save Model Modal */}
+      {/* Model Management Modal */}
       <SaveModelModal
-        isOpen={showSaveModelModal}
-        onClose={() => setShowSaveModelModal(false)}
-        currentTelejornal={currentTelejornal}
+        isOpen={saveModelModalOpen}
+        onClose={() => setSaveModelModalOpen(false)}
         blocks={blocks}
+        currentTelejornal={currentTelejornal}
       />
     </>
   );
