@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { FileText, Layout } from "lucide-react";
@@ -21,29 +21,47 @@ export const UseModelModal = ({
 }: UseModelModalProps) => {
   const [showModelSelection, setShowModelSelection] = useState(false);
 
-  const handleUseModel = () => {
-    setShowModelSelection(true);
-  };
+  // Reset internal state when modal opens/closes
+  useEffect(() => {
+    if (!isOpen) {
+      console.log("UseModelModal: Resetting internal state on close");
+      setShowModelSelection(false);
+    } else {
+      console.log("UseModelModal: Modal opened, state ready");
+    }
+  }, [isOpen]);
 
-  const handleCreateFromScratch = () => {
+  const handleUseModel = useCallback(() => {
+    console.log("UseModelModal: Use model button clicked");
+    setShowModelSelection(true);
+  }, []);
+
+  const handleCreateFromScratch = useCallback(() => {
     console.log("UseModelModal: Creating from scratch - truly empty rundown");
     onClose();
     onCreateFromScratch();
-  };
+  }, [onClose, onCreateFromScratch]);
 
-  const handleCloseModelSelection = () => {
+  const handleCloseModelSelection = useCallback(() => {
+    console.log("UseModelModal: Closing model selection");
     setShowModelSelection(false);
-  };
+  }, []);
 
-  const handleModelSelected = (modelo: ModeloEspelho) => {
+  const handleModelSelected = useCallback((modelo: ModeloEspelho) => {
+    console.log("UseModelModal: Model selected:", modelo.nome);
     setShowModelSelection(false);
     onClose();
     onModelSelected(modelo);
-  };
+  }, [onClose, onModelSelected]);
+
+  const handleDialogClose = useCallback(() => {
+    console.log("UseModelModal: Dialog close requested");
+    onClose();
+  }, [onClose]);
 
   return (
     <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
+      <Dialog open={isOpen} onOpenChange={handleDialogClose}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Usar Modelos Salvos?</DialogTitle>
@@ -75,7 +93,7 @@ export const UseModelModal = ({
             </div>
             
             <div className="flex justify-end">
-              <Button variant="ghost" onClick={onClose}>
+              <Button variant="ghost" onClick={handleDialogClose}>
                 Cancelar
               </Button>
             </div>

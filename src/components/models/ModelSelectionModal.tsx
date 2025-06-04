@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Loader2, Calendar, User, FileText } from "lucide-react";
@@ -25,17 +25,28 @@ export const ModelSelectionModal = ({
   const [isApplying, setIsApplying] = useState(false);
   const { toast } = useToast();
 
+  // Reset internal state when modal opens/closes
   useEffect(() => {
     if (isOpen) {
+      console.log("ModelSelectionModal: Modal opened, resetting state and loading models");
+      setSelectedModel(null);
+      setIsApplying(false);
       loadModelos();
+    } else {
+      console.log("ModelSelectionModal: Modal closed, clearing state");
+      setSelectedModel(null);
+      setIsApplying(false);
+      setModelos([]);
     }
   }, [isOpen]);
 
   const loadModelos = async () => {
     setIsLoading(true);
     try {
+      console.log("ModelSelectionModal: Loading models from API");
       const data = await getModelos();
       setModelos(data);
+      console.log("ModelSelectionModal: Loaded", data.length, "models");
       
       if (data.length === 0) {
         toast({
@@ -44,7 +55,7 @@ export const ModelSelectionModal = ({
         });
       }
     } catch (error) {
-      console.error("Erro ao carregar modelos:", error);
+      console.error("ModelSelectionModal: Error loading models:", error);
       toast({
         title: "Erro ao carregar modelos",
         description: "Não foi possível carregar os modelos salvos",
@@ -55,16 +66,20 @@ export const ModelSelectionModal = ({
     }
   };
 
-  const handleModelSelect = (modelo: ModeloEspelho) => {
+  const handleModelSelect = useCallback((modelo: ModeloEspelho) => {
+    console.log("ModelSelectionModal: Model selected:", modelo.nome);
     setSelectedModel(modelo);
-  };
+  }, []);
 
-  const handleUseModel = async () => {
-    if (!selectedModel) return;
+  const handleUseModel = useCallback(async () => {
+    if (!selectedModel) {
+      console.log("ModelSelectionModal: No model selected");
+      return;
+    }
     
     setIsApplying(true);
     try {
-      console.log("Aplicando modelo:", selectedModel);
+      console.log("ModelSelectionModal: Applying model:", selectedModel.nome);
       
       toast({
         title: "Aplicando modelo",
@@ -75,7 +90,7 @@ export const ModelSelectionModal = ({
       onModelSelected(selectedModel);
       
     } catch (error) {
-      console.error("Erro ao aplicar modelo:", error);
+      console.error("ModelSelectionModal: Error applying model:", error);
       toast({
         title: "Erro ao aplicar modelo",
         description: "Não foi possível aplicar o modelo selecionado",
@@ -84,10 +99,15 @@ export const ModelSelectionModal = ({
     } finally {
       setIsApplying(false);
     }
-  };
+  }, [selectedModel, onModelSelected, toast]);
+
+  const handleDialogClose = useCallback(() => {
+    console.log("ModelSelectionModal: Dialog close requested");
+    onClose();
+  }, [onClose]);
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-2xl h-auto max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>Selecionar Modelo</DialogTitle>
@@ -159,7 +179,7 @@ export const ModelSelectionModal = ({
         </div>
         
         <div className="mt-4 flex justify-end gap-2 border-t pt-4">
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={handleDialogClose}>
             Cancelar
           </Button>
           <Button 
