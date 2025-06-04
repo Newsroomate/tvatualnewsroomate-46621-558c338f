@@ -194,6 +194,36 @@ export type Database = {
           },
         ]
       }
+      modelos_espelho: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          estrutura: Json
+          id: string
+          nome: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          estrutura: Json
+          id?: string
+          nome: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          estrutura?: Json
+          id?: string
+          nome?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       pautas: {
         Row: {
           created_at: string | null

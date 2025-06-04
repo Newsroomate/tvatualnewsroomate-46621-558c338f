@@ -4,9 +4,11 @@ import { Bloco, Materia, Telejornal } from "@/types";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { ConfirmationDialogs } from "./ConfirmationDialogs";
+import { SaveModelModal } from "../models/SaveModelModal";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
+import { useState } from "react";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -35,6 +37,7 @@ export const NewsSchedule = ({
   isDualView = false
 }: NewsScheduleProps) => {
   const isDualViewMode = !!externalBlocks && !!onBlocksChange;
+  const [saveModelModalOpen, setSaveModelModalOpen] = useState(false);
   
   const {
     blocks: internalBlocks,
@@ -96,6 +99,10 @@ export const NewsSchedule = ({
     handleDragEnd(result);
   };
 
+  const handleSaveModel = () => {
+    setSaveModelModalOpen(true);
+  };
+
   const scheduleContent = (
     <>
       {/* Header with journal info and total time */}
@@ -106,6 +113,7 @@ export const NewsSchedule = ({
         hasBlocks={blocks.length > 0}
         onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
+        onSaveModel={handleSaveModel}
         blocks={blocks}
       />
 
@@ -148,6 +156,13 @@ export const NewsSchedule = ({
         setRenumberConfirmOpen={setRenumberConfirmOpen}
         confirmDeleteMateria={confirmDeleteMateria}
         confirmRenumberItems={confirmRenumberItems}
+      />
+
+      {/* Save Model Modal */}
+      <SaveModelModal
+        isOpen={saveModelModalOpen}
+        onClose={() => setSaveModelModalOpen(false)}
+        blocks={blocks}
       />
     </>
   );

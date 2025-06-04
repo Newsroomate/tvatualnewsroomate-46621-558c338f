@@ -1,4 +1,3 @@
-
 export interface Telejornal {
   id: string;
   created_at?: string;
@@ -98,3 +97,4 @@ export interface CloseRundownDialogProps {
 }
 
 export * from './saved-rundowns';
+export * from './models';
