@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal, Materia, Bloco } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -17,7 +17,6 @@ interface ScheduleHeaderProps {
   onExportClipRetranca?: () => void;
   materias?: Materia[];
   blocks?: (Bloco & { items: Materia[] })[];
-  onSaveModel?: () => void;
 }
 
 export const ScheduleHeader = ({
@@ -29,8 +28,7 @@ export const ScheduleHeader = ({
   onViewTeleprompter,
   onExportClipRetranca,
   materias = [],
-  blocks = [],
-  onSaveModel
+  blocks = []
 }: ScheduleHeaderProps) => {
 
   const handleExportGC = () => {
@@ -50,7 +48,7 @@ export const ScheduleHeader = ({
           {new Date().toLocaleDateString('pt-BR')}
         </p>
       </div>
-      <div className="flex gap-2 items-center flex-wrap">
+      <div className="flex gap-4 items-center">
         <Button 
           variant="outline" 
           size="sm" 
@@ -60,30 +58,6 @@ export const ScheduleHeader = ({
           <PlusCircle className="h-4 w-4 mr-2" />
           Adicionar Novo Bloco
         </Button>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={onSaveModel}
-                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Salvar Modelo
-                </Button>
-              </div>
-            </TooltipTrigger>
-            {!currentTelejornal?.espelho_aberto && <TooltipContent>
-                Abra o espelho para salvar modelos
-              </TooltipContent>}
-            {!hasBlocks && currentTelejornal?.espelho_aberto && <TooltipContent>
-                Adicione blocos para salvar como modelo
-              </TooltipContent>}
-          </Tooltip>
-        </TooltipProvider>
         
         <Button 
           variant="outline" 

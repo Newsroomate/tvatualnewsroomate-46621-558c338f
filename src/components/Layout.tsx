@@ -14,7 +14,6 @@ import { PostCloseRundownModal } from "./PostCloseRundownModal";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
-import { ModeloEspelho } from "@/types";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -263,33 +262,6 @@ const Layout = () => {
     }
   };
 
-  const handleCreateFromModel = async (modelo: ModeloEspelho) => {
-    if (!selectedJournal || !currentTelejornal) return;
-
-    try {
-      console.log("Criando espelho a partir do modelo:", modelo.nome);
-      
-      // Import the utility function
-      const { applyModeloEspelho } = await import("@/services/modelos-espelho-utils");
-      
-      // Apply the model
-      await applyModeloEspelho(modelo, selectedJournal, currentTelejornal);
-      
-      // Update local state
-      setCurrentTelejornal({
-        ...currentTelejornal,
-        espelho_aberto: true
-      });
-      
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['telejornais'] });
-      queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
-      
-    } catch (error) {
-      console.error("Erro ao criar espelho a partir do modelo:", error);
-    }
-  };
-
   const handleViewByDate = (date: Date) => {
     setSelectedViewDate(date);
     setIsSavedRundownsModalOpen(true);
@@ -408,7 +380,6 @@ const Layout = () => {
           currentTelejornal={currentTelejornal}
           onCreateNew={handleCreateNewRundown}
           onViewByDate={handleViewByDate}
-          onCreateFromModel={handleCreateFromModel}
         />
         
         {/* Modal para visualizar espelhos salvos por data */}

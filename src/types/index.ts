@@ -98,4 +98,3 @@ export interface CloseRundownDialogProps {
 }
 
 export * from './saved-rundowns';
-export * from './modelos-espelho';
