@@ -1,6 +1,8 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco } from "@/services/api";
+import { deleteAllBlocos } from "@/services/blocos-api";
+import { createBloco } from "@/services/blocos-api";
+import { createMateria } from "@/services/materias-api";
 
 export interface SavedModel {
   id: string;
@@ -138,6 +140,52 @@ export const deleteSavedModel = async (modelId: string): Promise<void> => {
 
   if (error) {
     console.error("Erro ao excluir modelo:", error);
+    throw error;
+  }
+};
+
+export const applyModelToTelejornal = async (
+  model: SavedModel,
+  telejornalId: string
+): Promise<void> => {
+  console.log("Aplicando modelo ao telejornal:", model.nome, telejornalId);
+  
+  try {
+    // 1. Delete all existing blocks and materias (cascading delete will handle materias)
+    await deleteAllBlocos(telejornalId);
+    
+    // 2. Create new blocks and materias from the model
+    const modelBlocos = model.estrutura.blocos;
+    
+    for (const bloco of modelBlocos) {
+      // Create the block
+      const newBloco = await createBloco({
+        nome: bloco.nome,
+        ordem: bloco.ordem,
+        telejornal_id: telejornalId
+      });
+      
+      // Create materias for this block
+      for (const item of bloco.items) {
+        await createMateria({
+          retranca: item.retranca,
+          clip: item.clip,
+          duracao: item.duracao,
+          pagina: item.pagina,
+          reporter: item.reporter,
+          status: item.status,
+          texto: item.texto,
+          cabeca: item.cabeca,
+          gc: item.gc,
+          ordem: item.ordem,
+          bloco_id: newBloco.id
+        });
+      }
+    }
+    
+    console.log("Modelo aplicado com sucesso");
+  } catch (error) {
+    console.error("Erro ao aplicar modelo:", error);
     throw error;
   }
 };

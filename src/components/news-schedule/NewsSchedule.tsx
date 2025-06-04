@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Bloco, Materia, Telejornal } from "@/types";
@@ -127,12 +126,12 @@ export const NewsSchedule = ({
   };
 
   const handleUseModel = (model: SavedModel) => {
-    // Esta funcionalidade será implementada em uma próxima iteração
-    console.log("Usando modelo:", model);
+    // Refresh the data after model is applied
     toast({
-      title: "Funcionalidade em desenvolvimento",
-      description: "A aplicação de modelos será implementada em breve",
+      title: "Modelo aplicado",
+      description: "O espelho foi atualizado com a estrutura do modelo",
     });
+    // The realtime updates will automatically refresh the blocks
   };
 
   const scheduleContent = (
@@ -204,6 +203,7 @@ export const NewsSchedule = ({
         isOpen={isSavedModelsModalOpen}
         onClose={() => setIsSavedModelsModalOpen(false)}
         onUseModel={handleUseModel}
+        telejornalId={selectedJournal}
       />
     </>
   );

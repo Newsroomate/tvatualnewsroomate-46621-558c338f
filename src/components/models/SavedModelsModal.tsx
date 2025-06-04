@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { fetchAllSavedModels, deleteSavedModel, SavedModel } from "@/services/models-api";
+import { fetchAllSavedModels, deleteSavedModel, applyModelToTelejornal, SavedModel } from "@/services/models-api";
 import { Loader2, Trash2, FileText, Eye } from "lucide-react";
 import { format } from "date-fns";
 
@@ -11,17 +10,20 @@ interface SavedModelsModalProps {
   isOpen: boolean;
   onClose: () => void;
   onUseModel?: (model: SavedModel) => void;
+  telejornalId?: string;
 }
 
 export const SavedModelsModal = ({
   isOpen,
   onClose,
-  onUseModel
+  onUseModel,
+  telejornalId
 }: SavedModelsModalProps) => {
   const [models, setModels] = useState<SavedModel[]>([]);
   const [selectedModel, setSelectedModel] = useState<SavedModel | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isApplying, setIsApplying] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,10 +70,36 @@ export const SavedModelsModal = ({
     }
   };
 
-  const handleUseModel = (model: SavedModel) => {
-    if (onUseModel) {
-      onUseModel(model);
+  const handleUseModel = async (model: SavedModel) => {
+    if (!telejornalId) {
+      toast({
+        title: "Erro",
+        description: "Nenhum telejornal selecionado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsApplying(model.id);
+    try {
+      await applyModelToTelejornal(model, telejornalId);
+      toast({
+        title: "Modelo aplicado",
+        description: `O modelo "${model.nome}" foi aplicado com sucesso`,
+      });
       onClose();
+      if (onUseModel) {
+        onUseModel(model);
+      }
+    } catch (error) {
+      console.error("Erro ao aplicar modelo:", error);
+      toast({
+        title: "Erro ao aplicar modelo",
+        description: "Não foi possível aplicar o modelo",
+        variant: "destructive"
+      });
+    } finally {
+      setIsApplying(null);
     }
   };
 
@@ -143,7 +171,9 @@ export const SavedModelsModal = ({
               </Button>
               <Button
                 onClick={() => handleUseModel(selectedModel)}
+                disabled={isApplying === selectedModel.id || !telejornalId}
               >
+                {isApplying === selectedModel.id && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 <FileText className="h-4 w-4 mr-2" />
                 Usar Modelo
               </Button>
@@ -214,7 +244,9 @@ export const SavedModelsModal = ({
                       <Button
                         size="sm"
                         onClick={() => handleUseModel(model)}
+                        disabled={isApplying === model.id || !telejornalId}
                       >
+                        {isApplying === model.id && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                         <FileText className="h-4 w-4 mr-2" />
                         Usar Modelo
                       </Button>
