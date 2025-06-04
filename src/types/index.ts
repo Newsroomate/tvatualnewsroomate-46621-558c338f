@@ -1,3 +1,4 @@
+
 export interface Telejornal {
   id: string;
   created_at?: string;
@@ -63,6 +64,9 @@ export interface MateriaCreateInput {
   texto?: string;
   cabeca?: string;
   gc?: string;  // New GC field
+  local_gravacao?: string;
+  tags?: string[];
+  equipamento?: string;
 }
 
 export interface Pauta {
