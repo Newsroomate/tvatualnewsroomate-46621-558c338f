@@ -16,7 +16,7 @@ interface PostCloseRundownModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentTelejornal: Telejornal | null;
-  onCreateNew: () => void;
+  onCreateNew: (loadLastBlock: boolean) => void;
   onViewByDate: (date: Date) => void;
   onApplyModel: (modelo: ModeloEspelho) => void;
 }
@@ -39,7 +39,7 @@ export const PostCloseRundownModal = ({
   };
 
   const handleCreateFromScratch = () => {
-    onCreateNew(); // SEMPRE carrega o último bloco agora
+    onCreateNew(false); // NÃO carrega o último bloco - cria do zero
     setShowUseModelModal(false);
     onClose();
   };

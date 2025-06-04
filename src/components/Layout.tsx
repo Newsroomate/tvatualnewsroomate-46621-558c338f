@@ -223,7 +223,7 @@ const Layout = () => {
     if (!selectedJournal || !currentTelejornal) return;
 
     try {
-      console.log("Criando novo espelho...");
+      console.log("Criando novo espelho...", { loadLastBlock });
       
       // Delete all current blocks and materias
       await deleteAllBlocos(selectedJournal);
@@ -240,12 +240,14 @@ const Layout = () => {
         espelho_aberto: true
       });
       
-      // A criação do primeiro bloco com dados do último bloco será tratada
-      // automaticamente pelo componente NewsSchedule quando detectar espelho aberto sem blocos
+      // A criação do primeiro bloco será tratada pelo componente NewsSchedule
+      // O parâmetro loadLastBlock determinará se deve carregar o último bloco ou criar do zero
       
       toast({
         title: "Novo espelho criado",
-        description: `Novo espelho de ${currentTelejornal.nome} criado e aberto com o último bloco carregado`,
+        description: loadLastBlock 
+          ? `Novo espelho de ${currentTelejornal.nome} criado e aberto com o último bloco carregado`
+          : `Novo espelho de ${currentTelejornal.nome} criado do zero`,
         variant: "default"
       });
       
