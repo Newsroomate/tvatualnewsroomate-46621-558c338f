@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { ScheduleHeader } from "./ScheduleHeader";
@@ -7,6 +8,10 @@ import { ConfirmationDialogs } from "./ConfirmationDialogs";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
+import { SaveModelModal } from "@/components/models/SaveModelModal";
+import { SavedModelsModal } from "@/components/models/SavedModelsModal";
+import { SavedModel } from "@/services/models-api";
+import { useToast } from "@/hooks/use-toast";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -35,6 +40,9 @@ export const NewsSchedule = ({
   isDualView = false
 }: NewsScheduleProps) => {
   const isDualViewMode = !!externalBlocks && !!onBlocksChange;
+  const [isSaveModelModalOpen, setIsSaveModelModalOpen] = useState(false);
+  const [isSavedModelsModalOpen, setIsSavedModelsModalOpen] = useState(false);
+  const { toast } = useToast();
   
   const {
     blocks: internalBlocks,
@@ -96,6 +104,37 @@ export const NewsSchedule = ({
     handleDragEnd(result);
   };
 
+  const handleSaveModel = () => {
+    if (!selectedJournal) {
+      toast({
+        title: "Erro",
+        description: "Nenhum telejornal selecionado",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!blocks || blocks.length === 0) {
+      toast({
+        title: "Nenhuma estrutura para salvar",
+        description: "Adicione blocos e matérias antes de salvar como modelo",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsSaveModelModalOpen(true);
+  };
+
+  const handleUseModel = (model: SavedModel) => {
+    // Esta funcionalidade será implementada em uma próxima iteração
+    console.log("Usando modelo:", model);
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "A aplicação de modelos será implementada em breve",
+    });
+  };
+
   const scheduleContent = (
     <>
       {/* Header with journal info and total time */}
@@ -106,6 +145,8 @@ export const NewsSchedule = ({
         hasBlocks={blocks.length > 0}
         onAddBlock={handleAddBlockWithScroll}
         onViewTeleprompter={handleViewTeleprompter}
+        onSaveModel={handleSaveModel}
+        onViewSavedModels={() => setIsSavedModelsModalOpen(true)}
         blocks={blocks}
       />
 
@@ -148,6 +189,21 @@ export const NewsSchedule = ({
         setRenumberConfirmOpen={setRenumberConfirmOpen}
         confirmDeleteMateria={confirmDeleteMateria}
         confirmRenumberItems={confirmRenumberItems}
+      />
+
+      {/* Models Modals */}
+      {selectedJournal && (
+        <SaveModelModal
+          isOpen={isSaveModelModalOpen}
+          onClose={() => setIsSaveModelModalOpen(false)}
+          telejornalId={selectedJournal}
+        />
+      )}
+      
+      <SavedModelsModal
+        isOpen={isSavedModelsModalOpen}
+        onClose={() => setIsSavedModelsModalOpen(false)}
+        onUseModel={handleUseModel}
       />
     </>
   );

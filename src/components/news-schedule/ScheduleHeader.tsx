@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save, FolderOpen } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal, Materia, Bloco } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,6 +15,8 @@ interface ScheduleHeaderProps {
   onAddBlock?: () => void;
   onViewTeleprompter?: () => void;
   onExportClipRetranca?: () => void;
+  onSaveModel?: () => void;
+  onViewSavedModels?: () => void;
   materias?: Materia[];
   blocks?: (Bloco & { items: Materia[] })[];
 }
@@ -27,6 +29,8 @@ export const ScheduleHeader = ({
   onAddBlock,
   onViewTeleprompter,
   onExportClipRetranca,
+  onSaveModel,
+  onViewSavedModels,
   materias = [],
   blocks = []
 }: ScheduleHeaderProps) => {
@@ -39,7 +43,8 @@ export const ScheduleHeader = ({
     exportPlayoutPDF(blocks, currentTelejornal);
   };
 
-  return <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
+  return (
+    <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
       <div>
         <h1 className="text-xl font-bold">
           {currentTelejornal ? currentTelejornal.nome : "Selecione um Telejornal"}
@@ -48,7 +53,7 @@ export const ScheduleHeader = ({
           {new Date().toLocaleDateString('pt-BR')}
         </p>
       </div>
-      <div className="flex gap-4 items-center">
+      <div className="flex gap-2 items-center">
         <Button 
           variant="outline" 
           size="sm" 
@@ -57,6 +62,25 @@ export const ScheduleHeader = ({
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Adicionar Novo Bloco
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onSaveModel}
+          disabled={!currentTelejornal || !hasBlocks}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          Salvar Modelo
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onViewSavedModels}
+        >
+          <FolderOpen className="h-4 w-4 mr-2" />
+          Modelos Salvos
         </Button>
         
         <Button 
@@ -99,9 +123,11 @@ export const ScheduleHeader = ({
                 </Button>
               </div>
             </TooltipTrigger>
-            {!currentTelejornal?.espelho_aberto && <TooltipContent>
+            {!currentTelejornal?.espelho_aberto && (
+              <TooltipContent>
                 Abra o espelho para reorganizar a numeração
-              </TooltipContent>}
+              </TooltipContent>
+            )}
           </Tooltip>
         </TooltipProvider>
         
@@ -110,5 +136,6 @@ export const ScheduleHeader = ({
           <p className="text-lg font-bold">{formatTime(totalJournalTime)}</p>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
