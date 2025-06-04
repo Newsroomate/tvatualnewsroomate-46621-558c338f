@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,16 +9,13 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Telejornal } from "@/types";
 import { GeneralScheduleModal } from "./general-schedule/GeneralScheduleModal";
-import { UseModelModal } from "./models/UseModelModal";
-import { ModeloEspelho } from "@/types/models";
 
 interface PostCloseRundownModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentTelejornal: Telejornal | null;
-  onCreateNew: (loadLastBlock: boolean) => void;
+  onCreateNew: () => void;
   onViewByDate: (date: Date) => void;
-  onApplyModel: (modelo: ModeloEspelho) => void;
 }
 
 export const PostCloseRundownModal = ({
@@ -25,33 +23,15 @@ export const PostCloseRundownModal = ({
   onClose,
   currentTelejornal,
   onCreateNew,
-  onViewByDate,
-  onApplyModel
+  onViewByDate
 }: PostCloseRundownModalProps) => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGeneralScheduleModal, setShowGeneralScheduleModal] = useState(false);
-  const [showUseModelModal, setShowUseModelModal] = useState(false);
 
   const handleCreateNew = () => {
-    setShowUseModelModal(true);
-  };
-
-  const handleCreateFromScratch = () => {
-    console.log("PostCloseRundownModal: Creating truly empty rundown (not loading last block)");
-    onCreateNew(false); // Pass false to indicate create empty (do NOT load last block)
-    setShowUseModelModal(false);
+    onCreateNew(); // SEMPRE carrega o último bloco agora
     onClose();
-  };
-
-  const handleModelSelected = (modelo: ModeloEspelho) => {
-    setShowUseModelModal(false);
-    onClose();
-    onApplyModel(modelo);
-  };
-
-  const handleCloseUseModelModal = () => {
-    setShowUseModelModal(false);
   };
 
   const handleViewByDate = () => {
@@ -147,13 +127,6 @@ export const PostCloseRundownModal = ({
       <GeneralScheduleModal
         isOpen={showGeneralScheduleModal}
         onClose={handleCloseGeneralScheduleModal}
-      />
-
-      <UseModelModal
-        isOpen={showUseModelModal}
-        onClose={handleCloseUseModelModal}
-        onCreateFromScratch={handleCreateFromScratch}
-        onModelSelected={handleModelSelected}
       />
     </>
   );

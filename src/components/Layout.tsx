@@ -14,7 +14,6 @@ import { PostCloseRundownModal } from "./PostCloseRundownModal";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
-import { ModeloEspelho } from "@/types/models";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -219,11 +218,11 @@ const Layout = () => {
     }
   };
 
-  const handleCreateNewRundown = async (createEmpty: boolean = false) => {
+  const handleCreateNewRundown = async (loadLastBlock: boolean = true) => {
     if (!selectedJournal || !currentTelejornal) return;
 
     try {
-      console.log("Creating new rundown...", { createEmpty });
+      console.log("Criando novo espelho...");
       
       // Delete all current blocks and materias
       await deleteAllBlocos(selectedJournal);
@@ -240,20 +239,12 @@ const Layout = () => {
         espelho_aberto: true
       });
       
-      // Store the createEmpty flag for NewsSchedule to use
-      if (createEmpty) {
-        console.log("Will create empty first block");
-        // The NewsSchedule component will handle creating an empty first block
-      } else {
-        console.log("Will load last block data");
-        // The NewsSchedule component will handle loading the last block
-      }
+      // A criação do primeiro bloco com dados do último bloco será tratada
+      // automaticamente pelo componente NewsSchedule quando detectar espelho aberto sem blocos
       
       toast({
         title: "Novo espelho criado",
-        description: createEmpty 
-          ? `Novo espelho de ${currentTelejornal.nome} criado do zero`
-          : `Novo espelho de ${currentTelejornal.nome} criado com o último bloco carregado`,
+        description: `Novo espelho de ${currentTelejornal.nome} criado e aberto com o último bloco carregado`,
         variant: "default"
       });
       
@@ -274,47 +265,6 @@ const Layout = () => {
   const handleViewByDate = (date: Date) => {
     setSelectedViewDate(date);
     setIsSavedRundownsModalOpen(true);
-  };
-
-  const handleApplyModel = async (modelo: ModeloEspelho) => {
-    if (!selectedJournal || !currentTelejornal) return;
-
-    try {
-      console.log("Applying model to create new rundown:", modelo);
-      
-      // Import the model application service
-      const { applyModeloToTelejornal } = await import("@/services/modelo-application-api");
-      
-      // First delete all current blocks
-      await deleteAllBlocos(selectedJournal);
-      
-      // Apply the model (this will also open the telejornal)
-      await applyModeloToTelejornal(modelo, selectedJournal, currentTelejornal);
-      
-      // Update local state
-      setCurrentTelejornal({
-        ...currentTelejornal,
-        espelho_aberto: true
-      });
-      
-      toast({
-        title: "Modelo aplicado",
-        description: `Espelho criado com base no modelo "${modelo.nome}"`,
-        variant: "default"
-      });
-      
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['telejornais'] });
-      queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
-      
-    } catch (error) {
-      console.error("Erro ao aplicar modelo:", error);
-      toast({
-        title: "Erro ao aplicar modelo",
-        description: "Não foi possível criar o espelho com base no modelo selecionado",
-        variant: "destructive"
-      });
-    }
   };
 
   return (
@@ -430,7 +380,6 @@ const Layout = () => {
           currentTelejornal={currentTelejornal}
           onCreateNew={handleCreateNewRundown}
           onViewByDate={handleViewByDate}
-          onApplyModel={handleApplyModel}
         />
         
         {/* Modal para visualizar espelhos salvos por data */}

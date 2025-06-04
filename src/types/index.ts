@@ -64,9 +64,6 @@ export interface MateriaCreateInput {
   texto?: string;
   cabeca?: string;
   gc?: string;  // New GC field
-  local_gravacao?: string;
-  tags?: string[];
-  equipamento?: string;
 }
 
 export interface Pauta {
@@ -101,4 +98,3 @@ export interface CloseRundownDialogProps {
 }
 
 export * from './saved-rundowns';
-export * from './models';

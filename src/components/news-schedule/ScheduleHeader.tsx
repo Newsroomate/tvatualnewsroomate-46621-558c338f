@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal, Materia, Bloco } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -15,7 +15,6 @@ interface ScheduleHeaderProps {
   onAddBlock?: () => void;
   onViewTeleprompter?: () => void;
   onExportClipRetranca?: () => void;
-  onSaveModel?: () => void;
   materias?: Materia[];
   blocks?: (Bloco & { items: Materia[] })[];
 }
@@ -28,7 +27,6 @@ export const ScheduleHeader = ({
   onAddBlock,
   onViewTeleprompter,
   onExportClipRetranca,
-  onSaveModel,
   materias = [],
   blocks = []
 }: ScheduleHeaderProps) => {
@@ -59,16 +57,6 @@ export const ScheduleHeader = ({
         >
           <PlusCircle className="h-4 w-4 mr-2" />
           Adicionar Novo Bloco
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onSaveModel}
-          disabled={!currentTelejornal || !hasBlocks}
-        >
-          <Save className="h-4 w-4 mr-2" />
-          Salvar Modelo
         </Button>
         
         <Button 
