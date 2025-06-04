@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save, FolderOpen } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal, Materia, Bloco } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -18,7 +18,6 @@ interface ScheduleHeaderProps {
   materias?: Materia[];
   blocks?: (Bloco & { items: Materia[] })[];
   onSaveModel?: () => void;
-  onViewSavedModels?: () => void;
 }
 
 export const ScheduleHeader = ({
@@ -31,8 +30,7 @@ export const ScheduleHeader = ({
   onExportClipRetranca,
   materias = [],
   blocks = [],
-  onSaveModel,
-  onViewSavedModels
+  onSaveModel
 }: ScheduleHeaderProps) => {
 
   const handleExportGC = () => {
@@ -86,16 +84,6 @@ export const ScheduleHeader = ({
               </TooltipContent>}
           </Tooltip>
         </TooltipProvider>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onViewSavedModels}
-          disabled={!currentTelejornal}
-        >
-          <FolderOpen className="h-4 w-4 mr-2" />
-          Modelos Salvos
-        </Button>
         
         <Button 
           variant="outline" 
