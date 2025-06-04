@@ -9,6 +9,7 @@ import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { Telejornal } from "@/types";
 import { GeneralScheduleModal } from "./general-schedule/GeneralScheduleModal";
+import { UseModelModal } from "./models/UseModelModal";
 
 interface PostCloseRundownModalProps {
   isOpen: boolean;
@@ -28,10 +29,20 @@ export const PostCloseRundownModal = ({
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showGeneralScheduleModal, setShowGeneralScheduleModal] = useState(false);
+  const [showUseModelModal, setShowUseModelModal] = useState(false);
 
   const handleCreateNew = () => {
+    setShowUseModelModal(true);
+  };
+
+  const handleCreateFromScratch = () => {
     onCreateNew(); // SEMPRE carrega o último bloco agora
+    setShowUseModelModal(false);
     onClose();
+  };
+
+  const handleCloseUseModelModal = () => {
+    setShowUseModelModal(false);
   };
 
   const handleViewByDate = () => {
@@ -127,6 +138,12 @@ export const PostCloseRundownModal = ({
       <GeneralScheduleModal
         isOpen={showGeneralScheduleModal}
         onClose={handleCloseGeneralScheduleModal}
+      />
+
+      <UseModelModal
+        isOpen={showUseModelModal}
+        onClose={handleCloseUseModelModal}
+        onCreateFromScratch={handleCreateFromScratch}
       />
     </>
   );
