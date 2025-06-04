@@ -36,6 +36,7 @@ export const SavedModelsModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [modeloToDelete, setModeloToDelete] = useState<ModeloEspelho | null>(null);
+  const [isApplyingModel, setIsApplyingModel] = useState<string | null>(null);
   const { toast } = useToast();
 
   const loadModelos = async () => {
@@ -74,9 +75,21 @@ export const SavedModelsModal = ({
     }
   };
 
-  const handleSelect = (modelo: ModeloEspelho) => {
-    onSelectModel(modelo);
-    onClose();
+  const handleSelect = async (modelo: ModeloEspelho) => {
+    setIsApplyingModel(modelo.id);
+    try {
+      await onSelectModel(modelo);
+      onClose();
+    } catch (error) {
+      console.error("Erro ao aplicar modelo:", error);
+      toast({
+        title: "Erro ao aplicar modelo",
+        description: "Não foi possível aplicar o modelo selecionado",
+        variant: "destructive"
+      });
+    } finally {
+      setIsApplyingModel(null);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -151,8 +164,9 @@ export const SavedModelsModal = ({
                       <Button
                         size="sm"
                         onClick={() => handleSelect(modelo)}
+                        disabled={isApplyingModel === modelo.id}
                       >
-                        Usar Modelo
+                        {isApplyingModel === modelo.id ? "Aplicando..." : "Usar Modelo"}
                       </Button>
                     </div>
                   </div>

@@ -33,8 +33,8 @@ export const CreateRundownModal = ({
     setShowModelsModal(true);
   };
 
-  const handleSelectModel = (modelo: ModeloEspelho) => {
-    onCreateFromModel(modelo);
+  const handleSelectModel = async (modelo: ModeloEspelho) => {
+    await onCreateFromModel(modelo);
     setShowModelsModal(false);
     onClose();
   };
