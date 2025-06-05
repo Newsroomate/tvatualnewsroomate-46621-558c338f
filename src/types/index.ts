@@ -1,4 +1,3 @@
-
 export interface Telejornal {
   id: string;
   created_at?: string;
@@ -43,6 +42,7 @@ export interface Materia {
   equipamento?: string;
   horario_exibicao?: string;
   updated_at?: string;
+  tipo_material?: string;  // New field for material type dropdown
   // Keep the old fields for backwards compatibility
   titulo: string;
   descricao?: string;
@@ -64,6 +64,7 @@ export interface MateriaCreateInput {
   texto?: string;
   cabeca?: string;
   gc?: string;  // New GC field
+  tipo_material?: string;  // New field for material type dropdown
 }
 
 export interface Pauta {

@@ -48,7 +48,8 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
         pagina: item.pagina,
         bloco_id: item.bloco_id,
         ordem: item.ordem,
-        tags: item.tags
+        tags: item.tags,
+        tipo_material: item.tipo_material
       });
     }
   }, [item]);
@@ -102,6 +103,7 @@ export const EditPanel = ({ isOpen, onClose, item }: EditPanelProps) => {
       local_gravacao: formData.local_gravacao,
       pagina: formData.pagina,
       tags: formData.tags,
+      tipo_material: formData.tipo_material,
       ordem: item.ordem,
       bloco_id: formData.bloco_id
     };

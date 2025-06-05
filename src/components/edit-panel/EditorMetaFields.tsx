@@ -29,6 +29,13 @@ export const EditorMetaFields = ({
     } as React.ChangeEvent<HTMLSelectElement>);
   };
 
+  const handleTipoMaterialChange = (value: string) => {
+    if (disabled) return;
+    onInputChange({
+      target: { id: 'tipo_material', value }
+    } as React.ChangeEvent<HTMLSelectElement>);
+  };
+
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (disabled) return;
     if (e.key === 'Enter' && newTag.trim()) {
@@ -120,28 +127,50 @@ export const EditorMetaFields = ({
         </div>
       </div>
 
-      <div className="space-y-1.5">
-        <Label>Tags</Label>
-        <div className="flex flex-wrap gap-2 mb-2">
-          {(formData.tags || []).map((tag, index) => (
-            <Badge key={index} variant="secondary" className="flex items-center gap-1">
-              {tag}
-              {!disabled && (
-                <X 
-                  className="w-3 h-3 cursor-pointer hover:text-red-500" 
-                  onClick={() => handleRemoveTag(tag)}
-                />
-              )}
-            </Badge>
-          ))}
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label>Tags</Label>
+          <div className="flex flex-wrap gap-2 mb-2">
+            {(formData.tags || []).map((tag, index) => (
+              <Badge key={index} variant="secondary" className="flex items-center gap-1">
+                {tag}
+                {!disabled && (
+                  <X 
+                    className="w-3 h-3 cursor-pointer hover:text-red-500" 
+                    onClick={() => handleRemoveTag(tag)}
+                  />
+                )}
+              </Badge>
+            ))}
+          </div>
+          <Input
+            placeholder="Digite uma tag e pressione Enter"
+            value={newTag}
+            onChange={(e) => setNewTag(e.target.value)}
+            onKeyDown={handleAddTag}
+            disabled={disabled}
+          />
         </div>
-        <Input
-          placeholder="Digite uma tag e pressione Enter"
-          value={newTag}
-          onChange={(e) => setNewTag(e.target.value)}
-          onKeyDown={handleAddTag}
-          disabled={disabled}
-        />
+
+        <div className="space-y-1.5">
+          <Label htmlFor="tipo_material">Tipo de Material</Label>
+          <Select value={formData.tipo_material || ''} onValueChange={handleTipoMaterialChange} disabled={disabled}>
+            <SelectTrigger>
+              <SelectValue placeholder="Selecione o tipo" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="VT">VT</SelectItem>
+              <SelectItem value="IMG">IMG</SelectItem>
+              <SelectItem value="EST">EST</SelectItem>
+              <SelectItem value="SUP">SUP</SelectItem>
+              <SelectItem value="LINK">LINK</SelectItem>
+              <SelectItem value="SELO">SELO</SelectItem>
+              <SelectItem value="VHT">VHT</SelectItem>
+              <SelectItem value="SON">SON</SelectItem>
+              <SelectItem value="NET">NET</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
     </>
   );
