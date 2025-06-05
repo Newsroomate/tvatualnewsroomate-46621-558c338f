@@ -31,65 +31,60 @@ export const BlockContent = ({
   isSelected,
   onToggleSelection
 }: BlockContentProps) => {
-  // Define the columns for the resizable grid
   const columns = [
-    ...(isBatchMode ? [{ id: 'selection', title: 'Sel.', minWidth: 8, defaultWidth: 8 }] : []),
-    { id: 'pagina', title: 'Página', minWidth: 10, defaultWidth: 10 },
-    { id: 'notas', title: 'Notas', minWidth: 12, defaultWidth: 12 },
-    { id: 'retranca', title: 'Retranca', minWidth: 20, defaultWidth: 25 },
-    { id: 'clipe', title: 'Clipe', minWidth: 15, defaultWidth: 15 },
-    { id: 'duracao', title: 'Duração', minWidth: 10, defaultWidth: 10 },
-    { id: 'status', title: 'Status', minWidth: 12, defaultWidth: 12 },
-    { id: 'reporter', title: 'Repórter', minWidth: 15, defaultWidth: 15 },
-    { id: 'acoes', title: 'Ações', minWidth: 15, defaultWidth: 15 }
+    { id: 'pagina', label: 'Página', minWidth: 80, defaultWidth: 100 },
+    { id: 'notas', label: 'Notas', minWidth: 100, defaultWidth: 120 },
+    { id: 'retranca', label: 'Retranca', minWidth: 150, defaultWidth: 200 },
+    { id: 'clipe', label: 'Clipe', minWidth: 100, defaultWidth: 120 },
+    { id: 'duracao', label: 'Duração', minWidth: 80, defaultWidth: 100 },
+    { id: 'status', label: 'Status', minWidth: 100, defaultWidth: 120 },
+    { id: 'reporter', label: 'Repórter', minWidth: 120, defaultWidth: 150 },
+    { id: 'acoes', label: 'Ações', minWidth: 120, defaultWidth: 140 }
   ];
 
   return (
-    <div className="overflow-hidden">
-      <Droppable droppableId={blockId}>
-        {(provided) => (
-          <div
-            ref={provided.innerRef}
-            {...provided.droppableProps}
-          >
-            <ResizableGrid columns={columns}>
-              {items.length === 0 ? (
-                <div className="py-8 text-center text-gray-500 bg-gray-50">
-                  Nenhuma matéria neste bloco
-                </div>
-              ) : (
-                items.map((item, index) => (
-                  <Draggable
-                    key={item.id}
-                    draggableId={item.id}
-                    index={index}
-                    isDragDisabled={!isEspelhoOpen || isBatchMode}
-                  >
-                    {(provided, snapshot) => (
-                      <NewsItem
-                        item={item}
-                        onEdit={onEditItem}
-                        onDelete={onDeleteItem}
-                        onDuplicate={onDuplicateItem}
-                        provided={provided}
-                        snapshot={snapshot}
-                        isEspelhoOpen={isEspelhoOpen}
-                        onDoubleClick={onEditItem}
-                        canModify={canModifyItems}
-                        isBatchMode={isBatchMode}
-                        isSelected={isSelected ? isSelected(item.id) : false}
-                        onToggleSelection={onToggleSelection}
-                        useGridLayout={true}
-                      />
-                    )}
-                  </Draggable>
-                ))
-              )}
-              {provided.placeholder}
-            </ResizableGrid>
-          </div>
-        )}
-      </Droppable>
-    </div>
+    <Droppable droppableId={blockId}>
+      {(provided) => (
+        <div
+          ref={provided.innerRef}
+          {...provided.droppableProps}
+        >
+          <ResizableGrid columns={columns} isBatchMode={isBatchMode}>
+            {items.length === 0 ? (
+              <div className="py-8 text-center text-gray-500 min-h-[80px] flex items-center justify-center">
+                Nenhuma matéria neste bloco
+              </div>
+            ) : (
+              items.map((item, index) => (
+                <Draggable
+                  key={item.id}
+                  draggableId={item.id}
+                  index={index}
+                  isDragDisabled={!isEspelhoOpen || isBatchMode}
+                >
+                  {(provided, snapshot) => (
+                    <NewsItem
+                      item={item}
+                      onEdit={onEditItem}
+                      onDelete={onDeleteItem}
+                      onDuplicate={onDuplicateItem}
+                      provided={provided}
+                      snapshot={snapshot}
+                      isEspelhoOpen={isEspelhoOpen}
+                      onDoubleClick={onEditItem}
+                      canModify={canModifyItems}
+                      isBatchMode={isBatchMode}
+                      isSelected={isSelected ? isSelected(item.id) : false}
+                      onToggleSelection={onToggleSelection}
+                    />
+                  )}
+                </Draggable>
+              ))
+            )}
+            {provided.placeholder}
+          </ResizableGrid>
+        </div>
+      )}
+    </Droppable>
   );
 };
