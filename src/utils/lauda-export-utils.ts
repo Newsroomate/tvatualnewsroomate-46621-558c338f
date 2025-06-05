@@ -2,7 +2,7 @@
 import jsPDF from 'jspdf';
 import { Materia } from '@/types';
 
-export const exportLaudaToPDF = (materias: Materia[], filename: string = 'Lauda_Reporter') => {
+export const exportLaudaToPDF = (materias: Materia[], customFilename?: string) => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
   const pageHeight = doc.internal.pageSize.height;
@@ -126,7 +126,20 @@ export const exportLaudaToPDF = (materias: Materia[], filename: string = 'Lauda_
     );
   }
 
-  // Salvar o PDF
+  // Gerar nome do arquivo baseado na retranca ou usar nome customizado
+  let filename = 'Lauda_Reporter';
+  
+  if (customFilename) {
+    filename = customFilename;
+  } else if (materias.length > 0 && materias[0].retranca) {
+    // Limpar a retranca para usar como nome de arquivo
+    filename = materias[0].retranca
+      .replace(/[^a-zA-Z0-9\s]/g, '') // Remove caracteres especiais
+      .replace(/\s+/g, '_') // Substitui espaços por underscore
+      .trim();
+  }
+
+  // Adicionar timestamp
   const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
   doc.save(`${filename}_${timestamp}.pdf`);
 };

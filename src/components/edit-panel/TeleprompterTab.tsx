@@ -1,4 +1,3 @@
-
 import { TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,7 +12,15 @@ interface TeleprompterTabProps {
 export const TeleprompterTab = ({ formData }: TeleprompterTabProps) => {
   const handleExportLauda = () => {
     if (formData) {
-      exportLaudaToPDF([formData as Materia], 'Lauda do Repórter');
+      // Use a retranca como nome do arquivo se disponível
+      const filename = formData.retranca 
+        ? formData.retranca
+            .replace(/[^a-zA-Z0-9\s]/g, '') // Remove caracteres especiais
+            .replace(/\s+/g, '_') // Substitui espaços por underscore
+            .trim()
+        : 'Lauda_Reporter';
+      
+      exportLaudaToPDF([formData as Materia], filename);
     }
   };
 
