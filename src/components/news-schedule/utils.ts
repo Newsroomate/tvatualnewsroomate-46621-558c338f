@@ -8,6 +8,35 @@ export const formatTime = (seconds: number): string => {
   return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
 };
 
+// Parse clip time string to seconds
+export const parseClipTime = (clipTime: string): number => {
+  if (!clipTime || clipTime.trim() === '') return 0;
+  
+  // Handle different formats: "MM:SS", "M:SS", "SS"
+  const parts = clipTime.split(':');
+  
+  if (parts.length === 1) {
+    // Only seconds
+    return parseInt(parts[0]) || 0;
+  } else if (parts.length === 2) {
+    // Minutes:Seconds
+    const minutes = parseInt(parts[0]) || 0;
+    const seconds = parseInt(parts[1]) || 0;
+    return (minutes * 60) + seconds;
+  }
+  
+  return 0;
+};
+
+// Helper to calculate total time for a block including clip times
+export const calculateBlockTotalTime = (items: Materia[]): number => {
+  return items.reduce((sum, item) => {
+    const materiaDuration = item.duracao || 0;
+    const clipDuration = parseClipTime(item.tempo_clip || '');
+    return sum + materiaDuration + clipDuration;
+  }, 0);
+};
+
 // Find the highest page number across all blocks
 export const findHighestPageNumber = (blocks: (Bloco & { items: Materia[] })[]): number => {
   let highestPage = 0;
@@ -52,9 +81,4 @@ export const processUpdatedMateria = (updatedMateria: Materia): Materia => {
     // Make sure we have a titulo property for UI consistency
     titulo: updatedMateria.retranca || "Sem título" 
   };
-};
-
-// Helper to calculate total time for a block
-export const calculateBlockTotalTime = (items: Materia[]): number => {
-  return items.reduce((sum, item) => sum + (item.duracao || 0), 0);
 };
