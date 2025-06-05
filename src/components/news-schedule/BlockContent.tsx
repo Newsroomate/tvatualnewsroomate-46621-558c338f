@@ -46,6 +46,7 @@ export const BlockContent = ({
                     <th className="py-3 px-4 text-left w-12">Sel.</th>
                   )}
                   <th className="py-3 px-4 text-left">Página</th>
+                  <th className="py-3 px-4 text-left">Notas</th>
                   <th className="py-3 px-4 text-left">Retranca</th>
                   <th className="py-3 px-4 text-left">Clipe</th>
                   <th className="py-3 px-4 text-left">Duração</th>
@@ -57,7 +58,7 @@ export const BlockContent = ({
               <tbody className="divide-y divide-gray-200">
                 {items.length === 0 ? (
                   <tr>
-                    <td colSpan={isBatchMode ? 8 : 7} className="py-4 text-center text-gray-500">
+                    <td colSpan={isBatchMode ? 9 : 8} className="py-4 text-center text-gray-500">
                       Nenhuma matéria neste bloco
                     </td>
                   </tr>

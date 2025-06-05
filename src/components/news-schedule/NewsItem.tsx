@@ -97,6 +97,7 @@ export const NewsItem = ({
       )}
       
       <td className="py-2 px-4">{item.pagina}</td>
+      <td className="py-2 px-4 text-xs font-medium text-blue-600">{item.tipo_material || '-'}</td>
       <td className="py-2 px-4 font-medium">{displayRetranca}</td>
       <td className="py-2 px-4 font-mono text-xs">{item.clip || ''}</td>
       <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
