@@ -105,6 +105,7 @@ export type Database = {
           tags: string[] | null
           tempo_clip: string | null
           texto: string | null
+          tipo_material: string | null
           updated_at: string | null
         }
         Insert: {
@@ -126,6 +127,7 @@ export type Database = {
           tags?: string[] | null
           tempo_clip?: string | null
           texto?: string | null
+          tipo_material?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -147,6 +149,7 @@ export type Database = {
           tags?: string[] | null
           tempo_clip?: string | null
           texto?: string | null
+          tipo_material?: string | null
           updated_at?: string | null
         }
         Relationships: [

@@ -147,6 +147,7 @@ export const updateMateriasOrdem = async (materias: Partial<Materia>[]) => {
     if (materia.status !== undefined) updateData.status = materia.status;
     if (materia.pagina !== undefined) updateData.pagina = materia.pagina;
     if (materia.reporter !== undefined) updateData.reporter = materia.reporter;
+    if (materia.tipo_material !== undefined) updateData.tipo_material = materia.tipo_material;
     
     return updateData;
   });
