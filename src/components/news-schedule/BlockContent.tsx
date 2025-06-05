@@ -2,7 +2,7 @@
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Materia } from "@/types";
 import { NewsItem } from "./NewsItem";
-import { ResizableTable } from "./ResizableTable";
+import { ResizableGrid } from "./ResizableGrid";
 
 interface BlockContentProps {
   blockId: string;
@@ -49,13 +49,11 @@ export const BlockContent = ({
           ref={provided.innerRef}
           {...provided.droppableProps}
         >
-          <ResizableTable columns={columns} isBatchMode={isBatchMode}>
+          <ResizableGrid columns={columns} isBatchMode={isBatchMode}>
             {items.length === 0 ? (
-              <tr>
-                <td colSpan={isBatchMode ? 9 : 8} className="py-4 text-center text-gray-500">
-                  Nenhuma matéria neste bloco
-                </td>
-              </tr>
+              <div className="py-8 text-center text-gray-500 min-h-[80px] flex items-center justify-center">
+                Nenhuma matéria neste bloco
+              </div>
             ) : (
               items.map((item, index) => (
                 <Draggable
@@ -84,7 +82,7 @@ export const BlockContent = ({
               ))
             )}
             {provided.placeholder}
-          </ResizableTable>
+          </ResizableGrid>
         </div>
       )}
     </Droppable>
