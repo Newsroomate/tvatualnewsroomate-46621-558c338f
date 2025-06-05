@@ -5,12 +5,62 @@ import { Materia } from '@/types';
 export const exportLaudaToPDF = (materias: Materia[], filename: string = 'Lauda_Reporter') => {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.width;
+  const pageHeight = doc.internal.pageSize.height;
   const margin = 20;
   const lineHeight = 7;
+  const bottomMargin = 30; // Margem inferior para evitar cortar texto
   let y = margin;
 
   // Configurar fonte
   doc.setFont('helvetica');
+
+  // Função para verificar se precisa de nova página e adicionar se necessário
+  const checkNewPage = (requiredSpace: number = lineHeight * 2) => {
+    if (y + requiredSpace > pageHeight - bottomMargin) {
+      doc.addPage();
+      y = margin;
+      return true;
+    }
+    return false;
+  };
+
+  // Função para adicionar texto com quebra automática de página
+  const addTextWithPageBreak = (text: string, fontSize: number, fontStyle: 'normal' | 'bold' | 'italic' = 'normal', maxWidth?: number) => {
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', fontStyle);
+    
+    const textWidth = maxWidth || pageWidth - 2 * margin;
+    const lines = doc.splitTextToSize(text, textWidth);
+    
+    for (let i = 0; i < lines.length; i++) {
+      // Verificar se precisa de nova página antes de cada linha
+      checkNewPage(lineHeight);
+      
+      doc.text(lines[i], margin, y);
+      y += lineHeight;
+    }
+    
+    return lines.length;
+  };
+
+  // Função para adicionar seção com título e conteúdo
+  const addSection = (title: string, content: string, backgroundColor?: string) => {
+    // Verificar espaço para título + pelo menos 2 linhas de conteúdo
+    checkNewPage(lineHeight * 4);
+    
+    // Título da seção
+    addTextWithPageBreak(title, 14, 'bold');
+    y += 2; // Pequeno espaço após o título
+    
+    // Conteúdo da seção
+    if (content && content.trim()) {
+      addTextWithPageBreak(content, 12, 'normal');
+    } else {
+      addTextWithPageBreak('Não informado', 12, 'normal');
+    }
+    
+    y += 8; // Espaço entre seções
+  };
 
   // Título do documento
   doc.setFontSize(16);
@@ -22,82 +72,59 @@ export const exportLaudaToPDF = (materias: Materia[], filename: string = 'Lauda_
   doc.setFontSize(10);
   doc.setFont('helvetica', 'normal');
   doc.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, pageWidth / 2, y, { align: 'center' });
-  y += lineHeight * 2;
+  y += lineHeight * 3;
 
   materias.forEach((materia, index) => {
-    // Verificar se precisa de nova página
-    if (y > doc.internal.pageSize.height - 40) {
-      doc.addPage();
-      y = margin;
-    }
-
-    // Separador entre matérias
+    // Separador entre matérias (exceto a primeira)
     if (index > 0) {
-      y += lineHeight;
+      checkNewPage(lineHeight * 6); // Espaço mínimo para começar nova matéria
+      
+      // Linha separadora
       doc.setDrawColor(200, 200, 200);
       doc.line(margin, y, pageWidth - margin, y);
-      y += lineHeight;
+      y += lineHeight * 2;
     }
 
+    // Verificar se há espaço para começar uma nova matéria
+    checkNewPage(lineHeight * 8);
+
     // Retranca
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('RETRANCA:', margin, y);
-    y += lineHeight;
-    
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    const retrancaText = materia.retranca || 'Não informado';
-    const retrancaLines = doc.splitTextToSize(retrancaText, pageWidth - 2 * margin);
-    doc.text(retrancaLines, margin, y);
-    y += lineHeight * retrancaLines.length + 5;
+    addSection('RETRANCA:', materia.retranca || 'Não informado');
 
-    // Cabeça
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CABEÇA (TELEPROMPTER):', margin, y);
-    y += lineHeight;
-    
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    const cabecaText = materia.cabeca || 'Não informado';
-    const cabecaLines = doc.splitTextToSize(cabecaText, pageWidth - 2 * margin);
-    doc.text(cabecaLines, margin, y);
-    y += lineHeight * cabecaLines.length + 5;
+    // Cabeça (Teleprompter)
+    addSection('CABEÇA (TELEPROMPTER):', materia.cabeca || 'Não informado');
 
-    // GC
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('GC (GERADOR DE CARACTERES):', margin, y);
-    y += lineHeight;
-    
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    const gcText = materia.gc || 'Não informado';
-    const gcLines = doc.splitTextToSize(gcText, pageWidth - 2 * margin);
-    doc.text(gcLines, margin, y);
-    y += lineHeight * gcLines.length + 5;
+    // GC (Gerador de Caracteres)
+    addSection('GC (GERADOR DE CARACTERES):', materia.gc || 'Não informado');
 
-    // Corpo da matéria
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.text('CORPO DA MATÉRIA:', margin, y);
-    y += lineHeight;
-    
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    const textoText = materia.texto || 'Não informado';
-    const textoLines = doc.splitTextToSize(textoText, pageWidth - 2 * margin);
-    doc.text(textoLines, margin, y);
-    y += lineHeight * textoLines.length + 10;
+    // Corpo da matéria - o mais importante, garantir que todo o texto seja incluído
+    addSection('CORPO DA MATÉRIA:', materia.texto || 'Não informado');
 
-    // Informações adicionais
+    // Informações adicionais em uma linha
+    checkNewPage(lineHeight * 3);
+    
     doc.setFontSize(10);
     doc.setFont('helvetica', 'italic');
     const infoText = `Duração: ${materia.duracao || 0}s | Repórter: ${materia.reporter || 'Não informado'}`;
-    doc.text(infoText, margin, y);
-    y += lineHeight * 2;
+    addTextWithPageBreak(infoText, 10, 'italic');
+    
+    y += lineHeight; // Espaço extra entre matérias
   });
+
+  // Adicionar numeração de páginas
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      `Página ${i} de ${totalPages}`,
+      pageWidth / 2,
+      pageHeight - 15,
+      { align: 'center' }
+    );
+  }
 
   // Salvar o PDF
   const timestamp = new Date().toISOString().slice(0, 19).replace(/[-:]/g, '').replace('T', '_');
