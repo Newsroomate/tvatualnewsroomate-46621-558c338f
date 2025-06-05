@@ -4,6 +4,7 @@ import { Trash2, Pencil, Copy } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Materia } from "@/types";
 import { formatTime } from "./utils";
+import { ResizableGridRow } from "./ResizableGridRow";
 import {
   Tooltip,
   TooltipContent,
@@ -25,6 +26,7 @@ interface NewsItemProps {
   isBatchMode?: boolean;
   isSelected?: boolean;
   onToggleSelection?: (itemId: string) => void;
+  useGridLayout?: boolean;
 }
 
 export const NewsItem = ({ 
@@ -40,7 +42,8 @@ export const NewsItem = ({
   // Batch selection props
   isBatchMode = false,
   isSelected = false,
-  onToggleSelection
+  onToggleSelection,
+  useGridLayout = false
 }: NewsItemProps) => {
   // Status color classes
   const getStatusClass = (status: string): string => {
@@ -90,7 +93,142 @@ export const NewsItem = ({
       onToggleSelection(item.id);
     }
   };
-  
+
+  // Create the cell contents array for the grid layout
+  const cellContents = [
+    // Checkbox column for batch selection (if enabled)
+    ...(isBatchMode ? [
+      <Checkbox
+        checked={isSelected}
+        onCheckedChange={handleCheckboxChange}
+        disabled={!canModify}
+      />
+    ] : []),
+    
+    // Página
+    <span className="text-sm">{item.pagina}</span>,
+    
+    // Notas (tipo_material)
+    item.tipo_material ? (
+      <span className={`px-2 py-1 rounded-md text-xs font-medium ${getMaterialTypeClass(item.tipo_material)}`}>
+        {item.tipo_material}
+      </span>
+    ) : (
+      <span className="text-gray-400">-</span>
+    ),
+    
+    // Retranca
+    <span className="font-medium text-sm truncate">{displayRetranca}</span>,
+    
+    // Clipe
+    <span className="font-mono text-xs">{item.clip || ''}</span>,
+    
+    // Duração
+    <span className="text-sm">{formatTime(displayDuracao)}</span>,
+    
+    // Status
+    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(displayStatus)}`}>
+      {translateStatus(displayStatus)}
+    </span>,
+    
+    // Reporter
+    <span className="text-sm">{item.reporter || '-'}</span>,
+    
+    // Ações
+    <div className="flex gap-1">
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={() => onEdit(item)}
+              disabled={!isEspelhoOpen || !canModify}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          {!isEspelhoOpen && (
+            <TooltipContent>
+              Abra o espelho para editar
+            </TooltipContent>
+          )}
+          {!canModify && isEspelhoOpen && (
+            <TooltipContent>
+              Sem permissão para editar
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              onClick={() => onDuplicate(item)}
+              disabled={!isEspelhoOpen || !canModify}
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          {!isEspelhoOpen && (
+            <TooltipContent>
+              Abra o espelho para duplicar
+            </TooltipContent>
+          )}
+          {!canModify && isEspelhoOpen && (
+            <TooltipContent>
+              Sem permissão para duplicar
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+      
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              size="sm" 
+              variant="ghost" 
+              className="text-red-600 hover:text-red-800"
+              onClick={() => onDelete(item)}
+              disabled={!isEspelhoOpen || !canModify}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          {!isEspelhoOpen && (
+            <TooltipContent>
+              Abra o espelho para excluir
+            </TooltipContent>
+          )}
+          {!canModify && isEspelhoOpen && (
+            <TooltipContent>
+              Sem permissão para excluir
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
+    </div>
+  ];
+
+  // Use grid layout if specified
+  if (useGridLayout) {
+    return (
+      <ResizableGridRow
+        provided={provided}
+        snapshot={snapshot}
+        onDoubleClick={() => onDoubleClick(item)}
+        className={isSelected ? "bg-blue-50" : ""}
+      >
+        {cellContents}
+      </ResizableGridRow>
+    );
+  }
+
+  // Fallback to table layout (existing code)
   return (
     <tr 
       ref={provided.innerRef}
