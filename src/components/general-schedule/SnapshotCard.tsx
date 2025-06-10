@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight, Clock } from "lucide-react";
+import { ChevronDown, ChevronRight, Clock, Eye } from "lucide-react";
 import { format } from "date-fns";
 import { formatTime } from "../news-schedule/utils";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
@@ -13,6 +13,7 @@ interface SnapshotCardProps {
   snapshot: ClosedRundownSnapshot;
   isExpanded: boolean;
   onToggleExpansion: () => void;
+  onViewDetails: (snapshot: ClosedRundownSnapshot) => void;
 }
 
 const getMateriasList = (bloco: any) => {
@@ -25,7 +26,7 @@ const getMateriasList = (bloco: any) => {
   return [];
 };
 
-export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion }: SnapshotCardProps) => {
+export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDetails }: SnapshotCardProps) => {
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
   
   const toggleBlockExpansion = (blockId: string) => {
@@ -83,12 +84,23 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion }: Snapsh
               </Badge>
             )}
           </div>
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>{blocos.length} blocos</span>
-            <span>•</span>
-            <span>{totalMaterias} matérias</span>
-            <span>•</span>
-            <span>{formatTime(totalDuracao)}</span>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <span>{blocos.length} blocos</span>
+              <span>•</span>
+              <span>{totalMaterias} matérias</span>
+              <span>•</span>
+              <span>{formatTime(totalDuracao)}</span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => onViewDetails(snapshot)}
+              className="flex items-center space-x-1"
+            >
+              <Eye className="h-4 w-4" />
+              <span>Ver Detalhes</span>
+            </Button>
           </div>
         </div>
       </CardHeader>

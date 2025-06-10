@@ -4,6 +4,7 @@ import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { LoadingState } from "./LoadingState";
 import { EmptyState } from "./EmptyState";
 import { SnapshotCard } from "./SnapshotCard";
+import { FullRundownView } from "./FullRundownView";
 
 interface ClosedRundownContentProps {
   snapshots: ClosedRundownSnapshot[];
@@ -12,6 +13,7 @@ interface ClosedRundownContentProps {
 
 export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownContentProps) => {
   const [expandedSnapshots, setExpandedSnapshots] = useState<Set<string>>(new Set());
+  const [selectedSnapshot, setSelectedSnapshot] = useState<ClosedRundownSnapshot | null>(null);
 
   const toggleSnapshotExpansion = (snapshotId: string) => {
     const newExpanded = new Set(expandedSnapshots);
@@ -23,8 +25,26 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
     setExpandedSnapshots(newExpanded);
   };
 
+  const handleViewDetails = (snapshot: ClosedRundownSnapshot) => {
+    setSelectedSnapshot(snapshot);
+  };
+
+  const handleBackToList = () => {
+    setSelectedSnapshot(null);
+  };
+
   if (isLoading) {
     return <LoadingState />;
+  }
+
+  // If a snapshot is selected, show the full view
+  if (selectedSnapshot) {
+    return (
+      <FullRundownView
+        snapshot={selectedSnapshot}
+        onBack={handleBackToList}
+      />
+    );
   }
 
   if (snapshots.length === 0) {
@@ -61,6 +81,7 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
             snapshot={snapshot}
             isExpanded={isExpanded}
             onToggleExpansion={() => toggleSnapshotExpansion(snapshot.id)}
+            onViewDetails={handleViewDetails}
           />
         );
       })}

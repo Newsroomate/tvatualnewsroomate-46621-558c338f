@@ -87,7 +87,7 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-4xl h-auto max-h-[80vh] overflow-hidden flex flex-col">
+      <DialogContent className="sm:max-w-6xl h-auto max-h-[90vh] overflow-hidden flex flex-col">
         <div className="border-b pb-4 mb-4">
           <h2 className="text-lg font-semibold">Espelho Geral - Histórico de Espelhos</h2>
           <p className="text-sm text-muted-foreground mt-1">
