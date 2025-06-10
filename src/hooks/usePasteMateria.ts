@@ -19,6 +19,26 @@ export const usePasteMateria = ({
   clearClipboard
 }: UsePasteMateriaProps) => {
   
+  // Função para calcular o próximo número de página no bloco
+  const getNextPageNumber = (blockItems: Materia[]): string => {
+    // Filtrar apenas as páginas que são números válidos
+    const pageNumbers = blockItems
+      .map(item => {
+        const pageNum = parseInt(item.pagina || '0');
+        return isNaN(pageNum) ? 0 : pageNum;
+      })
+      .filter(num => num > 0);
+    
+    // Se não há páginas numeradas, começar com 1
+    if (pageNumbers.length === 0) {
+      return '1';
+    }
+    
+    // Encontrar o maior número e adicionar 1
+    const maxPageNumber = Math.max(...pageNumbers);
+    return (maxPageNumber + 1).toString();
+  };
+  
   const pasteMateria = async () => {
     if (!copiedMateria) {
       toast({
@@ -65,6 +85,10 @@ export const usePasteMateria = ({
         return;
       }
 
+      // Encontrar o bloco de destino para calcular o próximo número de página
+      const targetBlock = blocks.find(block => block.id === targetBlockId);
+      const nextPageNumber = getNextPageNumber(targetBlock?.items || []);
+
       // Criar dados para nova matéria
       const materiaData = {
         bloco_id: targetBlockId,
@@ -73,7 +97,7 @@ export const usePasteMateria = ({
         texto: copiedMateria.texto || '',
         duracao: copiedMateria.duracao || 0,
         tipo_material: copiedMateria.tipo_material || '',
-        pagina: copiedMateria.pagina || '',
+        pagina: nextPageNumber, // Usar o número de página calculado sequencialmente
         clip: copiedMateria.clip || '',
         reporter: copiedMateria.reporter || '',
         gc: copiedMateria.gc || '',
@@ -106,7 +130,7 @@ export const usePasteMateria = ({
 
       toast({
         title: "Matéria colada",
-        description: `"${newMateria.retranca}" foi colada com sucesso`,
+        description: `"${newMateria.retranca}" foi colada com sucesso na página ${nextPageNumber}`,
       });
 
     } catch (error) {
