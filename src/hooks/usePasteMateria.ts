@@ -1,11 +1,11 @@
 
 import { Materia } from '@/types';
-import { duplicateMateria } from '@/services/materias-api';
+import { createMateria } from '@/services/materias-api';
 import { toast } from '@/hooks/use-toast';
 
 interface UsePasteMateriaProps {
   blocks: any[];
-  setBlocks: (blocks: any[]) => void;
+  setBlocks: ((blocks: any[]) => void) | ((updater: (blocks: any[]) => any[]) => void);
   selectedMateria: Materia | null;
   copiedMateria: Materia | null;
   clearClipboard: () => void;
@@ -65,8 +65,10 @@ export const usePasteMateria = ({
         return;
       }
 
-      // Criar dados para duplicação
+      // Criar dados para nova matéria
       const materiaData = {
+        bloco_id: targetBlockId,
+        ordem: insertPosition,
         retranca: `${copiedMateria.retranca} (Cópia)`,
         texto: copiedMateria.texto || '',
         duracao: copiedMateria.duracao || 0,
@@ -79,37 +81,34 @@ export const usePasteMateria = ({
         status: copiedMateria.status || 'draft'
       };
 
-      // Duplicar a matéria no bloco de destino
-      const duplicatedMateria = await duplicateMateria(
-        copiedMateria.id, 
-        targetBlockId, 
-        materiaData, 
-        insertPosition
-      );
+      // Criar a nova matéria
+      const newMateria = await createMateria(materiaData);
 
       // Atualizar o estado local
-      setBlocks(currentBlocks => 
-        currentBlocks.map(block => {
-          if (block.id === targetBlockId) {
-            const updatedItems = [...block.items];
-            updatedItems.splice(insertPosition, 0, duplicatedMateria);
-            
-            // Recalcular o tempo total
-            const totalTime = updatedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
-            
-            return {
-              ...block,
-              items: updatedItems,
-              totalTime
-            };
-          }
-          return block;
-        })
-      );
+      if (typeof setBlocks === 'function') {
+        setBlocks((currentBlocks: any[]) => 
+          currentBlocks.map(block => {
+            if (block.id === targetBlockId) {
+              const updatedItems = [...block.items];
+              updatedItems.splice(insertPosition, 0, newMateria);
+              
+              // Recalcular o tempo total
+              const totalTime = updatedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
+              
+              return {
+                ...block,
+                items: updatedItems,
+                totalTime
+              };
+            }
+            return block;
+          })
+        );
+      }
 
       toast({
         title: "Matéria colada",
-        description: `"${duplicatedMateria.retranca}" foi colada com sucesso`,
+        description: `"${newMateria.retranca}" foi colada com sucesso`,
       });
 
     } catch (error) {

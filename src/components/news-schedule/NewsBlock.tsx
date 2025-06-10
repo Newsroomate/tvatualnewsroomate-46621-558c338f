@@ -20,6 +20,8 @@ interface NewsBlockProps {
   journalPrefix?: string;
   onBatchDeleteItems: (items: Materia[]) => void;
   isDeleting?: boolean;
+  selectedMateria?: Materia | null;
+  onMateriaSelect?: (materia: Materia | null) => void;
 }
 
 export const NewsBlock = ({
@@ -34,7 +36,9 @@ export const NewsBlock = ({
   onDeleteBlock,
   journalPrefix = "default",
   onBatchDeleteItems,
-  isDeleting = false
+  isDeleting = false,
+  selectedMateria,
+  onMateriaSelect
 }: NewsBlockProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -55,12 +59,16 @@ export const NewsBlock = ({
 
   // Visual selection functionality
   const {
-    selectedMateria,
+    selectedMateria: localSelectedMateria,
     selectedItemId,
     selectItem,
     clearSelection: clearVisualSelection,
     isSelected: isVisuallySelected
   } = useItemSelection();
+
+  // Use external selected materia if provided, otherwise use local
+  const currentSelectedMateria = selectedMateria || localSelectedMateria;
+  const currentSelectedItemId = selectedMateria?.id || selectedItemId;
 
   const handleDeleteSelected = () => {
     // Get the actual materia objects for selected IDs
@@ -80,10 +88,18 @@ export const NewsBlock = ({
 
   const handleItemClick = (materia: Materia) => {
     // If the item is already selected, deselect it
-    if (selectedMateria?.id === materia.id) {
-      clearVisualSelection();
+    if (currentSelectedMateria?.id === materia.id) {
+      if (onMateriaSelect) {
+        onMateriaSelect(null);
+      } else {
+        clearVisualSelection();
+      }
     } else {
-      selectItem(materia);
+      if (onMateriaSelect) {
+        onMateriaSelect(materia);
+      } else {
+        selectItem(materia);
+      }
     }
   };
   
@@ -127,7 +143,7 @@ export const NewsBlock = ({
         isSelected={isSelected}
         onToggleSelection={toggleItemSelection}
         // Visual selection props
-        selectedItemId={selectedItemId}
+        selectedItemId={currentSelectedItemId}
         onItemClick={handleItemClick}
       />
     </div>
