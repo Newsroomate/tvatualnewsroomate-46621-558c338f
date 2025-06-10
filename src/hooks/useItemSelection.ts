@@ -1,23 +1,25 @@
 
 import { useState } from 'react';
+import { Materia } from '@/types';
 
 export const useItemSelection = () => {
-  const [selectedItemId, setSelectedItemId] = useState<string | null>(null);
+  const [selectedMateria, setSelectedMateria] = useState<Materia | null>(null);
 
-  const selectItem = (itemId: string) => {
-    setSelectedItemId(itemId);
+  const selectItem = (materia: Materia) => {
+    setSelectedMateria(materia);
   };
 
   const clearSelection = () => {
-    setSelectedItemId(null);
+    setSelectedMateria(null);
   };
 
   const isSelected = (itemId: string) => {
-    return selectedItemId === itemId;
+    return selectedMateria?.id === itemId;
   };
 
   return {
-    selectedItemId,
+    selectedMateria,
+    selectedItemId: selectedMateria?.id || null,
     selectItem,
     clearSelection,
     isSelected

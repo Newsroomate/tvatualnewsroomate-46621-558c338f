@@ -17,7 +17,7 @@ interface BlockContentProps {
   onToggleSelection?: (itemId: string) => void;
   // Visual selection props
   selectedItemId?: string | null;
-  onItemClick?: (itemId: string) => void;
+  onItemClick?: (materia: Materia) => void;
 }
 
 export const BlockContent = ({ 

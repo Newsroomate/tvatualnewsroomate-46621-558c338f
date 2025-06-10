@@ -25,6 +25,8 @@ interface ScheduleContentProps {
   journalPrefix?: string;
   onBatchDeleteItems: (items: Materia[]) => void;
   isDeleting?: boolean;
+  selectedMateria?: Materia | null;
+  onMateriaSelect?: (materia: Materia | null) => void;
 }
 
 export const ScheduleContent = ({
@@ -45,7 +47,9 @@ export const ScheduleContent = ({
   onDeleteBlock,
   journalPrefix = "default",
   onBatchDeleteItems,
-  isDeleting = false
+  isDeleting = false,
+  selectedMateria,
+  onMateriaSelect
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -116,6 +120,8 @@ export const ScheduleContent = ({
             journalPrefix={journalPrefix}
             onBatchDeleteItems={onBatchDeleteItems}
             isDeleting={isDeleting}
+            selectedMateria={selectedMateria}
+            onMateriaSelect={onMateriaSelect}
           />
           {/* Add extra spacing after the last block for better visibility */}
           {index === blocks.length - 1 && (

@@ -55,6 +55,7 @@ export const NewsBlock = ({
 
   // Visual selection functionality
   const {
+    selectedMateria,
     selectedItemId,
     selectItem,
     clearSelection: clearVisualSelection,
@@ -77,12 +78,12 @@ export const NewsBlock = ({
     clearSelection();
   };
 
-  const handleItemClick = (itemId: string) => {
+  const handleItemClick = (materia: Materia) => {
     // If the item is already selected, deselect it
-    if (selectedItemId === itemId) {
+    if (selectedMateria?.id === materia.id) {
       clearVisualSelection();
     } else {
-      selectItem(itemId);
+      selectItem(materia);
     }
   };
   

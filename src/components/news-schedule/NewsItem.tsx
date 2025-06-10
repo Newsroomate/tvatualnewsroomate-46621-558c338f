@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil, Copy } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -27,7 +26,7 @@ interface NewsItemProps {
   onToggleSelection?: (itemId: string) => void;
   // Visual selection props
   isVisuallySelected?: boolean;
-  onItemClick?: (itemId: string) => void;
+  onItemClick?: (materia: Materia) => void;
 }
 
 export const NewsItem = ({ 
@@ -99,7 +98,7 @@ export const NewsItem = ({
 
   const handleRowClick = () => {
     if (onItemClick && !isBatchMode) {
-      onItemClick(item.id);
+      onItemClick(item);
     }
   };
 

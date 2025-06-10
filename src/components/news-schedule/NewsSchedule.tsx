@@ -7,6 +7,9 @@ import { ConfirmationDialogs } from "./ConfirmationDialogs";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
+import { useClipboard } from "@/hooks/useClipboard";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { usePasteMateria } from "@/hooks/usePasteMateria";
 import { SaveModelModal } from "@/components/models/SaveModelModal";
 import { SavedModelsModal } from "@/components/models/SavedModelsModal";
 import { SavedModel } from "@/services/models-api";
@@ -42,6 +45,7 @@ export const NewsSchedule = ({
   const isDualViewMode = !!externalBlocks && !!onBlocksChange;
   const [isSaveModelModalOpen, setIsSaveModelModalOpen] = useState(false);
   const [isSavedModelsModalOpen, setIsSavedModelsModalOpen] = useState(false);
+  const [selectedMateria, setSelectedMateria] = useState<Materia | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
@@ -79,8 +83,29 @@ export const NewsSchedule = ({
 
   // Use external blocks in dual view mode, otherwise use internal blocks
   const blocks = isDualViewMode ? externalBlocks : internalBlocks;
+  const setBlocks = isDualViewMode ? onBlocksChange : (blocks: any) => {};
   
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
+
+  // Clipboard functionality
+  const { copiedMateria, copyMateria, clearClipboard, hasCopiedMateria } = useClipboard();
+  
+  // Paste functionality
+  const { pasteMateria } = usePasteMateria({
+    blocks,
+    setBlocks,
+    selectedMateria,
+    copiedMateria,
+    clearClipboard
+  });
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    selectedMateria,
+    onCopy: copyMateria,
+    onPaste: pasteMateria,
+    isEspelhoOpen: !!currentTelejornal?.espelho_aberto
+  });
 
   const {
     handleAddBlockWithScroll,
@@ -191,6 +216,8 @@ export const NewsSchedule = ({
           journalPrefix={journalPrefix}
           onBatchDeleteItems={handleBatchDeleteMaterias}
           isDeleting={isDeleting}
+          selectedMateria={selectedMateria}
+          onMateriaSelect={setSelectedMateria}
         />
       </div>
 
