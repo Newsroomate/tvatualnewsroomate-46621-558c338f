@@ -15,9 +15,6 @@ interface BlockContentProps {
   isBatchMode?: boolean;
   isSelected?: (itemId: string) => boolean;
   onToggleSelection?: (itemId: string) => void;
-  // New selection props
-  selectedItemId?: string | null;
-  onItemSelect?: (itemId: string) => void;
 }
 
 export const BlockContent = ({ 
@@ -31,10 +28,7 @@ export const BlockContent = ({
   // Batch selection props
   isBatchMode = false,
   isSelected,
-  onToggleSelection,
-  // New selection props
-  selectedItemId,
-  onItemSelect
+  onToggleSelection
 }: BlockContentProps) => {
   return (
     <div className="overflow-x-auto">
@@ -90,8 +84,6 @@ export const BlockContent = ({
                           isBatchMode={isBatchMode}
                           isSelected={isSelected ? isSelected(item.id) : false}
                           onToggleSelection={onToggleSelection}
-                          isItemSelected={selectedItemId === item.id}
-                          onItemSelect={onItemSelect}
                         />
                       )}
                     </Draggable>
