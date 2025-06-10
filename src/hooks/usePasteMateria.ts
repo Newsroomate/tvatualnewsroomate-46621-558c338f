@@ -1,12 +1,11 @@
 
-
 import { Materia } from '@/types';
 import { createMateria } from '@/services/materias-api';
 import { toast } from '@/hooks/use-toast';
 
 interface UsePasteMateriaProps {
   blocks: any[];
-  setBlocks: ((blocks: any[]) => void) | ((updater: (blocks: any[]) => any[]) => void);
+  setBlocks: (updater: (blocks: any[]) => any[]) => void;
   selectedMateria: Materia | null;
   copiedMateria: Materia | null;
   clearClipboard: () => void;
@@ -122,4 +121,3 @@ export const usePasteMateria = ({
 
   return { pasteMateria };
 };
-
