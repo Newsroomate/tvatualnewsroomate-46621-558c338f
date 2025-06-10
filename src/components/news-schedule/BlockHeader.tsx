@@ -1,27 +1,24 @@
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { PlusCircle, Pencil, Trash2, Check, X, CheckSquare } from "lucide-react";
+import { useState } from "react";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { 
-  Plus, 
-  MoreVertical, 
-  Edit2, 
-  Trash2, 
-  Check, 
-  X,
-  CheckSquare,
-  Square,
-  Copy,
-  Clipboard
-} from "lucide-react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { formatTime } from "./utils";
 import { BatchActions } from "./BatchActions";
 
@@ -45,16 +42,13 @@ interface BlockHeaderProps {
   onDeleteSelected?: () => void;
   onCancelBatch?: () => void;
   isDeleting?: boolean;
-  // Clipboard props
-  clipboardSelectedCount?: number;
-  hasCopiedMaterias?: boolean;
 }
 
-export const BlockHeader = ({
-  blockName,
-  totalTime,
-  onAddItem,
-  newItemBlock,
+export const BlockHeader = ({ 
+  blockName, 
+  totalTime, 
+  onAddItem, 
+  newItemBlock, 
   blockId,
   isEspelhoOpen,
   canAddItem = true,
@@ -69,81 +63,54 @@ export const BlockHeader = ({
   onClearSelection,
   onDeleteSelected,
   onCancelBatch,
-  isDeleting = false,
-  // Clipboard props
-  clipboardSelectedCount = 0,
-  hasCopiedMaterias = false
+  isDeleting = false
 }: BlockHeaderProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editName, setEditName] = useState(blockName);
+  const [editingName, setEditingName] = useState(blockName);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
-  const handleSaveName = () => {
-    if (editName.trim() && editName !== blockName) {
-      onRenameBlock(blockId, editName.trim());
+  const handleStartEdit = () => {
+    if (!isEspelhoOpen || !canAddItem) return;
+    setIsEditing(true);
+    setEditingName(blockName);
+  };
+
+  const handleSaveEdit = () => {
+    if (editingName.trim() && editingName !== blockName) {
+      onRenameBlock(blockId, editingName.trim());
     }
     setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
-    setEditName(blockName);
     setIsEditing(false);
+    setEditingName(blockName);
+  };
+
+  const handleDeleteClick = () => {
+    if (!isEspelhoOpen || !canAddItem) return;
+    setShowDeleteDialog(true);
+  };
+
+  const handleConfirmDelete = () => {
+    onDeleteBlock(blockId);
+    setShowDeleteDialog(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSaveName();
+      handleSaveEdit();
     } else if (e.key === 'Escape') {
       handleCancelEdit();
     }
   };
 
   return (
-    <div className="bg-gray-50 px-4 py-3 border-b">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          {isEditing ? (
-            <div className="flex items-center space-x-2">
-              <Input
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className="h-8 w-48"
-                autoFocus
-              />
-              <Button size="sm" variant="ghost" onClick={handleSaveName}>
-                <Check className="h-4 w-4" />
-              </Button>
-              <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
-                <X className="h-4 w-4" />
-              </Button>
-            </div>
-          ) : (
-            <>
-              <h3 className="font-semibold text-lg">{blockName}</h3>
-              <Badge variant="secondary" className="text-xs">
-                {formatTime(totalTime)}
-              </Badge>
-              
-              {/* Clipboard indicators */}
-              {clipboardSelectedCount > 0 && (
-                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
-                  <Copy className="h-3 w-3 mr-1" />
-                  {clipboardSelectedCount} selecionada(s)
-                </Badge>
-              )}
-              
-              {hasCopiedMaterias && (
-                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
-                  <Clipboard className="h-3 w-3 mr-1" />
-                  Ctrl+V para colar
-                </Badge>
-              )}
-            </>
-          )}
-        </div>
-
-        <div className="flex items-center space-x-2">
-          {isBatchMode ? (
+    <>
+      <div className="bg-muted p-3 rounded-t-lg">
+        {/* Batch Actions Mode */}
+        {isBatchMode && onSelectAll && onClearSelection && onDeleteSelected && onCancelBatch && (
+          <div className="mb-3">
             <BatchActions
               selectedCount={selectedCount}
               allSelected={allSelected}
@@ -153,62 +120,179 @@ export const BlockHeader = ({
               onCancel={onCancelBatch}
               isDeleting={isDeleting}
             />
-          ) : (
-            <>
-              <Button
-                size="sm"
-                onClick={onAddItem}
-                disabled={!isEspelhoOpen || !canAddItem || newItemBlock === blockId}
-                className="flex items-center space-x-1"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Nova Matéria</span>
-              </Button>
+          </div>
+        )}
 
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
-                    <Edit2 className="h-4 w-4 mr-2" />
-                    Renomear Bloco
-                  </DropdownMenuItem>
-                  
-                  {onToggleBatchMode && (
-                    <DropdownMenuItem 
+        {/* Normal Header */}
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            {isEditing ? (
+              <div className="flex items-center gap-1">
+                <Input
+                  value={editingName}
+                  onChange={(e) => setEditingName(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  className="h-8 text-sm font-bold"
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleSaveEdit}
+                  className="h-8 w-8 p-0"
+                >
+                  <Check className="h-4 w-4 text-green-600" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={handleCancelEdit}
+                  className="h-8 w-8 p-0"
+                >
+                  <X className="h-4 w-4 text-red-600" />
+                </Button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <h2 className="font-bold">{blockName}</h2>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleStartEdit}
+                        disabled={!isEspelhoOpen || !canAddItem}
+                        className="h-8 w-8 p-0"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    {!isEspelhoOpen && (
+                      <TooltipContent>
+                        Abra o espelho para renomear
+                      </TooltipContent>
+                    )}
+                    {!canAddItem && isEspelhoOpen && (
+                      <TooltipContent>
+                        Sem permissão para renomear
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleDeleteClick}
+                        disabled={!isEspelhoOpen || !canAddItem}
+                        className="h-8 w-8 p-0 text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </TooltipTrigger>
+                    {!isEspelhoOpen && (
+                      <TooltipContent>
+                        Abra o espelho para excluir
+                      </TooltipContent>
+                    )}
+                    {!canAddItem && isEspelhoOpen && (
+                      <TooltipContent>
+                        Sem permissão para excluir
+                      </TooltipContent>
+                    )}
+                  </Tooltip>
+                </TooltipProvider>
+              </div>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <span className="text-sm font-medium">
+              Tempo: {formatTime(totalTime)}
+            </span>
+            
+            {/* Batch Actions Toggle Button */}
+            {onToggleBatchMode && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      size="sm" 
+                      variant={isBatchMode ? "default" : "ghost"}
                       onClick={onToggleBatchMode}
-                      disabled={!isEspelhoOpen}
+                      disabled={!isEspelhoOpen || !canAddItem}
+                      className="h-8"
                     >
-                      <CheckSquare className="h-4 w-4 mr-2" />
-                      Seleção em Lote
-                    </DropdownMenuItem>
+                      <CheckSquare className="h-4 w-4 mr-1" />
+                      {isBatchMode ? "Sair" : "Ações em Lote"}
+                    </Button>
+                  </TooltipTrigger>
+                  {!isEspelhoOpen && (
+                    <TooltipContent>
+                      Abra o espelho para ações em lote
+                    </TooltipContent>
                   )}
-                  
-                  <DropdownMenuSeparator />
-                  
-                  <DropdownMenuItem 
-                    onClick={() => onDeleteBlock(blockId)}
-                    className="text-red-600"
-                  >
-                    <Trash2 className="h-4 w-4 mr-2" />
-                    Excluir Bloco
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
-          )}
+                  {!canAddItem && isEspelhoOpen && (
+                    <TooltipContent>
+                      Sem permissão para ações em lote
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            )}
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      onClick={onAddItem}
+                      disabled={(newItemBlock === blockId || !isEspelhoOpen || !canAddItem)}
+                    >
+                      <PlusCircle className="h-4 w-4 mr-1" /> Nova Matéria
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                {!isEspelhoOpen && (
+                  <TooltipContent>
+                    Abra o espelho para adicionar matérias
+                  </TooltipContent>
+                )}
+                {!canAddItem && isEspelhoOpen && (
+                  <TooltipContent>
+                    Sem permissão para adicionar matérias
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          </div>
         </div>
       </div>
-      
-      {/* Instructions for clipboard usage */}
-      {!isBatchMode && isEspelhoOpen && (
-        <div className="mt-2 text-xs text-gray-500">
-          Dica: Use Ctrl+Click para selecionar matérias, Ctrl+C para copiar e Ctrl+V para colar
-        </div>
-      )}
-    </div>
+
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Exclusão do Bloco</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir o bloco "{blockName}"? Todas as matérias dentro deste bloco também serão excluídas. Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700"
+              onClick={handleConfirmDelete}
+            >
+              Excluir Bloco
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };

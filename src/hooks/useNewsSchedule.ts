@@ -85,8 +85,7 @@ export const useNewsSchedule = ({
     confirmDeleteMateria,
     handleBatchDeleteMaterias,
     handleRenumberItems, 
-    confirmRenumberItems,
-    handlePasteMaterias
+    confirmRenumberItems 
   } = useItemManagement({ 
     blocks, 
     setBlocks, 
@@ -167,7 +166,6 @@ export const useNewsSchedule = ({
     handleRenameBlock,
     handleDeleteBlock,
     handleDragEnd,
-    openTeleprompter,
-    handlePasteMaterias
+    openTeleprompter
   };
 };

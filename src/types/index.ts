@@ -1,4 +1,3 @@
-
 export interface Telejornal {
   id: string;
   created_at?: string;
@@ -66,10 +65,6 @@ export interface MateriaCreateInput {
   cabeca?: string;
   gc?: string;  // New GC field
   tipo_material?: string;  // New field for material type dropdown
-  local_gravacao?: string;  // Add this missing field
-  tags?: string[];  // Add this missing field
-  equipamento?: string;  // Add this missing field
-  horario_exibicao?: string;  // Add this missing field
 }
 
 export interface Pauta {
