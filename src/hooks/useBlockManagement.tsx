@@ -1,4 +1,3 @@
-
 import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia, Telejornal } from "@/types";
@@ -60,12 +59,19 @@ export const useBlockManagement = ({
             ordem: i + 1,
             retranca: materiaData.retranca || 'Sem título',
             clip: materiaData.clip || '',
+            tempo_clip: materiaData.tempo_clip || '',
             duracao: materiaData.duracao || 0,
             pagina: materiaData.pagina || '',
             reporter: materiaData.reporter || '',
             status: materiaData.status || 'draft',
             texto: materiaData.texto || '',
-            cabeca: materiaData.cabeca || ''
+            cabeca: materiaData.cabeca || '',
+            gc: materiaData.gc || '',
+            local_gravacao: materiaData.local_gravacao || '',
+            tags: materiaData.tags || [],
+            equipamento: materiaData.equipamento || '',
+            horario_exibicao: materiaData.horario_exibicao || null,
+            tipo_material: materiaData.tipo_material || ''
           });
           
           createdMaterias.push({
@@ -107,6 +113,15 @@ export const useBlockManagement = ({
       console.log("Cannot create first block - journal not selected or espelho not open");
       return;
     }
+    
+    // Prevent multiple concurrent block creation attempts
+    if (blockCreationInProgress.current) {
+      console.log("Block creation already in progress, skipping");
+      return;
+    }
+    
+    blockCreationInProgress.current = true;
+    setIsCreatingFirstBlock(true);
     
     try {
       // Double check to make sure we don't have blocks already
@@ -152,6 +167,9 @@ export const useBlockManagement = ({
       }
       
       throw error;
+    } finally {
+      setIsCreatingFirstBlock(false);
+      blockCreationInProgress.current = false;
     }
   };
 
@@ -179,12 +197,20 @@ export const useBlockManagement = ({
       const novoBloco = await createBloco(novoBlocoInput);
       console.log(`New block created: ${novoBloco.nome} with order ${novoBloco.ordem}`);
       
-      // Update UI
-      setBlocks([...blocks, { 
+      // Update UI immediately
+      const newBlockWithItems = { 
         ...novoBloco, 
         items: [],
         totalTime: 0
-      }]);
+      };
+      
+      setBlocks(prevBlocks => [...prevBlocks, newBlockWithItems]);
+      
+      toast({
+        title: "Bloco criado",
+        description: `Bloco "${novoBloco.nome}" criado com sucesso`,
+      });
+      
     } catch (error) {
       console.error("Erro ao adicionar bloco:", error);
       
@@ -207,7 +233,7 @@ export const useBlockManagement = ({
           console.log(`New block created with adjusted order: ${novoBloco.nome} with order ${novoBloco.ordem}`);
           
           // Update UI
-          setBlocks([...blocks, { 
+          setBlocks(prevBlocks => [...prevBlocks, { 
             ...novoBloco, 
             items: [],
             totalTime: 0

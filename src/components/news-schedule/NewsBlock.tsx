@@ -21,7 +21,8 @@ interface NewsBlockProps {
   journalPrefix?: string;
   onBatchDeleteItems: (items: Materia[]) => void;
   isDeleting?: boolean;
-  onPasteMaterias?: (materias: Materia[], targetMateria?: Materia) => void;
+  onPasteMaterias?: (materias: Partial<Materia>[], targetMateria?: Materia) => void;
+  currentTelejornalId?: string;
 }
 
 export const NewsBlock = ({
@@ -37,7 +38,8 @@ export const NewsBlock = ({
   journalPrefix = "default",
   onBatchDeleteItems,
   isDeleting = false,
-  onPasteMaterias
+  onPasteMaterias,
+  currentTelejornalId
 }: NewsBlockProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -79,6 +81,7 @@ export const NewsBlock = ({
     selectedMaterias: getSelectedMaterias(),
     onPasteMaterias,
     currentBlockId: block.id,
+    currentTelejornalId,
     isEnabled: isEspelhoOpen && canModify,
     selectedMateria
   });

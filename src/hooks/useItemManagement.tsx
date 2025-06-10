@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { Bloco, Materia, Telejornal } from '@/types';
 import { createMateria, deleteMateria } from '@/services/materias-api';
@@ -32,7 +33,11 @@ export const useItemManagement = ({ blocks, setBlocks, currentTelejornal }: UseI
 
       const materiaToCreate = {
         ...materiaData,
-        telejornal_id: currentTelejornal.id,
+        bloco_id: item.bloco_id,
+        retranca: materiaData.retranca || 'Nova Matéria',
+        duracao: materiaData.duracao || 0,
+        ordem: materiaData.ordem || 1,
+        status: materiaData.status || 'draft'
       };
 
       await createMateria(materiaToCreate);
@@ -142,15 +147,23 @@ export const useItemManagement = ({ blocks, setBlocks, currentTelejornal }: UseI
       for (const materiaData of materiasData) {
         if (materiaData.bloco_id) {
           const materiaToCreate = {
-            ...materiaData,
             bloco_id: materiaData.bloco_id,
-            telejornal_id: currentTelejornal.id,
-            // Ensure all required fields are present
-            retranca: materiaData.retranca || '',
-            tipo_material: materiaData.tipo_material || '',
+            retranca: materiaData.retranca || 'Nova Matéria',
+            clip: materiaData.clip || '',
+            tempo_clip: materiaData.tempo_clip || '',
+            duracao: materiaData.duracao || 0,
+            texto: materiaData.texto || '',
+            cabeca: materiaData.cabeca || '',
+            gc: materiaData.gc || '',
             status: materiaData.status || 'draft',
-            ordem: materiaData.ordem || 0,
-            duracao: materiaData.duracao || 0
+            pagina: materiaData.pagina || '',
+            reporter: materiaData.reporter || '',
+            local_gravacao: materiaData.local_gravacao || '',
+            tags: materiaData.tags || [],
+            equipamento: materiaData.equipamento || '',
+            horario_exibicao: materiaData.horario_exibicao || null,
+            tipo_material: materiaData.tipo_material || '',
+            ordem: materiaData.ordem || 0
           };
           
           await createMateria(materiaToCreate);

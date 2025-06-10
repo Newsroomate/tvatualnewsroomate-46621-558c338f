@@ -1,3 +1,4 @@
+
 import { Plus } from "lucide-react";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { NewsBlock } from "./NewsBlock";
@@ -110,6 +111,7 @@ export const ScheduleContent = ({
           onBatchDeleteItems={onBatchDeleteItems}
           isDeleting={isDeleting}
           onPasteMaterias={onPasteMaterias}
+          currentTelejornalId={currentTelejornal?.id}
         />
       ))}
 

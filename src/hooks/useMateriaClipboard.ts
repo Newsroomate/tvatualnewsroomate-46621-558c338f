@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Materia } from '@/types';
 import { useClipboard } from '@/context/ClipboardContext';
@@ -6,8 +7,9 @@ import { useToast } from '@/hooks/use-toast';
 
 interface UseMateriaClipboardProps {
   selectedMaterias: Materia[];
-  onPasteMaterias?: (materias: Materia[], targetMateria?: Materia) => void;
+  onPasteMaterias?: (materias: Partial<Materia>[], targetMateria?: Materia) => void;
   currentBlockId?: string;
+  currentTelejornalId?: string;
   isEnabled?: boolean;
   selectedMateria?: Materia | null;
 }
@@ -16,6 +18,7 @@ export const useMateriaClipboard = ({
   selectedMaterias,
   onPasteMaterias,
   currentBlockId,
+  currentTelejornalId,
   isEnabled = true,
   selectedMateria
 }: UseMateriaClipboardProps) => {
@@ -34,7 +37,7 @@ export const useMateriaClipboard = ({
         copyMaterias(selectedMaterias);
       }
 
-      if (event.key === 'v' && copiedMaterias.length > 0 && currentBlockId) {
+      if (event.key === 'v' && copiedMaterias.length > 0 && currentBlockId && currentTelejornalId) {
         event.preventDefault();
         
         try {
@@ -51,11 +54,20 @@ export const useMateriaClipboard = ({
 
           // If there's a callback for handling paste, use it
           if (onPasteMaterias) {
-            onPasteMaterias(materiasToCreate as Materia[], selectedMateria || undefined);
+            onPasteMaterias(materiasToCreate, selectedMateria || undefined);
           } else {
             // Otherwise create the materias directly
             for (const materiaData of materiasToCreate) {
-              await createMateria(materiaData);
+              const materiaToCreate = {
+                ...materiaData,
+                bloco_id: currentBlockId,
+                retranca: materiaData.retranca || 'Nova Matéria',
+                duracao: materiaData.duracao || 0,
+                ordem: materiaData.ordem || 1,
+                status: materiaData.status || 'draft'
+              };
+              
+              await createMateria(materiaToCreate);
             }
             
             toast({
@@ -76,7 +88,7 @@ export const useMateriaClipboard = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedMaterias, copiedMaterias, currentBlockId, isEnabled, selectedMateria, copyMaterias, onPasteMaterias, toast]);
+  }, [selectedMaterias, copiedMaterias, currentBlockId, currentTelejornalId, isEnabled, selectedMateria, copyMaterias, onPasteMaterias, toast]);
 
   return {
     copyMaterias,
