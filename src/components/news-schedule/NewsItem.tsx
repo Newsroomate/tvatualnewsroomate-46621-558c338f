@@ -1,15 +1,11 @@
 
-import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Copy } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Materia } from "@/types";
 import { formatTime } from "./utils";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { StatusDisplay } from "./item/StatusDisplay";
+import { MaterialTypeDisplay } from "./item/MaterialTypeDisplay";
+import { ItemActions } from "./item/ItemActions";
+import { useItemRowInteraction } from "./item/useItemRowInteraction";
 
 interface NewsItemProps {
   item: Materia;
@@ -48,47 +44,8 @@ export const NewsItem = ({
   isItemSelected = false,
   onItemSelect
 }: NewsItemProps) => {
-  // Status color classes
-  const getStatusClass = (status: string): string => {
-    switch (status?.toLowerCase()) {
-      case 'published': return 'bg-green-100 text-green-800';
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'urgent': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  // Material type color classes - soft and subtle colors
-  const getMaterialTypeClass = (tipo: string): string => {
-    switch (tipo?.toUpperCase()) {
-      case 'VT': return 'bg-red-50 text-red-700 border border-red-200';
-      case 'SUP': return 'bg-yellow-50 text-yellow-700 border border-yellow-200';
-      case 'IMG': return 'bg-blue-50 text-blue-700 border border-blue-200';
-      case 'EST': return 'bg-green-50 text-green-700 border border-green-200';
-      case 'LINK': return 'bg-purple-50 text-purple-700 border border-purple-200';
-      case 'SELO': return 'bg-orange-50 text-orange-700 border border-orange-200';
-      case 'VHT': return 'bg-pink-50 text-pink-700 border border-pink-200';
-      case 'SON': return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
-      case 'NET': return 'bg-teal-50 text-teal-700 border border-teal-200';
-      default: return 'bg-gray-50 text-gray-600 border border-gray-200';
-    }
-  };
-
-  // Tradução do status para português
-  const translateStatus = (status: string): string => {
-    switch (status?.toLowerCase()) {
-      case 'published': return 'Publicado';
-      case 'draft': return 'Rascunho';
-      case 'pending': return 'Pendente';
-      case 'urgent': return 'Urgente';
-      default: return status || 'Rascunho';
-    }
-  };
-
   // Ensure we have valid data for display
   const displayRetranca = item.retranca || "Sem título";
-  const displayStatus = item.status || "draft";
   const displayDuracao = item.duracao || 0;
 
   const handleCheckboxChange = (checked: boolean) => {
@@ -97,37 +54,13 @@ export const NewsItem = ({
     }
   };
 
-  const handleRowClick = (e: React.MouseEvent) => {
-    // Don't trigger selection if clicking on buttons or checkboxes
-    if (e.target instanceof HTMLElement) {
-      const isInteractiveElement = e.target.closest('button, input, [role="button"]');
-      if (isInteractiveElement) return;
-    }
-
-    // Handle item selection on click
-    if (onItemSelect) {
-      onItemSelect(item.id);
-    }
-  };
-
-  // Define row background classes based on state
-  const getRowClasses = () => {
-    const baseClasses = "transition-colors cursor-pointer";
-    
-    if (snapshot.isDragging) {
-      return `${baseClasses} bg-blue-50`;
-    }
-    
-    if (isSelected) {
-      return `${baseClasses} bg-blue-50`;
-    }
-    
-    if (isItemSelected) {
-      return `${baseClasses} bg-gray-100 hover:bg-gray-150`;
-    }
-    
-    return `${baseClasses} hover:bg-gray-50`;
-  };
+  const { handleRowClick, getRowClasses } = useItemRowInteraction({
+    item,
+    snapshot,
+    isSelected,
+    isItemSelected,
+    onItemSelect
+  });
   
   return (
     <tr 
@@ -151,110 +84,24 @@ export const NewsItem = ({
       
       <td className="py-2 px-4">{item.pagina}</td>
       <td className="py-2 px-4">
-        {item.tipo_material ? (
-          <span className={`px-2 py-1 rounded-md text-xs font-medium ${getMaterialTypeClass(item.tipo_material)}`}>
-            {item.tipo_material}
-          </span>
-        ) : (
-          <span className="text-gray-400">-</span>
-        )}
+        <MaterialTypeDisplay tipo={item.tipo_material} />
       </td>
       <td className="py-2 px-4 font-medium">{displayRetranca}</td>
       <td className="py-2 px-4 font-mono text-xs">{item.clip || ''}</td>
       <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
       <td className="py-2 px-4">
-        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusClass(displayStatus)}`}>
-          {translateStatus(displayStatus)}
-        </span>
+        <StatusDisplay status={item.status} />
       </td>
       <td className="py-2 px-4">{item.reporter || '-'}</td>
       <td className="py-2 px-4">
-        <div className="flex gap-1">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(item);
-                  }}
-                  disabled={!isEspelhoOpen || !canModify}
-                >
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              {!isEspelhoOpen && (
-                <TooltipContent>
-                  Abra o espelho para editar
-                </TooltipContent>
-              )}
-              {!canModify && isEspelhoOpen && (
-                <TooltipContent>
-                  Sem permissão para editar
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDuplicate(item);
-                  }}
-                  disabled={!isEspelhoOpen || !canModify}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              {!isEspelhoOpen && (
-                <TooltipContent>
-                  Abra o espelho para duplicar
-                </TooltipContent>
-              )}
-              {!canModify && isEspelhoOpen && (
-                <TooltipContent>
-                  Sem permissão para duplicar
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  size="sm" 
-                  variant="ghost" 
-                  className="text-red-600 hover:text-red-800"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(item);
-                  }}
-                  disabled={!isEspelhoOpen || !canModify}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              {!isEspelhoOpen && (
-                <TooltipContent>
-                  Abra o espelho para excluir
-                </TooltipContent>
-              )}
-              {!canModify && isEspelhoOpen && (
-                <TooltipContent>
-                  Sem permissão para excluir
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+        <ItemActions
+          item={item}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onDuplicate={onDuplicate}
+          isEspelhoOpen={isEspelhoOpen}
+          canModify={canModify}
+        />
       </td>
     </tr>
   );
