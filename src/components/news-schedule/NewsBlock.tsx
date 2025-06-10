@@ -1,10 +1,12 @@
 
+import { useState } from "react";
 import { Bloco, Materia } from "@/types";
 import { BlockHeader } from "./BlockHeader";
 import { BlockContent } from "./BlockContent";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { useMateriaClipboard } from "@/hooks/useMateriaClipboard";
 
 interface NewsBlockProps {
   block: Bloco & { items: Materia[], totalTime: number };
@@ -19,6 +21,7 @@ interface NewsBlockProps {
   journalPrefix?: string;
   onBatchDeleteItems: (items: Materia[]) => void;
   isDeleting?: boolean;
+  onPasteMaterias?: (materias: Materia[], targetMateria?: Materia) => void;
 }
 
 export const NewsBlock = ({
@@ -33,7 +36,8 @@ export const NewsBlock = ({
   onDeleteBlock,
   journalPrefix = "default",
   onBatchDeleteItems,
-  isDeleting = false
+  isDeleting = false,
+  onPasteMaterias
 }: NewsBlockProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -51,6 +55,51 @@ export const NewsBlock = ({
     isSelected,
     setSelectedItems
   } = useBatchSelection(block.items);
+
+  // Clipboard selection state
+  const [clipboardSelectedMaterias, setClipboardSelectedMaterias] = useState<Materia[]>([]);
+  const [selectedMateria, setSelectedMateria] = useState<Materia | null>(null);
+
+  // Get selected materias for clipboard operations
+  const getSelectedMaterias = () => {
+    if (clipboardSelectedMaterias.length > 0) {
+      return clipboardSelectedMaterias;
+    }
+    if (selectedItems.length > 0) {
+      return block.items.filter(item => selectedItems.includes(item.id));
+    }
+    if (selectedMateria) {
+      return [selectedMateria];
+    }
+    return [];
+  };
+
+  // Clipboard functionality
+  const { hasCopiedMaterias } = useMateriaClipboard({
+    selectedMaterias: getSelectedMaterias(),
+    onPasteMaterias,
+    currentBlockId: block.id,
+    isEnabled: isEspelhoOpen && canModify,
+    selectedMateria
+  });
+
+  const handleToggleClipboardSelection = (materia: Materia) => {
+    setClipboardSelectedMaterias(prev => {
+      const isAlreadySelected = prev.some(m => m.id === materia.id);
+      if (isAlreadySelected) {
+        return prev.filter(m => m.id !== materia.id);
+      } else {
+        return [...prev, materia];
+      }
+    });
+    
+    // Also set as the current selected materia for paste operations
+    setSelectedMateria(materia);
+  };
+
+  const isClipboardSelected = (materia: Materia) => {
+    return clipboardSelectedMaterias.some(m => m.id === materia.id);
+  };
 
   const handleDeleteSelected = () => {
     // Get the actual materia objects for selected IDs
@@ -94,6 +143,9 @@ export const NewsBlock = ({
         onDeleteSelected={handleDeleteSelected}
         onCancelBatch={handleCancelBatch}
         isDeleting={isDeleting}
+        // Clipboard props
+        clipboardSelectedCount={clipboardSelectedMaterias.length}
+        hasCopiedMaterias={hasCopiedMaterias}
       />
       <BlockContent
         blockId={block.id}
@@ -107,6 +159,9 @@ export const NewsBlock = ({
         isBatchMode={isBatchMode}
         isSelected={isSelected}
         onToggleSelection={toggleItemSelection}
+        // Clipboard selection props
+        isClipboardSelected={isClipboardSelected}
+        onToggleClipboardSelection={handleToggleClipboardSelection}
       />
     </div>
   );
