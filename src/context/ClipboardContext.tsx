@@ -1,60 +1,67 @@
 
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Materia } from '@/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface ClipboardContextType {
   copiedMaterias: Materia[];
   copyMaterias: (materias: Materia[]) => void;
-  pasteMaterias: (targetMateriaId?: string, targetBlockId?: string) => Promise<void>;
-  hasCopiedMaterias: boolean;
   clearClipboard: () => void;
+  hasCopiedMaterias: boolean;
 }
 
 const ClipboardContext = createContext<ClipboardContextType | undefined>(undefined);
 
-export const useClipboard = () => {
-  const context = useContext(ClipboardContext);
-  if (!context) {
-    throw new Error('useClipboard must be used within a ClipboardProvider');
-  }
-  return context;
-};
-
-interface ClipboardProviderProps {
-  children: React.ReactNode;
-  onPasteMaterias?: (materias: Materia[], targetMateriaId?: string, targetBlockId?: string) => Promise<void>;
-}
-
-export const ClipboardProvider = ({ children, onPasteMaterias }: ClipboardProviderProps) => {
+export const ClipboardProvider = ({ children }: { children: React.ReactNode }) => {
   const [copiedMaterias, setCopiedMaterias] = useState<Materia[]>([]);
+  const { toast } = useToast();
 
-  const copyMaterias = useCallback((materias: Materia[]) => {
+  const copyMaterias = (materias: Materia[]) => {
     setCopiedMaterias(materias);
-    console.log('Matérias copiadas:', materias.length);
-  }, []);
+    toast({
+      title: "Matérias copiadas",
+      description: `${materias.length} matéria(s) copiada(s) para a área de transferência`,
+    });
+  };
 
-  const pasteMaterias = useCallback(async (targetMateriaId?: string, targetBlockId?: string) => {
-    if (copiedMaterias.length > 0 && onPasteMaterias) {
-      await onPasteMaterias(copiedMaterias, targetMateriaId, targetBlockId);
-      console.log('Matérias coladas:', copiedMaterias.length);
-    }
-  }, [copiedMaterias, onPasteMaterias]);
-
-  const clearClipboard = useCallback(() => {
+  const clearClipboard = () => {
     setCopiedMaterias([]);
-  }, []);
+  };
 
   const hasCopiedMaterias = copiedMaterias.length > 0;
+
+  // Handle global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle Ctrl+C and Ctrl+V, let components handle their own logic
+      if (event.ctrlKey || event.metaKey) {
+        if (event.key === 'c' || event.key === 'v') {
+          // These will be handled by individual components
+          // This context just provides the state management
+        }
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, []);
 
   return (
     <ClipboardContext.Provider value={{
       copiedMaterias,
       copyMaterias,
-      pasteMaterias,
-      hasCopiedMaterias,
-      clearClipboard
+      clearClipboard,
+      hasCopiedMaterias
     }}>
       {children}
     </ClipboardContext.Provider>
   );
+};
+
+export const useClipboard = () => {
+  const context = useContext(ClipboardContext);
+  if (context === undefined) {
+    throw new Error('useClipboard must be used within a ClipboardProvider');
+  }
+  return context;
 };

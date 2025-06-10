@@ -1,20 +1,29 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, Edit, Trash2, Check, X, Copy, Square, CheckSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Plus, 
+  MoreVertical, 
+  Edit2, 
+  Trash2, 
+  Check, 
+  X,
+  CheckSquare,
+  Square,
+  Copy,
+  Clipboard
+} from "lucide-react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 import { formatTime } from "./utils";
+import { BatchActions } from "./BatchActions";
 
 interface BlockHeaderProps {
   blockName: string;
@@ -34,9 +43,11 @@ interface BlockHeaderProps {
   onSelectAll?: () => void;
   onClearSelection?: () => void;
   onDeleteSelected?: () => void;
-  onCopySelected?: () => void;
   onCancelBatch?: () => void;
   isDeleting?: boolean;
+  // Clipboard props
+  clipboardSelectedCount?: number;
+  hasCopiedMaterias?: boolean;
 }
 
 export const BlockHeader = ({
@@ -57,195 +68,147 @@ export const BlockHeader = ({
   onSelectAll,
   onClearSelection,
   onDeleteSelected,
-  onCopySelected,
   onCancelBatch,
-  isDeleting = false
+  isDeleting = false,
+  // Clipboard props
+  clipboardSelectedCount = 0,
+  hasCopiedMaterias = false
 }: BlockHeaderProps) => {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedName, setEditedName] = useState(blockName);
+  const [editName, setEditName] = useState(blockName);
 
-  const handleSaveEdit = () => {
-    if (editedName.trim() && editedName !== blockName) {
-      onRenameBlock(blockId, editedName.trim());
+  const handleSaveName = () => {
+    if (editName.trim() && editName !== blockName) {
+      onRenameBlock(blockId, editName.trim());
     }
     setIsEditing(false);
   };
 
   const handleCancelEdit = () => {
-    setEditedName(blockName);
+    setEditName(blockName);
     setIsEditing(false);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      handleSaveEdit();
+      handleSaveName();
     } else if (e.key === 'Escape') {
       handleCancelEdit();
     }
   };
 
   return (
-    <div className="bg-gray-50 border-b border-gray-200 p-4">
+    <div className="bg-gray-50 px-4 py-3 border-b">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center space-x-3">
           {isEditing ? (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center space-x-2">
               <Input
-                value={editedName}
-                onChange={(e) => setEditedName(e.target.value)}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
                 onKeyDown={handleKeyPress}
-                className="text-lg font-semibold h-8 min-w-[200px]"
+                className="h-8 w-48"
                 autoFocus
               />
-              <Button size="sm" onClick={handleSaveEdit}>
+              <Button size="sm" variant="ghost" onClick={handleSaveName}>
                 <Check className="h-4 w-4" />
               </Button>
-              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+              <Button size="sm" variant="ghost" onClick={handleCancelEdit}>
                 <X className="h-4 w-4" />
               </Button>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <h3 className="text-lg font-semibold text-gray-800">{blockName}</h3>
-              {isEspelhoOpen && canAddItem && (
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setIsEditing(true)}
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          )}
-          <span className="text-sm text-gray-600">
-            Tempo total: {formatTime(totalTime)}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          {/* Batch mode controls */}
-          {isBatchMode && (
             <>
-              <div className="flex items-center gap-2 mr-4">
-                <span className="text-sm text-gray-600">
-                  {selectedCount} selecionada(s)
-                </span>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={allSelected ? onClearSelection : onSelectAll}
-                >
-                  {allSelected ? <Square className="h-4 w-4" /> : <CheckSquare className="h-4 w-4" />}
-                  {allSelected ? "Desmarcar todas" : "Selecionar todas"}
-                </Button>
-              </div>
-
-              {selectedCount > 0 && (
-                <>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={onCopySelected}
-                    className="text-blue-600 hover:text-blue-800"
-                  >
-                    <Copy className="h-4 w-4 mr-1" />
-                    Copiar ({selectedCount})
-                  </Button>
-                  
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="text-red-600 hover:text-red-800"
-                        disabled={isDeleting}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Excluir ({selectedCount})
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Tem certeza de que deseja excluir {selectedCount} matéria(s) selecionada(s)?
-                          Esta ação não pode ser desfeita.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={onDeleteSelected}>
-                          Excluir
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
+              <h3 className="font-semibold text-lg">{blockName}</h3>
+              <Badge variant="secondary" className="text-xs">
+                {formatTime(totalTime)}
+              </Badge>
+              
+              {/* Clipboard indicators */}
+              {clipboardSelectedCount > 0 && (
+                <Badge variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                  <Copy className="h-3 w-3 mr-1" />
+                  {clipboardSelectedCount} selecionada(s)
+                </Badge>
               )}
-
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onCancelBatch}
-              >
-                Cancelar
-              </Button>
+              
+              {hasCopiedMaterias && (
+                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                  <Clipboard className="h-3 w-3 mr-1" />
+                  Ctrl+V para colar
+                </Badge>
+              )}
             </>
           )}
+        </div>
 
-          {/* Regular controls */}
-          {!isBatchMode && (
+        <div className="flex items-center space-x-2">
+          {isBatchMode ? (
+            <BatchActions
+              selectedCount={selectedCount}
+              allSelected={allSelected}
+              onSelectAll={onSelectAll}
+              onClearSelection={onClearSelection}
+              onDeleteSelected={onDeleteSelected}
+              onCancel={onCancelBatch}
+              isDeleting={isDeleting}
+            />
+          ) : (
             <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onToggleBatchMode}
-                disabled={!isEspelhoOpen || !canAddItem}
-              >
-                Selecionar múltiplas
-              </Button>
-              
               <Button
                 size="sm"
                 onClick={onAddItem}
-                disabled={newItemBlock === blockId || !isEspelhoOpen || !canAddItem}
+                disabled={!isEspelhoOpen || !canAddItem || newItemBlock === blockId}
+                className="flex items-center space-x-1"
               >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Adicionar Matéria
+                <Plus className="h-4 w-4" />
+                <span>Nova Matéria</span>
               </Button>
 
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="text-red-600 hover:text-red-800"
-                    disabled={!isEspelhoOpen || !canAddItem}
-                  >
-                    <Trash2 className="h-4 w-4" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreVertical className="h-4 w-4" />
                   </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Confirmar exclusão do bloco</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Tem certeza de que deseja excluir o bloco "{blockName}" e todas as suas matérias?
-                      Esta ação não pode ser desfeita.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => onDeleteBlock(blockId)}>
-                      Excluir Bloco
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setIsEditing(true)}>
+                    <Edit2 className="h-4 w-4 mr-2" />
+                    Renomear Bloco
+                  </DropdownMenuItem>
+                  
+                  {onToggleBatchMode && (
+                    <DropdownMenuItem 
+                      onClick={onToggleBatchMode}
+                      disabled={!isEspelhoOpen}
+                    >
+                      <CheckSquare className="h-4 w-4 mr-2" />
+                      Seleção em Lote
+                    </DropdownMenuItem>
+                  )}
+                  
+                  <DropdownMenuSeparator />
+                  
+                  <DropdownMenuItem 
+                    onClick={() => onDeleteBlock(blockId)}
+                    className="text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Excluir Bloco
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           )}
         </div>
       </div>
+      
+      {/* Instructions for clipboard usage */}
+      {!isBatchMode && isEspelhoOpen && (
+        <div className="mt-2 text-xs text-gray-500">
+          Dica: Use Ctrl+Click para selecionar matérias, Ctrl+C para copiar e Ctrl+V para colar
+        </div>
+      )}
     </div>
   );
 };

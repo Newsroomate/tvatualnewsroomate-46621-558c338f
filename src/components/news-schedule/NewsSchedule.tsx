@@ -191,8 +191,8 @@ export const NewsSchedule = ({
           onDeleteBlock={handleDeleteBlock}
           journalPrefix={journalPrefix}
           onBatchDeleteItems={handleBatchDeleteMaterias}
-          onPasteMaterias={handlePasteMaterias}
           isDeleting={isDeleting}
+          onPasteMaterias={handlePasteMaterias}
         />
       </div>
 
