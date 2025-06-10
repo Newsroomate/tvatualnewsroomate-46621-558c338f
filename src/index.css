@@ -76,6 +76,13 @@
   }
 }
 
+/* Custom gray tones for item selection */
+@layer utilities {
+  .bg-gray-150 {
+    background-color: rgb(243 244 246); /* Entre gray-100 e gray-200 */
+  }
+}
+
 /* Estilos para o status das matérias */
 .status-published {
   @apply bg-green-100 text-green-800;

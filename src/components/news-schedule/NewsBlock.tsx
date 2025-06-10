@@ -5,6 +5,7 @@ import { BlockContent } from "./BlockContent";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { useItemSelection } from "@/hooks/useItemSelection";
 
 interface NewsBlockProps {
   block: Bloco & { items: Materia[], totalTime: number };
@@ -52,6 +53,14 @@ export const NewsBlock = ({
     setSelectedItems
   } = useBatchSelection(block.items);
 
+  // Individual item selection functionality
+  const {
+    selectedItemId,
+    selectItem,
+    clearSelection: clearItemSelection,
+    isItemSelected
+  } = useItemSelection();
+
   const handleDeleteSelected = () => {
     // Get the actual materia objects for selected IDs
     const materiasToDelete = block.items.filter(item => selectedItems.includes(item.id));
@@ -66,6 +75,21 @@ export const NewsBlock = ({
   const handleCancelBatch = () => {
     toggleBatchMode();
     clearSelection();
+  };
+
+  const handleItemSelect = (itemId: string) => {
+    // Clear batch selection when individual selection is used
+    if (isBatchMode) {
+      toggleBatchMode();
+      clearSelection();
+    }
+    selectItem(itemId);
+  };
+
+  const handleToggleBatchMode = () => {
+    // Clear individual selection when batch mode is activated
+    clearItemSelection();
+    toggleBatchMode();
   };
   
   return (
@@ -86,7 +110,7 @@ export const NewsBlock = ({
         onDeleteBlock={onDeleteBlock}
         // Batch selection props
         isBatchMode={isBatchMode}
-        onToggleBatchMode={toggleBatchMode}
+        onToggleBatchMode={handleToggleBatchMode}
         selectedCount={selectedCount}
         allSelected={allSelected}
         onSelectAll={selectAll}
@@ -107,6 +131,9 @@ export const NewsBlock = ({
         isBatchMode={isBatchMode}
         isSelected={isSelected}
         onToggleSelection={toggleItemSelection}
+        // Individual selection props
+        selectedItemId={selectedItemId}
+        onItemSelect={handleItemSelect}
       />
     </div>
   );
