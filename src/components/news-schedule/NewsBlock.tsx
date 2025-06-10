@@ -5,6 +5,8 @@ import { BlockContent } from "./BlockContent";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { useMateriaClipboard } from "@/hooks/useMateriaClipboard";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 interface NewsBlockProps {
   block: Bloco & { items: Materia[], totalTime: number };
@@ -52,6 +54,21 @@ export const NewsBlock = ({
     setSelectedItems
   } = useBatchSelection(block.items);
 
+  // Clipboard functionality
+  const { copySelectedMaterias, hasCopiedMaterias } = useMateriaClipboard();
+
+  // Get selected materia objects
+  const selectedMaterias = block.items.filter(item => selectedItems.includes(item.id));
+
+  // Keyboard shortcuts
+  useKeyboardShortcuts({
+    selectedMaterias,
+    onCopy: () => {
+      console.log(`Copiadas ${selectedMaterias.length} matérias`);
+    },
+    isActive: isBatchMode
+  });
+
   const handleDeleteSelected = () => {
     // Get the actual materia objects for selected IDs
     const materiasToDelete = block.items.filter(item => selectedItems.includes(item.id));
@@ -61,6 +78,12 @@ export const NewsBlock = ({
     
     // Clear selection after deletion
     setSelectedItems(new Set());
+  };
+
+  const handleCopySelected = () => {
+    if (selectedMaterias.length > 0) {
+      copySelectedMaterias(selectedMaterias);
+    }
   };
 
   const handleCancelBatch = () => {
@@ -92,6 +115,7 @@ export const NewsBlock = ({
         onSelectAll={selectAll}
         onClearSelection={clearSelection}
         onDeleteSelected={handleDeleteSelected}
+        onCopySelected={handleCopySelected}
         onCancelBatch={handleCancelBatch}
         isDeleting={isDeleting}
       />

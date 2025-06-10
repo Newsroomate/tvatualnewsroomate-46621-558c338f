@@ -3,6 +3,7 @@ import { Bloco, Materia, Telejornal } from "@/types";
 import { Button } from "@/components/ui/button";
 import { PlusCircle, Lock } from "lucide-react";
 import { NewsBlock } from "./NewsBlock";
+import { EmptyState } from "./EmptyState";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
 
@@ -24,6 +25,7 @@ interface ScheduleContentProps {
   onDeleteBlock: (blockId: string) => void;
   journalPrefix?: string;
   onBatchDeleteItems: (items: Materia[]) => void;
+  onPasteMaterias?: (materias: Materia[], targetMateriaId?: string, targetBlockId?: string) => Promise<void>;
   isDeleting?: boolean;
 }
 
@@ -45,6 +47,7 @@ export const ScheduleContent = ({
   onDeleteBlock,
   journalPrefix = "default",
   onBatchDeleteItems,
+  onPasteMaterias,
   isDeleting = false
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
@@ -90,12 +93,7 @@ export const ScheduleContent = ({
 
   if (blocks.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-32 gap-3">
-        <p className="text-gray-500">Nenhum bloco encontrado</p>
-        <Button onClick={onAddFirstBlock} variant="default">
-          Adicionar Bloco Inicial
-        </Button>
-      </div>
+      <EmptyState onAddFirstBlock={onAddFirstBlock} />
     );
   }
 

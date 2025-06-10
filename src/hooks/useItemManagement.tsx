@@ -134,6 +134,37 @@ export const useItemManagement = ({
     return originalConfirmRenumberItems();
   };
 
+  // Handler para colar matérias
+  const handlePasteMaterias = async (materias: Materia[], targetMateriaId?: string, targetBlockId?: string) => {
+    if (!canPerformAction(profile, 'create', 'materia')) {
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem permissão para colar matérias.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      // Duplicar cada matéria copiada
+      for (const materia of materias) {
+        await originalHandleDuplicateItem(materia);
+      }
+      
+      toast({
+        title: "Matérias coladas",
+        description: `${materias.length} matéria(s) foram coladas com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao colar matérias:', error);
+      toast({
+        title: "Erro ao colar",
+        description: "Ocorreu um erro ao colar as matérias.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return {
     newItemBlock,
     setNewItemBlock,
@@ -150,6 +181,7 @@ export const useItemManagement = ({
     confirmDeleteMateria,
     handleBatchDeleteMaterias,
     handleRenumberItems,
-    confirmRenumberItems
+    confirmRenumberItems,
+    handlePasteMaterias
   };
 };
