@@ -30,6 +30,7 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
   useEffect(() => {
     if (isOpen) {
       loadTelejornais();
+      // Carregar espelhos sem filtro de data inicialmente para mostrar histórico
       loadClosedSnapshots();
     }
   }, [isOpen]);
@@ -87,6 +88,13 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-4xl h-auto max-h-[80vh] overflow-hidden flex flex-col">
+        <div className="border-b pb-4 mb-4">
+          <h2 className="text-lg font-semibold">Espelho Geral - Histórico de Espelhos</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Visualize todos os espelhos fechados do sistema. Use os filtros abaixo para refinar sua busca.
+          </p>
+        </div>
+        
         <FilterSection 
           telejornais={telejornais}
           selectedJornal={selectedJornal}

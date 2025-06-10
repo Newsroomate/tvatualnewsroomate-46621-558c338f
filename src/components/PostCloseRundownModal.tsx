@@ -40,6 +40,10 @@ export const PostCloseRundownModal = ({
     }
   };
 
+  const handleViewGeneralSchedule = () => {
+    setShowGeneralScheduleModal(true);
+  };
+
   const handleCloseGeneralScheduleModal = () => {
     setShowGeneralScheduleModal(false);
   };
@@ -67,14 +71,23 @@ export const PostCloseRundownModal = ({
                 Criar um novo espelho
               </Button>
               
+              <Button 
+                onClick={handleViewGeneralSchedule}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Search className="mr-2 h-4 w-4" />
+                Visualizar todos os espelhos anteriores
+              </Button>
+              
               <div className="space-y-2">
                 <Button 
                   onClick={() => setShowDatePicker(!showDatePicker)}
                   className="w-full justify-start"
                   variant="outline"
                 >
-                  <Search className="mr-2 h-4 w-4" />
-                  Visualizar espelho de data selecionada
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  Buscar espelhos por data específica
                 </Button>
                 
                 {showDatePicker && (

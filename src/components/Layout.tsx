@@ -14,6 +14,7 @@ import { PostCloseRundownModal } from "./PostCloseRundownModal";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
+import { useAutoCloseRundowns } from "@/hooks/useAutoCloseRundowns";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -266,6 +267,9 @@ const Layout = () => {
     setSelectedViewDate(date);
     setIsSavedRundownsModalOpen(true);
   };
+
+  // Adicionar o hook de fechamento automático
+  useAutoCloseRundowns();
 
   return (
     <QueryClientProvider client={queryClient}>
