@@ -68,8 +68,7 @@ export const NewsSchedule = ({
     handleRenameBlock,
     handleDeleteBlock,
     handleDragEnd,
-    openTeleprompter,
-    handlePasteMaterias
+    openTeleprompter
   } = useNewsSchedule({ 
     selectedJournal, 
     currentTelejornal, 
@@ -192,7 +191,6 @@ export const NewsSchedule = ({
           journalPrefix={journalPrefix}
           onBatchDeleteItems={handleBatchDeleteMaterias}
           isDeleting={isDeleting}
-          onPasteMaterias={handlePasteMaterias}
         />
       </div>
 

@@ -25,9 +25,6 @@ interface NewsItemProps {
   isBatchMode?: boolean;
   isSelected?: boolean;
   onToggleSelection?: (itemId: string) => void;
-  // Clipboard selection props
-  isClipboardSelected?: boolean;
-  onToggleClipboardSelection?: (item: Materia) => void;
 }
 
 export const NewsItem = ({ 
@@ -43,10 +40,7 @@ export const NewsItem = ({
   // Batch selection props
   isBatchMode = false,
   isSelected = false,
-  onToggleSelection,
-  // Clipboard selection props
-  isClipboardSelected = false,
-  onToggleClipboardSelection
+  onToggleSelection
 }: NewsItemProps) => {
   // Status color classes
   const getStatusClass = (status: string): string => {
@@ -96,29 +90,16 @@ export const NewsItem = ({
       onToggleSelection(item.id);
     }
   };
-
-  const handleItemClick = (event: React.MouseEvent) => {
-    // Handle clipboard selection with Ctrl+Click
-    if ((event.ctrlKey || event.metaKey) && onToggleClipboardSelection) {
-      event.preventDefault();
-      onToggleClipboardSelection(item);
-    }
-  };
-
-  const isHighlighted = isSelected || isClipboardSelected;
   
   return (
     <tr 
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
-      className={`hover:bg-gray-50 transition-colors cursor-pointer ${
+      className={`hover:bg-gray-50 transition-colors ${
         snapshot.isDragging ? "bg-blue-50" : ""
-      } ${isHighlighted ? "bg-blue-50" : ""} ${
-        isClipboardSelected ? "ring-2 ring-blue-300" : ""
-      }`}
+      } ${isSelected ? "bg-blue-50" : ""}`}
       onDoubleClick={() => onDoubleClick(item)}
-      onClick={handleItemClick}
     >
       {/* Checkbox column for batch selection */}
       {isBatchMode && (
@@ -158,10 +139,7 @@ export const NewsItem = ({
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEdit(item);
-                  }}
+                  onClick={() => onEdit(item)}
                   disabled={!isEspelhoOpen || !canModify}
                 >
                   <Pencil className="h-4 w-4" />
@@ -186,10 +164,7 @@ export const NewsItem = ({
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDuplicate(item);
-                  }}
+                  onClick={() => onDuplicate(item)}
                   disabled={!isEspelhoOpen || !canModify}
                 >
                   <Copy className="h-4 w-4" />
@@ -215,10 +190,7 @@ export const NewsItem = ({
                   size="sm" 
                   variant="ghost" 
                   className="text-red-600 hover:text-red-800"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete(item);
-                  }}
+                  onClick={() => onDelete(item)}
                   disabled={!isEspelhoOpen || !canModify}
                 >
                   <Trash2 className="h-4 w-4" />
