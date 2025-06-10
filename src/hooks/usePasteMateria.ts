@@ -1,4 +1,5 @@
 
+
 import { Materia } from '@/types';
 import { createMateria } from '@/services/materias-api';
 import { toast } from '@/hooks/use-toast';
@@ -84,27 +85,25 @@ export const usePasteMateria = ({
       // Criar a nova matéria
       const newMateria = await createMateria(materiaData);
 
-      // Atualizar o estado local
-      if (typeof setBlocks === 'function') {
-        setBlocks((currentBlocks: any[]) => 
-          currentBlocks.map(block => {
-            if (block.id === targetBlockId) {
-              const updatedItems = [...block.items];
-              updatedItems.splice(insertPosition, 0, newMateria);
-              
-              // Recalcular o tempo total
-              const totalTime = updatedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
-              
-              return {
-                ...block,
-                items: updatedItems,
-                totalTime
-              };
-            }
-            return block;
-          })
-        );
-      }
+      // Atualizar o estado local usando o padrão de updater function
+      setBlocks((currentBlocks: any[]) => 
+        currentBlocks.map(block => {
+          if (block.id === targetBlockId) {
+            const updatedItems = [...block.items];
+            updatedItems.splice(insertPosition, 0, newMateria);
+            
+            // Recalcular o tempo total
+            const totalTime = updatedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
+            
+            return {
+              ...block,
+              items: updatedItems,
+              totalTime
+            };
+          }
+          return block;
+        })
+      );
 
       toast({
         title: "Matéria colada",
@@ -123,3 +122,4 @@ export const usePasteMateria = ({
 
   return { pasteMateria };
 };
+
