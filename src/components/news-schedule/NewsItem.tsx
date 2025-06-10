@@ -25,6 +25,9 @@ interface NewsItemProps {
   isBatchMode?: boolean;
   isSelected?: boolean;
   onToggleSelection?: (itemId: string) => void;
+  // Visual selection props
+  isVisuallySelected?: boolean;
+  onItemClick?: (itemId: string) => void;
 }
 
 export const NewsItem = ({ 
@@ -40,7 +43,10 @@ export const NewsItem = ({
   // Batch selection props
   isBatchMode = false,
   isSelected = false,
-  onToggleSelection
+  onToggleSelection,
+  // Visual selection props
+  isVisuallySelected = false,
+  onItemClick
 }: NewsItemProps) => {
   // Status color classes
   const getStatusClass = (status: string): string => {
@@ -90,20 +96,40 @@ export const NewsItem = ({
       onToggleSelection(item.id);
     }
   };
+
+  const handleRowClick = () => {
+    if (onItemClick && !isBatchMode) {
+      onItemClick(item.id);
+    }
+  };
+
+  // Determine row styling based on selection and drag state
+  const getRowStyling = () => {
+    let classes = "hover:bg-gray-50 transition-colors cursor-pointer";
+    
+    if (snapshot.isDragging) {
+      classes += " bg-blue-50";
+    } else if (isVisuallySelected && !isBatchMode) {
+      classes += " bg-gray-100";
+    } else if (isSelected && isBatchMode) {
+      classes += " bg-blue-50";
+    }
+    
+    return classes;
+  };
   
   return (
     <tr 
       ref={provided.innerRef}
       {...provided.draggableProps}
       {...provided.dragHandleProps}
-      className={`hover:bg-gray-50 transition-colors ${
-        snapshot.isDragging ? "bg-blue-50" : ""
-      } ${isSelected ? "bg-blue-50" : ""}`}
+      className={getRowStyling()}
       onDoubleClick={() => onDoubleClick(item)}
+      onClick={handleRowClick}
     >
       {/* Checkbox column for batch selection */}
       {isBatchMode && (
-        <td className="py-2 px-4 w-12">
+        <td className="py-2 px-4 w-12" onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={isSelected}
             onCheckedChange={handleCheckboxChange}
@@ -131,7 +157,7 @@ export const NewsItem = ({
         </span>
       </td>
       <td className="py-2 px-4">{item.reporter || '-'}</td>
-      <td className="py-2 px-4">
+      <td className="py-2 px-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex gap-1">
           <TooltipProvider>
             <Tooltip>

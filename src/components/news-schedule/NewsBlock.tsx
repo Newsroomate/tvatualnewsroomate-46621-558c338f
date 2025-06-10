@@ -5,6 +5,7 @@ import { BlockContent } from "./BlockContent";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
+import { useItemSelection } from "@/hooks/useItemSelection";
 
 interface NewsBlockProps {
   block: Bloco & { items: Materia[], totalTime: number };
@@ -52,6 +53,14 @@ export const NewsBlock = ({
     setSelectedItems
   } = useBatchSelection(block.items);
 
+  // Visual selection functionality
+  const {
+    selectedItemId,
+    selectItem,
+    clearSelection: clearVisualSelection,
+    isSelected: isVisuallySelected
+  } = useItemSelection();
+
   const handleDeleteSelected = () => {
     // Get the actual materia objects for selected IDs
     const materiasToDelete = block.items.filter(item => selectedItems.includes(item.id));
@@ -66,6 +75,15 @@ export const NewsBlock = ({
   const handleCancelBatch = () => {
     toggleBatchMode();
     clearSelection();
+  };
+
+  const handleItemClick = (itemId: string) => {
+    // If the item is already selected, deselect it
+    if (selectedItemId === itemId) {
+      clearVisualSelection();
+    } else {
+      selectItem(itemId);
+    }
   };
   
   return (
@@ -107,6 +125,9 @@ export const NewsBlock = ({
         isBatchMode={isBatchMode}
         isSelected={isSelected}
         onToggleSelection={toggleItemSelection}
+        // Visual selection props
+        selectedItemId={selectedItemId}
+        onItemClick={handleItemClick}
       />
     </div>
   );
