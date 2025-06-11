@@ -1,6 +1,6 @@
 
 import { Materia } from '@/types';
-import { createMateria } from '@/services/materias-api';
+import { createMateria, updateMateria } from '@/services/materias-api';
 import { toast } from '@/hooks/use-toast';
 
 interface UsePasteMateriaProps {
@@ -40,11 +40,19 @@ export const usePasteMateria = ({
   };
 
   // Função para recalcular ordens das matérias após inserção
-  const recalculateOrders = (items: Materia[], insertPosition: number): Materia[] => {
+  const recalculateOrders = (items: Materia[]): Materia[] => {
     return items.map((item, index) => ({
       ...item,
       ordem: index
     }));
+  };
+
+  // Função para atualizar ordens das matérias no banco de dados
+  const updateMateriasOrders = async (materiasToUpdate: Materia[]) => {
+    const updatePromises = materiasToUpdate.map(materia => 
+      updateMateria(materia.id, { ordem: materia.ordem })
+    );
+    await Promise.all(updatePromises);
   };
   
   const pasteMateria = async () => {
@@ -82,18 +90,34 @@ export const usePasteMateria = ({
       }
 
       const targetBlockId = targetBlock.id;
-      const selectedIndex = targetBlock.items.findIndex(
+      
+      // Ordenar os itens do bloco por ordem para garantir consistência
+      const sortedItems = [...targetBlock.items].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+      
+      // Encontrar o índice da matéria selecionada nos itens ordenados
+      const selectedIndex = sortedItems.findIndex(
         (item: Materia) => item.id === selectedMateria.id
       );
+      
+      if (selectedIndex === -1) {
+        toast({
+          title: "Erro ao colar",
+          description: "Matéria selecionada não encontrada no bloco",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const insertPosition = selectedIndex + 1; // Sempre colar logo abaixo da selecionada
+      const newOrdem = insertPosition; // A nova ordem será a posição de inserção
 
       // Calcular o próximo número de página
-      const nextPageNumber = getNextPageNumber(targetBlock.items || []);
+      const nextPageNumber = getNextPageNumber(sortedItems);
 
-      // Criar dados para nova matéria com ordem correta
+      // Criar dados para nova matéria
       const materiaData = {
         bloco_id: targetBlockId,
-        ordem: insertPosition, // Usar a posição de inserção como ordem
+        ordem: newOrdem,
         retranca: `${copiedMateria.retranca} (Cópia)`,
         texto: copiedMateria.texto || '',
         duracao: copiedMateria.duracao || 0,
@@ -110,7 +134,8 @@ export const usePasteMateria = ({
       setBlocks((currentBlocks: any[]) => 
         currentBlocks.map(block => {
           if (block.id === targetBlockId) {
-            const updatedItems = [...block.items];
+            // Criar uma cópia dos itens ordenados por ordem
+            const itemsSortedByOrder = [...block.items].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
             
             // Criar uma matéria temporária para inserção visual
             const tempMateria = {
@@ -121,10 +146,10 @@ export const usePasteMateria = ({
             };
             
             // Inserir na posição correta
-            updatedItems.splice(insertPosition, 0, tempMateria);
+            itemsSortedByOrder.splice(insertPosition, 0, tempMateria);
             
             // Recalcular as ordens de todas as matérias após a inserção
-            const reorderedItems = recalculateOrders(updatedItems, insertPosition);
+            const reorderedItems = recalculateOrders(itemsSortedByOrder);
             
             // Calcular o tempo total
             const totalTime = reorderedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
@@ -142,26 +167,42 @@ export const usePasteMateria = ({
       // Criar a nova matéria no banco de dados
       const newMateria = await createMateria(materiaData);
 
+      // Atualizar as ordens das matérias que vieram após a inserção
+      const currentBlock = blocks.find(b => b.id === targetBlockId);
+      if (currentBlock) {
+        const itemsToUpdate = currentBlock.items
+          .filter((item: Materia) => !item.id.toString().startsWith('temp-') && item.ordem >= newOrdem)
+          .map((item: Materia) => ({
+            ...item,
+            ordem: item.ordem + 1
+          }));
+
+        // Atualizar as ordens no banco de dados se houver itens para atualizar
+        if (itemsToUpdate.length > 0) {
+          await updateMateriasOrders(itemsToUpdate);
+        }
+      }
+
       // Atualizar o estado novamente com a matéria real do banco de dados
       setBlocks((currentBlocks: any[]) => 
         currentBlocks.map(block => {
           if (block.id === targetBlockId) {
-            // Remover a matéria temporária e inserir a real
+            // Remover a matéria temporária
             const itemsWithoutTemp = block.items.filter(item => !item.id.toString().startsWith('temp-'));
-            const updatedItems = [...itemsWithoutTemp];
             
-            // Inserir a matéria real na posição correta
+            // Adicionar a matéria real na posição correta
+            const updatedItems = [...itemsWithoutTemp];
             updatedItems.splice(insertPosition, 0, newMateria);
             
-            // Recalcular as ordens
-            const reorderedItems = recalculateOrders(updatedItems, insertPosition);
+            // Garantir que todas as ordens estejam corretas
+            const finalItems = recalculateOrders(updatedItems);
             
             // Calcular o tempo total
-            const totalTime = reorderedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
+            const totalTime = finalItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
             
             return {
               ...block,
-              items: reorderedItems,
+              items: finalItems,
               totalTime
             };
           }

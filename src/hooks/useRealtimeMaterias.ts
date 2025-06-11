@@ -31,17 +31,36 @@ export const useRealtimeMaterias = ({
   const insertMateriaInOrder = (items: Materia[], newMateria: Materia): Materia[] => {
     const newOrder = newMateria.ordem || 0;
     
-    // Find the correct position to insert based on ordem
-    const insertIndex = items.findIndex(item => (item.ordem || 0) > newOrder);
+    // Primeiro, ordenar os itens existentes por ordem
+    const sortedItems = [...items].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
     
-    if (insertIndex === -1) {
-      // Insert at the end if no item has higher ordem
-      return [...items, newMateria];
+    // Verificar se já existe uma matéria com a mesma ordem
+    const existingWithSameOrder = sortedItems.find(item => item.ordem === newOrder);
+    
+    if (existingWithSameOrder) {
+      // Se existe uma matéria com a mesma ordem, inserir logo após ela
+      const existingIndex = sortedItems.findIndex(item => item.id === existingWithSameOrder.id);
+      const insertIndex = existingIndex + 1;
+      sortedItems.splice(insertIndex, 0, newMateria);
+      
+      // Recalcular as ordens para manter sequência
+      return sortedItems.map((item, index) => ({
+        ...item,
+        ordem: index
+      }));
     } else {
-      // Insert at the correct position
-      const updatedItems = [...items];
-      updatedItems.splice(insertIndex, 0, newMateria);
-      return updatedItems;
+      // Encontrar a posição correta para inserir baseado na ordem
+      const insertIndex = sortedItems.findIndex(item => (item.ordem || 0) > newOrder);
+      
+      if (insertIndex === -1) {
+        // Inserir no final se nenhum item tem ordem maior
+        return [...sortedItems, newMateria];
+      } else {
+        // Inserir na posição correta
+        const updatedItems = [...sortedItems];
+        updatedItems.splice(insertIndex, 0, newMateria);
+        return updatedItems;
+      }
     }
   };
 
@@ -78,12 +97,25 @@ export const useRealtimeMaterias = ({
             let updatedItems;
             
             if (isInsert) {
-              // For inserts, check if materia already exists to avoid duplicates
+              // Para inserções, verificar se a matéria já existe (evitar duplicatas)
               const itemExists = block.items.some(item => item.id === updatedMateria.id);
               
               if (!itemExists) {
-                // Insert the new materia in the correct position based on ordem
-                updatedItems = insertMateriaInOrder(block.items, processUpdatedMateria(updatedMateria));
+                // Verificar se é uma matéria temporária sendo substituída pela real
+                const tempMateriaIndex = block.items.findIndex(item => 
+                  item.id.toString().startsWith('temp-') && 
+                  item.ordem === updatedMateria.ordem
+                );
+                
+                if (tempMateriaIndex !== -1) {
+                  // Substituir a matéria temporária pela real
+                  updatedItems = [...block.items];
+                  updatedItems[tempMateriaIndex] = processUpdatedMateria(updatedMateria);
+                  updatedItems = sortItemsByOrder(updatedItems);
+                } else {
+                  // Inserir a nova matéria na posição correta baseada na ordem
+                  updatedItems = insertMateriaInOrder(block.items, processUpdatedMateria(updatedMateria));
+                }
               } else {
                 updatedItems = block.items;
               }
