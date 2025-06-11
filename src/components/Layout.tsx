@@ -219,7 +219,7 @@ const Layout = () => {
     }
   };
 
-  const handleCreateNewRundown = async (loadLastBlock: boolean = false) => {
+  const handleCreateNewRundown = async () => {
     if (!selectedJournal || !currentTelejornal) return;
 
     try {
@@ -241,7 +241,7 @@ const Layout = () => {
       });
       
       // O primeiro bloco será criado automaticamente pelo componente NewsSchedule
-      // quando detectar espelho aberto sem blocos (sem dados do último bloco)
+      // quando detectar espelho aberto sem blocos (bloco vazio sem dados anteriores)
       
       toast({
         title: "Novo espelho criado",

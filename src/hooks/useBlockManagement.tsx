@@ -24,7 +24,7 @@ export const useBlockManagement = ({
   const { toast } = useToast();
 
   const createBasicBlock = async (telejornalId: string, blockName: string, order: number) => {
-    // Criar apenas o bloco básico sem carregar dados anteriores
+    // Criar apenas o bloco básico vazio
     const novoBlocoInput = {
       telejornal_id: telejornalId,
       nome: blockName,
@@ -69,7 +69,7 @@ export const useBlockManagement = ({
       
       console.log("No existing blocks found, creating first block");
       
-      // Criar apenas o bloco básico sem dados anteriores
+      // Criar apenas o bloco básico vazio
       const newBlock = await createBasicBlock(selectedJournal, "Bloco 1", 1);
       
       console.log("First block created successfully:", newBlock);
