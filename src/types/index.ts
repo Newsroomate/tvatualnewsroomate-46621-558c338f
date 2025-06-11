@@ -43,6 +43,7 @@ export interface Materia {
   horario_exibicao?: string;
   updated_at?: string;
   tipo_material?: string;  // New field for material type dropdown
+  is_from_snapshot?: boolean;  // Add this field to support snapshot origin tracking
   // Keep the old fields for backwards compatibility
   titulo: string;
   descricao?: string;
