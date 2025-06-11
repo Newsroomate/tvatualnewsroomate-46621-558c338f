@@ -49,45 +49,38 @@ export const usePasteMateria = ({
       return;
     }
 
+    if (!selectedMateria) {
+      toast({
+        title: "Nenhuma matéria selecionada",
+        description: "Selecione uma matéria primeiro para colar abaixo dela",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      let targetBlockId: string;
-      let insertPosition: number;
-
-      if (selectedMateria) {
-        // Se há uma matéria selecionada, colar logo abaixo dela
-        const targetBlock = blocks.find(block => 
-          block.items.some((item: Materia) => item.id === selectedMateria.id)
-        );
-        
-        if (targetBlock) {
-          targetBlockId = targetBlock.id;
-          const selectedIndex = targetBlock.items.findIndex(
-            (item: Materia) => item.id === selectedMateria.id
-          );
-          insertPosition = selectedIndex + 1;
-        } else {
-          // Se não encontrar o bloco, usar o primeiro bloco disponível
-          targetBlockId = blocks[0]?.id;
-          insertPosition = blocks[0]?.items.length || 0;
-        }
-      } else {
-        // Se não há matéria selecionada, colar no final do primeiro bloco
-        targetBlockId = blocks[0]?.id;
-        insertPosition = blocks[0]?.items.length || 0;
-      }
-
-      if (!targetBlockId) {
+      // Encontrar o bloco que contém a matéria selecionada
+      const targetBlock = blocks.find(block => 
+        block.items.some((item: Materia) => item.id === selectedMateria.id)
+      );
+      
+      if (!targetBlock) {
         toast({
           title: "Erro ao colar",
-          description: "Nenhum bloco disponível para colar a matéria",
+          description: "Não foi possível encontrar o bloco da matéria selecionada",
           variant: "destructive"
         });
         return;
       }
 
-      // Encontrar o bloco de destino para calcular o próximo número de página
-      const targetBlock = blocks.find(block => block.id === targetBlockId);
-      const nextPageNumber = getNextPageNumber(targetBlock?.items || []);
+      const targetBlockId = targetBlock.id;
+      const selectedIndex = targetBlock.items.findIndex(
+        (item: Materia) => item.id === selectedMateria.id
+      );
+      const insertPosition = selectedIndex + 1; // Sempre colar logo abaixo da selecionada
+
+      // Calcular o próximo número de página
+      const nextPageNumber = getNextPageNumber(targetBlock.items || []);
 
       // Criar dados para nova matéria
       const materiaData = {
@@ -130,7 +123,7 @@ export const usePasteMateria = ({
 
       toast({
         title: "Matéria colada",
-        description: `"${newMateria.retranca}" foi colada com sucesso na página ${nextPageNumber}`,
+        description: `"${newMateria.retranca}" foi colada abaixo da matéria selecionada na página ${nextPageNumber}`,
       });
 
     } catch (error) {
