@@ -1,4 +1,3 @@
-
 import { Materia } from '@/types';
 import { createMateria, updateMateriasOrdem } from '@/services/materias-api';
 import { toast } from '@/hooks/use-toast';
@@ -37,7 +36,7 @@ export const usePasteMateria = ({
     const maxPageNumber = Math.max(...pageNumbers);
     return (maxPageNumber + 1).toString();
   };
-
+  
   // Função para recalcular ordens após inserção
   const recalculateOrders = (items: Materia[], insertPosition: number): Materia[] => {
     return items.map((item, index) => ({
@@ -95,11 +94,16 @@ export const usePasteMateria = ({
 
     const nextPageNumber = getNextPageNumber(targetBlock.items);
 
+    // Identificar a origem da matéria para melhor feedback
+    const materiaOrigin = copiedMateria.bloco_nome 
+      ? `do bloco "${copiedMateria.bloco_nome}"` 
+      : "do espelho fechado";
+
     // Criar dados para nova matéria
     const materiaData = {
       bloco_id: targetBlockId,
       ordem: insertPosition,
-      retranca: `${copiedMateria.retranca} (Cópia)`,
+      retranca: copiedMateria.retranca ? `${copiedMateria.retranca} (Cópia)` : "Nova matéria",
       texto: copiedMateria.texto || '',
       duracao: copiedMateria.duracao || 0,
       tipo_material: copiedMateria.tipo_material || '',
@@ -108,14 +112,17 @@ export const usePasteMateria = ({
       reporter: copiedMateria.reporter || '',
       gc: copiedMateria.gc || '',
       cabeca: copiedMateria.cabeca || '',
-      status: copiedMateria.status || 'draft'
+      status: copiedMateria.status || 'draft',
+      local_gravacao: copiedMateria.local_gravacao || '',
+      equipamento: copiedMateria.equipamento || '',
+      tags: copiedMateria.tags || []
     };
 
     // Gerar ID temporário para atualização otimista
     const tempId = `temp-${Date.now()}`;
     const tempMateria: Materia = {
       id: tempId,
-      titulo: copiedMateria.titulo || copiedMateria.retranca, // Fix: add titulo property
+      titulo: copiedMateria.titulo || copiedMateria.retranca, 
       ...materiaData,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -164,10 +171,10 @@ export const usePasteMateria = ({
       ? `logo abaixo da matéria "${selectedMateria.retranca}"` 
       : "no final do bloco";
 
-    // Mostrar toast de sucesso imediatamente
+    // Mostrar toast de sucesso imediatamente - com melhor feedback da origem
     toast({
       title: "Matéria colada",
-      description: `"${tempMateria.retranca}" foi colada ${positionMessage} na página ${nextPageNumber}`,
+      description: `"${tempMateria.retranca}" ${materiaOrigin} foi colada ${positionMessage} na página ${nextPageNumber}`,
     });
 
     try {

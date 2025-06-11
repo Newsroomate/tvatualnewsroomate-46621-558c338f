@@ -69,6 +69,10 @@ export const NewsSchedule = ({
             handleSaveModel={hookProps.handleSaveModel}
             handleViewSavedModels={hookProps.handleViewSavedModels}
             isDualView={isDualView}
+            // Adicionando props explícitas para clipboard
+            copyMateria={hookProps.copyMateria}
+            pasteMateria={hookProps.pasteMateria}
+            hasCopiedMateria={hookProps.hasCopiedMateria}
           />
 
           <NewsScheduleDialogs
