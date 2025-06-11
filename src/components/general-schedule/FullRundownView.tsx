@@ -134,6 +134,15 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       return;
     }
 
+    if (!editData.bloco_id) {
+      toast({
+        title: "Erro de validação",
+        description: "ID do bloco é obrigatório.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       console.log("Iniciando salvamento da matéria:", {
