@@ -47,17 +47,35 @@ export const usePasteMateria = ({
   };
   
   const pasteMateria = async () => {
+    // Verificar se há matéria copiada
     if (!copiedMateria) {
+      console.log('Tentativa de colar sem matéria copiada');
       toast({
         title: "Nenhuma matéria copiada",
-        description: "Copie uma matéria primeiro usando Ctrl+C",
+        description: "Copie uma matéria primeiro no Espelho Geral usando Ctrl+C",
         variant: "destructive"
       });
       return;
     }
 
-    console.log('Iniciando processo de colar matéria:', {
-      copiedMateria,
+    // Verificar se a matéria copiada tem os campos necessários
+    if (!copiedMateria.retranca) {
+      console.error('Matéria copiada não possui retranca:', copiedMateria);
+      toast({
+        title: "Erro na matéria copiada",
+        description: "A matéria copiada não possui dados válidos",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    console.log('Iniciando processo de colar matéria do histórico:', {
+      materiaCopiada: {
+        id: copiedMateria.id,
+        retranca: copiedMateria.retranca,
+        totalCampos: Object.keys(copiedMateria).length,
+        isFromSnapshot: copiedMateria.is_from_snapshot
+      },
       selectedMateria: selectedMateria?.retranca,
       blocksCount: blocks.length
     });
@@ -101,36 +119,50 @@ export const usePasteMateria = ({
 
     const nextPageNumber = getNextPageNumber(targetBlock.items);
 
-    // Criar dados para nova matéria preservando TODOS os campos da matéria copiada
+    // Criar dados para nova matéria preservando TODOS os campos da matéria copiada do histórico
     const materiaData = {
       bloco_id: targetBlockId,
       ordem: insertPosition,
       retranca: `${copiedMateria.retranca} (Cópia)`,
+      
+      // Preservar todos os campos de conteúdo
       texto: copiedMateria.texto || '',
       duracao: copiedMateria.duracao || 0,
-      tipo_material: copiedMateria.tipo_material || '',
-      pagina: nextPageNumber,
+      cabeca: copiedMateria.cabeca || '',
+      gc: copiedMateria.gc || '',
+      
+      // Preservar campos de mídia
       clip: copiedMateria.clip || '',
       tempo_clip: copiedMateria.tempo_clip || '',
+      
+      // Preservar campos de pessoas e metadados
       reporter: copiedMateria.reporter || '',
-      gc: copiedMateria.gc || '',
-      cabeca: copiedMateria.cabeca || '',
       status: copiedMateria.status || 'draft',
+      tipo_material: copiedMateria.tipo_material || '',
+      
+      // Preservar campos de produção
       local_gravacao: copiedMateria.local_gravacao || '',
-      equipamento: copiedMateria.equipamento || ''
+      equipamento: copiedMateria.equipamento || '',
+      
+      // Página será a próxima disponível no bloco
+      pagina: nextPageNumber
     };
 
-    console.log('Dados da matéria a ser criada (preservando campos originais):', materiaData);
+    console.log('Dados da matéria a ser criada (preservando TODOS os campos do histórico):', {
+      dadosOriginais: Object.keys(copiedMateria).length + ' campos',
+      dadosPreservados: Object.keys(materiaData).length + ' campos',
+      materiaData
+    });
 
     // Gerar ID temporário para atualização otimista
     const tempId = `temp-${Date.now()}`;
     const tempMateria: Materia = {
       id: tempId,
-      titulo: copiedMateria.titulo || copiedMateria.retranca,
-      descricao: copiedMateria.descricao || copiedMateria.texto,
-      tempo_estimado: copiedMateria.tempo_estimado || copiedMateria.duracao,
-      apresentador: copiedMateria.apresentador || copiedMateria.reporter,
-      link_vt: copiedMateria.link_vt || copiedMateria.clip,
+      titulo: copiedMateria.retranca,
+      descricao: copiedMateria.texto || '',
+      tempo_estimado: copiedMateria.duracao || 0,
+      apresentador: copiedMateria.reporter || '',
+      link_vt: copiedMateria.clip || '',
       tags: copiedMateria.tags || [],
       horario_exibicao: copiedMateria.horario_exibicao,
       ...materiaData,
@@ -181,10 +213,15 @@ export const usePasteMateria = ({
       ? `logo abaixo da matéria "${selectedMateria.retranca}"` 
       : "no final do bloco";
 
-    // Mostrar toast de sucesso imediatamente
+    // Mostrar toast de sucesso imediatamente com informações sobre preservação
+    const camposPreservados = Object.keys(materiaData).filter(key => 
+      materiaData[key as keyof typeof materiaData] && 
+      materiaData[key as keyof typeof materiaData] !== ''
+    ).length;
+
     toast({
       title: "Matéria colada do histórico",
-      description: `"${tempMateria.retranca}" foi colada ${positionMessage} na página ${nextPageNumber} com todos os campos preservados`,
+      description: `"${tempMateria.retranca}" foi colada ${positionMessage} na página ${nextPageNumber} com ${camposPreservados} campos preservados`,
     });
 
     try {
