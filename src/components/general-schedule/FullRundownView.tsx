@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit2, Save, X, RefreshCw, CheckCircle } from "lucide-react";
+import { ArrowLeft, Edit2, Save, X, RefreshCw, CheckCircle, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { formatTime } from "../news-schedule/utils";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
@@ -12,6 +12,10 @@ import { useHybridSnapshotData } from "@/hooks/useHybridSnapshotData";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useClipboard } from "@/hooks/useClipboard";
+import { useItemSelection } from "@/hooks/useItemSelection";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
+import { Materia } from "@/types";
 
 interface FullRundownViewProps {
   snapshot: ClosedRundownSnapshot;
@@ -53,6 +57,61 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     refreshData,
     updateLocalMateria
   } = useHybridSnapshotData({ snapshot });
+
+  // Sistema de seleção e clipboard
+  const { selectedMateria, selectItem, clearSelection, isSelected } = useItemSelection();
+  const { copyMateria } = useClipboard();
+
+  // Função para converter matéria híbrida em formato Materia padrão
+  const convertToStandardMateria = (materia: any, blocoId: string, blocoNome: string): Materia => {
+    return {
+      id: materia.id,
+      bloco_id: blocoId,
+      ordem: materia.ordem || 0,
+      retranca: materia.retranca || '',
+      clip: materia.clip || '',
+      tempo_clip: materia.tempo_clip || '',
+      duracao: materia.duracao || 0,
+      texto: materia.texto || '',
+      cabeca: materia.cabeca || '',
+      gc: materia.gc || '',
+      status: materia.status || 'draft',
+      pagina: materia.pagina || '',
+      reporter: materia.reporter || '',
+      local_gravacao: materia.local_gravacao || '',
+      tags: materia.tags || [],
+      equipamento: materia.equipamento || '',
+      horario_exibicao: materia.horario_exibicao,
+      updated_at: materia.updated_at,
+      tipo_material: materia.tipo_material || '',
+      // Campos para compatibilidade
+      titulo: materia.retranca || '',
+      descricao: materia.texto || '',
+      tempo_estimado: materia.duracao || 0,
+      apresentador: materia.reporter || '',
+      link_vt: materia.clip || '',
+      created_at: materia.created_at
+    };
+  };
+
+  // Função para lidar com cópia de matéria
+  const handleCopyMateria = (materia: any, blocoId: string, blocoNome: string) => {
+    const standardMateria = convertToStandardMateria(materia, blocoId, blocoNome);
+    copyMateria(standardMateria);
+    selectItem(standardMateria);
+  };
+
+  // Atalhos de teclado para copiar
+  useKeyboardShortcuts({
+    selectedMateria,
+    onCopy: () => {
+      if (selectedMateria) {
+        copyMateria(selectedMateria);
+      }
+    },
+    onPaste: () => {}, // Não usado no espelho geral
+    isEspelhoOpen: true
+  });
 
   const getMateriasList = (bloco: any) => {
     if (bloco.materias && Array.isArray(bloco.materias)) {
@@ -154,6 +213,9 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   };
 
   const renderMateriaContent = (materia: any, blocoId: string, blocoNome: string, blocoOrdem: number) => {
+    const standardMateria = convertToStandardMateria(materia, blocoId, blocoNome);
+    const isSelectedMateria = isSelected(materia.id);
+
     if (editingMateria === materia.id) {
       return (
         <div className="space-y-4">
@@ -283,7 +345,12 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
 
     // View Mode
     return (
-      <div>
+      <div 
+        className={`cursor-pointer p-2 rounded transition-colors ${
+          isSelectedMateria ? 'bg-blue-50 border-2 border-blue-200' : 'hover:bg-gray-50'
+        }`}
+        onClick={() => selectItem(standardMateria)}
+      >
         <div className="flex items-start justify-between mb-3">
           <div>
             <div className="flex items-center space-x-2">
@@ -309,10 +376,30 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
               </span>
             </div>
           </div>
-          <Button size="sm" variant="outline" onClick={() => handleEditMateria(materia, blocoId, blocoNome, blocoOrdem)}>
-            <Edit2 className="h-4 w-4 mr-1" />
-            Editar
-          </Button>
+          <div className="flex space-x-1">
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCopyMateria(materia, blocoId, blocoNome);
+              }}
+            >
+              <Copy className="h-4 w-4 mr-1" />
+              Copiar
+            </Button>
+            <Button 
+              size="sm" 
+              variant="outline" 
+              onClick={(e) => {
+                e.stopPropagation();
+                handleEditMateria(materia, blocoId, blocoNome, blocoOrdem);
+              }}
+            >
+              <Edit2 className="h-4 w-4 mr-1" />
+              Editar
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -423,6 +510,14 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
             Atualizar
           </Button>
         </div>
+      </div>
+
+      {/* Instruções para o usuário */}
+      <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
+        <p className="text-sm text-blue-800">
+          <strong>Dica:</strong> Clique em uma matéria para selecioná-la, depois use <kbd className="bg-blue-200 px-1 rounded">Ctrl+C</kbd> para copiar. 
+          Você pode colar com <kbd className="bg-blue-200 px-1 rounded">Ctrl+V</kbd> em qualquer espelho aberto, mesmo após fechar este modal.
+        </p>
       </div>
 
       {/* Blocos */}
