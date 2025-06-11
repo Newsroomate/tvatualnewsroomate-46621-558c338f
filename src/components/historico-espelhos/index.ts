@@ -1,0 +1,2 @@
+
+export { HistoricoEspelhosModal } from './HistoricoEspelhosModal';
