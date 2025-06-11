@@ -96,6 +96,7 @@ export type Database = {
           gc: string | null
           horario_exibicao: string | null
           id: string
+          is_from_snapshot: boolean | null
           local_gravacao: string | null
           ordem: number
           pagina: string | null
@@ -118,6 +119,7 @@ export type Database = {
           gc?: string | null
           horario_exibicao?: string | null
           id?: string
+          is_from_snapshot?: boolean | null
           local_gravacao?: string | null
           ordem: number
           pagina?: string | null
@@ -140,6 +142,7 @@ export type Database = {
           gc?: string | null
           horario_exibicao?: string | null
           id?: string
+          is_from_snapshot?: boolean | null
           local_gravacao?: string | null
           ordem?: number
           pagina?: string | null
@@ -196,6 +199,87 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      materias_snapshots: {
+        Row: {
+          bloco_nome: string | null
+          bloco_ordem: number | null
+          cabeca: string | null
+          clip: string | null
+          created_at: string | null
+          duracao: number | null
+          equipamento: string | null
+          gc: string | null
+          horario_exibicao: string | null
+          id: string
+          is_snapshot: boolean | null
+          local_gravacao: string | null
+          materia_original_id: string | null
+          ordem: number
+          pagina: string | null
+          reporter: string | null
+          retranca: string
+          snapshot_id: string | null
+          status: string | null
+          tags: string[] | null
+          tempo_clip: string | null
+          texto: string | null
+          tipo_material: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bloco_nome?: string | null
+          bloco_ordem?: number | null
+          cabeca?: string | null
+          clip?: string | null
+          created_at?: string | null
+          duracao?: number | null
+          equipamento?: string | null
+          gc?: string | null
+          horario_exibicao?: string | null
+          id?: string
+          is_snapshot?: boolean | null
+          local_gravacao?: string | null
+          materia_original_id?: string | null
+          ordem?: number
+          pagina?: string | null
+          reporter?: string | null
+          retranca: string
+          snapshot_id?: string | null
+          status?: string | null
+          tags?: string[] | null
+          tempo_clip?: string | null
+          texto?: string | null
+          tipo_material?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bloco_nome?: string | null
+          bloco_ordem?: number | null
+          cabeca?: string | null
+          clip?: string | null
+          created_at?: string | null
+          duracao?: number | null
+          equipamento?: string | null
+          gc?: string | null
+          horario_exibicao?: string | null
+          id?: string
+          is_snapshot?: boolean | null
+          local_gravacao?: string | null
+          materia_original_id?: string | null
+          ordem?: number
+          pagina?: string | null
+          reporter?: string | null
+          retranca?: string
+          snapshot_id?: string | null
+          status?: string | null
+          tags?: string[] | null
+          tempo_clip?: string | null
+          texto?: string | null
+          tipo_material?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       modelos_salvos: {
         Row: {

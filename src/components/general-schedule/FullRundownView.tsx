@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,8 +7,7 @@ import { ArrowLeft, Edit2, Save, X } from "lucide-react";
 import { format } from "date-fns";
 import { formatTime } from "../news-schedule/utils";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
-import { updateMateria } from "@/services/materias-api";
-import { useToast } from "@/hooks/use-toast";
+import { useHybridMateriaUpdate } from "@/hooks/useHybridMateriaUpdate";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,27 +32,32 @@ interface EditableMateria {
   tags?: string[];
   local_gravacao?: string;
   equipamento?: string;
-  bloco_id: string;
+  bloco_id?: string;
+  bloco_nome?: string;
+  bloco_ordem?: number;
+  tipo_material?: string;
+  tempo_clip?: string;
 }
 
 export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   const [editingMateria, setEditingMateria] = useState<string | null>(null);
   const [editData, setEditData] = useState<EditableMateria | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const [materiasData, setMateriasData] = useState<any[]>([]);
-  const { toast } = useToast();
+  const { updateMateriaHybrid, isSaving } = useHybridMateriaUpdate();
 
   const blocos = snapshot.estrutura_completa.blocos || [];
 
   // Initialize materias data from snapshot
   useEffect(() => {
     const allMaterias: any[] = [];
-    blocos.forEach(bloco => {
+    blocos.forEach((bloco, blocoIndex) => {
       const materias = getMateriasList(bloco);
       materias.forEach(materia => {
         allMaterias.push({
           ...materia,
-          bloco_id: bloco.id
+          bloco_id: bloco.id,
+          bloco_nome: bloco.nome,
+          bloco_ordem: bloco.ordem || blocoIndex + 1
         });
       });
     });
@@ -73,13 +78,8 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     return materiasData.find(m => m.id === materiaId);
   };
 
-  const handleEditMateria = (materia: any, blocoId: string) => {
+  const handleEditMateria = (materia: any, blocoId: string, blocoNome: string, blocoOrdem: number) => {
     if (!materia || !materia.id) {
-      toast({
-        title: "Erro",
-        description: "Dados da matéria inválidos.",
-        variant: "destructive"
-      });
       return;
     }
 
@@ -101,76 +101,44 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       tags: currentData.tags || [],
       local_gravacao: currentData.local_gravacao || '',
       equipamento: currentData.equipamento || '',
-      bloco_id: blocoId
+      bloco_id: blocoId,
+      bloco_nome: blocoNome,
+      bloco_ordem: blocoOrdem,
+      tipo_material: currentData.tipo_material || '',
+      tempo_clip: currentData.tempo_clip || ''
     });
   };
 
   const handleSaveMateria = async () => {
     if (!editData) {
-      toast({
-        title: "Erro",
-        description: "Nenhum dado para salvar.",
-        variant: "destructive"
-      });
       return;
     }
 
     // Validate required fields
     if (!editData.retranca || !editData.retranca.trim()) {
-      toast({
-        title: "Erro de validação",
-        description: "O campo retranca é obrigatório.",
-        variant: "destructive"
-      });
       return;
     }
 
     if (!editData.id) {
-      toast({
-        title: "Erro de validação",
-        description: "ID da matéria é obrigatório.",
-        variant: "destructive"
-      });
       return;
     }
 
-    if (!editData.bloco_id) {
-      toast({
-        title: "Erro de validação",
-        description: "ID do bloco é obrigatório.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSaving(true);
     try {
-      console.log("Iniciando salvamento da matéria:", {
+      console.log("Iniciando salvamento híbrido da matéria:", {
         id: editData.id,
         retranca: editData.retranca,
-        bloco_id: editData.bloco_id
+        bloco_id: editData.bloco_id,
+        bloco_nome: editData.bloco_nome
       });
       
-      const updatePayload = {
-        retranca: editData.retranca.trim(),
-        clip: editData.clip || null,
-        duracao: editData.duracao || 0,
-        texto: editData.texto || null,
-        cabeca: editData.cabeca || null,
-        gc: editData.gc || null,
-        status: editData.status || 'draft',
-        pagina: editData.pagina || null,
-        reporter: editData.reporter || null,
-        tags: editData.tags || [],
-        local_gravacao: editData.local_gravacao || null,
-        tempo_clip: editData.clip || null,
-        ordem: editData.ordem,
-        bloco_id: editData.bloco_id
-      };
-
-      console.log("Payload para atualização:", updatePayload);
-
-      const updatedMateria = await updateMateria(editData.id, updatePayload);
+      // Determina se é de snapshot baseado na ausência de bloco_id válido
+      const isFromSnapshot = !editData.bloco_id || editData.bloco_id === '';
+      
+      const updatedMateria = await updateMateriaHybrid(
+        editData,
+        isFromSnapshot,
+        snapshot.id
+      );
       
       console.log("Matéria atualizada com sucesso:", updatedMateria);
 
@@ -178,36 +146,15 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       setMateriasData(prevMaterias => 
         prevMaterias.map(materia => 
           materia.id === editData.id 
-            ? { ...materia, ...updatePayload }
+            ? { ...materia, ...editData }
             : materia
         )
       );
-
-      toast({
-        title: "Sucesso",
-        description: "Matéria atualizada com sucesso.",
-      });
 
       setEditingMateria(null);
       setEditData(null);
     } catch (error: any) {
       console.error("Erro ao salvar matéria:", error);
-      
-      let errorMessage = "Erro desconhecido ao salvar as alterações.";
-      
-      if (error.message) {
-        errorMessage = error.message;
-      } else if (typeof error === 'string') {
-        errorMessage = error;
-      }
-      
-      toast({
-        title: "Erro ao salvar",
-        description: errorMessage,
-        variant: "destructive"
-      });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -226,7 +173,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     }
   };
 
-  const renderMateriaContent = (materia: any, blocoId: string) => {
+  const renderMateriaContent = (materia: any, blocoId: string, blocoNome: string, blocoOrdem: number) => {
     const currentData = getCurrentMateriaData(materia.id) || materia;
     
     if (editingMateria === materia.id) {
@@ -376,7 +323,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
               </span>
             </div>
           </div>
-          <Button size="sm" variant="outline" onClick={() => handleEditMateria(materia, blocoId)}>
+          <Button size="sm" variant="outline" onClick={() => handleEditMateria(materia, blocoId, blocoNome, blocoOrdem)}>
             <Edit2 className="h-4 w-4 mr-1" />
             Editar
           </Button>
@@ -494,7 +441,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
                 <div className="space-y-4">
                   {materias.map((materia: any, materiaIndex: number) => (
                     <div key={materia.id || `materia-${materiaIndex}`} className="border rounded-lg p-4">
-                      {renderMateriaContent(materia, bloco.id)}
+                      {renderMateriaContent(materia, bloco.id, bloco.nome, bloco.ordem || blocoIndex + 1)}
                     </div>
                   ))}
 

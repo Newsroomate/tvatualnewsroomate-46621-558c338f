@@ -99,3 +99,30 @@ export interface CloseRundownDialogProps {
 }
 
 export * from './saved-rundowns';
+
+export interface MateriaSnapshot {
+  id: string;
+  materia_original_id?: string;
+  snapshot_id?: string;
+  retranca: string;
+  bloco_nome?: string;
+  bloco_ordem?: number;
+  ordem: number;
+  duracao: number;
+  clip?: string;
+  tempo_clip?: string;
+  pagina?: string;
+  reporter?: string;
+  status?: string;
+  texto?: string;
+  cabeca?: string;
+  gc?: string;
+  tipo_material?: string;
+  local_gravacao?: string;
+  tags?: string[];
+  equipamento?: string;
+  horario_exibicao?: string;
+  is_snapshot: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
