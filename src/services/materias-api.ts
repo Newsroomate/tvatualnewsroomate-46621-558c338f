@@ -60,6 +60,13 @@ export const createMateria = async (materia: MateriaCreateInput) => {
 };
 
 export const updateMateria = async (id: string, updates: Partial<Materia>) => {
+  // Validate that ID exists
+  if (!id) {
+    const error = new Error('ID da matéria é obrigatório para atualização');
+    console.error('updateMateria: Missing ID', { id, updates });
+    throw error;
+  }
+
   // Create a copy of the updates object to avoid modifying the original
   const updatesToSend = { ...updates };
   
@@ -68,24 +75,63 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
   delete updatesToSend.titulo;
   
   // Ensure retranca is included since it's a required field in the database
-  if (updatesToSend.retranca === undefined) {
-    console.error('Missing required field retranca in updateMateria');
-    throw new Error('Retranca field is required when updating a materia');
+  if (updatesToSend.retranca === undefined || updatesToSend.retranca === null || updatesToSend.retranca.trim() === '') {
+    console.error('updateMateria: Missing or empty retranca field', { id, updates });
+    throw new Error('Retranca é obrigatória para atualizar uma matéria');
   }
   
-  console.log('Sending updates to database:', updatesToSend);
+  console.log('updateMateria: Sending updates to database:', { id, updates: updatesToSend });
 
+  // First, check if the materia exists
+  const { data: existingMateria, error: checkError } = await supabase
+    .from('materias')
+    .select('id, retranca')
+    .eq('id', id)
+    .maybeSingle();
+
+  if (checkError) {
+    console.error('updateMateria: Error checking if materia exists:', checkError);
+    throw new Error(`Erro ao verificar se a matéria existe: ${checkError.message}`);
+  }
+
+  if (!existingMateria) {
+    console.error('updateMateria: Materia not found:', { id });
+    throw new Error('Matéria não encontrada');
+  }
+
+  console.log('updateMateria: Found existing materia:', existingMateria);
+
+  // Check for potential duplicates
+  const { data: duplicates, error: duplicateError } = await supabase
+    .from('materias')
+    .select('id, retranca')
+    .eq('id', id);
+
+  if (duplicateError) {
+    console.warn('updateMateria: Error checking for duplicates:', duplicateError);
+  } else if (duplicates && duplicates.length > 1) {
+    console.warn('updateMateria: Multiple records found with same ID:', { id, count: duplicates.length, duplicates });
+    toastService.error("Aviso", "Detectados registros duplicados. Entre em contato com o suporte.");
+  }
+
+  // Perform the update using maybeSingle() instead of single()
   const { data, error } = await supabase
     .from('materias')
     .update(updatesToSend)
     .eq('id', id)
     .select()
-    .single();
+    .maybeSingle();
 
   if (error) {
-    console.error('Erro ao atualizar matéria:', error);
-    toastService.error("Erro ao atualizar matéria", error.message);
-    throw error;
+    console.error('updateMateria: Database error during update:', error);
+    const errorMessage = error.message || 'Erro desconhecido ao atualizar matéria';
+    toastService.error("Erro ao atualizar matéria", errorMessage);
+    throw new Error(`Erro ao atualizar matéria: ${errorMessage}`);
+  }
+
+  if (!data) {
+    console.error('updateMateria: No data returned after update:', { id });
+    throw new Error('Nenhum dado retornado após a atualização da matéria');
   }
 
   // Map database response to our application model
@@ -94,7 +140,7 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
     titulo: data.retranca || "Sem título"
   } as Materia;
   
-  console.log('Matéria atualizada:', updatedMateria);
+  console.log('updateMateria: Successfully updated materia:', updatedMateria);
   
   return updatedMateria;
 };

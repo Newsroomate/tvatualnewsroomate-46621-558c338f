@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -75,6 +74,15 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   };
 
   const handleEditMateria = (materia: any, blocoId: string) => {
+    if (!materia || !materia.id) {
+      toast({
+        title: "Erro",
+        description: "Dados da matéria inválidos.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     const currentData = getCurrentMateriaData(materia.id) || materia;
     
     setEditingMateria(materia.id);
@@ -98,10 +106,17 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   };
 
   const handleSaveMateria = async () => {
-    if (!editData) return;
+    if (!editData) {
+      toast({
+        title: "Erro",
+        description: "Nenhum dado para salvar.",
+        variant: "destructive"
+      });
+      return;
+    }
 
     // Validate required fields
-    if (!editData.retranca.trim()) {
+    if (!editData.retranca || !editData.retranca.trim()) {
       toast({
         title: "Erro de validação",
         description: "O campo retranca é obrigatório.",
@@ -110,14 +125,27 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       return;
     }
 
+    if (!editData.id) {
+      toast({
+        title: "Erro de validação",
+        description: "ID da matéria é obrigatório.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
-      console.log("Salvando matéria:", editData);
+      console.log("Iniciando salvamento da matéria:", {
+        id: editData.id,
+        retranca: editData.retranca,
+        bloco_id: editData.bloco_id
+      });
       
       const updatePayload = {
         retranca: editData.retranca.trim(),
         clip: editData.clip || null,
-        duracao: editData.duracao,
+        duracao: editData.duracao || 0,
         texto: editData.texto || null,
         cabeca: editData.cabeca || null,
         gc: editData.gc || null,
@@ -147,17 +175,26 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       );
 
       toast({
-        title: "Matéria atualizada",
-        description: "As alterações foram salvas com sucesso.",
+        title: "Sucesso",
+        description: "Matéria atualizada com sucesso.",
       });
 
       setEditingMateria(null);
       setEditData(null);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Erro ao salvar matéria:", error);
+      
+      let errorMessage = "Erro desconhecido ao salvar as alterações.";
+      
+      if (error.message) {
+        errorMessage = error.message;
+      } else if (typeof error === 'string') {
+        errorMessage = error;
+      }
+      
       toast({
         title: "Erro ao salvar",
-        description: `Não foi possível salvar as alterações: ${error.message || 'Erro desconhecido'}`,
+        description: errorMessage,
         variant: "destructive"
       });
     } finally {
@@ -193,7 +230,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
                 <Save className="h-4 w-4 mr-1" />
                 {isSaving ? 'Salvando...' : 'Salvar'}
               </Button>
-              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
                 <X className="h-4 w-4 mr-1" />
                 Cancelar
               </Button>
@@ -208,6 +245,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
                 onChange={(e) => setEditData(prev => prev ? {...prev, retranca: e.target.value} : null)}
                 placeholder="Retranca da matéria"
                 required
+                disabled={isSaving}
               />
             </div>
 
@@ -217,6 +255,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
                 value={editData?.clip || ''}
                 onChange={(e) => setEditData(prev => prev ? {...prev, clip: e.target.value} : null)}
                 placeholder="Código do clip"
+                disabled={isSaving}
               />
             </div>
 
@@ -228,6 +267,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
                 onChange={(e) => setEditData(prev => prev ? {...prev, duracao: parseInt(e.target.value) || 0} : null)}
                 placeholder="0"
                 min="0"
+                disabled={isSaving}
               />
             </div>
 
@@ -236,6 +276,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
               <Select 
                 value={editData?.status || 'draft'} 
                 onValueChange={(value) => setEditData(prev => prev ? {...prev, status: value} : null)}
+                disabled={isSaving}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -255,6 +296,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
                 value={editData?.pagina || ''}
                 onChange={(e) => setEditData(prev => prev ? {...prev, pagina: e.target.value} : null)}
                 placeholder="Página"
+                disabled={isSaving}
               />
             </div>
 
@@ -264,6 +306,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
                 value={editData?.reporter || ''}
                 onChange={(e) => setEditData(prev => prev ? {...prev, reporter: e.target.value} : null)}
                 placeholder="Nome do repórter"
+                disabled={isSaving}
               />
             </div>
           </div>
@@ -275,6 +318,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
               onChange={(e) => setEditData(prev => prev ? {...prev, cabeca: e.target.value} : null)}
               placeholder="Texto da cabeça"
               rows={3}
+              disabled={isSaving}
             />
           </div>
 
@@ -285,6 +329,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
               onChange={(e) => setEditData(prev => prev ? {...prev, texto: e.target.value} : null)}
               placeholder="Texto da matéria"
               rows={4}
+              disabled={isSaving}
             />
           </div>
 
@@ -295,6 +340,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
               onChange={(e) => setEditData(prev => prev ? {...prev, gc: e.target.value} : null)}
               placeholder="Texto do GC"
               rows={2}
+              disabled={isSaving}
             />
           </div>
         </div>
