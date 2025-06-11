@@ -1,11 +1,15 @@
 
 import { Badge } from "@/components/ui/badge";
-import { Clock, User, FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Clock, User, FileText, Copy } from "lucide-react";
 import { formatTime } from "../news-schedule/utils";
 
 interface MaterialCardProps {
   materia: any;
   materiaIndex: number;
+  onCopyMateria?: (materia: any) => void;
+  onSelectMateria?: (materia: any) => void;
+  isSelected?: boolean;
 }
 
 const getStatusColor = (status?: string) => {
@@ -18,9 +22,33 @@ const getStatusColor = (status?: string) => {
   }
 };
 
-export const MaterialCard = ({ materia, materiaIndex }: MaterialCardProps) => {
+export const MaterialCard = ({ 
+  materia, 
+  materiaIndex, 
+  onCopyMateria, 
+  onSelectMateria,
+  isSelected = false 
+}: MaterialCardProps) => {
+  const handleClick = () => {
+    if (onSelectMateria) {
+      onSelectMateria(materia);
+    }
+  };
+
+  const handleCopyClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onCopyMateria) {
+      onCopyMateria(materia);
+    }
+  };
+
   return (
-    <div className="bg-white border rounded p-3 text-sm">
+    <div 
+      className={`bg-white border rounded p-3 text-sm cursor-pointer transition-colors ${
+        isSelected ? 'ring-2 ring-primary bg-blue-50' : 'hover:bg-gray-50'
+      }`}
+      onClick={handleClick}
+    >
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-1">
@@ -51,6 +79,19 @@ export const MaterialCard = ({ materia, materiaIndex }: MaterialCardProps) => {
             {materia.ordem && <span>Ordem: {materia.ordem}</span>}
           </div>
         </div>
+        
+        {/* Botão de cópia */}
+        {onCopyMateria && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyClick}
+            className="h-6 w-6 p-0 hover:bg-blue-100"
+            title="Copiar matéria"
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+        )}
       </div>
 
       {materia.cabeca && (

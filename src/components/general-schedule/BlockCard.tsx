@@ -11,6 +11,9 @@ interface BlockCardProps {
   blocoIndex: number;
   isExpanded: boolean;
   onToggleExpansion: () => void;
+  onCopyMateria?: (materia: any) => void;
+  onSelectMateria?: (materia: any) => void;
+  isSelected?: (materiaId: string) => boolean;
 }
 
 const getMateriasList = (bloco: any) => {
@@ -23,7 +26,15 @@ const getMateriasList = (bloco: any) => {
   return [];
 };
 
-export const BlockCard = ({ bloco, blocoIndex, isExpanded, onToggleExpansion }: BlockCardProps) => {
+export const BlockCard = ({ 
+  bloco, 
+  blocoIndex, 
+  isExpanded, 
+  onToggleExpansion,
+  onCopyMateria,
+  onSelectMateria,
+  isSelected
+}: BlockCardProps) => {
   const materias = getMateriasList(bloco);
   const blocoDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
 
@@ -63,6 +74,9 @@ export const BlockCard = ({ bloco, blocoIndex, isExpanded, onToggleExpansion }: 
                 key={materia.id || `materia-${materiaIndex}`}
                 materia={materia}
                 materiaIndex={materiaIndex}
+                onCopyMateria={onCopyMateria}
+                onSelectMateria={onSelectMateria}
+                isSelected={isSelected ? isSelected(materia.id) : false}
               />
             ))
           ) : (
