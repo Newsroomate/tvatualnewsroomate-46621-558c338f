@@ -87,7 +87,7 @@ export const NewsSchedule = ({
   // Clipboard functionality
   const { copiedMateria, copyMateria, clearClipboard, hasCopiedMateria } = useClipboard();
   
-  // Paste functionality with selected materia
+  // Enhanced paste functionality with optimistic updates
   const { pasteMateria } = usePasteMateria({
     blocks,
     setBlocks: setBlocksWrapper,
@@ -115,7 +115,7 @@ export const NewsSchedule = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Keyboard shortcuts
+  // Enhanced keyboard shortcuts with better paste handling
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: copyMateria,
@@ -136,6 +136,12 @@ export const NewsSchedule = ({
     scrollToBlock
   });
 
+  // Improved materia selection handler
+  const handleMateriaSelect = (materia: Materia | null) => {
+    console.log('Matéria selecionada para colagem:', materia?.retranca || 'nenhuma');
+    setSelectedMateria(materia);
+  };
+
   const scheduleContent = (
     <>
       {/* Header with journal info and total time */}
@@ -151,13 +157,13 @@ export const NewsSchedule = ({
         blocks={blocks}
       />
 
-      {/* Main area with blocks - improved scrolling and padding */}
+      {/* Main area with blocks - enhanced scrolling and real-time updates */}
       <div 
         ref={scrollContainerRef}
         className="flex-1 overflow-y-auto p-4 pb-32 space-y-6"
         style={{ 
           scrollBehavior: 'smooth',
-          paddingBottom: 'max(8rem, 20vh)' // Responsive bottom padding
+          paddingBottom: 'max(8rem, 20vh)'
         }}
       >
         <ScheduleContent
@@ -180,7 +186,7 @@ export const NewsSchedule = ({
           onBatchDeleteItems={handleBatchDeleteMaterias}
           isDeleting={isDeleting}
           selectedMateria={selectedMateria}
-          onMateriaSelect={setSelectedMateria}
+          onMateriaSelect={handleMateriaSelect}
         />
       </div>
 
