@@ -41,6 +41,10 @@ interface NewsScheduleCoreProps {
   handleSaveModel: () => void;
   handleViewSavedModels: () => void;
   isDualView?: boolean;
+  // Clipboard related props
+  copyMateria?: (materia: Materia) => void;
+  pasteMateria?: () => void;
+  hasCopiedMateria?: boolean;
 }
 
 export const NewsScheduleCore = ({
@@ -70,7 +74,11 @@ export const NewsScheduleCore = ({
   handleViewTeleprompter,
   handleSaveModel,
   handleViewSavedModels,
-  isDualView = false
+  isDualView = false,
+  // Clipboard related props with defaults
+  copyMateria = () => {},
+  pasteMateria = () => {},
+  hasCopiedMateria = false
 }: NewsScheduleCoreProps) => {
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
 
@@ -100,6 +108,7 @@ export const NewsScheduleCore = ({
         onSaveModel={handleSaveModel}
         onViewSavedModels={handleViewSavedModels}
         blocks={blocks}
+        hasCopiedMateria={hasCopiedMateria}
       />
 
       {/* Main area with blocks - enhanced scrolling and real-time updates */}
@@ -132,6 +141,7 @@ export const NewsScheduleCore = ({
           isDeleting={isDeleting}
           selectedMateria={selectedMateria}
           onMateriaSelect={onMateriaSelect}
+          copyMateria={copyMateria}
         />
       </div>
     </>

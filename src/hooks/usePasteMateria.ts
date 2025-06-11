@@ -95,6 +95,7 @@ export const usePasteMateria = ({
     const nextPageNumber = getNextPageNumber(targetBlock.items);
 
     // Identificar a origem da matéria para melhor feedback
+    // Safely access bloco_nome with optional chaining
     const materiaOrigin = copiedMateria.bloco_nome 
       ? `do bloco "${copiedMateria.bloco_nome}"` 
       : "do espelho fechado";
