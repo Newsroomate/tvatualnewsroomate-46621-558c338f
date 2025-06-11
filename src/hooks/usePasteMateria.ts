@@ -9,6 +9,7 @@ interface UsePasteMateriaProps {
   selectedMateria: Materia | null;
   copiedMateria: Materia | null;
   clearClipboard: () => void;
+  markOptimisticUpdate?: (materiaId: string) => void;
 }
 
 export const usePasteMateria = ({
@@ -16,7 +17,8 @@ export const usePasteMateria = ({
   setBlocks,
   selectedMateria,
   copiedMateria,
-  clearClipboard
+  clearClipboard,
+  markOptimisticUpdate
 }: UsePasteMateriaProps) => {
   
   // Função para calcular o próximo número de página no bloco
@@ -113,6 +115,7 @@ export const usePasteMateria = ({
     const tempId = `temp-${Date.now()}`;
     const tempMateria: Materia = {
       id: tempId,
+      titulo: copiedMateria.titulo || copiedMateria.retranca, // Fix: add titulo property
       ...materiaData,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -120,6 +123,11 @@ export const usePasteMateria = ({
 
     // 1. ATUALIZAÇÃO OTIMISTA - Atualizar UI imediatamente
     console.log('Iniciando atualização otimista para posição:', insertPosition);
+    
+    // Marcar como atualização otimista para evitar duplicação realtime
+    if (markOptimisticUpdate) {
+      markOptimisticUpdate(tempId);
+    }
     
     setBlocks((currentBlocks: any[]) => 
       currentBlocks.map(block => {

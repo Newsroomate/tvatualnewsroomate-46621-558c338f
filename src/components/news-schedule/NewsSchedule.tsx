@@ -1,18 +1,8 @@
-import { useState } from "react";
-import { DragDropContext } from "@hello-pangea/dnd";
+
 import { Bloco, Materia, Telejornal } from "@/types";
-import { ScheduleHeader } from "./ScheduleHeader";
-import { ScheduleContent } from "./ScheduleContent";
-import { ConfirmationDialogs } from "./ConfirmationDialogs";
-import { NewsScheduleModals } from "./NewsScheduleModals";
-import { useNewsSchedule } from "@/hooks/useNewsSchedule";
-import { useScrollUtils } from "@/hooks/useScrollUtils";
-import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
-import { useClipboard } from "@/hooks/useClipboard";
-import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { usePasteMateria } from "@/hooks/usePasteMateria";
-import { useNewsScheduleDualView } from "@/hooks/useNewsScheduleDualView";
-import { useNewsScheduleActions } from "./NewsScheduleActions";
+import { NewsScheduleHooks } from "./NewsScheduleHooks";
+import { NewsScheduleCore } from "./NewsScheduleCore";
+import { NewsScheduleDialogs } from "./NewsScheduleDialogs";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -40,190 +30,64 @@ export const NewsSchedule = ({
   onBlocksChange,
   isDualView = false
 }: NewsScheduleProps) => {
-  const [isSaveModelModalOpen, setIsSaveModelModalOpen] = useState(false);
-  const [isSavedModelsModalOpen, setIsSavedModelsModalOpen] = useState(false);
-  const [selectedMateria, setSelectedMateria] = useState<Materia | null>(null);
-  
-  const {
-    blocks: internalBlocks,
-    totalJournalTime,
-    isLoading,
-    isCreatingFirstBlock,
-    newItemBlock,
-    deleteConfirmOpen,
-    setDeleteConfirmOpen,
-    renumberConfirmOpen,
-    setRenumberConfirmOpen,
-    isDeleting,
-    handleAddItem,
-    handleDuplicateItem,
-    handleDeleteMateria,
-    confirmDeleteMateria,
-    handleBatchDeleteMaterias,
-    handleRenumberItems,
-    confirmRenumberItems,
-    handleAddFirstBlock,
-    handleAddBlock,
-    handleRenameBlock,
-    handleDeleteBlock,
-    handleDragEnd,
-    openTeleprompter
-  } = useNewsSchedule({ 
-    selectedJournal, 
-    currentTelejornal, 
-    onEditItem,
-    externalBlocks: !!externalBlocks && !!onBlocksChange ? externalBlocks : undefined,
-    onBlocksChange: !!externalBlocks && !!onBlocksChange ? onBlocksChange : undefined
-  });
-
-  const { isDualViewMode, blocks, setBlocksWrapper } = useNewsScheduleDualView({
-    externalBlocks,
-    onBlocksChange,
-    internalBlocks
-  });
-  
-  const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
-
-  // Clipboard functionality
-  const { copiedMateria, copyMateria, clearClipboard, hasCopiedMateria } = useClipboard();
-  
-  // Enhanced paste functionality with optimistic updates
-  const { pasteMateria } = usePasteMateria({
-    blocks,
-    setBlocks: setBlocksWrapper,
-    selectedMateria,
-    copiedMateria,
-    clearClipboard
-  });
-
-  // Actions handlers
-  const {
-    handleViewTeleprompter,
-    handleDragEndWithLogging,
-    handleSaveModel,
-    handleUseModel,
-    handleModelApplied,
-    handleViewSavedModels
-  } = useNewsScheduleActions({
-    selectedJournal,
-    currentTelejornal,
-    blocks,
-    journalPrefix,
-    openTeleprompter,
-    handleDragEnd,
-    onSetSaveModelModalOpen: setIsSaveModelModalOpen,
-    onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
-  });
-
-  // Enhanced keyboard shortcuts with better paste handling
-  useKeyboardShortcuts({
-    selectedMateria,
-    onCopy: copyMateria,
-    onPaste: pasteMateria,
-    isEspelhoOpen: !!currentTelejornal?.espelho_aberto
-  });
-
-  const {
-    handleAddBlockWithScroll,
-    handleAddFirstBlockWithScroll,
-    handleAddItemWithScroll
-  } = useEnhancedHandlers({
-    blocks,
-    handleAddBlock,
-    handleAddFirstBlock,
-    handleAddItem,
-    scrollToBottom,
-    scrollToBlock
-  });
-
-  // Improved materia selection handler
-  const handleMateriaSelect = (materia: Materia | null) => {
-    console.log('Matéria selecionada para colagem:', materia?.retranca || 'nenhuma');
-    setSelectedMateria(materia);
-  };
-
-  const scheduleContent = (
-    <>
-      {/* Header with journal info and total time */}
-      <ScheduleHeader
-        currentTelejornal={currentTelejornal}
-        totalJournalTime={totalJournalTime}
-        onRenumberItems={handleRenumberItems}
-        hasBlocks={blocks.length > 0}
-        onAddBlock={handleAddBlockWithScroll}
-        onViewTeleprompter={handleViewTeleprompter}
-        onSaveModel={handleSaveModel}
-        onViewSavedModels={handleViewSavedModels}
-        blocks={blocks}
-      />
-
-      {/* Main area with blocks - enhanced scrolling and real-time updates */}
-      <div 
-        ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto p-4 pb-32 space-y-6"
-        style={{ 
-          scrollBehavior: 'smooth',
-          paddingBottom: 'max(8rem, 20vh)'
-        }}
-      >
-        <ScheduleContent
-          selectedJournal={selectedJournal}
-          currentTelejornal={currentTelejornal}
-          blocks={blocks}
-          isLoading={isLoading}
-          isCreatingFirstBlock={isCreatingFirstBlock}
-          newItemBlock={newItemBlock}
-          onOpenRundown={onOpenRundown}
-          onAddFirstBlock={handleAddFirstBlockWithScroll}
-          onAddBlock={handleAddBlockWithScroll}
-          onAddItem={handleAddItemWithScroll}
-          onEditItem={onEditItem}
-          onDeleteItem={handleDeleteMateria}
-          onDuplicateItem={handleDuplicateItem}
-          onRenameBlock={handleRenameBlock}
-          onDeleteBlock={handleDeleteBlock}
-          journalPrefix={journalPrefix}
-          onBatchDeleteItems={handleBatchDeleteMaterias}
-          isDeleting={isDeleting}
-          selectedMateria={selectedMateria}
-          onMateriaSelect={handleMateriaSelect}
-        />
-      </div>
-
-      {/* Confirmation Dialogs */}
-      <ConfirmationDialogs
-        deleteConfirmOpen={deleteConfirmOpen}
-        setDeleteConfirmOpen={setDeleteConfirmOpen}
-        renumberConfirmOpen={renumberConfirmOpen}
-        setRenumberConfirmOpen={setRenumberConfirmOpen}
-        confirmDeleteMateria={confirmDeleteMateria}
-        confirmRenumberItems={confirmRenumberItems}
-      />
-
-      {/* Models Modals */}
-      <NewsScheduleModals
-        selectedJournal={selectedJournal}
-        isSaveModelModalOpen={isSaveModelModalOpen}
-        isSavedModelsModalOpen={isSavedModelsModalOpen}
-        onCloseSaveModel={() => setIsSaveModelModalOpen(false)}
-        onCloseSavedModels={() => setIsSavedModelsModalOpen(false)}
-        onUseModel={handleUseModel}
-        onModelApplied={handleModelApplied}
-      />
-    </>
-  );
-
   return (
-    <div className="flex flex-col h-full">
-      {isDualView ? (
-        // In dual view, don't wrap with DragDropContext as it's handled by DualViewLayout
-        scheduleContent
-      ) : (
-        // In single view, wrap with DragDropContext for internal drag and drop
-        <DragDropContext onDragEnd={handleDragEndWithLogging}>
-          {scheduleContent}
-        </DragDropContext>
+    <NewsScheduleHooks
+      selectedJournal={selectedJournal}
+      currentTelejornal={currentTelejornal}
+      onEditItem={onEditItem}
+      journalPrefix={journalPrefix}
+      externalBlocks={externalBlocks}
+      onBlocksChange={onBlocksChange}
+    >
+      {(hookProps) => (
+        <>
+          <NewsScheduleCore
+            selectedJournal={selectedJournal}
+            onEditItem={onEditItem}
+            currentTelejornal={currentTelejornal}
+            onOpenRundown={onOpenRundown}
+            journalPrefix={journalPrefix}
+            blocks={hookProps.blocks}
+            totalJournalTime={hookProps.totalJournalTime}
+            isLoading={hookProps.isLoading}
+            isCreatingFirstBlock={hookProps.isCreatingFirstBlock}
+            newItemBlock={hookProps.newItemBlock}
+            isDeleting={hookProps.isDeleting}
+            selectedMateria={hookProps.selectedMateria}
+            onMateriaSelect={hookProps.handleMateriaSelect}
+            handleAddItem={hookProps.handleAddItem}
+            handleDuplicateItem={hookProps.handleDuplicateItem}
+            handleDeleteMateria={hookProps.handleDeleteMateria}
+            handleBatchDeleteMaterias={hookProps.handleBatchDeleteMaterias}
+            handleRenumberItems={hookProps.handleRenumberItems}
+            handleAddFirstBlock={hookProps.handleAddFirstBlock}
+            handleAddBlock={hookProps.handleAddBlock}
+            handleRenameBlock={hookProps.handleRenameBlock}
+            handleDeleteBlock={hookProps.handleDeleteBlock}
+            handleDragEnd={hookProps.handleDragEndWithLogging}
+            handleViewTeleprompter={hookProps.handleViewTeleprompter}
+            handleSaveModel={hookProps.handleSaveModel}
+            handleViewSavedModels={hookProps.handleViewSavedModels}
+            isDualView={isDualView}
+          />
+
+          <NewsScheduleDialogs
+            selectedJournal={selectedJournal}
+            deleteConfirmOpen={hookProps.deleteConfirmOpen}
+            setDeleteConfirmOpen={hookProps.setDeleteConfirmOpen}
+            renumberConfirmOpen={hookProps.renumberConfirmOpen}
+            setRenumberConfirmOpen={hookProps.setRenumberConfirmOpen}
+            confirmDeleteMateria={hookProps.confirmDeleteMateria}
+            confirmRenumberItems={hookProps.confirmRenumberItems}
+            isSaveModelModalOpen={hookProps.isSaveModelModalOpen}
+            isSavedModelsModalOpen={hookProps.isSavedModelsModalOpen}
+            onCloseSaveModel={() => hookProps.setIsSaveModelModalOpen(false)}
+            onCloseSavedModels={() => hookProps.setIsSavedModelsModalOpen(false)}
+            onUseModel={hookProps.handleUseModel}
+            onModelApplied={hookProps.handleModelApplied}
+          />
+        </>
       )}
-    </div>
+    </NewsScheduleHooks>
   );
 };
