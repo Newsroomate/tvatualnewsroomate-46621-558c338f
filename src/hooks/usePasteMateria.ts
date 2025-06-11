@@ -56,6 +56,12 @@ export const usePasteMateria = ({
       return;
     }
 
+    console.log('Iniciando processo de colar matéria:', {
+      copiedMateria,
+      selectedMateria: selectedMateria?.retranca,
+      blocksCount: blocks.length
+    });
+
     let targetBlockId: string;
     let insertPosition: number;
     let targetBlock: any;
@@ -95,7 +101,7 @@ export const usePasteMateria = ({
 
     const nextPageNumber = getNextPageNumber(targetBlock.items);
 
-    // Criar dados para nova matéria
+    // Criar dados para nova matéria preservando TODOS os campos da matéria copiada
     const materiaData = {
       bloco_id: targetBlockId,
       ordem: insertPosition,
@@ -105,17 +111,28 @@ export const usePasteMateria = ({
       tipo_material: copiedMateria.tipo_material || '',
       pagina: nextPageNumber,
       clip: copiedMateria.clip || '',
+      tempo_clip: copiedMateria.tempo_clip || '',
       reporter: copiedMateria.reporter || '',
       gc: copiedMateria.gc || '',
       cabeca: copiedMateria.cabeca || '',
-      status: copiedMateria.status || 'draft'
+      status: copiedMateria.status || 'draft',
+      local_gravacao: copiedMateria.local_gravacao || '',
+      equipamento: copiedMateria.equipamento || ''
     };
+
+    console.log('Dados da matéria a ser criada (preservando campos originais):', materiaData);
 
     // Gerar ID temporário para atualização otimista
     const tempId = `temp-${Date.now()}`;
     const tempMateria: Materia = {
       id: tempId,
-      titulo: copiedMateria.titulo || copiedMateria.retranca, // Fix: add titulo property
+      titulo: copiedMateria.titulo || copiedMateria.retranca,
+      descricao: copiedMateria.descricao || copiedMateria.texto,
+      tempo_estimado: copiedMateria.tempo_estimado || copiedMateria.duracao,
+      apresentador: copiedMateria.apresentador || copiedMateria.reporter,
+      link_vt: copiedMateria.link_vt || copiedMateria.clip,
+      tags: copiedMateria.tags || [],
+      horario_exibicao: copiedMateria.horario_exibicao,
       ...materiaData,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -166,8 +183,8 @@ export const usePasteMateria = ({
 
     // Mostrar toast de sucesso imediatamente
     toast({
-      title: "Matéria colada",
-      description: `"${tempMateria.retranca}" foi colada ${positionMessage} na página ${nextPageNumber}`,
+      title: "Matéria colada do histórico",
+      description: `"${tempMateria.retranca}" foi colada ${positionMessage} na página ${nextPageNumber} com todos os campos preservados`,
     });
 
     try {

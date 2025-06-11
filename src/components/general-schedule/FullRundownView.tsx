@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
@@ -54,7 +53,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   const { selectedMateria, selectItem, clearSelection, isSelected } = useItemSelection();
   const { copyMateria } = useClipboard();
 
-  // Função para converter matéria híbrida em formato Materia padrão
+  // Função para converter matéria híbrida em formato Materia padrão com TODOS os campos preservados
   const convertToStandardMateria = (materia: any, blocoId: string, blocoNome: string): Materia => {
     return {
       id: materia.id,
@@ -76,8 +75,8 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       horario_exibicao: materia.horario_exibicao,
       updated_at: materia.updated_at,
       tipo_material: materia.tipo_material || '',
-      titulo: materia.retranca || '',
-      descricao: materia.texto || '',
+      titulo: materia.retranca || '', // Garantir que titulo seja igual a retranca
+      descricao: materia.texto || '', // Garantir que descricao seja igual a texto
       tempo_estimado: materia.duracao || 0,
       apresentador: materia.reporter || '',
       link_vt: materia.clip || '',
@@ -85,9 +84,21 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     };
   };
 
-  // Função para lidar com cópia de matéria
+  // Função para lidar com cópia de matéria - preservando TODOS os campos
   const handleCopyMateria = (materia: any, blocoId: string, blocoNome: string) => {
+    console.log('Copiando matéria do histórico:', {
+      id: materia.id,
+      retranca: materia.retranca,
+      texto: materia.texto,
+      duracao: materia.duracao,
+      todos_campos: materia
+    });
+    
     const standardMateria = convertToStandardMateria(materia, blocoId, blocoNome);
+    
+    // Log para verificar se todos os campos estão sendo preservados
+    console.log('Matéria convertida para formato padrão:', standardMateria);
+    
     copyMateria(standardMateria);
     selectItem(standardMateria);
   };
@@ -98,15 +109,19 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     selectItem(standardMateria);
   };
 
-  // Atalhos de teclado para copiar
+  // Atalhos de teclado para copiar - com funcionalidade aprimorada
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: () => {
       if (selectedMateria) {
+        console.log('Copiando via Ctrl+C no histórico:', selectedMateria);
         copyMateria(selectedMateria);
       }
     },
-    onPaste: () => {},
+    onPaste: () => {
+      console.log('Tentativa de colar no histórico (não permitido)');
+      // Não permitir colar no histórico, apenas copiar
+    },
     isEspelhoOpen: true
   });
 
@@ -209,11 +224,11 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
         hybridError={hybridError}
       />
 
-      {/* Instruções para o usuário */}
+      {/* Instruções atualizadas para o usuário */}
       <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
         <p className="text-sm text-blue-800">
-          <strong>Dica:</strong> Clique em uma matéria para selecioná-la, depois use <kbd className="bg-blue-200 px-1 rounded">Ctrl+C</kbd> para copiar. 
-          Você pode colar com <kbd className="bg-blue-200 px-1 rounded">Ctrl+V</kbd> em qualquer espelho aberto, mesmo após fechar este modal.
+          <strong>Dica:</strong> Clique em uma matéria para selecioná-la, depois use <kbd className="bg-blue-200 px-1 rounded">Ctrl+C</kbd> para copiar com todos os campos preservados. 
+          Você pode fechar este modal e colar com <kbd className="bg-blue-200 px-1 rounded">Ctrl+V</kbd> em qualquer espelho aberto, logo abaixo da matéria selecionada.
         </p>
       </div>
 
