@@ -1,14 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { fetchTelejornais } from "@/services/api";
 import { fetchPautas } from "@/services/pautas-api";
 import { Telejornal, Pauta } from "@/types";
-import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { GeneralScheduleModal } from "@/components/general-schedule";
 import { PautaModal } from "@/components/PautaModal";
 import { TelejornalModal } from "@/components/TelejornalModal";
-import { HistoricoEspelhosModal } from "@/components/historico-espelhos";
 import { supabase } from "@/integrations/supabase/client";
 import { TelejornalSection } from "./TelejornalSection";
 import { PautaSection } from "./PautaSection";
@@ -29,8 +28,6 @@ export const LeftSidebar = ({
   const [isPautaModalOpen, setIsPautaModalOpen] = useState(false);
   const [isTelejornalModalOpen, setIsTelejornalModalOpen] = useState(false);
   const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
-  const [isHistoricoModalOpen, setIsHistoricoModalOpen] = useState(false);
-  const [selectedHistoricoSnapshot, setSelectedHistoricoSnapshot] = useState<ClosedRundownSnapshot | null>(null);
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   const [pautas, setPautas] = useState<Pauta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -158,16 +155,6 @@ export const LeftSidebar = ({
     setIsMainMenuOpen(!isMainMenuOpen);
   };
 
-  const handleOpenHistorico = (snapshot: ClosedRundownSnapshot) => {
-    setSelectedHistoricoSnapshot(snapshot);
-    setIsHistoricoModalOpen(true);
-  };
-
-  const handleCloseHistorico = () => {
-    setIsHistoricoModalOpen(false);
-    setSelectedHistoricoSnapshot(null);
-  };
-
   const handleActivateDualView = (secondJournalId: string) => {
     if (onToggleDualView) {
       onToggleDualView(true, secondJournalId);
@@ -219,13 +206,6 @@ export const LeftSidebar = ({
       <PautaModal isOpen={isPautaModalOpen} onClose={() => setIsPautaModalOpen(false)} onPautaCreated={loadData} />
       <TelejornalModal isOpen={isTelejornalModalOpen} onClose={() => setIsTelejornalModalOpen(false)} onTelejornalCreated={loadData} />
       
-      {/* Histórico Modal */}
-      <HistoricoEspelhosModal
-        isOpen={isHistoricoModalOpen}
-        onClose={handleCloseHistorico}
-        snapshot={selectedHistoricoSnapshot}
-      />
-      
       {/* Main Menu */}
       <MainMenu
         isOpen={isMainMenuOpen}
@@ -235,7 +215,6 @@ export const LeftSidebar = ({
         onActivateDualView={handleActivateDualView}
         onDeactivateDualView={handleDeactivateDualView}
         onOpenGeneralSchedule={handleOpenGeneralSchedule}
-        onOpenHistorico={handleOpenHistorico}
       />
     </div>
   );
