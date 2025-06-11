@@ -1,9 +1,13 @@
 
 import { Materia } from '@/types';
-import { createMateria, updateMateria } from '@/services/materias-api';
+import { createMateria } from '@/services/materias-api';
 import { toast } from '@/hooks/use-toast';
-import { useOrderCalculation } from './useOrderCalculation';
+import { useOrderCalculation } from '../useOrderCalculation';
 import { useRef } from 'react';
+import { pageNumberUtils } from './pageNumberUtils';
+import { materiaUpdateUtils } from './materiaUpdateUtils';
+import { pasteValidation } from './pasteValidation';
+import { OperationQueue } from './operationQueue';
 
 interface UsePasteMateriaProps {
   blocks: any[];
@@ -21,59 +25,16 @@ export const usePasteMateria = ({
   clearClipboard
 }: UsePasteMateriaProps) => {
   const { calculateInsertOrder, normalizeOrders, getItemsToUpdate } = useOrderCalculation();
-  const operationQueue = useRef<Set<string>>(new Set());
-  
-  // Função para calcular o próximo número de página no bloco
-  const getNextPageNumber = (blockItems: Materia[]): string => {
-    // Filtrar apenas as páginas que são números válidos
-    const pageNumbers = blockItems
-      .map(item => {
-        const pageNum = parseInt(item.pagina || '0');
-        return isNaN(pageNum) ? 0 : pageNum;
-      })
-      .filter(num => num > 0);
-    
-    // Se não há páginas numeradas, começar com 1
-    if (pageNumbers.length === 0) {
-      return '1';
-    }
-    
-    // Encontrar o maior número e adicionar 1
-    const maxPageNumber = Math.max(...pageNumbers);
-    return (maxPageNumber + 1).toString();
-  };
-
-  // Função para atualizar ordens das matérias no banco de dados
-  const updateMateriasOrders = async (materiasToUpdate: Materia[]) => {
-    if (materiasToUpdate.length === 0) return;
-    
-    const updatePromises = materiasToUpdate.map(materia => 
-      updateMateria(materia.id, { ordem: materia.ordem })
-    );
-    await Promise.all(updatePromises);
-  };
+  const operationQueue = useRef(new OperationQueue());
   
   const pasteMateria = async () => {
-    if (!copiedMateria) {
-      toast({
-        title: "Nenhuma matéria copiada",
-        description: "Copie uma matéria primeiro usando Ctrl+C",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!selectedMateria) {
-      toast({
-        title: "Nenhuma matéria selecionada",
-        description: "Selecione uma matéria primeiro para colar abaixo dela",
-        variant: "destructive"
-      });
+    // Validate paste operation
+    if (!pasteValidation.validatePasteOperation(copiedMateria, selectedMateria)) {
       return;
     }
 
     // Generate unique operation ID to prevent duplicate operations
-    const operationId = `paste-${selectedMateria.id}-${Date.now()}`;
+    const operationId = `paste-${selectedMateria!.id}-${Date.now()}`;
     
     if (operationQueue.current.has(operationId)) {
       console.log('Operation already in progress, skipping duplicate');
@@ -85,7 +46,7 @@ export const usePasteMateria = ({
     try {
       // Encontrar o bloco que contém a matéria selecionada
       const targetBlock = blocks.find(block => 
-        block.items.some((item: Materia) => item.id === selectedMateria.id)
+        block.items.some((item: Materia) => item.id === selectedMateria!.id)
       );
       
       if (!targetBlock) {
@@ -100,25 +61,25 @@ export const usePasteMateria = ({
       const targetBlockId = targetBlock.id;
       
       // Calculate the new order for the inserted materia
-      const newOrder = calculateInsertOrder(targetBlock.items, selectedMateria);
+      const newOrder = calculateInsertOrder(targetBlock.items, selectedMateria!);
       
       // Calcular o próximo número de página
-      const nextPageNumber = getNextPageNumber(targetBlock.items);
+      const nextPageNumber = pageNumberUtils.getNextPageNumber(targetBlock.items);
 
       // Criar dados para nova matéria
       const materiaData = {
         bloco_id: targetBlockId,
         ordem: newOrder,
-        retranca: `${copiedMateria.retranca} (Cópia)`,
-        texto: copiedMateria.texto || '',
-        duracao: copiedMateria.duracao || 0,
-        tipo_material: copiedMateria.tipo_material || '',
+        retranca: `${copiedMateria!.retranca} (Cópia)`,
+        texto: copiedMateria!.texto || '',
+        duracao: copiedMateria!.duracao || 0,
+        tipo_material: copiedMateria!.tipo_material || '',
         pagina: nextPageNumber,
-        clip: copiedMateria.clip || '',
-        reporter: copiedMateria.reporter || '',
-        gc: copiedMateria.gc || '',
-        cabeca: copiedMateria.cabeca || '',
-        status: copiedMateria.status || 'draft'
+        clip: copiedMateria!.clip || '',
+        reporter: copiedMateria!.reporter || '',
+        gc: copiedMateria!.gc || '',
+        cabeca: copiedMateria!.cabeca || '',
+        status: copiedMateria!.status || 'draft'
       };
 
       // Create temporary item for instant visual feedback
@@ -166,7 +127,7 @@ export const usePasteMateria = ({
 
       // Update orders in database if needed
       if (itemsToUpdate.length > 0) {
-        await updateMateriasOrders(itemsToUpdate);
+        await materiaUpdateUtils.updateMateriasOrders(itemsToUpdate);
       }
 
       // Replace temporary item with real one and normalize all orders
@@ -222,9 +183,7 @@ export const usePasteMateria = ({
       });
     } finally {
       // Clean up operation queue
-      setTimeout(() => {
-        operationQueue.current.delete(operationId);
-      }, 1000);
+      operationQueue.current.delete(operationId);
     }
   };
 
