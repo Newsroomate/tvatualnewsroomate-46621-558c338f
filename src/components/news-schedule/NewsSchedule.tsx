@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Bloco, Materia, Telejornal } from "@/types";
@@ -88,7 +87,7 @@ export const NewsSchedule = ({
   // Clipboard functionality
   const { copiedMateria, copyMateria, clearClipboard, hasCopiedMateria } = useClipboard();
   
-  // Paste functionality
+  // Paste functionality with selected materia
   const { pasteMateria } = usePasteMateria({
     blocks,
     setBlocks: setBlocksWrapper,

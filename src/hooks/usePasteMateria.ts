@@ -64,6 +64,7 @@ export const usePasteMateria = ({
           const selectedIndex = targetBlock.items.findIndex(
             (item: Materia) => item.id === selectedMateria.id
           );
+          // Inserir na posição seguinte à matéria selecionada
           insertPosition = selectedIndex + 1;
         } else {
           // Se não encontrar o bloco, usar o primeiro bloco disponível
@@ -97,7 +98,7 @@ export const usePasteMateria = ({
         texto: copiedMateria.texto || '',
         duracao: copiedMateria.duracao || 0,
         tipo_material: copiedMateria.tipo_material || '',
-        pagina: nextPageNumber, // Usar o número de página calculado sequencialmente
+        pagina: nextPageNumber,
         clip: copiedMateria.clip || '',
         reporter: copiedMateria.reporter || '',
         gc: copiedMateria.gc || '',
@@ -128,9 +129,13 @@ export const usePasteMateria = ({
         })
       );
 
+      const positionMessage = selectedMateria 
+        ? `logo abaixo da matéria "${selectedMateria.retranca}"` 
+        : "no final do bloco";
+
       toast({
         title: "Matéria colada",
-        description: `"${newMateria.retranca}" foi colada com sucesso na página ${nextPageNumber}`,
+        description: `"${newMateria.retranca}" foi colada ${positionMessage} na página ${nextPageNumber}`,
       });
 
     } catch (error) {
