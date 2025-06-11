@@ -30,7 +30,7 @@ export const PostCloseRundownModal = ({
   const [showGeneralScheduleModal, setShowGeneralScheduleModal] = useState(false);
 
   const handleCreateNew = () => {
-    onCreateNew(); // SEMPRE carrega o último bloco agora
+    onCreateNew(); // Criar espelho vazio (sem carregar último bloco)
     onClose();
   };
 

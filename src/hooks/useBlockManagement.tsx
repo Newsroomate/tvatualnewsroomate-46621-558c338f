@@ -3,8 +3,6 @@ import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { createBloco, updateBloco, deleteBloco } from "@/services/blocos-api";
-import { createMateria } from "@/services/materias-api";
-import { getLastBlockFromPreviousRundown } from "@/services/last-block-api";
 
 interface UseBlockManagementProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
@@ -25,8 +23,8 @@ export const useBlockManagement = ({
   const blockCreationInProgress = useRef(false);
   const { toast } = useToast();
 
-  const createBlockWithLastBlockData = async (telejornalId: string, blockName: string, order: number) => {
-    // Criar o bloco
+  const createBasicBlock = async (telejornalId: string, blockName: string, order: number) => {
+    // Criar apenas o bloco básico sem carregar dados anteriores
     const novoBlocoInput = {
       telejornal_id: telejornalId,
       nome: blockName,
@@ -36,69 +34,17 @@ export const useBlockManagement = ({
     const novoBloco = await createBloco(novoBlocoInput);
     console.log(`Block created: ${novoBloco.nome} with order ${novoBloco.ordem}`);
 
-    // SEMPRE buscar dados do último bloco do espelho anterior
-    const lastBlockData = await getLastBlockFromPreviousRundown(telejornalId);
-    
-    let createdMaterias: Materia[] = [];
-    let blockNameToUse = blockName;
-    
-    if (lastBlockData && lastBlockData.materias.length > 0) {
-      console.log(`Carregando ${lastBlockData.materias.length} matérias do bloco anterior: ${lastBlockData.nome}`);
-      
-      // Usar o nome do último bloco
-      blockNameToUse = lastBlockData.nome;
-      
-      // Atualizar o nome do bloco criado
-      await updateBloco(novoBloco.id, { nome: blockNameToUse });
-      
-      // Criar as matérias do último bloco no novo bloco
-      for (let i = 0; i < lastBlockData.materias.length; i++) {
-        const materiaData = lastBlockData.materias[i];
-        try {
-          const newMateria = await createMateria({
-            bloco_id: novoBloco.id,
-            ordem: i + 1,
-            retranca: materiaData.retranca || 'Sem título',
-            clip: materiaData.clip || '',
-            duracao: materiaData.duracao || 0,
-            pagina: materiaData.pagina || '',
-            reporter: materiaData.reporter || '',
-            status: materiaData.status || 'draft',
-            texto: materiaData.texto || '',
-            cabeca: materiaData.cabeca || ''
-          });
-          
-          createdMaterias.push({
-            ...newMateria,
-            titulo: newMateria.retranca || "Sem título"
-          });
-        } catch (error) {
-          console.error('Erro ao criar matéria:', error);
-        }
-      }
-      
-      toast({
-        title: "Bloco carregado",
-        description: `Bloco "${blockNameToUse}" criado com ${createdMaterias.length} matérias do espelho anterior`,
-        variant: "default"
-      });
-    } else {
-      console.log("Nenhum bloco anterior encontrado ou bloco anterior vazio");
-      toast({
-        title: "Bloco criado",
-        description: `Bloco "${blockNameToUse}" criado (nenhum bloco anterior encontrado)`,
-        variant: "default"
-      });
-    }
+    toast({
+      title: "Bloco criado",
+      description: `Bloco "${blockName}" criado com sucesso`,
+      variant: "default"
+    });
 
-    // Calcular tempo total
-    const totalTime = createdMaterias.reduce((sum, item) => sum + (item.duracao || 0), 0);
-
+    // Retornar bloco vazio
     return {
       ...novoBloco,
-      nome: blockNameToUse,
-      items: createdMaterias,
-      totalTime
+      items: [],
+      totalTime: 0
     };
   };
 
@@ -121,20 +67,20 @@ export const useBlockManagement = ({
         return;
       }
       
-      console.log("No existing blocks found, creating first block with previous rundown data");
+      console.log("No existing blocks found, creating first block");
       
-      // SEMPRE criar o novo bloco com dados do espelho anterior
-      const newBlockWithData = await createBlockWithLastBlockData(selectedJournal, "Bloco 1", 1);
+      // Criar apenas o bloco básico sem dados anteriores
+      const newBlock = await createBasicBlock(selectedJournal, "Bloco 1", 1);
       
-      console.log("First block created successfully with previous data:", newBlockWithData);
+      console.log("First block created successfully:", newBlock);
       
       // Immediately update the UI
-      setBlocks([newBlockWithData]);
+      setBlocks([newBlock]);
       
       // Force refresh the blocks query
       blocosQuery.refetch();
       
-      return newBlockWithData;
+      return newBlock;
     } catch (error) {
       console.error("Erro ao adicionar bloco inicial:", error);
       
