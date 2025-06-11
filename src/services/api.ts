@@ -165,7 +165,10 @@ export const createMateria = async (materia: TablesInsert<'materias'>): Promise<
     throw error;
   }
 
-  return data as Materia;
+  return {
+    ...data,
+    titulo: data.retranca || "Sem título"
+  } as Materia;
 };
 
 export const updateMateria = async (id: string, updates: TablesInsert<'materias'>): Promise<Materia | null> => {
@@ -181,7 +184,10 @@ export const updateMateria = async (id: string, updates: TablesInsert<'materias'
     throw error;
   }
 
-  return data as Materia;
+  return {
+    ...data,
+    titulo: data.retranca || "Sem título"
+  } as Materia;
 };
 
 export const deleteMateria = async (id: string): Promise<void> => {

@@ -253,5 +253,9 @@ export const updateMateriasOrdem = async (materias: Partial<Materia>[]) => {
     throw error;
   }
   
-  return data as Materia[];
+  // Add the titulo property to each returned item
+  return data.map(item => ({
+    ...item,
+    titulo: item.retranca || "Sem título"
+  })) as Materia[];
 };
