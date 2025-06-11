@@ -144,7 +144,12 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
           className="pointer-events-auto"
         >
           <div className="w-full h-full bg-white border-l border-gray-200 shadow-lg overflow-y-auto">
-            <EditPanelHeader item={item} onClose={onClose} />
+            <EditPanelHeader 
+              item={item} 
+              onClose={onClose}
+              onSave={canEdit ? handleSave : undefined}
+              isSaving={isSaving}
+            />
             
             {canEdit && (
               <EditPanelTabs
