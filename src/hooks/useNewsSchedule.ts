@@ -388,11 +388,14 @@ export const useNewsSchedule = ({
         return 0;
       });
 
-      // Update the order of all materias
+      // Update the order of all materias with required fields
       let order = 0;
       const updates = sortedMaterias.map(item => ({
         id: item.id,
-        ordem: order++
+        ordem: order++,
+        retranca: item.retranca || "Sem título", // Include required field
+        bloco_id: item.bloco_id,
+        duracao: item.duracao || 0
       }));
 
       // Persist the updates to the database
@@ -579,10 +582,12 @@ export const useNewsSchedule = ({
       const [removed] = newBlocks.splice(source.index, 1);
       newBlocks.splice(destination.index, 0, removed);
 
-      // Update the order of the blocks
+      // Update the order of the blocks with required fields
       const updates = newBlocks.map((block, index) => ({
         id: block.id,
-        ordem: index
+        ordem: index,
+        nome: block.nome, // Include required field
+        telejornal_id: block.telejornal_id
       }));
 
       // Persist the updates to the database
@@ -630,11 +635,13 @@ export const useNewsSchedule = ({
       // Add the item to the destination
       destinationItems.splice(destination.index, 0, removed);
 
-      // Update the order of the items
+      // Update the order of the items with required fields
       const updates = destinationItems.map((item, index) => ({
         id: item.id,
         bloco_id: destinationBlockId,
-        ordem: index
+        ordem: index,
+        retranca: item.retranca || "Sem título", // Include required field
+        duracao: item.duracao || 0
       }));
 
       // If the source and destination blocks are different, update the source block items
@@ -642,7 +649,9 @@ export const useNewsSchedule = ({
         const sourceUpdates = sourceItems.map((item, index) => ({
           id: item.id,
           bloco_id: sourceBlockId,
-          ordem: index
+          ordem: index,
+          retranca: item.retranca || "Sem título", // Include required field
+          duracao: item.duracao || 0
         }));
 
         updates.push(...sourceUpdates);
@@ -668,10 +677,12 @@ export const useNewsSchedule = ({
 
   const openTeleprompter = () => {
     if (currentTelejornal) {
-      supabase
+      const updatePromise = supabase
         .from('telejornais')
         .update({ espelho_aberto: true })
-        .eq('id', currentTelejornal.id)
+        .eq('id', currentTelejornal.id);
+
+      updatePromise
         .then(() => {
           toast({
             title: "Teleprompter aberto",
