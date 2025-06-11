@@ -1,6 +1,6 @@
 
 import { supabase } from "@/integrations/supabase/client";
-import { Bloco, BlocoCreateInput, Materia } from "@/types";
+import { Bloco, BlocoCreateInput } from "@/types";
 
 export const fetchBlocosByTelejornal = async (telejornalId: string): Promise<Bloco[]> => {
   const { data, error } = await supabase
