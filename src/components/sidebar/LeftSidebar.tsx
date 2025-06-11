@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
@@ -8,7 +7,6 @@ import { Telejornal, Pauta } from "@/types";
 import { GeneralScheduleModal } from "@/components/general-schedule";
 import { PautaModal } from "@/components/PautaModal";
 import { TelejornalModal } from "@/components/TelejornalModal";
-import { PreviousRundownModal } from "@/components/previous-rundown";
 import { supabase } from "@/integrations/supabase/client";
 import { TelejornalSection } from "./TelejornalSection";
 import { PautaSection } from "./PautaSection";
@@ -29,9 +27,6 @@ export const LeftSidebar = ({
   const [isPautaModalOpen, setIsPautaModalOpen] = useState(false);
   const [isTelejornalModalOpen, setIsTelejornalModalOpen] = useState(false);
   const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
-  const [isPreviousRundownOpen, setIsPreviousRundownOpen] = useState(false);
-  const [selectedPreviousJournal, setSelectedPreviousJournal] = useState<string>("");
-  const [selectedPreviousDate, setSelectedPreviousDate] = useState<Date>(new Date());
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   const [pautas, setPautas] = useState<Pauta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -171,12 +166,6 @@ export const LeftSidebar = ({
     }
   };
 
-  const handleOpenPreviousRundown = (journalId: string, date: Date) => {
-    setSelectedPreviousJournal(journalId);
-    setSelectedPreviousDate(date);
-    setIsPreviousRundownOpen(true);
-  };
-
   return (
     <div className="w-64 bg-gray-100 h-full border-r border-gray-200 flex flex-col">
       <div className="p-4 bg-primary text-primary-foreground">
@@ -225,19 +214,7 @@ export const LeftSidebar = ({
         onActivateDualView={handleActivateDualView}
         onDeactivateDualView={handleDeactivateDualView}
         onOpenGeneralSchedule={handleOpenGeneralSchedule}
-        onOpenPreviousRundown={handleOpenPreviousRundown}
       />
-
-      {/* Previous Rundown Modal */}
-      {isPreviousRundownOpen && (
-        <PreviousRundownModal
-          isOpen={isPreviousRundownOpen}
-          onClose={() => setIsPreviousRundownOpen(false)}
-          selectedJournal={selectedPreviousJournal}
-          selectedDate={selectedPreviousDate}
-          telejornais={telejornais}
-        />
-      )}
     </div>
   );
 };

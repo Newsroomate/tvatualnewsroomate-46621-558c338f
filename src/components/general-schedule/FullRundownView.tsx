@@ -52,9 +52,9 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   } = useHybridSnapshotData({ snapshot });
 
   const { selectedMateria, selectItem, clearSelection, isSelected } = useItemSelection();
-  const { copyMateria, hasCopiedMateria } = useClipboard();
+  const { copyMateria } = useClipboard();
 
-  // Função para converter matéria híbrida em formato Materia padrão com TODOS os campos
+  // Função para converter matéria híbrida em formato Materia padrão
   const convertToStandardMateria = (materia: any, blocoId: string, blocoNome: string): Materia => {
     return {
       id: materia.id,
@@ -76,27 +76,17 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       horario_exibicao: materia.horario_exibicao,
       updated_at: materia.updated_at,
       tipo_material: materia.tipo_material || '',
-      // Campos para compatibilidade
       titulo: materia.retranca || '',
       descricao: materia.texto || '',
       tempo_estimado: materia.duracao || 0,
       apresentador: materia.reporter || '',
       link_vt: materia.clip || '',
-      created_at: materia.created_at,
-      // Campo essencial para identificar origem da cópia
-      bloco_nome: blocoNome
+      created_at: materia.created_at
     };
   };
 
-  // Função para lidar com cópia de matéria - captura TODOS os dados
+  // Função para lidar com cópia de matéria
   const handleCopyMateria = (materia: any, blocoId: string, blocoNome: string) => {
-    console.log('Copiando matéria completa:', {
-      id: materia.id,
-      retranca: materia.retranca,
-      bloco_origem: blocoNome,
-      campos_copiados: Object.keys(materia)
-    });
-    
     const standardMateria = convertToStandardMateria(materia, blocoId, blocoNome);
     copyMateria(standardMateria);
     selectItem(standardMateria);
@@ -108,16 +98,15 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     selectItem(standardMateria);
   };
 
-  // Atalhos de teclado para copiar matéria selecionada
+  // Atalhos de teclado para copiar
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: () => {
       if (selectedMateria) {
-        console.log('Copiando via Ctrl+C:', selectedMateria.retranca);
         copyMateria(selectedMateria);
       }
     },
-    onPaste: () => {}, // Paste não funciona aqui, apenas no espelho aberto
+    onPaste: () => {},
     isEspelhoOpen: true
   });
 
@@ -218,19 +207,13 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
         onBack={onBack}
         onRefresh={refreshData}
         hybridError={hybridError}
-        hasCopiedMateria={hasCopiedMateria()}
       />
 
-      {/* Instruções aprimoradas para o usuário */}
+      {/* Instruções para o usuário */}
       <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
         <p className="text-sm text-blue-800">
-          <strong>Como copiar:</strong> Clique em uma matéria para selecioná-la, depois use <kbd className="bg-blue-200 px-1 rounded">Ctrl+C</kbd> para copiar todos os dados. 
-          Você pode colar com <kbd className="bg-blue-200 px-1 rounded">Ctrl+V</kbd> em qualquer espelho aberto logo abaixo da matéria selecionada.
-          {hasCopiedMateria() && (
-            <span className="block mt-1 text-green-700 font-medium">
-              ✓ Matéria "{selectedMateria?.retranca}" copiada com todos os dados! Cole em qualquer espelho aberto.
-            </span>
-          )}
+          <strong>Dica:</strong> Clique em uma matéria para selecioná-la, depois use <kbd className="bg-blue-200 px-1 rounded">Ctrl+C</kbd> para copiar. 
+          Você pode colar com <kbd className="bg-blue-200 px-1 rounded">Ctrl+V</kbd> em qualquer espelho aberto, mesmo após fechar este modal.
         </p>
       </div>
 

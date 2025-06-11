@@ -5,8 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Telejornal } from "@/types";
-import { Monitor, MonitorX, FileText, Eye, Settings, Calendar } from "lucide-react";
-import { DatePicker } from "@/components/ui/date-picker";
+import { Monitor, MonitorX, FileText, Eye, Settings } from "lucide-react";
 
 interface MainMenuProps {
   isOpen: boolean;
@@ -16,7 +15,6 @@ interface MainMenuProps {
   onActivateDualView: (secondJournalId: string) => void;
   onDeactivateDualView: () => void;
   onOpenGeneralSchedule: () => void;
-  onOpenPreviousRundown: (journalId: string, date: Date) => void;
 }
 
 export const MainMenu = ({
@@ -26,12 +24,9 @@ export const MainMenu = ({
   selectedJournal,
   onActivateDualView,
   onDeactivateDualView,
-  onOpenGeneralSchedule,
-  onOpenPreviousRundown
+  onOpenGeneralSchedule
 }: MainMenuProps) => {
   const [secondJournalId, setSecondJournalId] = useState<string>("");
-  const [selectedJournalForRundown, setSelectedJournalForRundown] = useState<string>("");
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
 
   const availableJournals = telejornais.filter(journal => journal.id !== selectedJournal);
 
@@ -53,15 +48,6 @@ export const MainMenu = ({
     onClose();
   };
 
-  const handleOpenPreviousRundown = () => {
-    if (selectedJournalForRundown && selectedDate) {
-      onOpenPreviousRundown(selectedJournalForRundown, selectedDate);
-      setSelectedJournalForRundown("");
-      setSelectedDate(undefined);
-      onClose();
-    }
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg bg-white border border-gray-200 shadow-lg">
@@ -73,70 +59,6 @@ export const MainMenu = ({
         </DialogHeader>
         
         <div className="space-y-6 py-2">
-          {/* Espelhos Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-gray-50 rounded-lg">
-                <Calendar className="h-4 w-4 text-gray-600" />
-              </div>
-              <h3 className="text-base font-medium text-gray-800">Espelhos</h3>
-            </div>
-            
-            <div className="bg-gray-50 rounded-lg p-5 space-y-4 border border-gray-100">
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Visualize e edite espelhos de datas anteriores com total funcionalidade preservada.
-              </p>
-              
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-gray-700">
-                    Selecionar telejornal:
-                  </label>
-                  <Select value={selectedJournalForRundown} onValueChange={setSelectedJournalForRundown}>
-                    <SelectTrigger className="w-full bg-white border-gray-200 text-gray-700 hover:border-gray-300 focus:border-gray-400 transition-colors duration-200">
-                      <SelectValue placeholder="Escolha um telejornal" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 shadow-lg">
-                      {telejornais.map((journal) => (
-                        <SelectItem 
-                          key={journal.id} 
-                          value={journal.id}
-                          className="text-gray-700 hover:bg-gray-50 focus:bg-gray-50"
-                        >
-                          {journal.nome}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-gray-700">
-                    Selecionar data:
-                  </label>
-                  <DatePicker 
-                    date={selectedDate} 
-                    onDateChange={setSelectedDate}
-                    placeholder="Escolha uma data"
-                  />
-                </div>
-                
-                <Button 
-                  onClick={handleOpenPreviousRundown} 
-                  disabled={!selectedJournalForRundown || !selectedDate}
-                  className="w-full bg-gray-700 hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 text-white font-medium py-2.5 transition-colors duration-200"
-                  size="default"
-                >
-                  <Eye className="h-4 w-4 mr-2" />
-                  Abrir Espelho
-                </Button>
-              </div>
-            </div>
-          </div>
-
-          {/* Visual Separator */}
-          <Separator className="my-6 bg-gray-200" />
-
           {/* Espelho Geral Section */}
           <div className="space-y-4">
             <div className="flex items-center gap-3 mb-4">

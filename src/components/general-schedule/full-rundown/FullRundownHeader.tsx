@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, RefreshCw, Clipboard } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 
@@ -10,16 +10,9 @@ interface FullRundownHeaderProps {
   onBack: () => void;
   onRefresh: () => void;
   hybridError?: string | null;
-  hasCopiedMateria?: boolean;
 }
 
-export const FullRundownHeader = ({ 
-  snapshot, 
-  onBack, 
-  onRefresh, 
-  hybridError,
-  hasCopiedMateria = false
-}: FullRundownHeaderProps) => {
+export const FullRundownHeader = ({ snapshot, onBack, onRefresh, hybridError }: FullRundownHeaderProps) => {
   return (
     <div className="flex items-center justify-between border-b pb-4">
       <div className="flex items-center space-x-4">
@@ -43,12 +36,6 @@ export const FullRundownHeader = ({
       </div>
       
       <div className="flex items-center space-x-2">
-        {hasCopiedMateria && (
-          <Badge variant="default" className="bg-green-100 text-green-800 border-green-300">
-            <Clipboard className="h-3 w-3 mr-1" />
-            Matéria Copiada
-          </Badge>
-        )}
         {hybridError && (
           <span className="text-sm text-red-600">Erro ao carregar alterações</span>
         )}
