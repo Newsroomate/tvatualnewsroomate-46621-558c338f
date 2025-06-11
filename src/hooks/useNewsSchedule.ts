@@ -675,26 +675,26 @@ export const useNewsSchedule = ({
     }
   };
 
-  const openTeleprompter = () => {
+  const openTeleprompter = async () => {
     if (currentTelejornal) {
-      supabase
-        .from('telejornais')
-        .update({ espelho_aberto: true })
-        .eq('id', currentTelejornal.id)
-        .then(() => {
-          toast({
-            title: "Teleprompter aberto",
-            description: "O teleprompter foi aberto.",
-          });
-        })
-        .catch(error => {
-          console.error("Erro ao abrir teleprompter:", error);
-          toast({
-            title: "Erro ao abrir teleprompter",
-            description: error.message,
-            variant: "destructive"
-          });
+      try {
+        await supabase
+          .from('telejornais')
+          .update({ espelho_aberto: true })
+          .eq('id', currentTelejornal.id);
+
+        toast({
+          title: "Teleprompter aberto",
+          description: "O teleprompter foi aberto.",
         });
+      } catch (error) {
+        console.error("Erro ao abrir teleprompter:", error);
+        toast({
+          title: "Erro ao abrir teleprompter",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
     }
   };
 
