@@ -56,6 +56,13 @@ export const usePasteMateria = ({
       return;
     }
 
+    console.log('Iniciando colagem de matéria com dados completos:', {
+      id: copiedMateria.id,
+      retranca: copiedMateria.retranca,
+      bloco_origem: copiedMateria.bloco_nome || 'desconhecido',
+      campos_disponíveis: Object.keys(copiedMateria).length
+    });
+
     let targetBlockId: string;
     let insertPosition: number;
     let targetBlock: any;
@@ -72,6 +79,8 @@ export const usePasteMateria = ({
           (item: Materia) => item.id === selectedMateria.id
         );
         insertPosition = selectedIndex + 1;
+        
+        console.log(`Colando abaixo da matéria selecionada "${selectedMateria.retranca}" na posição ${insertPosition}`);
       } else {
         targetBlockId = blocks[0]?.id;
         targetBlock = blocks[0];
@@ -82,6 +91,8 @@ export const usePasteMateria = ({
       targetBlockId = blocks[0]?.id;
       targetBlock = blocks[0];
       insertPosition = blocks[0]?.items.length || 0;
+      
+      console.log(`Nenhuma matéria selecionada, colando no final do primeiro bloco na posição ${insertPosition}`);
     }
 
     if (!targetBlockId || !targetBlock) {
@@ -100,35 +111,46 @@ export const usePasteMateria = ({
       ? ` (do ${copiedMateria.bloco_nome})`
       : ' (Cópia)';
 
-    // Criar dados para nova matéria
+    // Criar dados para nova matéria preservando TODOS os campos originais
     const materiaData = {
       bloco_id: targetBlockId,
       ordem: insertPosition,
+      // Preservar TODOS os campos da matéria original
       retranca: `${copiedMateria.retranca}${sourceIndicator}`,
       texto: copiedMateria.texto || '',
+      cabeca: copiedMateria.cabeca || '',
+      gc: copiedMateria.gc || '',
       duracao: copiedMateria.duracao || 0,
       tipo_material: copiedMateria.tipo_material || '',
-      pagina: nextPageNumber,
       clip: copiedMateria.clip || '',
       tempo_clip: copiedMateria.tempo_clip || '',
       reporter: copiedMateria.reporter || '',
-      gc: copiedMateria.gc || '',
-      cabeca: copiedMateria.cabeca || '',
-      status: copiedMateria.status || 'draft'
+      status: copiedMateria.status || 'draft',
+      local_gravacao: copiedMateria.local_gravacao || '',
+      equipamento: copiedMateria.equipamento || '',
+      tags: copiedMateria.tags || [],
+      // Página sequencial no novo contexto
+      pagina: nextPageNumber
     };
+
+    console.log('Dados da matéria a ser criada:', materiaData);
 
     // Gerar ID temporário para atualização otimista
     const tempId = `temp-${Date.now()}`;
     const tempMateria: Materia = {
       id: tempId,
       titulo: copiedMateria.titulo || copiedMateria.retranca,
+      descricao: copiedMateria.descricao || copiedMateria.texto,
+      tempo_estimado: copiedMateria.tempo_estimado || copiedMateria.duracao,
+      apresentador: copiedMateria.apresentador || copiedMateria.reporter,
+      link_vt: copiedMateria.link_vt || copiedMateria.clip,
       ...materiaData,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     };
 
     // 1. ATUALIZAÇÃO OTIMISTA - Atualizar UI imediatamente
-    console.log('Iniciando atualização otimista para posição:', insertPosition);
+    console.log('Aplicando atualização otimista na posição:', insertPosition);
     
     // Marcar como atualização otimista para evitar duplicação realtime
     if (markOptimisticUpdate) {
@@ -171,20 +193,20 @@ export const usePasteMateria = ({
       : "no final do bloco";
 
     const sourceMessage = copiedMateria.bloco_nome 
-      ? ` do bloco "${copiedMateria.bloco_nome}"`
+      ? ` do bloco "${copiedMateria.bloco_nome}"` 
       : '';
 
     // Mostrar toast de sucesso imediatamente
     toast({
-      title: "Matéria colada",
-      description: `"${copiedMateria.retranca}"${sourceMessage} foi colada ${positionMessage} na página ${nextPageNumber}`,
+      title: "Matéria colada com sucesso",
+      description: `"${copiedMateria.retranca}"${sourceMessage} foi colada ${positionMessage} na página ${nextPageNumber} com todos os dados preservados`,
     });
 
     try {
       // 2. CRIAR NO BANCO DE DADOS
-      console.log('Criando matéria no banco de dados...');
+      console.log('Criando matéria no banco de dados com todos os campos...');
       const newMateria = await createMateria(materiaData);
-      console.log('Matéria criada no banco:', newMateria);
+      console.log('Matéria criada no banco com sucesso:', newMateria);
 
       // 3. ATUALIZAR ORDENS NO BANCO
       const currentTargetBlock = blocks.find(b => b.id === targetBlockId);
@@ -224,6 +246,8 @@ export const usePasteMateria = ({
           return block;
         })
       );
+
+      console.log('Colagem concluída com sucesso - matéria pronta para edição!');
 
     } catch (error) {
       console.error('Erro ao colar matéria:', error);

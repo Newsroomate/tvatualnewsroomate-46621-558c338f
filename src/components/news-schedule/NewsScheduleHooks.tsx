@@ -84,7 +84,7 @@ export const NewsScheduleHooks = ({
   // Clipboard functionality - usando hook global
   const { copiedMateria, copyMateria, clearClipboard, hasCopiedMateria } = useClipboard();
   
-  // Enhanced paste functionality with optimistic updates
+  // Enhanced paste functionality com preservação completa de dados
   const { pasteMateria } = usePasteMateria({
     blocks,
     setBlocks: setBlocksWrapper,
@@ -112,11 +112,17 @@ export const NewsScheduleHooks = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Enhanced keyboard shortcuts with better paste handling
+  // Enhanced keyboard shortcuts para cópia e colagem perfeitas
   useKeyboardShortcuts({
     selectedMateria,
-    onCopy: copyMateria,
-    onPaste: pasteMateria,
+    onCopy: (materia) => {
+      console.log('Copiando matéria selecionada:', materia.retranca);
+      copyMateria(materia);
+    },
+    onPaste: () => {
+      console.log('Colando matéria no espelho aberto');
+      pasteMateria();
+    },
     isEspelhoOpen: !!currentTelejornal?.espelho_aberto
   });
 
