@@ -38,6 +38,14 @@ export const usePasteMateria = ({
     const maxPageNumber = Math.max(...pageNumbers);
     return (maxPageNumber + 1).toString();
   };
+
+  // Função para recalcular ordens das matérias após inserção
+  const recalculateOrders = (items: Materia[], insertPosition: number): Materia[] => {
+    return items.map((item, index) => ({
+      ...item,
+      ordem: index
+    }));
+  };
   
   const pasteMateria = async () => {
     if (!copiedMateria) {
@@ -82,15 +90,15 @@ export const usePasteMateria = ({
       // Calcular o próximo número de página
       const nextPageNumber = getNextPageNumber(targetBlock.items || []);
 
-      // Criar dados para nova matéria
+      // Criar dados para nova matéria com ordem correta
       const materiaData = {
         bloco_id: targetBlockId,
-        ordem: insertPosition,
+        ordem: insertPosition, // Usar a posição de inserção como ordem
         retranca: `${copiedMateria.retranca} (Cópia)`,
         texto: copiedMateria.texto || '',
         duracao: copiedMateria.duracao || 0,
         tipo_material: copiedMateria.tipo_material || '',
-        pagina: nextPageNumber, // Usar o número de página calculado sequencialmente
+        pagina: nextPageNumber,
         clip: copiedMateria.clip || '',
         reporter: copiedMateria.reporter || '',
         gc: copiedMateria.gc || '',
@@ -98,22 +106,62 @@ export const usePasteMateria = ({
         status: copiedMateria.status || 'draft'
       };
 
-      // Criar a nova matéria
-      const newMateria = await createMateria(materiaData);
-
-      // Atualizar o estado local usando o padrão de updater function
+      // Primeiro, atualizar o estado local para ter feedback visual instantâneo
       setBlocks((currentBlocks: any[]) => 
         currentBlocks.map(block => {
           if (block.id === targetBlockId) {
             const updatedItems = [...block.items];
-            updatedItems.splice(insertPosition, 0, newMateria);
             
-            // Recalcular o tempo total
-            const totalTime = updatedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
+            // Criar uma matéria temporária para inserção visual
+            const tempMateria = {
+              ...materiaData,
+              id: `temp-${Date.now()}`, // ID temporário
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            };
+            
+            // Inserir na posição correta
+            updatedItems.splice(insertPosition, 0, tempMateria);
+            
+            // Recalcular as ordens de todas as matérias após a inserção
+            const reorderedItems = recalculateOrders(updatedItems, insertPosition);
+            
+            // Calcular o tempo total
+            const totalTime = reorderedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
             
             return {
               ...block,
-              items: updatedItems,
+              items: reorderedItems,
+              totalTime
+            };
+          }
+          return block;
+        })
+      );
+
+      // Criar a nova matéria no banco de dados
+      const newMateria = await createMateria(materiaData);
+
+      // Atualizar o estado novamente com a matéria real do banco de dados
+      setBlocks((currentBlocks: any[]) => 
+        currentBlocks.map(block => {
+          if (block.id === targetBlockId) {
+            // Remover a matéria temporária e inserir a real
+            const itemsWithoutTemp = block.items.filter(item => !item.id.toString().startsWith('temp-'));
+            const updatedItems = [...itemsWithoutTemp];
+            
+            // Inserir a matéria real na posição correta
+            updatedItems.splice(insertPosition, 0, newMateria);
+            
+            // Recalcular as ordens
+            const reorderedItems = recalculateOrders(updatedItems, insertPosition);
+            
+            // Calcular o tempo total
+            const totalTime = reorderedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
+            
+            return {
+              ...block,
+              items: reorderedItems,
               totalTime
             };
           }
@@ -128,6 +176,15 @@ export const usePasteMateria = ({
 
     } catch (error) {
       console.error('Erro ao colar matéria:', error);
+      
+      // Reverter o estado local em caso de erro, removendo a matéria temporária
+      setBlocks((currentBlocks: any[]) => 
+        currentBlocks.map(block => ({
+          ...block,
+          items: block.items.filter(item => !item.id.toString().startsWith('temp-'))
+        }))
+      );
+      
       toast({
         title: "Erro ao colar",
         description: "Não foi possível colar a matéria",
