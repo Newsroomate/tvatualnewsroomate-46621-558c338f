@@ -1,11 +1,15 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
+import { Calendar, MonitorSpeaker, Archive, Eye, ArrowLeft, BarChart } from "lucide-react";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Telejornal } from "@/types";
-import { Monitor, MonitorX, FileText, Eye, Settings } from "lucide-react";
+import { ClosedRundownSnapshot, fetchClosedRundownSnapshots } from "@/services/snapshots-api";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 interface MainMenuProps {
   isOpen: boolean;
@@ -15,7 +19,10 @@ interface MainMenuProps {
   onActivateDualView: (secondJournalId: string) => void;
   onDeactivateDualView: () => void;
   onOpenGeneralSchedule: () => void;
+  onOpenHistorico: (snapshot: ClosedRundownSnapshot) => void;
 }
+
+type MenuSection = 'main' | 'general-schedule' | 'dual-view' | 'historico';
 
 export const MainMenu = ({
   isOpen,
@@ -24,130 +31,287 @@ export const MainMenu = ({
   selectedJournal,
   onActivateDualView,
   onDeactivateDualView,
-  onOpenGeneralSchedule
+  onOpenGeneralSchedule,
+  onOpenHistorico
 }: MainMenuProps) => {
-  const [secondJournalId, setSecondJournalId] = useState<string>("");
+  const [currentSection, setCurrentSection] = useState<MenuSection>('main');
+  const [selectedSecondJournal, setSelectedSecondJournal] = useState<string>("");
+  
+  // Histórico states
+  const [selectedTelejornal, setSelectedTelejornal] = useState<string>("all");
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const [espelhos, setEspelhos] = useState<ClosedRundownSnapshot[]>([]);
+  const [isLoadingEspelhos, setIsLoadingEspelhos] = useState(false);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
 
-  const availableJournals = telejornais.filter(journal => journal.id !== selectedJournal);
+  const handleClose = () => {
+    setCurrentSection('main');
+    onClose();
+  };
+
+  const handleBackToMain = () => {
+    setCurrentSection('main');
+  };
 
   const handleActivateDualView = () => {
-    if (secondJournalId) {
-      onActivateDualView(secondJournalId);
-      setSecondJournalId("");
-      onClose();
+    if (selectedSecondJournal && selectedJournal) {
+      onActivateDualView(selectedSecondJournal);
+      handleClose();
     }
   };
 
   const handleDeactivateDualView = () => {
     onDeactivateDualView();
-    onClose();
+    handleClose();
   };
 
   const handleOpenGeneralSchedule = () => {
     onOpenGeneralSchedule();
-    onClose();
+    handleClose();
   };
 
+  const loadEspelhos = async () => {
+    if (!selectedDate) return;
+    
+    setIsLoadingEspelhos(true);
+    try {
+      const data = await fetchClosedRundownSnapshots(
+        selectedTelejornal === "all" ? undefined : selectedTelejornal,
+        selectedDate
+      );
+      setEspelhos(data);
+    } catch (error) {
+      console.error("Erro ao carregar espelhos históricos:", error);
+      setEspelhos([]);
+    } finally {
+      setIsLoadingEspelhos(false);
+    }
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    setSelectedDate(date);
+    setIsDatePickerOpen(false);
+  };
+
+  const handleOpenHistoricoSection = () => {
+    setCurrentSection('historico');
+    loadEspelhos();
+  };
+
+  const handleOpenHistoricoEspelho = (espelho: ClosedRundownSnapshot) => {
+    onOpenHistorico(espelho);
+    handleClose();
+  };
+
+  // Atualizar espelhos quando filtros mudarem
+  React.useEffect(() => {
+    if (currentSection === 'historico') {
+      loadEspelhos();
+    }
+  }, [selectedTelejornal, selectedDate, currentSection]);
+
+  const availableJournals = telejornais.filter(journal => journal.id !== selectedJournal);
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg bg-white border border-gray-200 shadow-lg">
-        <DialogHeader className="pb-6 border-b border-gray-100">
-          <DialogTitle className="flex items-center gap-3 text-xl font-medium text-gray-800">
-            <Settings className="h-5 w-5 text-gray-600" />
-            Menu Principal
+    <Dialog open={isOpen} onOpenChange={handleClose}>
+      <DialogContent className="sm:max-w-md h-auto max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogHeader className="pb-4">
+          <DialogTitle className="flex items-center">
+            {currentSection !== 'main' && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleBackToMain}
+                className="mr-2 p-1"
+              >
+                <ArrowLeft className="h-4 w-4" />
+              </Button>
+            )}
+            {currentSection === 'main' && 'Menu Principal'}
+            {currentSection === 'general-schedule' && 'Espelho Geral'}
+            {currentSection === 'dual-view' && 'Visualização Dual'}
+            {currentSection === 'historico' && 'Histórico de Espelhos'}
           </DialogTitle>
         </DialogHeader>
-        
-        <div className="space-y-6 py-2">
-          {/* Espelho Geral Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-gray-50 rounded-lg">
-                <FileText className="h-4 w-4 text-gray-600" />
-              </div>
-              <h3 className="text-base font-medium text-gray-800">Espelho Geral</h3>
-            </div>
-            
-            <div className="bg-gray-50 rounded-lg p-5 space-y-4 border border-gray-100">
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Visualize todos os espelhos fechados do sistema em uma única tela para acompanhamento geral.
-              </p>
-              
-              <Button 
+
+        <div className="flex-1 overflow-y-auto">
+          {/* Main Menu */}
+          {currentSection === 'main' && (
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start"
                 onClick={handleOpenGeneralSchedule}
-                className="w-full bg-gray-700 hover:bg-gray-800 text-white font-medium py-2.5 transition-colors duration-200"
-                size="default"
               >
-                <Eye className="h-4 w-4 mr-2" />
-                Abrir Espelho Geral
+                <BarChart className="h-4 w-4 mr-3" />
+                Espelho Geral
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={() => setCurrentSection('dual-view')}
+              >
+                <MonitorSpeaker className="h-4 w-4 mr-3" />
+                Visualização Dual
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full justify-start"
+                onClick={handleOpenHistoricoSection}
+              >
+                <Archive className="h-4 w-4 mr-3" />
+                Histórico de Espelhos
               </Button>
             </div>
-          </div>
+          )}
 
-          {/* Visual Separator */}
-          <Separator className="my-6 bg-gray-200" />
-
-          {/* Visualização Dual Section */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 bg-gray-50 rounded-lg">
-                <Monitor className="h-4 w-4 text-gray-600" />
+          {/* Dual View Section */}
+          {currentSection === 'dual-view' && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">
+                  Telejornal secundário:
+                </label>
+                <Select value={selectedSecondJournal} onValueChange={setSelectedSecondJournal}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecionar telejornal" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableJournals.map((journal) => (
+                      <SelectItem key={journal.id} value={journal.id}>
+                        {journal.nome}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <h3 className="text-base font-medium text-gray-800">Visualização Dual</h3>
+
+              <div className="flex space-x-2">
+                <Button 
+                  onClick={handleActivateDualView} 
+                  disabled={!selectedSecondJournal}
+                  className="flex-1"
+                >
+                  Ativar Visualização Dual
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={handleDeactivateDualView}
+                  className="flex-1"
+                >
+                  Desativar
+                </Button>
+              </div>
             </div>
-            
-            <div className="bg-gray-50 rounded-lg p-5 space-y-5 border border-gray-100">
-              <p className="text-sm text-gray-600 leading-relaxed">
-                Ative a visualização dual para trabalhar com dois telejornais simultaneamente em painéis separados.
-              </p>
-              
-              <div className="space-y-4">
-                <div className="space-y-3">
-                  <label className="text-sm font-medium text-gray-700">
-                    Selecionar segundo telejornal:
-                  </label>
-                  <Select value={secondJournalId} onValueChange={setSecondJournalId}>
-                    <SelectTrigger className="w-full bg-white border-gray-200 text-gray-700 hover:border-gray-300 focus:border-gray-400 transition-colors duration-200">
-                      <SelectValue placeholder="Escolha um telejornal para visualização dual" />
+          )}
+
+          {/* Histórico Section */}
+          {currentSection === 'historico' && (
+            <div className="space-y-4">
+              {/* Filtros */}
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Telejornal:</label>
+                  <Select value={selectedTelejornal} onValueChange={setSelectedTelejornal}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecionar telejornal" />
                     </SelectTrigger>
-                    <SelectContent className="bg-white border-gray-200 shadow-lg">
-                      {availableJournals.map((journal) => (
-                        <SelectItem 
-                          key={journal.id} 
-                          value={journal.id}
-                          className="text-gray-700 hover:bg-gray-50 focus:bg-gray-50"
-                        >
+                    <SelectContent>
+                      <SelectItem value="all">Todos os telejornais</SelectItem>
+                      {telejornais.map((journal) => (
+                        <SelectItem key={journal.id} value={journal.id}>
                           {journal.nome}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 </div>
-                
-                <div className="grid grid-cols-2 gap-3">
-                  <Button 
-                    onClick={handleActivateDualView} 
-                    disabled={!secondJournalId}
-                    className="bg-gray-700 hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 text-white font-medium py-2.5 transition-colors duration-200"
-                    size="default"
-                  >
-                    <Monitor className="h-4 w-4 mr-2" />
-                    Ativar
-                  </Button>
-                  
-                  <Button 
-                    variant="outline" 
-                    onClick={handleDeactivateDualView}
-                    className="border-gray-300 text-gray-700 hover:bg-gray-50 hover:border-gray-400 font-medium py-2.5 transition-colors duration-200"
-                    size="default"
-                  >
-                    <MonitorX className="h-4 w-4 mr-2" />
-                    Desativar
-                  </Button>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Data:</label>
+                  <Popover open={isDatePickerOpen} onOpenChange={setIsDatePickerOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="w-full justify-start text-left font-normal"
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        {selectedDate ? (
+                          format(selectedDate, "dd/MM/yyyy", { locale: ptBR })
+                        ) : (
+                          "Selecionar data"
+                        )}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <CalendarComponent
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={handleDateSelect}
+                        disabled={(date) => date > new Date()}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
+
+              {/* Lista de espelhos */}
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {isLoadingEspelhos ? (
+                  <div className="text-sm text-gray-500 text-center py-4">
+                    Carregando espelhos...
+                  </div>
+                ) : espelhos.length === 0 ? (
+                  <div className="text-sm text-gray-500 text-center py-4">
+                    Nenhum espelho encontrado para esta data
+                  </div>
+                ) : (
+                  espelhos.map((espelho) => (
+                    <div
+                      key={espelho.id}
+                      className="p-3 bg-gray-50 rounded-md border border-gray-200 hover:bg-gray-100 cursor-pointer transition-colors"
+                      onClick={() => handleOpenHistoricoEspelho(espelho)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="text-sm font-medium text-gray-800 truncate">
+                            {espelho.nome_telejornal}
+                          </h4>
+                          <div className="flex items-center space-x-2 mt-1">
+                            <span className="text-xs text-gray-500">
+                              {format(new Date(espelho.data_referencia), "dd/MM", { locale: ptBR })}
+                            </span>
+                            {espelho.horario && (
+                              <span className="text-xs text-gray-500">
+                                {espelho.horario}
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {espelho.estrutura_completa.metadata.total_blocos} bloco(s)
+                          </div>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 flex-shrink-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleOpenHistoricoEspelho(espelho);
+                          }}
+                        >
+                          <Eye className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

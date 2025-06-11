@@ -12,7 +12,6 @@ import { HistoricoEspelhosModal } from "@/components/historico-espelhos";
 import { supabase } from "@/integrations/supabase/client";
 import { TelejornalSection } from "./TelejornalSection";
 import { PautaSection } from "./PautaSection";
-import { HistoricoEspelhosSection } from "./HistoricoEspelhosSection";
 import { MainMenu } from "./MainMenu";
 
 interface LeftSidebarProps {
@@ -213,13 +212,6 @@ export const LeftSidebar = ({
           isLoading={isLoading}
           onDataChange={loadData}
         />
-
-        {/* Histórico de Espelhos Section */}
-        <HistoricoEspelhosSection
-          telejornais={telejornais}
-          onOpenHistorico={handleOpenHistorico}
-          isLoading={isLoading}
-        />
       </div>
 
       {/* Modals */}
@@ -243,6 +235,7 @@ export const LeftSidebar = ({
         onActivateDualView={handleActivateDualView}
         onDeactivateDualView={handleDeactivateDualView}
         onOpenGeneralSchedule={handleOpenGeneralSchedule}
+        onOpenHistorico={handleOpenHistorico}
       />
     </div>
   );
