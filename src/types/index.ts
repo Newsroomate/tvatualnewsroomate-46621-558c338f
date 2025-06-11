@@ -1,4 +1,3 @@
-
 export interface Telejornal {
   id: string;
   created_at?: string;
@@ -50,9 +49,6 @@ export interface Materia {
   tempo_estimado?: number;
   apresentador?: string;
   link_vt?: string;
-  // Adding field for copy/paste functionality
-  bloco_nome?: string;  // Name of the block (used when copying from closed rundowns)
-  bloco_ordem?: number; // Order of the block in the rundown (used when copying from closed rundowns)
 }
 
 export interface MateriaCreateInput {

@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, RefreshCw, Copy } from "lucide-react";
+import { ArrowLeft, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 
@@ -10,16 +10,9 @@ interface FullRundownHeaderProps {
   onBack: () => void;
   onRefresh: () => void;
   hybridError?: string | null;
-  hasCopiedItem?: boolean;
 }
 
-export const FullRundownHeader = ({ 
-  snapshot, 
-  onBack, 
-  onRefresh, 
-  hybridError, 
-  hasCopiedItem 
-}: FullRundownHeaderProps) => {
+export const FullRundownHeader = ({ snapshot, onBack, onRefresh, hybridError }: FullRundownHeaderProps) => {
   return (
     <div className="flex items-center justify-between border-b pb-4">
       <div className="flex items-center space-x-4">
@@ -43,12 +36,6 @@ export const FullRundownHeader = ({
       </div>
       
       <div className="flex items-center space-x-2">
-        {hasCopiedItem && (
-          <Badge className="bg-blue-100 text-blue-800 border-blue-300 flex items-center">
-            <Copy className="h-3 w-3 mr-1" />
-            <span>Matéria na área de transferência</span>
-          </Badge>
-        )}
         {hybridError && (
           <span className="text-sm text-red-600">Erro ao carregar alterações</span>
         )}

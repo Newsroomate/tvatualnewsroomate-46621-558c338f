@@ -81,7 +81,7 @@ export const NewsScheduleHooks = ({
     isSelected
   } = useItemSelection();
 
-  // Clipboard functionality - Agora usando uma única instância global
+  // Clipboard functionality
   const { copiedMateria, copyMateria, clearClipboard, hasCopiedMateria } = useClipboard();
   
   // Enhanced paste functionality with optimistic updates
@@ -90,11 +90,7 @@ export const NewsScheduleHooks = ({
     setBlocks: setBlocksWrapper,
     selectedMateria,
     copiedMateria,
-    clearClipboard,
-    // Adicionar flag para marcar atualizações otimistas e evitar duplicação por realtime
-    markOptimisticUpdate: (id) => {
-      console.log("Marcando update otimista para ID:", id);
-    }
+    clearClipboard
   });
 
   // Actions handlers
@@ -119,8 +115,8 @@ export const NewsScheduleHooks = ({
   // Enhanced keyboard shortcuts with better paste handling
   useKeyboardShortcuts({
     selectedMateria,
-    onCopy: copyMateria, // Garantindo que a função de copiar está sendo passada corretamente
-    onPaste: pasteMateria, // Garantindo que a função de colar está sendo passada corretamente
+    onCopy: copyMateria,
+    onPaste: pasteMateria,
     isEspelhoOpen: !!currentTelejornal?.espelho_aberto
   });
 
@@ -161,11 +157,6 @@ export const NewsScheduleHooks = ({
     handleModelApplied,
     handleViewSavedModels,
     handleMateriaSelect,
-    
-    // Clipboard handlers explícitos - para garantir acesso no componente filho
-    copyMateria,
-    pasteMateria,
-    hasCopiedMateria,
     
     // Other props
     isDualViewMode,
