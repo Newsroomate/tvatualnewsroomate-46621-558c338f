@@ -2,6 +2,8 @@
 import { Materia } from '@/types';
 import { createMateria, updateMateria } from '@/services/materias-api';
 import { toast } from '@/hooks/use-toast';
+import { useOrderCalculation } from './useOrderCalculation';
+import { useRef } from 'react';
 
 interface UsePasteMateriaProps {
   blocks: any[];
@@ -18,6 +20,8 @@ export const usePasteMateria = ({
   copiedMateria,
   clearClipboard
 }: UsePasteMateriaProps) => {
+  const { calculateInsertOrder, normalizeOrders, getItemsToUpdate } = useOrderCalculation();
+  const operationQueue = useRef<Set<string>>(new Set());
   
   // Função para calcular o próximo número de página no bloco
   const getNextPageNumber = (blockItems: Materia[]): string => {
@@ -39,16 +43,10 @@ export const usePasteMateria = ({
     return (maxPageNumber + 1).toString();
   };
 
-  // Função para recalcular ordens das matérias após inserção
-  const recalculateOrders = (items: Materia[]): Materia[] => {
-    return items.map((item, index) => ({
-      ...item,
-      ordem: index
-    }));
-  };
-
   // Função para atualizar ordens das matérias no banco de dados
   const updateMateriasOrders = async (materiasToUpdate: Materia[]) => {
+    if (materiasToUpdate.length === 0) return;
+    
     const updatePromises = materiasToUpdate.map(materia => 
       updateMateria(materia.id, { ordem: materia.ordem })
     );
@@ -74,6 +72,16 @@ export const usePasteMateria = ({
       return;
     }
 
+    // Generate unique operation ID to prevent duplicate operations
+    const operationId = `paste-${selectedMateria.id}-${Date.now()}`;
+    
+    if (operationQueue.current.has(operationId)) {
+      console.log('Operation already in progress, skipping duplicate');
+      return;
+    }
+    
+    operationQueue.current.add(operationId);
+
     try {
       // Encontrar o bloco que contém a matéria selecionada
       const targetBlock = blocks.find(block => 
@@ -91,33 +99,16 @@ export const usePasteMateria = ({
 
       const targetBlockId = targetBlock.id;
       
-      // Ordenar os itens do bloco por ordem para garantir consistência
-      const sortedItems = [...targetBlock.items].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+      // Calculate the new order for the inserted materia
+      const newOrder = calculateInsertOrder(targetBlock.items, selectedMateria);
       
-      // Encontrar o índice da matéria selecionada nos itens ordenados
-      const selectedIndex = sortedItems.findIndex(
-        (item: Materia) => item.id === selectedMateria.id
-      );
-      
-      if (selectedIndex === -1) {
-        toast({
-          title: "Erro ao colar",
-          description: "Matéria selecionada não encontrada no bloco",
-          variant: "destructive"
-        });
-        return;
-      }
-
-      const insertPosition = selectedIndex + 1; // Sempre colar logo abaixo da selecionada
-      const newOrdem = insertPosition; // A nova ordem será a posição de inserção
-
       // Calcular o próximo número de página
-      const nextPageNumber = getNextPageNumber(sortedItems);
+      const nextPageNumber = getNextPageNumber(targetBlock.items);
 
       // Criar dados para nova matéria
       const materiaData = {
         bloco_id: targetBlockId,
-        ordem: newOrdem,
+        ordem: newOrder,
         retranca: `${copiedMateria.retranca} (Cópia)`,
         texto: copiedMateria.texto || '',
         duracao: copiedMateria.duracao || 0,
@@ -130,33 +121,30 @@ export const usePasteMateria = ({
         status: copiedMateria.status || 'draft'
       };
 
-      // Primeiro, atualizar o estado local para ter feedback visual instantâneo
+      // Create temporary item for instant visual feedback
+      const tempMateria = {
+        ...materiaData,
+        id: `temp-${operationId}`,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      // Update local state instantly
       setBlocks((currentBlocks: any[]) => 
         currentBlocks.map(block => {
           if (block.id === targetBlockId) {
-            // Criar uma cópia dos itens ordenados por ordem
-            const itemsSortedByOrder = [...block.items].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
+            // Add temporary item to the correct position
+            const updatedItems = [...block.items, tempMateria];
             
-            // Criar uma matéria temporária para inserção visual
-            const tempMateria = {
-              ...materiaData,
-              id: `temp-${Date.now()}`, // ID temporário
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            };
+            // Normalize all orders to ensure proper sequence
+            const normalizedItems = normalizeOrders(updatedItems);
             
-            // Inserir na posição correta
-            itemsSortedByOrder.splice(insertPosition, 0, tempMateria);
-            
-            // Recalcular as ordens de todas as matérias após a inserção
-            const reorderedItems = recalculateOrders(itemsSortedByOrder);
-            
-            // Calcular o tempo total
-            const totalTime = reorderedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
+            // Calculate total time
+            const totalTime = normalizedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
             
             return {
               ...block,
-              items: reorderedItems,
+              items: normalizedItems,
               totalTime
             };
           }
@@ -164,45 +152,43 @@ export const usePasteMateria = ({
         })
       );
 
-      // Criar a nova matéria no banco de dados
+      // Create the new materia in the database
       const newMateria = await createMateria(materiaData);
 
-      // Atualizar as ordens das matérias que vieram após a inserção
-      const currentBlock = blocks.find(b => b.id === targetBlockId);
-      if (currentBlock) {
-        const itemsToUpdate = currentBlock.items
-          .filter((item: Materia) => !item.id.toString().startsWith('temp-') && item.ordem >= newOrdem)
-          .map((item: Materia) => ({
-            ...item,
-            ordem: item.ordem + 1
-          }));
+      // Get items that need order updates (those after the insertion point)
+      const itemsToUpdate = getItemsToUpdate(
+        targetBlock.items.filter(item => !item.id.toString().startsWith('temp-')), 
+        newOrder
+      ).map(item => ({
+        ...item,
+        ordem: (item.ordem || 0) + 1
+      }));
 
-        // Atualizar as ordens no banco de dados se houver itens para atualizar
-        if (itemsToUpdate.length > 0) {
-          await updateMateriasOrders(itemsToUpdate);
-        }
+      // Update orders in database if needed
+      if (itemsToUpdate.length > 0) {
+        await updateMateriasOrders(itemsToUpdate);
       }
 
-      // Atualizar o estado novamente com a matéria real do banco de dados
+      // Replace temporary item with real one and normalize all orders
       setBlocks((currentBlocks: any[]) => 
         currentBlocks.map(block => {
           if (block.id === targetBlockId) {
-            // Remover a matéria temporária
-            const itemsWithoutTemp = block.items.filter(item => !item.id.toString().startsWith('temp-'));
+            // Remove temporary item and add real one
+            const itemsWithoutTemp = block.items.filter(
+              item => !item.id.toString().startsWith('temp-')
+            );
             
-            // Adicionar a matéria real na posição correta
-            const updatedItems = [...itemsWithoutTemp];
-            updatedItems.splice(insertPosition, 0, newMateria);
+            const updatedItems = [...itemsWithoutTemp, newMateria];
             
-            // Garantir que todas as ordens estejam corretas
-            const finalItems = recalculateOrders(updatedItems);
+            // Normalize orders to ensure sequential integers
+            const normalizedItems = normalizeOrders(updatedItems);
             
-            // Calcular o tempo total
-            const totalTime = finalItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
+            // Calculate total time
+            const totalTime = normalizedItems.reduce((sum, item) => sum + (item.duracao || 0), 0);
             
             return {
               ...block,
-              items: finalItems,
+              items: normalizedItems,
               totalTime
             };
           }
@@ -218,11 +204,14 @@ export const usePasteMateria = ({
     } catch (error) {
       console.error('Erro ao colar matéria:', error);
       
-      // Reverter o estado local em caso de erro, removendo a matéria temporária
+      // Remove temporary item on error
       setBlocks((currentBlocks: any[]) => 
         currentBlocks.map(block => ({
           ...block,
-          items: block.items.filter(item => !item.id.toString().startsWith('temp-'))
+          items: block.items.filter(item => 
+            !item.id.toString().startsWith('temp-') || 
+            !item.id.toString().includes(operationId)
+          )
         }))
       );
       
@@ -231,6 +220,11 @@ export const usePasteMateria = ({
         description: "Não foi possível colar a matéria",
         variant: "destructive"
       });
+    } finally {
+      // Clean up operation queue
+      setTimeout(() => {
+        operationQueue.current.delete(operationId);
+      }, 1000);
     }
   };
 

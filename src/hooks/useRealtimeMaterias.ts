@@ -31,36 +31,20 @@ export const useRealtimeMaterias = ({
   const insertMateriaInOrder = (items: Materia[], newMateria: Materia): Materia[] => {
     const newOrder = newMateria.ordem || 0;
     
-    // Primeiro, ordenar os itens existentes por ordem
+    // Sort existing items by order
     const sortedItems = [...items].sort((a, b) => (a.ordem || 0) - (b.ordem || 0));
     
-    // Verificar se já existe uma matéria com a mesma ordem
-    const existingWithSameOrder = sortedItems.find(item => item.ordem === newOrder);
+    // Find the correct position to insert based on order
+    const insertIndex = sortedItems.findIndex(item => (item.ordem || 0) > newOrder);
     
-    if (existingWithSameOrder) {
-      // Se existe uma matéria com a mesma ordem, inserir logo após ela
-      const existingIndex = sortedItems.findIndex(item => item.id === existingWithSameOrder.id);
-      const insertIndex = existingIndex + 1;
-      sortedItems.splice(insertIndex, 0, newMateria);
-      
-      // Recalcular as ordens para manter sequência
-      return sortedItems.map((item, index) => ({
-        ...item,
-        ordem: index
-      }));
+    if (insertIndex === -1) {
+      // Insert at the end if no item has a higher order
+      return [...sortedItems, newMateria];
     } else {
-      // Encontrar a posição correta para inserir baseado na ordem
-      const insertIndex = sortedItems.findIndex(item => (item.ordem || 0) > newOrder);
-      
-      if (insertIndex === -1) {
-        // Inserir no final se nenhum item tem ordem maior
-        return [...sortedItems, newMateria];
-      } else {
-        // Inserir na posição correta
-        const updatedItems = [...sortedItems];
-        updatedItems.splice(insertIndex, 0, newMateria);
-        return updatedItems;
-      }
+      // Insert at the correct position
+      const updatedItems = [...sortedItems];
+      updatedItems.splice(insertIndex, 0, newMateria);
+      return updatedItems;
     }
   };
 
@@ -90,32 +74,33 @@ export const useRealtimeMaterias = ({
       console.log(`Processing standard materia ${isInsert ? 'insert' : 'update'}:`, updatedMateria);
       
       setBlocks(currentBlocks => {
-        // Create new blocks array to ensure React detects the state change
         return currentBlocks.map(block => {
           // Find the block that contains this materia
           if (block.id === updatedMateria.bloco_id) {
             let updatedItems;
             
             if (isInsert) {
-              // Para inserções, verificar se a matéria já existe (evitar duplicatas)
+              // For inserts, check if the materia already exists (avoid duplicates)
               const itemExists = block.items.some(item => item.id === updatedMateria.id);
               
               if (!itemExists) {
-                // Verificar se é uma matéria temporária sendo substituída pela real
+                // Check if this is replacing a temporary item
                 const tempMateriaIndex = block.items.findIndex(item => 
                   item.id.toString().startsWith('temp-') && 
-                  item.ordem === updatedMateria.ordem
+                  Math.abs((item.ordem || 0) - (updatedMateria.ordem || 0)) < 0.5
                 );
                 
                 if (tempMateriaIndex !== -1) {
-                  // Substituir a matéria temporária pela real
+                  // Replace the temporary materia with the real one
                   updatedItems = [...block.items];
                   updatedItems[tempMateriaIndex] = processUpdatedMateria(updatedMateria);
-                  updatedItems = sortItemsByOrder(updatedItems);
                 } else {
-                  // Inserir a nova matéria na posição correta baseada na ordem
+                  // Insert the new materia in the correct position based on order
                   updatedItems = insertMateriaInOrder(block.items, processUpdatedMateria(updatedMateria));
                 }
+                
+                // Always sort by order to ensure consistency
+                updatedItems = sortItemsByOrder(updatedItems);
               } else {
                 updatedItems = block.items;
               }
