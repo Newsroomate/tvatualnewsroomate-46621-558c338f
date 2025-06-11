@@ -1,31 +1,9 @@
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatTime } from "../../news-schedule/utils";
 import { MateriaViewCard } from "./MateriaViewCard";
 import { EditableMateriaForm } from "./EditableMateriaForm";
-
-interface EditableMateria {
-  id: string;
-  retranca: string;
-  clip?: string;
-  duracao: number;
-  texto?: string;
-  cabeca?: string;
-  gc?: string;
-  status?: string;
-  pagina?: string;
-  reporter?: string;
-  ordem: number;
-  tags?: string[];
-  local_gravacao?: string;
-  equipamento?: string;
-  bloco_id?: string;
-  bloco_nome?: string;
-  bloco_ordem?: number;
-  tipo_material?: string;
-  tempo_clip?: string;
-}
+import { EditableMateria } from "../types";
 
 interface BlocoCardProps {
   bloco: any;
