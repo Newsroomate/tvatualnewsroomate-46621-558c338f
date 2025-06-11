@@ -95,16 +95,22 @@ export const usePasteMateria = ({
 
     const nextPageNumber = getNextPageNumber(targetBlock.items);
 
+    // Determinar origem da matéria copiada para o nome da cópia
+    const sourceIndicator = copiedMateria.bloco_nome 
+      ? ` (do ${copiedMateria.bloco_nome})`
+      : ' (Cópia)';
+
     // Criar dados para nova matéria
     const materiaData = {
       bloco_id: targetBlockId,
       ordem: insertPosition,
-      retranca: `${copiedMateria.retranca} (Cópia)`,
+      retranca: `${copiedMateria.retranca}${sourceIndicator}`,
       texto: copiedMateria.texto || '',
       duracao: copiedMateria.duracao || 0,
       tipo_material: copiedMateria.tipo_material || '',
       pagina: nextPageNumber,
       clip: copiedMateria.clip || '',
+      tempo_clip: copiedMateria.tempo_clip || '',
       reporter: copiedMateria.reporter || '',
       gc: copiedMateria.gc || '',
       cabeca: copiedMateria.cabeca || '',
@@ -115,7 +121,7 @@ export const usePasteMateria = ({
     const tempId = `temp-${Date.now()}`;
     const tempMateria: Materia = {
       id: tempId,
-      titulo: copiedMateria.titulo || copiedMateria.retranca, // Fix: add titulo property
+      titulo: copiedMateria.titulo || copiedMateria.retranca,
       ...materiaData,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
@@ -164,10 +170,14 @@ export const usePasteMateria = ({
       ? `logo abaixo da matéria "${selectedMateria.retranca}"` 
       : "no final do bloco";
 
+    const sourceMessage = copiedMateria.bloco_nome 
+      ? ` do bloco "${copiedMateria.bloco_nome}"`
+      : '';
+
     // Mostrar toast de sucesso imediatamente
     toast({
       title: "Matéria colada",
-      description: `"${tempMateria.retranca}" foi colada ${positionMessage} na página ${nextPageNumber}`,
+      description: `"${copiedMateria.retranca}"${sourceMessage} foi colada ${positionMessage} na página ${nextPageNumber}`,
     });
 
     try {

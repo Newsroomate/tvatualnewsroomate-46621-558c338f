@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { RefreshCw } from "lucide-react";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
@@ -52,7 +51,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   } = useHybridSnapshotData({ snapshot });
 
   const { selectedMateria, selectItem, clearSelection, isSelected } = useItemSelection();
-  const { copyMateria } = useClipboard();
+  const { copyMateria, hasCopiedMateria } = useClipboard();
 
   // Função para converter matéria híbrida em formato Materia padrão
   const convertToStandardMateria = (materia: any, blocoId: string, blocoNome: string): Materia => {
@@ -81,7 +80,8 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       tempo_estimado: materia.duracao || 0,
       apresentador: materia.reporter || '',
       link_vt: materia.clip || '',
-      created_at: materia.created_at
+      created_at: materia.created_at,
+      bloco_nome: blocoNome
     };
   };
 
@@ -207,6 +207,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
         onBack={onBack}
         onRefresh={refreshData}
         hybridError={hybridError}
+        hasCopiedMateria={hasCopiedMateria()}
       />
 
       {/* Instruções para o usuário */}
@@ -214,6 +215,11 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
         <p className="text-sm text-blue-800">
           <strong>Dica:</strong> Clique em uma matéria para selecioná-la, depois use <kbd className="bg-blue-200 px-1 rounded">Ctrl+C</kbd> para copiar. 
           Você pode colar com <kbd className="bg-blue-200 px-1 rounded">Ctrl+V</kbd> em qualquer espelho aberto, mesmo após fechar este modal.
+          {hasCopiedMateria() && (
+            <span className="block mt-1 text-green-700 font-medium">
+              ✓ Matéria copiada! Você pode colar em qualquer espelho aberto.
+            </span>
+          )}
         </p>
       </div>
 

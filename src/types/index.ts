@@ -1,3 +1,4 @@
+
 export interface Telejornal {
   id: string;
   created_at?: string;
@@ -49,6 +50,8 @@ export interface Materia {
   tempo_estimado?: number;
   apresentador?: string;
   link_vt?: string;
+  // New field for cross-rundown copy functionality
+  bloco_nome?: string;  // Nome do bloco de origem (para matérias copiadas do espelho geral)
 }
 
 export interface MateriaCreateInput {

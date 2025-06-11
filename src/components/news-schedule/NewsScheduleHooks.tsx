@@ -81,7 +81,7 @@ export const NewsScheduleHooks = ({
     isSelected
   } = useItemSelection();
 
-  // Clipboard functionality
+  // Clipboard functionality - usando hook global
   const { copiedMateria, copyMateria, clearClipboard, hasCopiedMateria } = useClipboard();
   
   // Enhanced paste functionality with optimistic updates
@@ -157,6 +157,11 @@ export const NewsScheduleHooks = ({
     handleModelApplied,
     handleViewSavedModels,
     handleMateriaSelect,
+    
+    // Clipboard functionality
+    copyMateria,
+    pasteMateria,
+    hasCopiedMateria,
     
     // Other props
     isDualViewMode,
