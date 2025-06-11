@@ -33,15 +33,32 @@ interface EditableMateria {
   tags?: string[];
   local_gravacao?: string;
   equipamento?: string;
+  bloco_id: string;
 }
 
 export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   const [editingMateria, setEditingMateria] = useState<string | null>(null);
   const [editData, setEditData] = useState<EditableMateria | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [materiasData, setMateriasData] = useState<any[]>([]);
   const { toast } = useToast();
 
   const blocos = snapshot.estrutura_completa.blocos || [];
+
+  // Initialize materias data from snapshot
+  useEffect(() => {
+    const allMaterias: any[] = [];
+    blocos.forEach(bloco => {
+      const materias = getMateriasList(bloco);
+      materias.forEach(materia => {
+        allMaterias.push({
+          ...materia,
+          bloco_id: bloco.id
+        });
+      });
+    });
+    setMateriasData(allMaterias);
+  }, [snapshot]);
 
   const getMateriasList = (bloco: any) => {
     if (bloco.materias && Array.isArray(bloco.materias)) {
@@ -53,45 +70,81 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     return [];
   };
 
-  const handleEditMateria = (materia: any) => {
+  const getCurrentMateriaData = (materiaId: string) => {
+    return materiasData.find(m => m.id === materiaId);
+  };
+
+  const handleEditMateria = (materia: any, blocoId: string) => {
+    const currentData = getCurrentMateriaData(materia.id) || materia;
+    
     setEditingMateria(materia.id);
     setEditData({
       id: materia.id,
-      retranca: materia.retranca || '',
-      clip: materia.clip || '',
-      duracao: materia.duracao || 0,
-      texto: materia.texto || '',
-      cabeca: materia.cabeca || '',
-      gc: materia.gc || '',
-      status: materia.status || 'draft',
-      pagina: materia.pagina || '',
-      reporter: materia.reporter || '',
-      ordem: materia.ordem || 0,
-      tags: materia.tags || [],
-      local_gravacao: materia.local_gravacao || '',
-      equipamento: materia.equipamento || ''
+      retranca: currentData.retranca || '',
+      clip: currentData.clip || '',
+      duracao: currentData.duracao || 0,
+      texto: currentData.texto || '',
+      cabeca: currentData.cabeca || '',
+      gc: currentData.gc || '',
+      status: currentData.status || 'draft',
+      pagina: currentData.pagina || '',
+      reporter: currentData.reporter || '',
+      ordem: currentData.ordem || 0,
+      tags: currentData.tags || [],
+      local_gravacao: currentData.local_gravacao || '',
+      equipamento: currentData.equipamento || '',
+      bloco_id: blocoId
     });
   };
 
   const handleSaveMateria = async () => {
     if (!editData) return;
 
+    // Validate required fields
+    if (!editData.retranca.trim()) {
+      toast({
+        title: "Erro de validação",
+        description: "O campo retranca é obrigatório.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
-      await updateMateria(editData.id, {
-        retranca: editData.retranca,
-        clip: editData.clip,
+      console.log("Salvando matéria:", editData);
+      
+      const updatePayload = {
+        retranca: editData.retranca.trim(),
+        clip: editData.clip || null,
         duracao: editData.duracao,
-        texto: editData.texto,
-        cabeca: editData.cabeca,
-        gc: editData.gc,
-        status: editData.status,
-        pagina: editData.pagina,
-        reporter: editData.reporter,
-        tags: editData.tags,
-        local_gravacao: editData.local_gravacao,
-        tempo_clip: editData.clip
-      });
+        texto: editData.texto || null,
+        cabeca: editData.cabeca || null,
+        gc: editData.gc || null,
+        status: editData.status || 'draft',
+        pagina: editData.pagina || null,
+        reporter: editData.reporter || null,
+        tags: editData.tags || [],
+        local_gravacao: editData.local_gravacao || null,
+        tempo_clip: editData.clip || null,
+        ordem: editData.ordem,
+        bloco_id: editData.bloco_id
+      };
+
+      console.log("Payload para atualização:", updatePayload);
+
+      const updatedMateria = await updateMateria(editData.id, updatePayload);
+      
+      console.log("Matéria atualizada com sucesso:", updatedMateria);
+
+      // Update local state to reflect changes immediately
+      setMateriasData(prevMaterias => 
+        prevMaterias.map(materia => 
+          materia.id === editData.id 
+            ? { ...materia, ...updatePayload }
+            : materia
+        )
+      );
 
       toast({
         title: "Matéria atualizada",
@@ -104,7 +157,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       console.error("Erro ao salvar matéria:", error);
       toast({
         title: "Erro ao salvar",
-        description: "Não foi possível salvar as alterações.",
+        description: `Não foi possível salvar as alterações: ${error.message || 'Erro desconhecido'}`,
         variant: "destructive"
       });
     } finally {
@@ -125,6 +178,217 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       case 'urgent': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
+  };
+
+  const renderMateriaContent = (materia: any, blocoId: string) => {
+    const currentData = getCurrentMateriaData(materia.id) || materia;
+    
+    if (editingMateria === materia.id) {
+      return (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-4">
+            <h4 className="font-medium">Editando Matéria</h4>
+            <div className="flex space-x-2">
+              <Button size="sm" onClick={handleSaveMateria} disabled={isSaving}>
+                <Save className="h-4 w-4 mr-1" />
+                {isSaving ? 'Salvando...' : 'Salvar'}
+              </Button>
+              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
+                <X className="h-4 w-4 mr-1" />
+                Cancelar
+              </Button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">Retranca *</label>
+              <Input
+                value={editData?.retranca || ''}
+                onChange={(e) => setEditData(prev => prev ? {...prev, retranca: e.target.value} : null)}
+                placeholder="Retranca da matéria"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Clip</label>
+              <Input
+                value={editData?.clip || ''}
+                onChange={(e) => setEditData(prev => prev ? {...prev, clip: e.target.value} : null)}
+                placeholder="Código do clip"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Duração (segundos)</label>
+              <Input
+                type="number"
+                value={editData?.duracao || 0}
+                onChange={(e) => setEditData(prev => prev ? {...prev, duracao: parseInt(e.target.value) || 0} : null)}
+                placeholder="0"
+                min="0"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Status</label>
+              <Select 
+                value={editData?.status || 'draft'} 
+                onValueChange={(value) => setEditData(prev => prev ? {...prev, status: value} : null)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                  <SelectItem value="published">Published</SelectItem>
+                  <SelectItem value="urgent">Urgent</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Página</label>
+              <Input
+                value={editData?.pagina || ''}
+                onChange={(e) => setEditData(prev => prev ? {...prev, pagina: e.target.value} : null)}
+                placeholder="Página"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-1">Repórter</label>
+              <Input
+                value={editData?.reporter || ''}
+                onChange={(e) => setEditData(prev => prev ? {...prev, reporter: e.target.value} : null)}
+                placeholder="Nome do repórter"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Cabeça</label>
+            <Textarea
+              value={editData?.cabeca || ''}
+              onChange={(e) => setEditData(prev => prev ? {...prev, cabeca: e.target.value} : null)}
+              placeholder="Texto da cabeça"
+              rows={3}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Texto</label>
+            <Textarea
+              value={editData?.texto || ''}
+              onChange={(e) => setEditData(prev => prev ? {...prev, texto: e.target.value} : null)}
+              placeholder="Texto da matéria"
+              rows={4}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">GC</label>
+            <Textarea
+              value={editData?.gc || ''}
+              onChange={(e) => setEditData(prev => prev ? {...prev, gc: e.target.value} : null)}
+              placeholder="Texto do GC"
+              rows={2}
+            />
+          </div>
+        </div>
+      );
+    }
+
+    // View Mode
+    return (
+      <div>
+        <div className="flex items-start justify-between mb-3">
+          <div>
+            <h4 className="font-medium text-lg">{currentData.retranca}</h4>
+            <div className="flex items-center space-x-2 mt-1">
+              {currentData.pagina && (
+                <Badge variant="outline" className="text-xs">
+                  Pág. {currentData.pagina}
+                </Badge>
+              )}
+              <Badge className={`text-xs ${getStatusClass(currentData.status || 'draft')}`}>
+                {currentData.status || 'draft'}
+              </Badge>
+              <span className="text-xs text-muted-foreground">
+                {formatTime(currentData.duracao || 0)}
+              </span>
+            </div>
+          </div>
+          <Button size="sm" variant="outline" onClick={() => handleEditMateria(materia, blocoId)}>
+            <Edit2 className="h-4 w-4 mr-1" />
+            Editar
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          {currentData.clip && (
+            <div>
+              <span className="font-medium">Clip: </span>
+              <span className="font-mono">{currentData.clip}</span>
+            </div>
+          )}
+          {currentData.reporter && (
+            <div>
+              <span className="font-medium">Repórter: </span>
+              <span>{currentData.reporter}</span>
+            </div>
+          )}
+          {currentData.local_gravacao && (
+            <div>
+              <span className="font-medium">Local: </span>
+              <span>{currentData.local_gravacao}</span>
+            </div>
+          )}
+          {currentData.equipamento && (
+            <div>
+              <span className="font-medium">Equipamento: </span>
+              <span>{currentData.equipamento}</span>
+            </div>
+          )}
+        </div>
+
+        {currentData.cabeca && (
+          <div className="mt-3">
+            <span className="font-medium text-sm">Cabeça:</span>
+            <p className="mt-1 text-sm bg-gray-50 p-2 rounded">{currentData.cabeca}</p>
+          </div>
+        )}
+
+        {currentData.texto && (
+          <div className="mt-3">
+            <span className="font-medium text-sm">Texto:</span>
+            <p className="mt-1 text-sm bg-gray-50 p-2 rounded">{currentData.texto}</p>
+          </div>
+        )}
+
+        {currentData.gc && (
+          <div className="mt-3">
+            <span className="font-medium text-sm">GC:</span>
+            <p className="mt-1 text-sm bg-gray-50 p-2 rounded">{currentData.gc}</p>
+          </div>
+        )}
+
+        {currentData.tags && currentData.tags.length > 0 && (
+          <div className="mt-3">
+            <span className="font-medium text-sm">Tags:</span>
+            <div className="flex flex-wrap gap-1 mt-1">
+              {currentData.tags.map((tag: string, tagIndex: number) => (
+                <Badge key={tagIndex} variant="secondary" className="text-xs">
+                  {tag}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -175,207 +439,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
                 <div className="space-y-4">
                   {materias.map((materia: any, materiaIndex: number) => (
                     <div key={materia.id || `materia-${materiaIndex}`} className="border rounded-lg p-4">
-                      {editingMateria === materia.id ? (
-                        // Edit Mode
-                        <div className="space-y-4">
-                          <div className="flex items-center justify-between mb-4">
-                            <h4 className="font-medium">Editando Matéria</h4>
-                            <div className="flex space-x-2">
-                              <Button size="sm" onClick={handleSaveMateria} disabled={isSaving}>
-                                <Save className="h-4 w-4 mr-1" />
-                                {isSaving ? 'Salvando...' : 'Salvar'}
-                              </Button>
-                              <Button size="sm" variant="outline" onClick={handleCancelEdit}>
-                                <X className="h-4 w-4 mr-1" />
-                                Cancelar
-                              </Button>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Retranca *</label>
-                              <Input
-                                value={editData?.retranca || ''}
-                                onChange={(e) => setEditData(prev => prev ? {...prev, retranca: e.target.value} : null)}
-                                placeholder="Retranca da matéria"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Clip</label>
-                              <Input
-                                value={editData?.clip || ''}
-                                onChange={(e) => setEditData(prev => prev ? {...prev, clip: e.target.value} : null)}
-                                placeholder="Código do clip"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Duração (segundos)</label>
-                              <Input
-                                type="number"
-                                value={editData?.duracao || 0}
-                                onChange={(e) => setEditData(prev => prev ? {...prev, duracao: parseInt(e.target.value) || 0} : null)}
-                                placeholder="0"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Status</label>
-                              <Select 
-                                value={editData?.status || 'draft'} 
-                                onValueChange={(value) => setEditData(prev => prev ? {...prev, status: value} : null)}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="draft">Draft</SelectItem>
-                                  <SelectItem value="pending">Pending</SelectItem>
-                                  <SelectItem value="published">Published</SelectItem>
-                                  <SelectItem value="urgent">Urgent</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Página</label>
-                              <Input
-                                value={editData?.pagina || ''}
-                                onChange={(e) => setEditData(prev => prev ? {...prev, pagina: e.target.value} : null)}
-                                placeholder="Página"
-                              />
-                            </div>
-
-                            <div>
-                              <label className="block text-sm font-medium mb-1">Repórter</label>
-                              <Input
-                                value={editData?.reporter || ''}
-                                onChange={(e) => setEditData(prev => prev ? {...prev, reporter: e.target.value} : null)}
-                                placeholder="Nome do repórter"
-                              />
-                            </div>
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Cabeça</label>
-                            <Textarea
-                              value={editData?.cabeca || ''}
-                              onChange={(e) => setEditData(prev => prev ? {...prev, cabeca: e.target.value} : null)}
-                              placeholder="Texto da cabeça"
-                              rows={3}
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium mb-1">Texto</label>
-                            <Textarea
-                              value={editData?.texto || ''}
-                              onChange={(e) => setEditData(prev => prev ? {...prev, texto: e.target.value} : null)}
-                              placeholder="Texto da matéria"
-                              rows={4}
-                            />
-                          </div>
-
-                          <div>
-                            <label className="block text-sm font-medium mb-1">GC</label>
-                            <Textarea
-                              value={editData?.gc || ''}
-                              onChange={(e) => setEditData(prev => prev ? {...prev, gc: e.target.value} : null)}
-                              placeholder="Texto do GC"
-                              rows={2}
-                            />
-                          </div>
-                        </div>
-                      ) : (
-                        // View Mode
-                        <div>
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <h4 className="font-medium text-lg">{materia.retranca}</h4>
-                              <div className="flex items-center space-x-2 mt-1">
-                                {materia.pagina && (
-                                  <Badge variant="outline" className="text-xs">
-                                    Pág. {materia.pagina}
-                                  </Badge>
-                                )}
-                                <Badge className={`text-xs ${getStatusClass(materia.status || 'draft')}`}>
-                                  {materia.status || 'draft'}
-                                </Badge>
-                                <span className="text-xs text-muted-foreground">
-                                  {formatTime(materia.duracao || 0)}
-                                </span>
-                              </div>
-                            </div>
-                            <Button size="sm" variant="outline" onClick={() => handleEditMateria(materia)}>
-                              <Edit2 className="h-4 w-4 mr-1" />
-                              Editar
-                            </Button>
-                          </div>
-
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            {materia.clip && (
-                              <div>
-                                <span className="font-medium">Clip: </span>
-                                <span className="font-mono">{materia.clip}</span>
-                              </div>
-                            )}
-                            {materia.reporter && (
-                              <div>
-                                <span className="font-medium">Repórter: </span>
-                                <span>{materia.reporter}</span>
-                              </div>
-                            )}
-                            {materia.local_gravacao && (
-                              <div>
-                                <span className="font-medium">Local: </span>
-                                <span>{materia.local_gravacao}</span>
-                              </div>
-                            )}
-                            {materia.equipamento && (
-                              <div>
-                                <span className="font-medium">Equipamento: </span>
-                                <span>{materia.equipamento}</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {materia.cabeca && (
-                            <div className="mt-3">
-                              <span className="font-medium text-sm">Cabeça:</span>
-                              <p className="mt-1 text-sm bg-gray-50 p-2 rounded">{materia.cabeca}</p>
-                            </div>
-                          )}
-
-                          {materia.texto && (
-                            <div className="mt-3">
-                              <span className="font-medium text-sm">Texto:</span>
-                              <p className="mt-1 text-sm bg-gray-50 p-2 rounded">{materia.texto}</p>
-                            </div>
-                          )}
-
-                          {materia.gc && (
-                            <div className="mt-3">
-                              <span className="font-medium text-sm">GC:</span>
-                              <p className="mt-1 text-sm bg-gray-50 p-2 rounded">{materia.gc}</p>
-                            </div>
-                          )}
-
-                          {materia.tags && materia.tags.length > 0 && (
-                            <div className="mt-3">
-                              <span className="font-medium text-sm">Tags:</span>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {materia.tags.map((tag: string, tagIndex: number) => (
-                                  <Badge key={tagIndex} variant="secondary" className="text-xs">
-                                    {tag}
-                                  </Badge>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                      {renderMateriaContent(materia, bloco.id)}
                     </div>
                   ))}
 
