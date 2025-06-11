@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useHybridMateriaUpdate } from "@/hooks/useHybridMateriaUpdate";
 import { useHybridSnapshotData } from "@/hooks/useHybridSnapshotData";
@@ -7,11 +6,13 @@ import { useItemSelection } from "@/hooks/useItemSelection";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { Materia } from "@/types";
 import { EditableMateria } from "../types";
+import { useToast } from "@/hooks/use-toast";
 
 export const useMateriaOperations = (snapshot: ClosedRundownSnapshot) => {
   const [editingMateria, setEditingMateria] = useState<string | null>(null);
   const [editData, setEditData] = useState<EditableMateria | null>(null);
   const { updateMateriaHybrid, isSaving } = useHybridMateriaUpdate();
+  const { toast } = useToast();
   
   const { 
     hybridData: blocos, 
@@ -24,54 +25,124 @@ export const useMateriaOperations = (snapshot: ClosedRundownSnapshot) => {
   const { selectedMateria, selectItem, clearSelection, isSelected } = useItemSelection();
   const { copyMateria } = useClipboard();
 
-  // Função para converter matéria híbrida em formato Materia padrão com TODOS os campos preservados
+  // Função melhorada para converter matéria híbrida em formato Materia padrão com TODOS os campos preservados
   const convertToStandardMateria = (materia: any, blocoId: string, blocoNome: string): Materia => {
-    return {
+    console.log('Convertendo matéria com todos os campos:', {
+      materiaOriginal: materia,
+      camposDetectados: Object.keys(materia),
+      blocoInfo: { blocoId, blocoNome }
+    });
+
+    // Garantir que todos os campos sejam preservados, incluindo campos novos ou opcionais
+    const standardMateria: Materia = {
+      // Campos obrigatórios
       id: materia.id,
       bloco_id: blocoId,
       ordem: materia.ordem || 0,
       retranca: materia.retranca || '',
-      clip: materia.clip || '',
-      tempo_clip: materia.tempo_clip || '',
+      titulo: materia.retranca || materia.titulo || '',
+      
+      // Campos de tempo e duração
       duracao: materia.duracao || 0,
+      tempo_estimado: materia.tempo_estimado || materia.duracao || 0,
+      tempo_clip: materia.tempo_clip || '',
+      horario_exibicao: materia.horario_exibicao,
+      
+      // Campos de conteúdo
       texto: materia.texto || '',
+      descricao: materia.descricao || materia.texto || '',
       cabeca: materia.cabeca || '',
       gc: materia.gc || '',
+      
+      // Campos de mídia
+      clip: materia.clip || '',
+      link_vt: materia.link_vt || materia.clip || '',
+      
+      // Campos de pessoas
+      reporter: materia.reporter || '',
+      apresentador: materia.apresentador || materia.reporter || '',
+      
+      // Campos de metadados
       status: materia.status || 'draft',
       pagina: materia.pagina || '',
-      reporter: materia.reporter || '',
-      local_gravacao: materia.local_gravacao || '',
-      tags: materia.tags || [],
-      equipamento: materia.equipamento || '',
-      horario_exibicao: materia.horario_exibicao,
-      updated_at: materia.updated_at,
       tipo_material: materia.tipo_material || '',
-      titulo: materia.retranca || '',
-      descricao: materia.texto || '',
-      tempo_estimado: materia.duracao || 0,
-      apresentador: materia.reporter || '',
-      link_vt: materia.clip || '',
-      created_at: materia.created_at
+      
+      // Campos de produção
+      local_gravacao: materia.local_gravacao || '',
+      equipamento: materia.equipamento || '',
+      tags: Array.isArray(materia.tags) ? materia.tags : (materia.tags ? [materia.tags] : []),
+      
+      // Timestamps
+      created_at: materia.created_at || new Date().toISOString(),
+      updated_at: materia.updated_at || new Date().toISOString(),
+
+      // Campos específicos para compatibilidade com snapshots
+      is_from_snapshot: true,
     };
+
+    // Preservar campos extras que podem existir no snapshot mas não na interface padrão
+    const extraFields = Object.keys(materia).filter(key => 
+      !Object.hasOwnProperty.call(standardMateria, key) && 
+      key !== 'bloco_nome' && 
+      key !== 'bloco_ordem' && 
+      key !== 'isEdited'
+    );
+
+    extraFields.forEach(field => {
+      (standardMateria as any)[field] = materia[field];
+    });
+
+    console.log('Matéria convertida com todos os campos preservados:', {
+      camposOriginais: Object.keys(materia).length,
+      camposConvertidos: Object.keys(standardMateria).length,
+      camposExtras: extraFields,
+      materiaFinal: standardMateria
+    });
+
+    return standardMateria;
   };
 
   const handleCopyMateria = (materia: any, blocoId: string, blocoNome: string) => {
-    console.log('Copiando matéria do histórico:', {
+    console.log('Iniciando cópia de matéria do histórico com preservação completa:', {
       id: materia.id,
       retranca: materia.retranca,
-      texto: materia.texto,
-      duracao: materia.duracao,
-      todos_campos: materia
+      todosOsCampos: materia,
+      blocoInfo: { blocoId, blocoNome }
     });
     
     const standardMateria = convertToStandardMateria(materia, blocoId, blocoNome);
-    console.log('Matéria convertida para formato padrão:', standardMateria);
+    
+    // Validar se todos os campos importantes foram preservados
+    const camposImportantes = ['retranca', 'texto', 'duracao', 'clip', 'reporter', 'pagina', 'cabeca', 'gc', 'status', 'tipo_material'];
+    const camposPreservados = camposImportantes.filter(campo => {
+      const original = materia[campo];
+      const convertido = standardMateria[campo as keyof Materia];
+      return original === convertido || (!original && !convertido);
+    });
+
+    console.log('Validação de preservação de campos:', {
+      camposImportantes: camposImportantes.length,
+      camposPreservados: camposPreservados.length,
+      preservacaoCompleta: camposImportantes.length === camposPreservados.length
+    });
     
     copyMateria(standardMateria);
     selectItem(standardMateria);
+
+    // Toast melhorado com informações sobre campos preservados
+    toast({
+      title: "Matéria copiada do histórico",
+      description: `"${standardMateria.retranca}" foi copiada com ${Object.keys(standardMateria).length} campos preservados. Use Ctrl+V para colar no espelho atual.`,
+    });
   };
 
   const handleSelectMateria = (materia: any, blocoId: string, blocoNome: string) => {
+    console.log('Selecionando matéria:', {
+      id: materia.id,
+      retranca: materia.retranca,
+      bloco: blocoNome
+    });
+    
     const standardMateria = convertToStandardMateria(materia, blocoId, blocoNome);
     selectItem(standardMateria);
   };

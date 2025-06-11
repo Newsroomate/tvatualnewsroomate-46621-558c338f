@@ -1,7 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, User, FileText, Copy } from "lucide-react";
+import { Clock, User, FileText, Copy, CheckCircle2 } from "lucide-react";
 import { formatTime } from "../news-schedule/utils";
 
 interface MaterialCardProps {
@@ -42,16 +42,36 @@ export const MaterialCard = ({
     }
   };
 
+  // Contador de campos preenchidos para mostrar completude da matéria
+  const camposPreenchidos = [
+    materia.retranca,
+    materia.texto,
+    materia.clip,
+    materia.reporter,
+    materia.pagina,
+    materia.cabeca,
+    materia.gc,
+    materia.tipo_material,
+    materia.local_gravacao,
+    materia.equipamento,
+    materia.tempo_clip
+  ].filter(campo => campo && campo.toString().trim() !== '').length;
+
   return (
     <div 
-      className={`bg-white border rounded p-3 text-sm cursor-pointer transition-colors ${
-        isSelected ? 'ring-2 ring-primary bg-blue-50' : 'hover:bg-gray-50'
+      className={`bg-white border rounded p-3 text-sm cursor-pointer transition-all duration-200 ${
+        isSelected 
+          ? 'ring-2 ring-primary bg-blue-50 border-blue-300 shadow-sm' 
+          : 'hover:bg-gray-50 hover:border-gray-300'
       }`}
       onClick={handleClick}
     >
       <div className="flex items-start justify-between mb-2">
         <div className="flex-1">
           <div className="flex items-center space-x-2 mb-1">
+            {isSelected && (
+              <CheckCircle2 className="h-4 w-4 text-blue-600" />
+            )}
             <span className="font-medium">{materia.retranca || materia.titulo || `Matéria ${materiaIndex + 1}`}</span>
             {materia.clip && (
               <Badge variant="secondary" className="text-xs font-mono">
@@ -63,6 +83,10 @@ export const MaterialCard = ({
                 {materia.status}
               </Badge>
             )}
+            {/* Indicador de completude dos campos */}
+            <Badge variant="outline" className="text-xs" title={`${camposPreenchidos} campos preenchidos`}>
+              {camposPreenchidos} campos
+            </Badge>
           </div>
           <div className="flex items-center space-x-4 text-xs text-muted-foreground">
             {materia.pagina && <span>Pág. {materia.pagina}</span>}
@@ -77,17 +101,26 @@ export const MaterialCard = ({
               {formatTime(materia.duracao || 0)}
             </span>
             {materia.ordem && <span>Ordem: {materia.ordem}</span>}
+            {materia.tipo_material && (
+              <Badge variant="outline" className="text-xs">
+                {materia.tipo_material}
+              </Badge>
+            )}
           </div>
         </div>
         
-        {/* Botão de cópia */}
+        {/* Botão de cópia melhorado */}
         {onCopyMateria && (
           <Button
             variant="ghost"
             size="sm"
             onClick={handleCopyClick}
-            className="h-6 w-6 p-0 hover:bg-blue-100"
-            title="Copiar matéria"
+            className={`h-7 w-7 p-0 transition-colors ${
+              isSelected 
+                ? 'hover:bg-blue-200 text-blue-700' 
+                : 'hover:bg-blue-100 text-blue-600'
+            }`}
+            title={`Copiar matéria com ${camposPreenchidos} campos preservados`}
           >
             <Copy className="h-3 w-3" />
           </Button>
@@ -115,6 +148,23 @@ export const MaterialCard = ({
         <div className="mt-2 p-2 bg-yellow-50 rounded text-xs">
           <div className="font-medium text-yellow-800 mb-1">GC:</div>
           <p className="text-yellow-700">{materia.gc}</p>
+        </div>
+      )}
+
+      {/* Indicadores adicionais para campos preenchidos */}
+      {(materia.local_gravacao || materia.equipamento || materia.tempo_clip) && (
+        <div className="mt-2 pt-2 border-t border-gray-100">
+          <div className="flex flex-wrap gap-1 text-xs text-muted-foreground">
+            {materia.local_gravacao && (
+              <Badge variant="outline" className="text-xs">Local: {materia.local_gravacao}</Badge>
+            )}
+            {materia.equipamento && (
+              <Badge variant="outline" className="text-xs">Equip: {materia.equipamento}</Badge>
+            )}
+            {materia.tempo_clip && (
+              <Badge variant="outline" className="text-xs">Tempo: {materia.tempo_clip}</Badge>
+            )}
+          </div>
         </div>
       )}
     </div>
