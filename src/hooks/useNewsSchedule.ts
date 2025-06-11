@@ -677,12 +677,10 @@ export const useNewsSchedule = ({
 
   const openTeleprompter = () => {
     if (currentTelejornal) {
-      const updatePromise = supabase
+      supabase
         .from('telejornais')
         .update({ espelho_aberto: true })
-        .eq('id', currentTelejornal.id);
-
-      updatePromise
+        .eq('id', currentTelejornal.id)
         .then(() => {
           toast({
             title: "Teleprompter aberto",
