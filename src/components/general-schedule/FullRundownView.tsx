@@ -1,21 +1,15 @@
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Edit2, Save, X, RefreshCw, CheckCircle, Copy } from "lucide-react";
-import { format } from "date-fns";
-import { formatTime } from "../news-schedule/utils";
+import { RefreshCw } from "lucide-react";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { useHybridMateriaUpdate } from "@/hooks/useHybridMateriaUpdate";
 import { useHybridSnapshotData } from "@/hooks/useHybridSnapshotData";
-import { Textarea } from "@/components/ui/textarea";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useItemSelection } from "@/hooks/useItemSelection";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { Materia } from "@/types";
+import { FullRundownHeader } from "./full-rundown/FullRundownHeader";
+import { BlocoCard } from "./full-rundown/BlocoCard";
 
 interface FullRundownViewProps {
   snapshot: ClosedRundownSnapshot;
@@ -49,7 +43,6 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   const [editData, setEditData] = useState<EditableMateria | null>(null);
   const { updateMateriaHybrid, isSaving } = useHybridMateriaUpdate();
   
-  // Usar o novo hook para dados híbridos
   const { 
     hybridData: blocos, 
     isLoading: isLoadingHybrid, 
@@ -58,7 +51,6 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     updateLocalMateria
   } = useHybridSnapshotData({ snapshot });
 
-  // Sistema de seleção e clipboard
   const { selectedMateria, selectItem, clearSelection, isSelected } = useItemSelection();
   const { copyMateria } = useClipboard();
 
@@ -84,7 +76,6 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       horario_exibicao: materia.horario_exibicao,
       updated_at: materia.updated_at,
       tipo_material: materia.tipo_material || '',
-      // Campos para compatibilidade
       titulo: materia.retranca || '',
       descricao: materia.texto || '',
       tempo_estimado: materia.duracao || 0,
@@ -101,6 +92,12 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     selectItem(standardMateria);
   };
 
+  // Função para lidar com seleção de matéria
+  const handleSelectMateria = (materia: any, blocoId: string, blocoNome: string) => {
+    const standardMateria = convertToStandardMateria(materia, blocoId, blocoNome);
+    selectItem(standardMateria);
+  };
+
   // Atalhos de teclado para copiar
   useKeyboardShortcuts({
     selectedMateria,
@@ -109,19 +106,9 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
         copyMateria(selectedMateria);
       }
     },
-    onPaste: () => {}, // Não usado no espelho geral
+    onPaste: () => {},
     isEspelhoOpen: true
   });
-
-  const getMateriasList = (bloco: any) => {
-    if (bloco.materias && Array.isArray(bloco.materias)) {
-      return bloco.materias;
-    }
-    if (bloco.items && Array.isArray(bloco.items)) {
-      return bloco.items;
-    }
-    return [];
-  };
 
   const handleEditMateria = (materia: any, blocoId: string, blocoNome: string, blocoOrdem: number) => {
     if (!materia || !materia.id) {
@@ -157,7 +144,6 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       return;
     }
 
-    // Validate required fields
     if (!editData.retranca || !editData.retranca.trim()) {
       return;
     }
@@ -174,10 +160,8 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
         bloco_nome: editData.bloco_nome
       });
       
-      // Update local state immediately (optimistic update)
       updateLocalMateria(editData.id, editData);
       
-      // Determina se é de snapshot baseado na ausência de bloco_id válido
       const isFromSnapshot = !editData.bloco_id || editData.bloco_id === '';
       
       const updatedMateria = await updateMateriaHybrid(
@@ -192,7 +176,6 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
       setEditData(null);
     } catch (error: any) {
       console.error("Erro ao salvar matéria:", error);
-      // Em caso de erro, recarregar dados para voltar ao estado anterior
       refreshData();
     }
   };
@@ -202,268 +185,8 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     setEditData(null);
   };
 
-  const getStatusClass = (status: string): string => {
-    switch (status?.toLowerCase()) {
-      case 'published': return 'bg-green-100 text-green-800';
-      case 'draft': return 'bg-gray-100 text-gray-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'urgent': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const renderMateriaContent = (materia: any, blocoId: string, blocoNome: string, blocoOrdem: number) => {
-    const standardMateria = convertToStandardMateria(materia, blocoId, blocoNome);
-    const isSelectedMateria = isSelected(materia.id);
-
-    if (editingMateria === materia.id) {
-      return (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between mb-4">
-            <h4 className="font-medium">Editando Matéria</h4>
-            <div className="flex space-x-2">
-              <Button size="sm" onClick={handleSaveMateria} disabled={isSaving}>
-                <Save className="h-4 w-4 mr-1" />
-                {isSaving ? 'Salvando...' : 'Salvar'}
-              </Button>
-              <Button size="sm" variant="outline" onClick={handleCancelEdit} disabled={isSaving}>
-                <X className="h-4 w-4 mr-1" />
-                Cancelar
-              </Button>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Retranca *</label>
-              <Input
-                value={editData?.retranca || ''}
-                onChange={(e) => setEditData(prev => prev ? {...prev, retranca: e.target.value} : null)}
-                placeholder="Retranca da matéria"
-                required
-                disabled={isSaving}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Clip</label>
-              <Input
-                value={editData?.clip || ''}
-                onChange={(e) => setEditData(prev => prev ? {...prev, clip: e.target.value} : null)}
-                placeholder="Código do clip"
-                disabled={isSaving}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Duração (segundos)</label>
-              <Input
-                type="number"
-                value={editData?.duracao || 0}
-                onChange={(e) => setEditData(prev => prev ? {...prev, duracao: parseInt(e.target.value) || 0} : null)}
-                placeholder="0"
-                min="0"
-                disabled={isSaving}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Status</label>
-              <Select 
-                value={editData?.status || 'draft'} 
-                onValueChange={(value) => setEditData(prev => prev ? {...prev, status: value} : null)}
-                disabled={isSaving}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Página</label>
-              <Input
-                value={editData?.pagina || ''}
-                onChange={(e) => setEditData(prev => prev ? {...prev, pagina: e.target.value} : null)}
-                placeholder="Página"
-                disabled={isSaving}
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Repórter</label>
-              <Input
-                value={editData?.reporter || ''}
-                onChange={(e) => setEditData(prev => prev ? {...prev, reporter: e.target.value} : null)}
-                placeholder="Nome do repórter"
-                disabled={isSaving}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Cabeça</label>
-            <Textarea
-              value={editData?.cabeca || ''}
-              onChange={(e) => setEditData(prev => prev ? {...prev, cabeca: e.target.value} : null)}
-              placeholder="Texto da cabeça"
-              rows={3}
-              disabled={isSaving}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Texto</label>
-            <Textarea
-              value={editData?.texto || ''}
-              onChange={(e) => setEditData(prev => prev ? {...prev, texto: e.target.value} : null)}
-              placeholder="Texto da matéria"
-              rows={4}
-              disabled={isSaving}
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">GC</label>
-            <Textarea
-              value={editData?.gc || ''}
-              onChange={(e) => setEditData(prev => prev ? {...prev, gc: e.target.value} : null)}
-              placeholder="Texto do GC"
-              rows={2}
-              disabled={isSaving}
-            />
-          </div>
-        </div>
-      );
-    }
-
-    // View Mode
-    return (
-      <div 
-        className={`cursor-pointer p-2 rounded transition-colors ${
-          isSelectedMateria ? 'bg-blue-50 border-2 border-blue-200' : 'hover:bg-gray-50'
-        }`}
-        onClick={() => selectItem(standardMateria)}
-      >
-        <div className="flex items-start justify-between mb-3">
-          <div>
-            <div className="flex items-center space-x-2">
-              <h4 className="font-medium text-lg">{materia.retranca}</h4>
-              {materia.isEdited && (
-                <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                  <CheckCircle className="h-3 w-3 mr-1" />
-                  Editada
-                </Badge>
-              )}
-            </div>
-            <div className="flex items-center space-x-2 mt-1">
-              {materia.pagina && (
-                <Badge variant="outline" className="text-xs">
-                  Pág. {materia.pagina}
-                </Badge>
-              )}
-              <Badge className={`text-xs ${getStatusClass(materia.status || 'draft')}`}>
-                {materia.status || 'draft'}
-              </Badge>
-              <span className="text-xs text-muted-foreground">
-                {formatTime(materia.duracao || 0)}
-              </span>
-            </div>
-          </div>
-          <div className="flex space-x-1">
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleCopyMateria(materia, blocoId, blocoNome);
-              }}
-            >
-              <Copy className="h-4 w-4 mr-1" />
-              Copiar
-            </Button>
-            <Button 
-              size="sm" 
-              variant="outline" 
-              onClick={(e) => {
-                e.stopPropagation();
-                handleEditMateria(materia, blocoId, blocoNome, blocoOrdem);
-              }}
-            >
-              <Edit2 className="h-4 w-4 mr-1" />
-              Editar
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          {materia.clip && (
-            <div>
-              <span className="font-medium">Clip: </span>
-              <span className="font-mono">{materia.clip}</span>
-            </div>
-          )}
-          {materia.reporter && (
-            <div>
-              <span className="font-medium">Repórter: </span>
-              <span>{materia.reporter}</span>
-            </div>
-          )}
-          {materia.local_gravacao && (
-            <div>
-              <span className="font-medium">Local: </span>
-              <span>{materia.local_gravacao}</span>
-            </div>
-          )}
-          {materia.equipamento && (
-            <div>
-              <span className="font-medium">Equipamento: </span>
-              <span>{materia.equipamento}</span>
-            </div>
-          )}
-        </div>
-
-        {materia.cabeca && (
-          <div className="mt-3">
-            <span className="font-medium text-sm">Cabeça:</span>
-            <p className="mt-1 text-sm bg-gray-50 p-2 rounded">{materia.cabeca}</p>
-          </div>
-        )}
-
-        {materia.texto && (
-          <div className="mt-3">
-            <span className="font-medium text-sm">Texto:</span>
-            <p className="mt-1 text-sm bg-gray-50 p-2 rounded">{materia.texto}</p>
-          </div>
-        )}
-
-        {materia.gc && (
-          <div className="mt-3">
-            <span className="font-medium text-sm">GC:</span>
-            <p className="mt-1 text-sm bg-gray-50 p-2 rounded">{materia.gc}</p>
-          </div>
-        )}
-
-        {materia.tags && materia.tags.length > 0 && (
-          <div className="mt-3">
-            <span className="font-medium text-sm">Tags:</span>
-            <div className="flex flex-wrap gap-1 mt-1">
-              {materia.tags.map((tag: string, tagIndex: number) => (
-                <Badge key={tagIndex} variant="secondary" className="text-xs">
-                  {tag}
-                </Badge>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
+  const handleUpdateEditData = (updates: Partial<EditableMateria>) => {
+    setEditData(prev => prev ? { ...prev, ...updates } : null);
   };
 
   if (isLoadingHybrid) {
@@ -479,38 +202,12 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
 
   return (
     <div className="space-y-4">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b pb-4">
-        <div className="flex items-center space-x-4">
-          <Button variant="outline" size="sm" onClick={onBack}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Voltar
-          </Button>
-          <div>
-            <h2 className="text-xl font-semibold">{snapshot.nome_telejornal}</h2>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Badge variant="outline">
-                {format(new Date(snapshot.data_referencia), "dd/MM/yyyy")}
-              </Badge>
-              {snapshot.horario && (
-                <Badge variant="secondary">
-                  {snapshot.horario}
-                </Badge>
-              )}
-            </div>
-          </div>
-        </div>
-        
-        <div className="flex items-center space-x-2">
-          {hybridError && (
-            <span className="text-sm text-red-600">Erro ao carregar alterações</span>
-          )}
-          <Button variant="outline" size="sm" onClick={refreshData}>
-            <RefreshCw className="h-4 w-4 mr-1" />
-            Atualizar
-          </Button>
-        </div>
-      </div>
+      <FullRundownHeader
+        snapshot={snapshot}
+        onBack={onBack}
+        onRefresh={refreshData}
+        hybridError={hybridError}
+      />
 
       {/* Instruções para o usuário */}
       <div className="bg-blue-50 border border-blue-200 p-3 rounded-lg">
@@ -522,49 +219,23 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
 
       {/* Blocos */}
       <div className="space-y-6">
-        {blocos.map((bloco, blocoIndex) => {
-          const materias = getMateriasList(bloco);
-          const totalDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
-          const editedCount = materias.filter((item: any) => item.isEdited).length;
-
-          return (
-            <Card key={bloco.id || `bloco-${blocoIndex}`}>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center space-x-2">
-                    <span>{bloco.nome}</span>
-                    {editedCount > 0 && (
-                      <Badge variant="secondary" className="text-xs bg-blue-100 text-blue-800">
-                        {editedCount} editada{editedCount > 1 ? 's' : ''}
-                      </Badge>
-                    )}
-                  </CardTitle>
-                  <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                    <span>{materias.length} matérias</span>
-                    <span>•</span>
-                    <span>{formatTime(totalDuracao)}</span>
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent>
-                <div className="space-y-4">
-                  {materias.map((materia: any, materiaIndex: number) => (
-                    <div key={materia.id || `materia-${materiaIndex}`} className="border rounded-lg p-4">
-                      {renderMateriaContent(materia, bloco.id, bloco.nome, bloco.ordem || blocoIndex + 1)}
-                    </div>
-                  ))}
-
-                  {materias.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      Nenhuma matéria neste bloco
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+        {blocos.map((bloco, blocoIndex) => (
+          <BlocoCard
+            key={bloco.id || `bloco-${blocoIndex}`}
+            bloco={bloco}
+            blocoIndex={blocoIndex}
+            editingMateria={editingMateria}
+            editData={editData}
+            isSaving={isSaving}
+            onEditMateria={handleEditMateria}
+            onSaveMateria={handleSaveMateria}
+            onCancelEdit={handleCancelEdit}
+            onUpdateEditData={handleUpdateEditData}
+            onSelectMateria={handleSelectMateria}
+            onCopyMateria={handleCopyMateria}
+            isSelected={isSelected}
+          />
+        ))}
 
         {blocos.length === 0 && (
           <div className="text-center py-8 text-muted-foreground">
