@@ -42,28 +42,36 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
           lineHeight: '1.8',
           scrollBehavior: 'smooth',
           height: '100%',
-          paddingLeft: '16rem',
-          paddingRight: '16rem',
-          paddingTop: '2rem',
-          paddingBottom: '2rem'
+          padding: 0,
+          margin: 0
         }}
       >
         {orderedMaterias.length === 0 ? (
           <div 
-            className="text-center text-gray-400 mt-20"
-            style={{ fontSize: `${fontSize}px` }}
+            className="text-gray-400"
+            style={{ 
+              fontSize: `${fontSize}px`,
+              padding: 0,
+              margin: 0,
+              textAlign: 'left'
+            }}
           >
             Nenhuma matéria encontrada para este telejornal
           </div>
         ) : (
-          <div className="space-y-8">
+          <div style={{ padding: 0, margin: 0 }}>
             {orderedMaterias.map((materia, index) => (
-              <div key={`${materia.bloco_id}-${materia.id}`} className="space-y-4">
+              <div key={`${materia.bloco_id}-${materia.id}`} style={{ padding: 0, margin: 0 }}>
                 {/* Block name indicator (optional, can be commented out) */}
                 {index === 0 || orderedMaterias[index - 1]?.bloco_id !== materia.bloco_id ? (
                   <div 
-                    className="text-blue-400 font-medium mb-2"
-                    style={{ fontSize: `${fontSize * 0.7}px` }}
+                    className="text-blue-400 font-medium"
+                    style={{ 
+                      fontSize: `${fontSize * 0.7}px`,
+                      padding: 0,
+                      margin: 0,
+                      textAlign: 'left'
+                    }}
                   >
                     {materia.blockName}
                   </div>
@@ -74,7 +82,10 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                   className="font-bold"
                   style={{ 
                     fontSize: `${fontSize}px`,
-                    color: retrancaColor
+                    color: retrancaColor,
+                    padding: 0,
+                    margin: 0,
+                    textAlign: 'left'
                   }}
                 >
                   {materia.retranca || `Matéria ${materia.ordem}`}
@@ -86,7 +97,10 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                     className="font-medium"
                     style={{ 
                       fontSize: `${fontSize}px`,
-                      color: cabecaColor
+                      color: cabecaColor,
+                      padding: 0,
+                      margin: 0,
+                      textAlign: 'left'
                     }}
                   >
                     {materia.cabeca}
@@ -95,13 +109,13 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                 
                 {/* Spacer between items */}
                 {index < orderedMaterias.length - 1 && (
-                  <div className="h-8"></div>
+                  <div style={{ height: '32px' }}></div>
                 )}
               </div>
             ))}
             
             {/* Extra space at the end */}
-            <div className="h-screen"></div>
+            <div style={{ height: '100vh' }}></div>
           </div>
         )}
       </div>
