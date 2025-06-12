@@ -42,8 +42,11 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
           lineHeight: '1.8',
           scrollBehavior: 'smooth',
           height: '100%',
-          padding: 0,
-          margin: 0
+          padding: '20px',
+          margin: 0,
+          boxSizing: 'border-box',
+          width: '100%',
+          maxWidth: '100vw'
         }}
       >
         {orderedMaterias.length === 0 ? (
@@ -53,15 +56,34 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
               fontSize: `${fontSize}px`,
               padding: 0,
               margin: 0,
-              textAlign: 'left'
+              textAlign: 'center',
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              hyphens: 'auto',
+              maxWidth: '100%'
             }}
           >
             Nenhuma matéria encontrada para este telejornal
           </div>
         ) : (
-          <div style={{ padding: 0, margin: 0 }}>
+          <div style={{ 
+            padding: 0, 
+            margin: 0,
+            width: '100%',
+            maxWidth: '100%',
+            boxSizing: 'border-box'
+          }}>
             {orderedMaterias.map((materia, index) => (
-              <div key={`${materia.bloco_id}-${materia.id}`} style={{ padding: 0, margin: 0 }}>
+              <div 
+                key={`${materia.bloco_id}-${materia.id}`} 
+                style={{ 
+                  padding: 0, 
+                  margin: 0,
+                  width: '100%',
+                  maxWidth: '100%',
+                  boxSizing: 'border-box'
+                }}
+              >
                 {/* Block name indicator (optional, can be commented out) */}
                 {index === 0 || orderedMaterias[index - 1]?.bloco_id !== materia.bloco_id ? (
                   <div 
@@ -69,8 +91,13 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                     style={{ 
                       fontSize: `${fontSize * 0.7}px`,
                       padding: 0,
-                      margin: 0,
-                      textAlign: 'left'
+                      margin: '0 0 16px 0',
+                      textAlign: 'center',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
+                      hyphens: 'auto',
+                      maxWidth: '100%',
+                      width: '100%'
                     }}
                   >
                     {materia.blockName}
@@ -84,8 +111,14 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                     fontSize: `${fontSize}px`,
                     color: retrancaColor,
                     padding: 0,
-                    margin: 0,
-                    textAlign: 'left'
+                    margin: '0 0 8px 0',
+                    textAlign: 'center',
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word',
+                    hyphens: 'auto',
+                    maxWidth: '100%',
+                    width: '100%',
+                    whiteSpace: 'pre-wrap'
                   }}
                 >
                   {materia.retranca || `Matéria ${materia.ordem}`}
@@ -99,8 +132,14 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                       fontSize: `${fontSize}px`,
                       color: cabecaColor,
                       padding: 0,
-                      margin: 0,
-                      textAlign: 'left'
+                      margin: '0 0 8px 0',
+                      textAlign: 'left',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
+                      hyphens: 'auto',
+                      maxWidth: '100%',
+                      width: '100%',
+                      whiteSpace: 'pre-wrap'
                     }}
                   >
                     {materia.cabeca}

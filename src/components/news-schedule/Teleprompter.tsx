@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Materia, Telejornal, Bloco } from "@/types";
@@ -156,7 +155,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col">
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col" style={{ width: '90vw', maxWidth: '90vw' }}>
         {/* Header - Hidden in fullscreen */}
         {!isFullscreen && (
           <DialogHeader>
@@ -199,13 +198,15 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
         )}
 
         {/* Teleprompter Content */}
-        <TeleprompterContent
-          ref={contentRef}
-          blocks={blocks}
-          fontSize={fontSize}
-          cabecaColor={cabecaColor}
-          retrancaColor={retrancaColor}
-        />
+        <div className="flex-1 overflow-hidden" style={{ width: '100%', maxWidth: '100%' }}>
+          <TeleprompterContent
+            ref={contentRef}
+            blocks={blocks}
+            fontSize={fontSize}
+            cabecaColor={cabecaColor}
+            retrancaColor={retrancaColor}
+          />
+        </div>
       </DialogContent>
     </Dialog>
   );

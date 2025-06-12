@@ -71,7 +71,7 @@ const TeleprompterWindow = () => {
   }
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-screen flex flex-col bg-white" style={{ width: '100vw', maxWidth: '100vw', overflow: 'hidden' }}>
       <TeleprompterWindowHeader 
         telejornalName={telejornal?.nome}
         isFullscreen={isFullscreen}
@@ -98,7 +98,7 @@ const TeleprompterWindow = () => {
       />
 
       {/* Teleprompter Content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden" style={{ width: '100%', maxWidth: '100%' }}>
         <TeleprompterContent
           ref={contentRef}
           blocks={blocks}
