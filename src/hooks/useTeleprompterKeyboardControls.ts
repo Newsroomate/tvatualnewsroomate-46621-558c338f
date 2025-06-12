@@ -8,6 +8,7 @@ interface UseTeleprompterKeyboardControlsProps {
   isPlaying: boolean;
   onPlayPause: () => void;
   fontSize: number;
+  setScrollPosition?: (position: number) => void;
 }
 
 export const useTeleprompterKeyboardControls = ({
@@ -15,7 +16,8 @@ export const useTeleprompterKeyboardControls = ({
   contentRef,
   isPlaying,
   onPlayPause,
-  fontSize
+  fontSize,
+  setScrollPosition
 }: UseTeleprompterKeyboardControlsProps) => {
   const currentRetrancaIndex = useRef(0);
 
@@ -49,14 +51,22 @@ export const useTeleprompterKeyboardControls = ({
     
     // Calculate scroll position to center the retranca
     const targetScrollTop = container.scrollTop + elementRect.top - containerRect.top - (container.clientHeight / 4);
+    const finalScrollTop = Math.max(0, targetScrollTop);
     
     container.scrollTo({
-      top: Math.max(0, targetScrollTop),
+      top: finalScrollTop,
       behavior: 'smooth'
     });
 
+    // Update scroll position state to sync with the new position
+    if (setScrollPosition) {
+      setTimeout(() => {
+        setScrollPosition(finalScrollTop);
+      }, 300); // Wait for smooth scroll to complete
+    }
+
     currentRetrancaIndex.current = index;
-    console.log(`Navegated to retranca ${index + 1}/${retrancas.length}: ${targetRetranca.materia.retranca}`);
+    console.log(`Navigated to retranca ${index + 1}/${retrancas.length}: ${targetRetranca.materia.retranca}`);
   };
 
   // Navigate to previous retranca

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Materia, Telejornal, Bloco } from "@/types";
@@ -30,13 +31,14 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     setIsPlaying(!isPlaying);
   };
 
-  // Setup keyboard controls
+  // Setup keyboard controls with scroll position sync
   useTeleprompterKeyboardControls({
     blocks,
     contentRef,
     isPlaying,
     onPlayPause: handlePlayPause,
-    fontSize
+    fontSize,
+    setScrollPosition
   });
 
   // Listen for fullscreen changes
@@ -96,22 +98,30 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     };
   }, [isOpen]);
 
+  // Auto-scroll logic - improved to continue from current position
   useEffect(() => {
     if (isPlaying && contentRef.current) {
-      const scrollSpeed = speed[0] / 10; // Convert speed to pixels per interval
+      const scrollSpeed = speed[0] / 10;
       
       intervalRef.current = setInterval(() => {
-        setScrollPosition(prev => {
-          const newPosition = prev + scrollSpeed;
-          const maxScroll = contentRef.current?.scrollHeight || 0;
-          
-          if (newPosition >= maxScroll) {
-            setIsPlaying(false);
-            return 0; // Reset to top when reaching end
-          }
-          
-          return newPosition;
-        });
+        const contentElement = contentRef.current;
+        if (!contentElement) return;
+        
+        // Get the current actual scroll position from the DOM element
+        const currentScrollTop = contentElement.scrollTop;
+        const maxScroll = contentElement.scrollHeight - contentElement.clientHeight;
+        
+        // Calculate next position based on current DOM position, not state
+        const nextPosition = currentScrollTop + scrollSpeed;
+        
+        if (nextPosition >= maxScroll) {
+          setIsPlaying(false);
+          return;
+        }
+        
+        // Update both the DOM and the state
+        contentElement.scrollTop = nextPosition;
+        setScrollPosition(nextPosition);
       }, 100);
     } else {
       if (intervalRef.current) {
@@ -127,11 +137,30 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     };
   }, [isPlaying, speed]);
 
+  // Sync scroll position state with DOM when manually scrolled
   useEffect(() => {
-    if (contentRef.current) {
+    const contentElement = contentRef.current;
+    if (!contentElement) return;
+
+    const handleScroll = () => {
+      // Update the scroll position state to match the current DOM position
+      const currentScrollTop = contentElement.scrollTop;
+      setScrollPosition(currentScrollTop);
+    };
+
+    contentElement.addEventListener('scroll', handleScroll);
+
+    return () => {
+      contentElement.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
+
+  // Apply scroll position only when not playing (to avoid conflicts during auto-scroll)
+  useEffect(() => {
+    if (!isPlaying && contentRef.current) {
       contentRef.current.scrollTop = scrollPosition;
     }
-  }, [scrollPosition]);
+  }, [scrollPosition, isPlaying]);
 
   const handleSpeedChange = (value: number[]) => {
     setSpeed(value);

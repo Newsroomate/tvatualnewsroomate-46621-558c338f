@@ -42,13 +42,14 @@ const TeleprompterWindow = () => {
     handleRetrancaColorChange
   } = useTeleprompterWindowState();
 
-  // Setup keyboard controls
+  // Setup keyboard controls with scroll position sync
   useTeleprompterKeyboardControls({
     blocks,
     contentRef,
     isPlaying,
     onPlayPause: handlePlayPause,
-    fontSize
+    fontSize,
+    setScrollPosition
   });
 
   // Setup all effects
