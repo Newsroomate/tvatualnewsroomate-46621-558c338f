@@ -4,6 +4,7 @@ import { TeleprompterWindowHeader } from "@/components/news-schedule/teleprompte
 import { TeleprompterWindowControls } from "@/components/news-schedule/teleprompter/TeleprompterWindowControls";
 import { useTeleprompterWindowState } from "@/hooks/useTeleprompterWindowState";
 import { useTeleprompterWindowEffects } from "@/hooks/useTeleprompterWindowEffects";
+import { useTeleprompterKeyboardControls } from "@/hooks/useTeleprompterKeyboardControls";
 
 const TeleprompterWindow = () => {
   const {
@@ -40,6 +41,15 @@ const TeleprompterWindow = () => {
     handleCabecaColorChange,
     handleRetrancaColorChange
   } = useTeleprompterWindowState();
+
+  // Setup keyboard controls
+  useTeleprompterKeyboardControls({
+    blocks,
+    contentRef,
+    isPlaying,
+    onPlayPause: handlePlayPause,
+    fontSize
+  });
 
   // Setup all effects
   useTeleprompterWindowEffects({
@@ -107,6 +117,14 @@ const TeleprompterWindow = () => {
           retrancaColor={retrancaColor}
         />
       </div>
+      
+      {/* Keyboard controls info overlay - only visible when not fullscreen */}
+      {!isFullscreen && (
+        <div className="absolute bottom-4 right-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs">
+          <div>← → Navegar retrancas</div>
+          <div>Espaço: Play/Pause</div>
+        </div>
+      )}
     </div>
   );
 };

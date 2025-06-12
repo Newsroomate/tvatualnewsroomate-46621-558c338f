@@ -6,6 +6,7 @@ import { TeleprompterViewControls } from "./teleprompter/TeleprompterViewControl
 import { TeleprompterColorControls } from "./teleprompter/TeleprompterColorControls";
 import { TeleprompterExport } from "./teleprompter/TeleprompterExport";
 import { TeleprompterContent } from "./teleprompter/TeleprompterContent";
+import { useTeleprompterKeyboardControls } from "@/hooks/useTeleprompterKeyboardControls";
 
 interface TeleprompterProps {
   isOpen: boolean;
@@ -25,13 +26,26 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  const handlePlayPause = () => {
+    setIsPlaying(!isPlaying);
+  };
+
+  // Setup keyboard controls
+  useTeleprompterKeyboardControls({
+    blocks,
+    contentRef,
+    isPlaying,
+    onPlayPause: handlePlayPause,
+    fontSize
+  });
+
   // Listen for fullscreen changes
   useEffect(() => {
     const handleFullscreenChange = () => {
       const isCurrentlyFullscreen = !!(
         document.fullscreenElement ||
         (document as any).webkitFullscreenElement ||
-        (document as any).mozFullScreenElement ||
+        (document as any).mozFullscreenElement ||
         (document as any).msFullscreenElement
       );
       
@@ -119,10 +133,6 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     }
   }, [scrollPosition]);
 
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
   const handleSpeedChange = (value: number[]) => {
     setSpeed(value);
   };
@@ -155,7 +165,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col" style={{ width: '90vw', maxWidth: '90vw' }}>
+      <DialogContent className="max-w-4xl h-[80vh] flex flex-col relative" style={{ width: '90vw', maxWidth: '90vw' }}>
         {/* Header - Hidden in fullscreen */}
         {!isFullscreen && (
           <DialogHeader>
@@ -207,6 +217,14 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
             retrancaColor={retrancaColor}
           />
         </div>
+
+        {/* Keyboard controls info overlay - only visible when not fullscreen */}
+        {!isFullscreen && (
+          <div className="absolute bottom-4 right-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-10">
+            <div>← → Navegar retrancas</div>
+            <div>Espaço: Play/Pause</div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

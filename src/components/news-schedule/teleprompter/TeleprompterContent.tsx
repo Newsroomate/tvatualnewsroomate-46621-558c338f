@@ -75,7 +75,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
           }}>
             {orderedMaterias.map((materia, index) => (
               <div 
-                key={`${materia.bloco_id}-${materia.id}`} 
+                key={`${materia.bloco_id}-${materia.id}`}
+                data-materia-id={materia.id}
                 style={{ 
                   padding: 0, 
                   margin: 0,
