@@ -14,6 +14,7 @@ const TeleprompterWindow = () => {
   const [speed, setSpeed] = useState([50]);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [fontSize, setFontSize] = useState(24);
+  const [isFullscreen, setIsFullscreen] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const hasReceivedDataRef = useRef(false);
@@ -69,6 +70,60 @@ const TeleprompterWindow = () => {
       window.removeEventListener('message', handleMessage);
       clearTimeout(readyTimeout);
       clearTimeout(loadingTimeout);
+    };
+  }, []);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isCurrentlyFullscreen = !!(
+        document.fullscreenElement ||
+        (document as any).webkitFullscreenElement ||
+        (document as any).mozFullScreenElement ||
+        (document as any).msFullscreenElement
+      );
+      
+      setIsFullscreen(isCurrentlyFullscreen);
+      console.log("Fullscreen mode:", isCurrentlyFullscreen);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
+
+  // Handle F11 key for fullscreen toggle
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'F11') {
+        event.preventDefault();
+        
+        if (!document.fullscreenElement) {
+          // Enter fullscreen
+          document.documentElement.requestFullscreen().catch(err => {
+            console.error('Error attempting to enable fullscreen:', err);
+          });
+        } else {
+          // Exit fullscreen
+          document.exitFullscreen().catch(err => {
+            console.error('Error attempting to exit fullscreen:', err);
+          });
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
     };
   }, []);
 
@@ -133,7 +188,7 @@ const TeleprompterWindow = () => {
 
   const increaseFontSize = () => {
     setFontSize(prev => {
-      const newSize = Math.min(prev + 2, 100);
+      const newSize = Math.min(prev + 2, 200);
       console.log("Font size increased to:", newSize);
       return newSize;
     });
@@ -145,6 +200,12 @@ const TeleprompterWindow = () => {
       console.log("Font size decreased to:", newSize);
       return newSize;
     });
+  };
+
+  const handleFontSizeChange = (newSize: number) => {
+    const clampedSize = Math.max(12, Math.min(200, newSize));
+    setFontSize(clampedSize);
+    console.log("Font size manually changed to:", clampedSize);
   };
 
   // Show loading only for a brief moment initially
@@ -161,40 +222,46 @@ const TeleprompterWindow = () => {
 
   return (
     <div className="h-screen flex flex-col bg-white">
-      <div className="bg-gray-100 border-b p-4">
-        <h1 className="text-xl font-bold">
-          Teleprompter - {telejornal?.nome || "Sem Telejornal Selecionado"}
-        </h1>
-      </div>
+      {/* Header - Hidden in fullscreen */}
+      {!isFullscreen && (
+        <div className="bg-gray-100 border-b p-4">
+          <h1 className="text-xl font-bold">
+            Teleprompter - {telejornal?.nome || "Sem Telejornal Selecionado"}
+          </h1>
+        </div>
+      )}
       
-      {/* Controls */}
-      <div className="flex items-center gap-4 p-4 border-b bg-gray-50">
-        <TeleprompterControls
-          isPlaying={isPlaying}
-          speed={speed}
-          onPlayPause={handlePlayPause}
-          onSpeedChange={handleSpeedChange}
-          onReset={resetPosition}
-        />
+      {/* Controls - Hidden in fullscreen */}
+      {!isFullscreen && (
+        <div className="flex items-center gap-4 p-4 border-b bg-gray-50">
+          <TeleprompterControls
+            isPlaying={isPlaying}
+            speed={speed}
+            onPlayPause={handlePlayPause}
+            onSpeedChange={handleSpeedChange}
+            onReset={resetPosition}
+          />
 
-        <TeleprompterViewControls
-          fontSize={fontSize}
-          onIncreaseFontSize={increaseFontSize}
-          onDecreaseFontSize={decreaseFontSize}
-        />
+          <TeleprompterViewControls
+            fontSize={fontSize}
+            onIncreaseFontSize={increaseFontSize}
+            onDecreaseFontSize={decreaseFontSize}
+            onFontSizeChange={handleFontSizeChange}
+          />
 
-        <TeleprompterExport
-          blocks={blocks}
-          telejornal={telejornal}
-        />
+          <TeleprompterExport
+            blocks={blocks}
+            telejornal={telejornal}
+          />
 
-        <button
-          onClick={() => window.close()}
-          className="ml-auto px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-        >
-          Fechar
-        </button>
-      </div>
+          <button
+            onClick={() => window.close()}
+            className="ml-auto px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
 
       {/* Teleprompter Content */}
       <div className="flex-1 overflow-hidden">
