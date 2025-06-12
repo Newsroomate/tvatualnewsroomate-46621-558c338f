@@ -1,6 +1,7 @@
 
 import { TeleprompterControls } from "./TeleprompterControls";
 import { TeleprompterViewControls } from "./TeleprompterViewControls";
+import { TeleprompterColorControls } from "./TeleprompterColorControls";
 import { TeleprompterExport } from "./TeleprompterExport";
 import { Materia, Telejornal, Bloco } from "@/types";
 
@@ -11,12 +12,16 @@ interface TeleprompterWindowControlsProps {
   fontSize: number;
   blocks: (Bloco & { items: Materia[] })[];
   telejornal: Telejornal | null;
+  cabecaColor: string;
+  retrancaColor: string;
   onPlayPause: () => void;
   onSpeedChange: (value: number[]) => void;
   onReset: () => void;
   onIncreaseFontSize: () => void;
   onDecreaseFontSize: () => void;
   onFontSizeChange: (newSize: number) => void;
+  onCabecaColorChange: (color: string) => void;
+  onRetrancaColorChange: (color: string) => void;
   onClose: () => void;
 }
 
@@ -27,18 +32,22 @@ export const TeleprompterWindowControls = ({
   fontSize,
   blocks,
   telejornal,
+  cabecaColor,
+  retrancaColor,
   onPlayPause,
   onSpeedChange,
   onReset,
   onIncreaseFontSize,
   onDecreaseFontSize,
   onFontSizeChange,
+  onCabecaColorChange,
+  onRetrancaColorChange,
   onClose
 }: TeleprompterWindowControlsProps) => {
   if (isFullscreen) return null;
 
   return (
-    <div className="flex items-center gap-4 p-4 border-b bg-gray-50">
+    <div className="flex items-center gap-4 p-4 border-b bg-gray-50 flex-wrap">
       <TeleprompterControls
         isPlaying={isPlaying}
         speed={speed}
@@ -52,6 +61,13 @@ export const TeleprompterWindowControls = ({
         onIncreaseFontSize={onIncreaseFontSize}
         onDecreaseFontSize={onDecreaseFontSize}
         onFontSizeChange={onFontSizeChange}
+      />
+
+      <TeleprompterColorControls
+        cabecaColor={cabecaColor}
+        retrancaColor={retrancaColor}
+        onCabecaColorChange={onCabecaColorChange}
+        onRetrancaColorChange={onRetrancaColorChange}
       />
 
       <TeleprompterExport

@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Materia, Telejornal, Bloco } from "@/types";
 import { TeleprompterControls } from "./teleprompter/TeleprompterControls";
 import { TeleprompterViewControls } from "./teleprompter/TeleprompterViewControls";
+import { TeleprompterColorControls } from "./teleprompter/TeleprompterColorControls";
 import { TeleprompterExport } from "./teleprompter/TeleprompterExport";
 import { TeleprompterContent } from "./teleprompter/TeleprompterContent";
 
@@ -20,6 +21,8 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const [scrollPosition, setScrollPosition] = useState(0);
   const [fontSize, setFontSize] = useState(24);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [cabecaColor, setCabecaColor] = useState("#ffffff");
+  const [retrancaColor, setRetrancaColor] = useState("#facc15");
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -143,8 +146,13 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     setFontSize(clampedSize);
   };
 
-  // Get all materias for export functionality
-  const allMaterias = blocks.flatMap(block => block.items);
+  const handleCabecaColorChange = (color: string) => {
+    setCabecaColor(color);
+  };
+
+  const handleRetrancaColorChange = (color: string) => {
+    setRetrancaColor(color);
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -160,7 +168,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
         
         {/* Controls - Hidden in fullscreen */}
         {!isFullscreen && (
-          <div className="flex items-center gap-4 p-4 border-b bg-gray-50">
+          <div className="flex items-center gap-4 p-4 border-b bg-gray-50 flex-wrap">
             <TeleprompterControls
               isPlaying={isPlaying}
               speed={speed}
@@ -176,6 +184,13 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
               onFontSizeChange={handleFontSizeChange}
             />
 
+            <TeleprompterColorControls
+              cabecaColor={cabecaColor}
+              retrancaColor={retrancaColor}
+              onCabecaColorChange={handleCabecaColorChange}
+              onRetrancaColorChange={handleRetrancaColorChange}
+            />
+
             <TeleprompterExport
               blocks={blocks}
               telejornal={telejornal}
@@ -188,6 +203,8 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
           ref={contentRef}
           blocks={blocks}
           fontSize={fontSize}
+          cabecaColor={cabecaColor}
+          retrancaColor={retrancaColor}
         />
       </DialogContent>
     </Dialog>

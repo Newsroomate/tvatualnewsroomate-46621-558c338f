@@ -5,10 +5,12 @@ import { Materia, Bloco } from "@/types";
 interface TeleprompterContentProps {
   blocks: (Bloco & { items: Materia[] })[];
   fontSize: number;
+  cabecaColor?: string;
+  retrancaColor?: string;
 }
 
 export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterContentProps>(
-  ({ blocks, fontSize }, ref) => {
+  ({ blocks, fontSize, cabecaColor = "#ffffff", retrancaColor = "#facc15" }, ref) => {
     console.log("TeleprompterContent received blocks:", blocks);
 
     // Sort blocks by ordem and then get all materias in the correct order
@@ -40,8 +42,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
           lineHeight: '1.8',
           scrollBehavior: 'smooth',
           height: '100%',
-          paddingLeft: '16rem', // Margem lateral esquerda aumentada (equivalente a 8 TABs)
-          paddingRight: '16rem', // Margem lateral direita aumentada (equivalente a 8 TABs)
+          paddingLeft: '16rem',
+          paddingRight: '16rem',
           paddingTop: '2rem',
           paddingBottom: '2rem'
         }}
@@ -67,19 +69,25 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                   </div>
                 ) : null}
                 
-                {/* Retranca em amarelo - aplicando fontSize dinâmico */}
+                {/* Retranca com cor customizada */}
                 <div 
-                  className="text-yellow-400 font-bold"
-                  style={{ fontSize: `${fontSize}px` }}
+                  className="font-bold"
+                  style={{ 
+                    fontSize: `${fontSize}px`,
+                    color: retrancaColor
+                  }}
                 >
                   {materia.retranca || `Matéria ${materia.ordem}`}
                 </div>
                 
-                {/* Cabeça em branco - aplicando fontSize dinâmico */}
+                {/* Cabeça com cor customizada */}
                 {materia.cabeca && (
                   <div 
-                    className="text-white font-medium"
-                    style={{ fontSize: `${fontSize}px` }}
+                    className="font-medium"
+                    style={{ 
+                      fontSize: `${fontSize}px`,
+                      color: cabecaColor
+                    }}
                   >
                     {materia.cabeca}
                   </div>
