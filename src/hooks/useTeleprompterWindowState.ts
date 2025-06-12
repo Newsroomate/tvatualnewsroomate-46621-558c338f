@@ -11,6 +11,8 @@ export const useTeleprompterWindowState = () => {
   const [scrollPosition, setScrollPosition] = useState(0);
   const [fontSize, setFontSize] = useState(24);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [cabecaColor, setCabecaColor] = useState('#FFFFFF');
+  const [retrancaColor, setRetrancaColor] = useState('#FFD700');
   
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -54,6 +56,16 @@ export const useTeleprompterWindowState = () => {
     console.log("Font size manually changed to:", clampedSize);
   };
 
+  const handleCabecaColorChange = (color: string) => {
+    setCabecaColor(color);
+    console.log("Cabeça color changed to:", color);
+  };
+
+  const handleRetrancaColorChange = (color: string) => {
+    setRetrancaColor(color);
+    console.log("Retranca color changed to:", color);
+  };
+
   return {
     // State
     blocks,
@@ -70,6 +82,8 @@ export const useTeleprompterWindowState = () => {
     setScrollPosition,
     isFullscreen,
     setIsFullscreen,
+    cabecaColor,
+    retrancaColor,
     
     // Refs
     contentRef,
@@ -82,6 +96,8 @@ export const useTeleprompterWindowState = () => {
     resetPosition,
     increaseFontSize,
     decreaseFontSize,
-    handleFontSizeChange
+    handleFontSizeChange,
+    handleCabecaColorChange,
+    handleRetrancaColorChange
   };
 };

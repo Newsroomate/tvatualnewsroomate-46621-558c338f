@@ -4,6 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Materia, Telejornal, Bloco } from "@/types";
 import { TeleprompterControls } from "./teleprompter/TeleprompterControls";
 import { TeleprompterViewControls } from "./teleprompter/TeleprompterViewControls";
+import { TeleprompterColorControls } from "./teleprompter/TeleprompterColorControls";
 import { TeleprompterExport } from "./teleprompter/TeleprompterExport";
 import { TeleprompterContent } from "./teleprompter/TeleprompterContent";
 
@@ -20,6 +21,8 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const [scrollPosition, setScrollPosition] = useState(0);
   const [fontSize, setFontSize] = useState(24);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [cabecaColor, setCabecaColor] = useState('#FFFFFF');
+  const [retrancaColor, setRetrancaColor] = useState('#FFD700');
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -143,6 +146,14 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     setFontSize(clampedSize);
   };
 
+  const handleCabecaColorChange = (color: string) => {
+    setCabecaColor(color);
+  };
+
+  const handleRetrancaColorChange = (color: string) => {
+    setRetrancaColor(color);
+  };
+
   // Get all materias for export functionality
   const allMaterias = blocks.flatMap(block => block.items);
 
@@ -160,26 +171,37 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
         
         {/* Controls - Hidden in fullscreen */}
         {!isFullscreen && (
-          <div className="flex items-center gap-4 p-4 border-b bg-gray-50">
-            <TeleprompterControls
-              isPlaying={isPlaying}
-              speed={speed}
-              onPlayPause={handlePlayPause}
-              onSpeedChange={handleSpeedChange}
-              onReset={resetPosition}
-            />
+          <div className="flex flex-col gap-4 p-4 border-b bg-gray-50">
+            <div className="flex items-center gap-4">
+              <TeleprompterControls
+                isPlaying={isPlaying}
+                speed={speed}
+                onPlayPause={handlePlayPause}
+                onSpeedChange={handleSpeedChange}
+                onReset={resetPosition}
+              />
 
-            <TeleprompterViewControls
-              fontSize={fontSize}
-              onIncreaseFontSize={increaseFontSize}
-              onDecreaseFontSize={decreaseFontSize}
-              onFontSizeChange={handleFontSizeChange}
-            />
+              <TeleprompterViewControls
+                fontSize={fontSize}
+                onIncreaseFontSize={increaseFontSize}
+                onDecreaseFontSize={decreaseFontSize}
+                onFontSizeChange={handleFontSizeChange}
+              />
 
-            <TeleprompterExport
-              blocks={blocks}
-              telejornal={telejornal}
-            />
+              <TeleprompterExport
+                blocks={blocks}
+                telejornal={telejornal}
+              />
+            </div>
+
+            <div className="flex items-center justify-center">
+              <TeleprompterColorControls
+                cabecaColor={cabecaColor}
+                retrancaColor={retrancaColor}
+                onCabecaColorChange={handleCabecaColorChange}
+                onRetrancaColorChange={handleRetrancaColorChange}
+              />
+            </div>
           </div>
         )}
 
@@ -188,6 +210,8 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
           ref={contentRef}
           blocks={blocks}
           fontSize={fontSize}
+          cabecaColor={cabecaColor}
+          retrancaColor={retrancaColor}
         />
       </DialogContent>
     </Dialog>
