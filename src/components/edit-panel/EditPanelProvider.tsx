@@ -127,11 +127,11 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Check if user is editing text in the edit panel
-      const activeElement = document.activeElement;
+      const activeElement = document.activeElement as HTMLElement;
       const isEditingInPanel = activeElement && (
         activeElement.tagName === 'INPUT' || 
         activeElement.tagName === 'TEXTAREA' ||
-        activeElement.contentEditable === 'true'
+        (activeElement as any).contentEditable === 'true'
       ) && activeElement.closest('.edit-panel-content');
 
       // If editing text in panel, allow normal paste behavior

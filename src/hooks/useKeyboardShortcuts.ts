@@ -21,11 +21,11 @@ export const useKeyboardShortcuts = ({
       if (!isEspelhoOpen) return;
       
       // Check if user is currently editing a text field
-      const activeElement = document.activeElement;
+      const activeElement = document.activeElement as HTMLElement;
       const isEditingText = activeElement && (
         activeElement.tagName === 'INPUT' || 
         activeElement.tagName === 'TEXTAREA' ||
-        activeElement.contentEditable === 'true' ||
+        (activeElement as any).contentEditable === 'true' ||
         activeElement.getAttribute('role') === 'textbox'
       );
 
