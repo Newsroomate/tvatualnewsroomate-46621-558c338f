@@ -6,39 +6,45 @@ interface UseKeyboardShortcutsProps {
   selectedMateria: Materia | null;
   onCopy: (materia: Materia) => void;
   onPaste: () => void;
-  isEspelhoOpen: boolean;
+  isEspelhoOpen?: boolean;
 }
 
 export const useKeyboardShortcuts = ({
   selectedMateria,
   onCopy,
   onPaste,
-  isEspelhoOpen
+  isEspelhoOpen = false
 }: UseKeyboardShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Verificar se Ctrl está pressionado (Cmd no Mac)
-      const isCtrlPressed = event.ctrlKey || event.metaKey;
+      // Only handle shortcuts when espelho is open
+      if (!isEspelhoOpen) return;
       
-      if (!isCtrlPressed) return;
+      // Check if user is currently editing a text field
+      const activeElement = document.activeElement;
+      const isEditingText = activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.contentEditable === 'true' ||
+        activeElement.getAttribute('role') === 'textbox'
+      );
 
-      // Ctrl+C - Copiar matéria selecionada
-      if (event.key === 'c' && selectedMateria) {
-        event.preventDefault();
-        onCopy(selectedMateria);
+      // Copy functionality (Ctrl+C)
+      if (event.ctrlKey && event.key === 'c' && !isEditingText) {
+        if (selectedMateria) {
+          event.preventDefault();
+          onCopy(selectedMateria);
+        }
       }
 
-      // Ctrl+V - Colar matéria (apenas se o espelho estiver aberto)
-      if (event.key === 'v' && isEspelhoOpen) {
+      // Paste functionality (Ctrl+V) - only when NOT editing text
+      if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         event.preventDefault();
         onPaste();
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-    };
+    return () => document.removeEventListener('keydown', handleKeyDown);
   }, [selectedMateria, onCopy, onPaste, isEspelhoOpen]);
 };

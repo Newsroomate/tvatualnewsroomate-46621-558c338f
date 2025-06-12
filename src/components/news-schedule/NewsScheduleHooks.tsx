@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
@@ -112,7 +113,7 @@ export const NewsScheduleHooks = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Enhanced keyboard shortcuts with better paste handling
+  // Enhanced keyboard shortcuts - only handle materia paste when not editing text
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: copyMateria,

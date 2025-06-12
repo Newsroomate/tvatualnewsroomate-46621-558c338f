@@ -123,6 +123,28 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
     }
   };
 
+  // Prevent keyboard shortcuts from interfering with text editing
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Check if user is editing text in the edit panel
+      const activeElement = document.activeElement;
+      const isEditingInPanel = activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.contentEditable === 'true'
+      ) && activeElement.closest('.edit-panel-content');
+
+      // If editing text in panel, allow normal paste behavior
+      if (isEditingInPanel && event.ctrlKey && event.key === 'v') {
+        // Don't prevent default - allow normal paste
+        return;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown, true); // Use capture phase
+    return () => document.removeEventListener('keydown', handleKeyDown, true);
+  }, []);
+
   return (
     <div className="fixed top-0 left-0 w-full h-full z-20 pointer-events-none">
       <ResizablePanelGroup direction="horizontal" className="w-full h-full pointer-events-auto">
@@ -143,7 +165,7 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
           maxSize={70}
           className="pointer-events-auto"
         >
-          <div className="w-full h-full bg-white border-l border-gray-200 shadow-lg overflow-y-auto">
+          <div className="w-full h-full bg-white border-l border-gray-200 shadow-lg overflow-y-auto edit-panel-content">
             <EditPanelHeader 
               item={item} 
               onClose={onClose}
