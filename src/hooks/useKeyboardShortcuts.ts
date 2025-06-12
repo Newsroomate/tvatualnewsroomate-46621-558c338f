@@ -25,7 +25,7 @@ export const useKeyboardShortcuts = ({
       const isEditingText = activeElement && (
         activeElement.tagName === 'INPUT' || 
         activeElement.tagName === 'TEXTAREA' ||
-        (activeElement as any).contentEditable === 'true' ||
+        activeElement.contentEditable === 'true' ||
         activeElement.getAttribute('role') === 'textbox'
       );
 

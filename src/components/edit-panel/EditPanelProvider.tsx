@@ -131,7 +131,7 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
       const isEditingInPanel = activeElement && (
         activeElement.tagName === 'INPUT' || 
         activeElement.tagName === 'TEXTAREA' ||
-        (activeElement as any).contentEditable === 'true'
+        activeElement.contentEditable === 'true'
       ) && activeElement.closest('.edit-panel-content');
 
       // If editing text in panel, allow normal paste behavior
