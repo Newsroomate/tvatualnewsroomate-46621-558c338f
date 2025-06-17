@@ -1,39 +1,20 @@
 
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Search, Loader2, FileText, Edit2, Copy } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { fetchTelejornais } from "@/services/api";
 import { performDeepSearch, DeepSearchFilters, DeepSearchResult } from "@/services/deep-search-api";
 import { useClipboard } from "@/hooks/useClipboard";
-import { useMateriaOperations } from "@/components/general-schedule/hooks/useMateriaOperations";
 import { Telejornal } from "@/types";
+import { DeepSearchFilters as FiltersComponent } from "./deep-search/DeepSearchFilters";
+import { DeepSearchResults } from "./deep-search/DeepSearchResults";
+import { convertSearchResultToMateria } from "./deep-search/utils";
 
 interface DeepSearchModalProps {
   isOpen: boolean;
   onClose: () => void;
 }
-
-const searchFields = [
-  { id: 'retranca', label: 'Retranca' },
-  { id: 'clip', label: 'Clip' },
-  { id: 'texto', label: 'Corpo da Matéria' },
-  { id: 'cabeca', label: 'Cabeça' },
-  { id: 'gc', label: 'GC' },
-  { id: 'reporter', label: 'Repórter' }
-];
 
 export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
   const [query, setQuery] = useState("");
@@ -66,22 +47,6 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
         variant: "destructive"
       });
     }
-  };
-
-  const handleFieldToggle = (fieldId: string, checked: boolean) => {
-    setSelectedFields(prev => 
-      checked 
-        ? [...prev, fieldId]
-        : prev.filter(id => id !== fieldId)
-    );
-  };
-
-  const handleTelejornalToggle = (telejornalId: string, checked: boolean) => {
-    setSelectedTelejornais(prev => 
-      checked 
-        ? [...prev, telejornalId]
-        : prev.filter(id => id !== telejornalId)
-    );
   };
 
   const handleSearch = async () => {
@@ -145,41 +110,6 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
     setHasSearched(false);
   };
 
-  const highlightText = (text: string, highlight: string) => {
-    if (!highlight) return text;
-    const parts = text.split(new RegExp(`(${highlight})`, 'gi'));
-    return parts.map((part, index) => 
-      part.toLowerCase() === highlight.toLowerCase() ? 
-        <mark key={index} className="bg-yellow-200">{part}</mark> : part
-    );
-  };
-
-  // Converter resultado da busca para formato Materia padrão
-  const convertSearchResultToMateria = (result: DeepSearchResult) => {
-    return {
-      id: result.id,
-      titulo: result.retranca, // Map retranca to titulo to satisfy the interface
-      retranca: result.retranca,
-      clip: result.clip || '',
-      duracao: 0, // Não temos duração no resultado da busca
-      texto: result.texto || '',
-      cabeca: result.cabeca || '',
-      gc: result.gc || '',
-      reporter: result.reporter || '',
-      status: 'draft',
-      pagina: '',
-      tipo_material: '',
-      bloco_id: '', // Será definido ao colar
-      ordem: 0,
-      created_at: result.created_at,
-      updated_at: result.updated_at,
-      tags: [],
-      local_gravacao: '',
-      equipamento: '',
-      is_from_snapshot: true // Marca como vinda do histórico
-    };
-  };
-
   // Handler para copiar matéria da busca profunda
   const handleCopyMateria = (result: DeepSearchResult) => {
     console.log('Copiando matéria da busca profunda:', {
@@ -225,224 +155,34 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Painel de Filtros */}
             <div className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm">Filtros de Busca</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  {/* Campo de busca */}
-                  <div>
-                    <Label htmlFor="search-query">Palavra-chave *</Label>
-                    <Input
-                      id="search-query"
-                      placeholder="Digite sua busca..."
-                      value={query}
-                      onChange={(e) => setQuery(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                    />
-                  </div>
-
-                  {/* Campos para buscar */}
-                  <div>
-                    <Label>Campos para buscar</Label>
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      {searchFields.map(field => (
-                        <div key={field.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={field.id}
-                            checked={selectedFields.includes(field.id)}
-                            onCheckedChange={(checked) => handleFieldToggle(field.id, checked as boolean)}
-                          />
-                          <Label htmlFor={field.id} className="text-sm">{field.label}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Filtro de data */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div>
-                      <Label>Data inicial</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start text-left font-normal">
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {startDate ? format(startDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={startDate}
-                            onSelect={setStartDate}
-                            locale={ptBR}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                    <div>
-                      <Label>Data final</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start text-left font-normal">
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {endDate ? format(endDate, "dd/MM/yyyy", { locale: ptBR }) : "Selecionar"}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0">
-                          <Calendar
-                            mode="single"
-                            selected={endDate}
-                            onSelect={setEndDate}
-                            locale={ptBR}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                    </div>
-                  </div>
-
-                  {/* Filtro de telejornais */}
-                  <div>
-                    <Label>Telejornais (opcional)</Label>
-                    <div className="max-h-32 overflow-y-auto space-y-2 mt-2">
-                      {telejornais.map(telejornal => (
-                        <div key={telejornal.id} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`tj-${telejornal.id}`}
-                            checked={selectedTelejornais.includes(telejornal.id)}
-                            onCheckedChange={(checked) => handleTelejornalToggle(telejornal.id, checked as boolean)}
-                          />
-                          <Label htmlFor={`tj-${telejornal.id}`} className="text-sm">{telejornal.nome}</Label>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Botões de ação */}
-                  <div className="flex space-x-2">
-                    <Button onClick={handleSearch} disabled={isSearching} className="flex-1">
-                      {isSearching ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <Search className="h-4 w-4 mr-2" />
-                      )}
-                      Buscar
-                    </Button>
-                    <Button variant="outline" onClick={handleClear}>
-                      Limpar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+              <FiltersComponent
+                query={query}
+                setQuery={setQuery}
+                selectedFields={selectedFields}
+                setSelectedFields={setSelectedFields}
+                startDate={startDate}
+                setStartDate={setStartDate}
+                endDate={endDate}
+                setEndDate={setEndDate}
+                telejornais={telejornais}
+                selectedTelejornais={selectedTelejornais}
+                setSelectedTelejornais={setSelectedTelejornais}
+                isSearching={isSearching}
+                onSearch={handleSearch}
+                onClear={handleClear}
+              />
             </div>
 
             {/* Resultados */}
             <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-sm flex items-center justify-between">
-                    <span>Resultados da Busca</span>
-                    {hasSearched && (
-                      <Badge variant="secondary">
-                        {searchResults.length} resultado(s)
-                      </Badge>
-                    )}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {!hasSearched && !isSearching && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <FileText className="h-12 w-12 mx-auto mb-4" />
-                      <p>Digite uma palavra-chave e clique em "Buscar" para ver os resultados</p>
-                    </div>
-                  )}
-
-                  {isSearching && (
-                    <div className="text-center py-8">
-                      <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-                      <p className="text-muted-foreground">Buscando...</p>
-                    </div>
-                  )}
-
-                  {hasSearched && searchResults.length === 0 && (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <FileText className="h-12 w-12 mx-auto mb-4" />
-                      <p>Nenhum resultado encontrado para sua busca</p>
-                    </div>
-                  )}
-
-                  {hasSearched && searchResults.length > 0 && (
-                    <div className="space-y-3 max-h-96 overflow-y-auto">
-                      {searchResults.map((result) => (
-                        <Card key={result.id} className="border-l-4 border-l-blue-500">
-                          <CardContent className="p-4">
-                            <div className="space-y-2">
-                              <div className="flex items-start justify-between">
-                                <h4 className="font-medium text-sm">{result.retranca}</h4>
-                                <div className="flex items-center space-x-2">
-                                  <Badge variant="outline" className="text-xs">
-                                    {result.telejornal_nome}
-                                  </Badge>
-                                  <Badge variant="secondary" className="text-xs">
-                                    {result.bloco_nome}
-                                  </Badge>
-                                  
-                                  {/* Botões de ação */}
-                                  <div className="flex space-x-1">
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleEditMateria(result)}
-                                      className="h-6 w-6 p-0"
-                                      title="Editar matéria"
-                                    >
-                                      <Edit2 className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleCopyMateria(result)}
-                                      className="h-6 w-6 p-0"
-                                      title="Copiar matéria"
-                                    >
-                                      <Copy className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {result.clip && (
-                                <p className="text-sm text-muted-foreground">
-                                  <strong>Clip:</strong> {result.clip}
-                                </p>
-                              )}
-                              
-                              {result.reporter && (
-                                <p className="text-sm text-muted-foreground">
-                                  <strong>Repórter:</strong> {result.reporter}
-                                </p>
-                              )}
-                              
-                              {result.highlight_text && (
-                                <div className="bg-gray-50 p-2 rounded text-sm">
-                                  <strong className="capitalize">{result.highlight_field}:</strong>{" "}
-                                  {highlightText(result.highlight_text, query)}
-                                </div>
-                              )}
-                              
-                              <div className="text-xs text-muted-foreground">
-                                Atualizado em: {format(new Date(result.updated_at), 'dd/MM/yyyy HH:mm', { locale: ptBR })}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <DeepSearchResults
+                searchResults={searchResults}
+                hasSearched={hasSearched}
+                isSearching={isSearching}
+                query={query}
+                onEditMateria={handleEditMateria}
+                onCopyMateria={handleCopyMateria}
+              />
             </div>
           </div>
         </div>
