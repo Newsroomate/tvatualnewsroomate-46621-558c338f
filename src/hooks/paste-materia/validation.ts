@@ -2,34 +2,34 @@
 import { Materia } from '@/types';
 import { toast } from '@/hooks/use-toast';
 
-interface BlocoClipboard {
-  id: string;
-  nome: string;
-  ordem: number;
-  materias: Materia[];
-  totalTime: number;
-}
-
 export const validatePasteOperation = (
-  copiedMateria: Materia | null, 
-  copiedBloco: BlocoClipboard | null,
+  copiedMateria: Materia | null,
   blocks: any[]
 ): boolean => {
-  // Verificar se há algum conteúdo copiado
-  if (!copiedMateria && !copiedBloco) {
+  if (!copiedMateria) {
+    console.log('Tentativa de colar sem matéria copiada');
     toast({
-      title: "Nada para colar",
-      description: "Não há matéria ou bloco na área de transferência",
+      title: "Nenhuma matéria copiada",
+      description: "Copie uma matéria primeiro no Espelho Geral usando Ctrl+C",
       variant: "destructive"
     });
     return false;
   }
 
-  // Verificar se há blocos disponíveis (apenas para matérias individuais)
-  if (copiedMateria && !copiedBloco && blocks.length === 0) {
+  if (!copiedMateria.retranca) {
+    console.error('Matéria copiada não possui retranca:', copiedMateria);
     toast({
-      title: "Nenhum bloco disponível",
-      description: "Crie um bloco primeiro para colar a matéria",
+      title: "Erro na matéria copiada",
+      description: "A matéria copiada não possui dados válidos",
+      variant: "destructive"
+    });
+    return false;
+  }
+
+  if (blocks.length === 0) {
+    toast({
+      title: "Erro ao colar",
+      description: "Nenhum bloco disponível para colar a matéria",
       variant: "destructive"
     });
     return false;

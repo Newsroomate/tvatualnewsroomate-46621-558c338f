@@ -91,7 +91,6 @@ export const NewsScheduleHooks = ({
     setBlocks: setBlocksWrapper,
     selectedMateria,
     copiedMateria,
-    copiedBloco, // Passar copiedBloco para o hook
     clearClipboard
   });
 
@@ -124,11 +123,9 @@ export const NewsScheduleHooks = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Enhanced keyboard shortcuts - with intelligent paste detection
+  // Enhanced keyboard shortcuts - with block paste support
   useKeyboardShortcuts({
     selectedMateria,
-    copiedMateria,
-    copiedBloco,
     onCopy: copyMateria,
     onPaste: pasteMateria,
     onPasteBloco: pasteBloco,
