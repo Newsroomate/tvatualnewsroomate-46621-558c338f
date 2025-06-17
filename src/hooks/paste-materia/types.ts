@@ -1,11 +1,20 @@
 
 import { Materia } from '@/types';
 
+interface BlocoClipboard {
+  id: string;
+  nome: string;
+  ordem: number;
+  materias: Materia[];
+  totalTime: number;
+}
+
 export interface UsePasteMateriaProps {
   blocks: any[];
   setBlocks: (updater: (blocks: any[]) => any[]) => void;
   selectedMateria: Materia | null;
   copiedMateria: Materia | null;
+  copiedBloco?: BlocoClipboard | null;
   clearClipboard: () => void;
   markOptimisticUpdate?: (materiaId: string) => void;
 }

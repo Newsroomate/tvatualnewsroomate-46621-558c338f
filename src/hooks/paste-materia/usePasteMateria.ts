@@ -18,22 +18,38 @@ export const usePasteMateria = ({
   setBlocks,
   selectedMateria,
   copiedMateria,
+  copiedBloco,
   clearClipboard,
   markOptimisticUpdate
 }: UsePasteMateriaProps) => {
   
   const pasteMateria = async () => {
-    // Validação inicial
-    if (!validatePasteOperation(copiedMateria, blocks)) {
+    // Validação inicial - agora considera tanto matéria quanto bloco
+    if (!validatePasteOperation(copiedMateria, copiedBloco, blocks)) {
+      return;
+    }
+
+    // Se há um bloco copiado, não colar como matéria individual
+    if (copiedBloco && !copiedMateria) {
+      toast({
+        title: "Bloco copiado",
+        description: "Use Ctrl+Shift+V para colar o bloco inteiro, ou copie uma matéria individual",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Se não há matéria copiada, retornar
+    if (!copiedMateria) {
       return;
     }
 
     console.log('Iniciando processo de colar matéria do histórico:', {
       materiaCopiada: {
-        id: copiedMateria!.id,
-        retranca: copiedMateria!.retranca,
-        totalCampos: Object.keys(copiedMateria!).length,
-        isFromSnapshot: copiedMateria!.is_from_snapshot
+        id: copiedMateria.id,
+        retranca: copiedMateria.retranca,
+        totalCampos: Object.keys(copiedMateria).length,
+        isFromSnapshot: copiedMateria.is_from_snapshot
       },
       selectedMateria: selectedMateria?.retranca,
       blocksCount: blocks.length
@@ -55,21 +71,21 @@ export const usePasteMateria = ({
 
     // Criar dados para nova matéria
     const materiaData = buildPasteMateriaData(
-      copiedMateria!,
+      copiedMateria,
       targetBlockId,
       insertPosition,
       nextPageNumber
     );
 
     console.log('Dados da matéria a ser criada (preservando TODOS os campos do histórico):', {
-      dadosOriginais: Object.keys(copiedMateria!).length + ' campos',
+      dadosOriginais: Object.keys(copiedMateria).length + ' campos',
       dadosPreservados: Object.keys(materiaData).length + ' campos',
       materiaData
     });
 
     // Gerar ID temporário para atualização otimista
     const tempId = `temp-${Date.now()}`;
-    const tempMateria = createTempMateria(materiaData, tempId, copiedMateria!);
+    const tempMateria = createTempMateria(materiaData, tempId, copiedMateria);
 
     // 1. ATUALIZAÇÃO OTIMISTA - Atualizar UI imediatamente
     console.log('Iniciando atualização otimista para posição:', insertPosition);

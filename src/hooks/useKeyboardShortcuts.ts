@@ -2,8 +2,18 @@
 import { useEffect } from 'react';
 import { Materia } from '@/types';
 
+interface BlocoClipboard {
+  id: string;
+  nome: string;
+  ordem: number;
+  materias: Materia[];
+  totalTime: number;
+}
+
 interface UseKeyboardShortcutsProps {
   selectedMateria?: Materia | null;
+  copiedMateria?: Materia | null;
+  copiedBloco?: BlocoClipboard | null;
   onCopy?: (materia: Materia) => void;
   onPaste?: () => void;
   onPasteBloco?: () => void;
@@ -12,6 +22,8 @@ interface UseKeyboardShortcutsProps {
 
 export const useKeyboardShortcuts = ({
   selectedMateria,
+  copiedMateria,
+  copiedBloco,
   onCopy,
   onPaste,
   onPasteBloco,
@@ -32,19 +44,28 @@ export const useKeyboardShortcuts = ({
         return;
       }
 
-      // Ctrl+V - Paste materia
+      // Ctrl+V - Paste (inteligente: detecta automaticamente se é matéria ou bloco)
       if (event.ctrlKey && event.key === 'v' && isEspelhoOpen) {
         event.preventDefault();
-        if (onPaste) {
+        
+        // Se há um bloco copiado, colar bloco
+        if (copiedBloco && onPasteBloco) {
+          console.log('Detectado bloco copiado, colando bloco via Ctrl+V');
+          onPasteBloco();
+        } 
+        // Se há uma matéria copiada, colar matéria
+        else if (copiedMateria && onPaste) {
+          console.log('Detectado matéria copiada, colando matéria via Ctrl+V');
           onPaste();
         }
         return;
       }
 
-      // Ctrl+Shift+V - Paste bloco
+      // Ctrl+Shift+V - Paste bloco (atalho alternativo específico para blocos)
       if (event.ctrlKey && event.shiftKey && event.key === 'V' && isEspelhoOpen) {
         event.preventDefault();
         if (onPasteBloco) {
+          console.log('Forçando colagem de bloco via Ctrl+Shift+V');
           onPasteBloco();
         }
         return;
@@ -53,5 +74,5 @@ export const useKeyboardShortcuts = ({
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedMateria, onCopy, onPaste, onPasteBloco, isEspelhoOpen]);
+  }, [selectedMateria, copiedMateria, copiedBloco, onCopy, onPaste, onPasteBloco, isEspelhoOpen]);
 };
