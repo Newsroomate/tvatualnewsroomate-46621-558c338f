@@ -65,7 +65,13 @@ export async function fetchClosedRundowns(
   }
 
   if (selectedDate) {
-    const dateString = format(selectedDate, "yyyy-MM-dd");
+    // Garantir que a data seja formatada corretamente para UTC sem conversão de timezone
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    
+    console.log("Filtering by date:", dateString, "from selected date:", selectedDate);
     query = query.eq("data_referencia", dateString);
   }
 
@@ -75,6 +81,8 @@ export async function fetchClosedRundowns(
     console.error("Error fetching closed rundowns:", error);
     throw error;
   }
+
+  console.log("Found rundowns:", data?.length || 0);
 
   // Map the data to the ClosedRundown format
   return data.map(rundown => {

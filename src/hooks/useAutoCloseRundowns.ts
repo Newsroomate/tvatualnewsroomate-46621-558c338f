@@ -46,9 +46,16 @@ export const useAutoCloseRundowns = () => {
       );
 
       // Usar a data de ontem como referência para o espelho fechado automaticamente
+      // Corrigir a lógica de data para evitar problemas de timezone
       const yesterday = new Date();
       yesterday.setDate(yesterday.getDate() - 1);
-      const dataReferencia = yesterday.toISOString().split('T')[0];
+      
+      const year = yesterday.getFullYear();
+      const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+      const day = String(yesterday.getDate()).padStart(2, '0');
+      const dataReferencia = `${year}-${month}-${day}`;
+
+      console.log("Saving with date reference:", dataReferencia);
 
       await saveRundownSnapshot({
         telejornal_id: telejornalId,

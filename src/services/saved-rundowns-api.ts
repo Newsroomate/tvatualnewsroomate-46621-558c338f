@@ -85,6 +85,7 @@ export const fetchAllSavedRundowns = async (
   }
 
   if (targetDate) {
+    console.log("Filtering all saved rundowns by date:", targetDate);
     query = query.eq('data_referencia', targetDate);
   }
 
@@ -96,6 +97,8 @@ export const fetchAllSavedRundowns = async (
     console.error("Erro ao buscar espelhos salvos:", error);
     throw error;
   }
+
+  console.log("Found all saved rundowns:", data?.length || 0);
 
   // Convert the raw data to SavedRundown format, ensuring proper type conversion
   return data?.map(item => ({

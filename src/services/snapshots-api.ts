@@ -81,7 +81,13 @@ export const fetchClosedRundownSnapshots = async (
   }
 
   if (selectedDate) {
-    const dateString = selectedDate.toISOString().split('T')[0];
+    // Garantir que a data seja formatada corretamente para UTC sem conversão de timezone
+    const year = selectedDate.getFullYear();
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
+    const day = String(selectedDate.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    
+    console.log("Filtering snapshots by date:", dateString, "from selected date:", selectedDate);
     query = query.eq("data_referencia", dateString);
   }
 
@@ -91,6 +97,8 @@ export const fetchClosedRundownSnapshots = async (
     console.error("Error fetching closed rundown snapshots:", error);
     throw error;
   }
+
+  console.log("Found snapshots:", data?.length || 0);
 
   // Transformar os dados para o formato esperado
   const snapshots: ClosedRundownSnapshot[] = (data || []).map((item: any) => {
