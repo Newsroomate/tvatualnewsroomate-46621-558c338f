@@ -2,18 +2,31 @@
 import { useEffect } from 'react';
 import { Materia } from '@/types';
 
+interface CopiedBlock {
+  id: string;
+  nome: string;
+  ordem: number;
+  materias: Materia[];
+  is_copied_block: true;
+}
+
 interface UseKeyboardShortcutsProps {
   selectedMateria: Materia | null;
   onCopy: (materia: Materia) => void;
   onPaste: () => void;
   isEspelhoOpen?: boolean;
+  // Novos props para suporte a blocos
+  copiedBlock?: CopiedBlock | null;
+  onPasteBlock?: () => void;
 }
 
 export const useKeyboardShortcuts = ({
   selectedMateria,
   onCopy,
   onPaste,
-  isEspelhoOpen = false
+  isEspelhoOpen = false,
+  copiedBlock,
+  onPasteBlock
 }: UseKeyboardShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -40,11 +53,19 @@ export const useKeyboardShortcuts = ({
       // Paste functionality (Ctrl+V) - only when NOT editing text
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         event.preventDefault();
-        onPaste();
+        
+        // Se há um bloco copiado, priorizar colar o bloco
+        if (copiedBlock && onPasteBlock) {
+          console.log('Colando bloco via Ctrl+V:', copiedBlock.nome);
+          onPasteBlock();
+        } else {
+          // Caso contrário, colar matéria individual
+          onPaste();
+        }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen]);
+  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock]);
 };

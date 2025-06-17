@@ -1,0 +1,2 @@
+
+export { usePasteBlock } from './usePasteBlock';

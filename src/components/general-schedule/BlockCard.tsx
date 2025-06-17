@@ -2,9 +2,10 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronRight, Copy } from "lucide-react";
 import { formatTime } from "../news-schedule/utils";
 import { MaterialCard } from "./MaterialCard";
+import { useClipboard } from "@/hooks/useClipboard";
 
 interface BlockCardProps {
   bloco: any;
@@ -37,12 +38,19 @@ export const BlockCard = ({
 }: BlockCardProps) => {
   const materias = getMateriasList(bloco);
   const blocoDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
+  const { copyBlock } = useClipboard();
 
   console.log(`Bloco ${bloco.nome}:`, {
     materias: materias.length,
     blocoDuracao,
     rawBloco: bloco
   });
+
+  const handleCopyBlock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('Copiando bloco completo:', bloco.nome);
+    copyBlock(bloco, materias);
+  };
 
   return (
     <div className="border rounded-lg p-3 bg-gray-50">
@@ -61,8 +69,19 @@ export const BlockCard = ({
             Bloco {bloco.ordem}
           </Badge>
         </div>
-        <div className="text-xs text-muted-foreground">
-          {materias.length} matérias • {formatTime(blocoDuracao)}
+        <div className="flex items-center space-x-2">
+          <div className="text-xs text-muted-foreground">
+            {materias.length} matérias • {formatTime(blocoDuracao)}
+          </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyBlock}
+            className="p-1 h-6 w-6"
+            title="Copiar bloco completo"
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
         </div>
       </div>
 

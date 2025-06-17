@@ -1,14 +1,14 @@
-
-
 import { useState } from "react";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { usePasteMateria } from "@/hooks/paste-materia";
+import { usePasteBlock } from "@/hooks/paste-block";
 import { useNewsScheduleDualView } from "@/hooks/useNewsScheduleDualView";
 import { useNewsScheduleActions } from "./NewsScheduleActions";
 import { useItemSelection } from "@/hooks/useItemSelection";
+import { useQueryClient } from "@tanstack/react-query";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -34,6 +34,7 @@ export const NewsScheduleHooks = ({
   onBlocksChange,
   children
 }: NewsScheduleHooksProps) => {
+  const queryClient = useQueryClient();
   const [isSaveModelModalOpen, setIsSaveModelModalOpen] = useState(false);
   const [isSavedModelsModalOpen, setIsSavedModelsModalOpen] = useState(false);
   
@@ -84,7 +85,7 @@ export const NewsScheduleHooks = ({
   } = useItemSelection();
 
   // Clipboard functionality
-  const { copiedMateria, copyMateria, clearClipboard, hasCopiedMateria } = useClipboard();
+  const { copiedMateria, copiedBlock, copyMateria, copyBlock, clearClipboard, hasCopiedMateria, hasCopiedBlock } = useClipboard();
   
   // Enhanced paste functionality with optimistic updates
   const { pasteMateria } = usePasteMateria({
@@ -93,6 +94,19 @@ export const NewsScheduleHooks = ({
     selectedMateria,
     copiedMateria,
     clearClipboard
+  });
+
+  // Block paste functionality
+  const { pasteBlock } = usePasteBlock({
+    selectedJournal,
+    currentTelejornal,
+    copiedBlock,
+    clearClipboard,
+    refreshBlocks: () => {
+      if (selectedJournal) {
+        queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
+      }
+    }
   });
 
   // Actions handlers
@@ -114,12 +128,14 @@ export const NewsScheduleHooks = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Enhanced keyboard shortcuts - only handle materia paste when not editing text
+  // Enhanced keyboard shortcuts - support for both materia and block pasting
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: copyMateria,
     onPaste: pasteMateria,
-    isEspelhoOpen: !!currentTelejornal?.espelho_aberto
+    isEspelhoOpen: !!currentTelejornal?.espelho_aberto,
+    copiedBlock,
+    onPasteBlock: pasteBlock
   });
 
   return children({
@@ -159,6 +175,13 @@ export const NewsScheduleHooks = ({
     handleModelApplied,
     handleViewSavedModels,
     handleMateriaSelect,
+    
+    // Clipboard functionality
+    copyMateria,
+    copyBlock,
+    hasCopiedMateria,
+    hasCopiedBlock,
+    copiedBlock,
     
     // Other props
     isDualViewMode,
