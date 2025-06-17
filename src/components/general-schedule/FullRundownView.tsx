@@ -33,7 +33,12 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     handleUpdateEditData
   } = useMateriaOperations(snapshot);
 
-  const { copyMateria } = useClipboard();
+  const { copyMateria, copyBloco } = useClipboard();
+
+  const handleCopyBloco = (blocoData: any) => {
+    console.log('Copiando bloco do histórico:', blocoData);
+    copyBloco(blocoData);
+  };
 
   // Atalhos de teclado para copiar - com funcionalidade aprimorada
   useKeyboardShortcuts({
@@ -82,6 +87,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
             onUpdateEditData={handleUpdateEditData}
             onSelectMateria={handleSelectMateria}
             onCopyMateria={handleCopyMateria}
+            onCopyBloco={handleCopyBloco}
             isSelected={isSelected}
           />
         ))}

@@ -83,8 +83,8 @@ export const NewsScheduleHooks = ({
     isSelected
   } = useItemSelection();
 
-  // Clipboard functionality
-  const { copiedMateria, copyMateria, clearClipboard, hasCopiedMateria } = useClipboard();
+  // Clipboard functionality - updated to support blocks
+  const { copiedMateria, copiedBloco, copyMateria, clearClipboard, hasCopiedMateria, hasCopiedBloco } = useClipboard();
   
   // Enhanced paste functionality with optimistic updates
   const { pasteMateria } = usePasteMateria({
@@ -93,6 +93,16 @@ export const NewsScheduleHooks = ({
     selectedMateria,
     copiedMateria,
     clearClipboard
+  });
+
+  // Paste bloco functionality
+  const { pasteBloco } = usePasteBloco({
+    blocks,
+    setBlocks: setBlocksWrapper,
+    copiedBloco,
+    clearClipboard,
+    telejornalId: selectedJournal,
+    isEspelhoOpen: !!currentTelejornal?.espelho_aberto
   });
 
   // Actions handlers
@@ -114,11 +124,12 @@ export const NewsScheduleHooks = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Enhanced keyboard shortcuts - only handle materia paste when not editing text
+  // Enhanced keyboard shortcuts - with block paste support
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: copyMateria,
     onPaste: pasteMateria,
+    onPasteBloco: pasteBloco,
     isEspelhoOpen: !!currentTelejornal?.espelho_aberto
   });
 

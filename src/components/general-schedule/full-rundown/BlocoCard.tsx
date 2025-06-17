@@ -1,5 +1,14 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Copy } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { formatTime } from "../../news-schedule/utils";
 import { MateriaViewCard } from "./MateriaViewCard";
 import { EditableMateriaForm } from "./EditableMateriaForm";
@@ -17,6 +26,7 @@ interface BlocoCardProps {
   onUpdateEditData: (updates: Partial<EditableMateria>) => void;
   onSelectMateria: (materia: any, blocoId: string, blocoNome: string) => void;
   onCopyMateria: (materia: any, blocoId: string, blocoNome: string) => void;
+  onCopyBloco?: (blocoData: any) => void;
   isSelected: (id: string) => boolean;
 }
 
@@ -42,11 +52,25 @@ export const BlocoCard = ({
   onUpdateEditData,
   onSelectMateria,
   onCopyMateria,
+  onCopyBloco,
   isSelected
 }: BlocoCardProps) => {
   const materias = getMateriasList(bloco);
   const totalDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
   const editedCount = materias.filter((item: any) => item.isEdited).length;
+
+  const handleCopyBloco = () => {
+    if (onCopyBloco) {
+      const blocoData = {
+        id: bloco.id,
+        nome: bloco.nome,
+        ordem: bloco.ordem || blocoIndex + 1,
+        materias: materias,
+        totalTime: totalDuracao
+      };
+      onCopyBloco(blocoData);
+    }
+  };
 
   return (
     <Card key={bloco.id || `bloco-${blocoIndex}`}>
@@ -60,10 +84,27 @@ export const BlocoCard = ({
               </Badge>
             )}
           </CardTitle>
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>{materias.length} matérias</span>
-            <span>•</span>
-            <span>{formatTime(totalDuracao)}</span>
+          <div className="flex items-center space-x-2">
+            <div className="text-sm text-muted-foreground">
+              {materias.length} matérias • {formatTime(totalDuracao)}
+            </div>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleCopyBloco}
+                    className="p-2 hover:bg-blue-100"
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Copiar bloco inteiro
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </CardHeader>
