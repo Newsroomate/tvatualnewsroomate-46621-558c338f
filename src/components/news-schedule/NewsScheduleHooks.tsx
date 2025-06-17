@@ -1,11 +1,10 @@
-
-
 import { useState } from "react";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { usePasteMateria } from "@/hooks/paste-materia";
+import { usePasteBloco } from "@/hooks/usePasteBloco";
 import { useNewsScheduleDualView } from "@/hooks/useNewsScheduleDualView";
 import { useNewsScheduleActions } from "./NewsScheduleActions";
 import { useItemSelection } from "@/hooks/useItemSelection";
