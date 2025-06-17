@@ -1,4 +1,3 @@
-
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
@@ -168,6 +167,8 @@ export const EditorMetaFields = ({
               <SelectItem value="VHT">VHT</SelectItem>
               <SelectItem value="SON">SON</SelectItem>
               <SelectItem value="NET">NET</SelectItem>
+              <SelectItem value="NC">NC</SelectItem>
+              <SelectItem value="NR" className="text-red-600 font-medium">NR</SelectItem>
             </SelectContent>
           </Select>
         </div>
