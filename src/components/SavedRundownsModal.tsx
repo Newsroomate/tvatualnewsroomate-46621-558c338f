@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { SavedRundownView } from "./SavedRundownView";
 import { Loader2 } from "lucide-react";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface SavedRundownsModalProps {
   isOpen: boolean;
@@ -36,14 +37,27 @@ export const SavedRundownsModal = ({
   const loadSavedRundowns = async () => {
     setIsLoading(true);
     try {
-      const dateString = format(targetDate, 'yyyy-MM-dd');
+      // Processar a data corretamente para evitar problemas de timezone
+      const processedDate = new Date(
+        targetDate.getFullYear(),
+        targetDate.getMonth(),
+        targetDate.getDate()
+      );
+      
+      const year = processedDate.getFullYear();
+      const month = String(processedDate.getMonth() + 1).padStart(2, '0');
+      const day = String(processedDate.getDate()).padStart(2, '0');
+      const dateString = `${year}-${month}-${day}`;
+      
+      console.log("Loading saved rundowns for date:", dateString);
+      
       const data = await fetchSavedRundownsByDate(telejornalId, dateString);
       setSavedRundowns(data);
       
       if (data.length === 0) {
         toast({
           title: "Nenhum espelho encontrado",
-          description: `Não há espelhos salvos para a data ${format(targetDate, 'dd/MM/yyyy')}`,
+          description: `Não há espelhos salvos para a data ${format(targetDate, 'dd/MM/yyyy', { locale: ptBR })}`,
         });
       }
     } catch (error) {
@@ -85,7 +99,7 @@ export const SavedRundownsModal = ({
         <div className="flex flex-col h-full">
           <div className="border-b pb-4 mb-4">
             <h2 className="text-lg font-semibold">
-              Espelhos de {format(targetDate, 'dd/MM/yyyy')}
+              Espelhos de {format(targetDate, 'dd/MM/yyyy', { locale: ptBR })}
             </h2>
           </div>
           

@@ -7,6 +7,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { Telejornal } from "@/types";
 
@@ -44,9 +45,22 @@ export const FilterSection = ({
   
   const formatSelectedDate = () => {
     if (selectedDate) {
-      return format(selectedDate, "dd/MM/yyyy");
+      // Usar formatação brasileira para exibição
+      return format(selectedDate, "dd/MM/yyyy", { locale: ptBR });
     }
     return "";
+  };
+
+  const handleDateSelect = (date: Date | undefined) => {
+    if (date) {
+      // Garantir que a data seja processada corretamente sem conversão de timezone
+      const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      console.log("Date selected:", date);
+      console.log("Normalized date:", normalizedDate);
+      setSelectedDate(normalizedDate);
+    } else {
+      setSelectedDate(undefined);
+    }
   };
 
   return (
@@ -99,9 +113,10 @@ export const FilterSection = ({
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={setSelectedDate}
+                onSelect={handleDateSelect}
                 initialFocus
                 className="pointer-events-auto"
+                locale={ptBR}
               />
             </PopoverContent>
           </Popover>

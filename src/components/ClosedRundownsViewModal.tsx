@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { fetchClosedRundowns, ClosedRundown } from "@/services/espelhos-api";
 import { RundownTable } from "./general-schedule/RundownTable";
@@ -37,14 +38,23 @@ export const ClosedRundownsViewModal = ({
   const loadClosedRundowns = async () => {
     setIsLoading(true);
     try {
-      const data = await fetchClosedRundowns(telejornalId, selectedDate);
+      // Processar a data corretamente para evitar problemas de timezone
+      const processedDate = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate()
+      );
+      
+      console.log("Loading closed rundowns for date:", processedDate);
+      
+      const data = await fetchClosedRundowns(telejornalId, processedDate);
       
       setClosedRundowns(data);
       
       if (data.length === 0) {
         toast({
           title: "Nenhum espelho encontrado",
-          description: `Não há espelhos fechados para ${telejornalName} na data ${format(selectedDate, 'dd/MM/yyyy')}`,
+          description: `Não há espelhos fechados para ${telejornalName} na data ${format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })}`,
         });
       }
     } catch (error) {
@@ -90,7 +100,7 @@ export const ClosedRundownsViewModal = ({
       <DialogContent className="sm:max-w-4xl h-auto max-h-[80vh] overflow-hidden flex flex-col">
         <DialogHeader>
           <DialogTitle>
-            Espelhos Fechados - {telejornalName} - {format(selectedDate, 'dd/MM/yyyy')}
+            Espelhos Fechados - {telejornalName} - {format(selectedDate, 'dd/MM/yyyy', { locale: ptBR })}
           </DialogTitle>
         </DialogHeader>
         

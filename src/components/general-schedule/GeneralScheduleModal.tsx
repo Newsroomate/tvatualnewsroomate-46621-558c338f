@@ -58,9 +58,22 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
   const loadClosedSnapshots = async () => {
     setIsLoading(true);
     try {
+      // Processar a data selecionada corretamente para evitar problemas de timezone
+      let processedDate: Date | undefined = undefined;
+      if (selectedDate) {
+        // Criar uma nova data usando apenas ano, mês e dia para evitar problemas de timezone
+        processedDate = new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate()
+        );
+        console.log("Original selected date:", selectedDate);
+        console.log("Processed date for query:", processedDate);
+      }
+
       const data = await fetchClosedRundownSnapshots(
         selectedJornal === "all" ? undefined : selectedJornal, 
-        selectedDate, 
+        processedDate, 
         selectedTime,
         showTimeRange ? startTime : undefined,
         showTimeRange ? endTime : undefined

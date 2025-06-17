@@ -36,9 +36,18 @@ export const HistoricoEspelhosSection = ({
     
     setIsLoadingEspelhos(true);
     try {
+      // Processar a data corretamente para evitar problemas de timezone
+      const processedDate = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate()
+      );
+      
+      console.log("Loading espelhos históricos for date:", processedDate);
+      
       const data = await fetchClosedRundownSnapshots(
         selectedTelejornal === "all" ? undefined : selectedTelejornal,
-        selectedDate
+        processedDate
       );
       setEspelhos(data);
     } catch (error) {
@@ -50,7 +59,13 @@ export const HistoricoEspelhosSection = ({
   };
 
   const handleDateSelect = (date: Date | undefined) => {
-    setSelectedDate(date);
+    if (date) {
+      // Normalizar a data para evitar problemas de timezone
+      const normalizedDate = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+      setSelectedDate(normalizedDate);
+    } else {
+      setSelectedDate(undefined);
+    }
     setIsDatePickerOpen(false);
   };
 
@@ -106,6 +121,7 @@ export const HistoricoEspelhosSection = ({
                   onSelect={handleDateSelect}
                   disabled={(date) => date > new Date()}
                   initialFocus
+                  locale={ptBR}
                 />
               </PopoverContent>
             </Popover>
