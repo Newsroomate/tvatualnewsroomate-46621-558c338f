@@ -88,7 +88,7 @@ export const usePasteBlock = ({
           retranca: `${originalMateria.retranca} (Cópia)`,
           clip: originalMateria.clip || '',
           duracao: originalMateria.duracao || 0,
-          pagina: i + 1, // Renumerar páginas sequencialmente
+          pagina: (i + 1).toString(), // Convert to string
           reporter: originalMateria.reporter || '',
           status: originalMateria.status || 'draft',
           texto: originalMateria.texto || '',
@@ -98,11 +98,7 @@ export const usePasteBlock = ({
           bloco_id: newBlock.id,
           ordem: i + 1,
           // Preservar outros campos importantes
-          pre_producao: originalMateria.pre_producao || '',
-          pos_producao: originalMateria.pos_producao || '',
-          observacoes: originalMateria.observacoes || '',
-          arte_observacoes: originalMateria.arte_observacoes || '',
-          camera_observacoes: originalMateria.camera_observacoes || ''
+          tempo_clip: originalMateria.tempo_clip || ''
         };
 
         const newMateria = await createMateria(materiaData);
