@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -11,12 +10,14 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Search, Loader2, FileText } from "lucide-react";
+import { CalendarIcon, Search, Loader2, FileText, Edit2, Copy } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useToast } from "@/hooks/use-toast";
 import { fetchTelejornais } from "@/services/api";
 import { performDeepSearch, DeepSearchFilters, DeepSearchResult } from "@/services/deep-search-api";
+import { useClipboard } from "@/hooks/useClipboard";
+import { useMateriaOperations } from "@/components/general-schedule/hooks/useMateriaOperations";
 import { Telejornal } from "@/types";
 
 interface DeepSearchModalProps {
@@ -44,6 +45,7 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
   const [searchResults, setSearchResults] = useState<DeepSearchResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const { toast } = useToast();
+  const { copyMateria } = useClipboard();
 
   useEffect(() => {
     if (isOpen) {
@@ -149,6 +151,62 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
       part.toLowerCase() === highlight.toLowerCase() ? 
         <mark key={index} className="bg-yellow-200">{part}</mark> : part
     );
+  };
+
+  // Converter resultado da busca para formato Materia padrão
+  const convertSearchResultToMateria = (result: DeepSearchResult) => {
+    return {
+      id: result.id,
+      retranca: result.retranca,
+      clip: result.clip || '',
+      duracao: 0, // Não temos duração no resultado da busca
+      texto: result.texto || '',
+      cabeca: result.cabeca || '',
+      gc: result.gc || '',
+      reporter: result.reporter || '',
+      status: 'draft',
+      pagina: '',
+      tipo_material: '',
+      bloco_id: '', // Será definido ao colar
+      ordem: 0,
+      created_at: result.created_at,
+      updated_at: result.updated_at,
+      tags: [],
+      local_gravacao: '',
+      equipamento: '',
+      is_from_snapshot: true // Marca como vinda do histórico
+    };
+  };
+
+  // Handler para copiar matéria da busca profunda
+  const handleCopyMateria = (result: DeepSearchResult) => {
+    console.log('Copiando matéria da busca profunda:', {
+      id: result.id,
+      retranca: result.retranca,
+      campos: Object.keys(result).length
+    });
+
+    const standardMateria = convertSearchResultToMateria(result);
+    copyMateria(standardMateria);
+
+    toast({
+      title: "Matéria copiada da busca",
+      description: `"${result.retranca}" foi copiada. Use Ctrl+V para colar no espelho atual.`,
+    });
+  };
+
+  // Handler para editar matéria da busca profunda
+  const handleEditMateria = (result: DeepSearchResult) => {
+    console.log('Editando matéria da busca profunda:', {
+      id: result.id,
+      retranca: result.retranca
+    });
+
+    toast({
+      title: "Funcionalidade em desenvolvimento",
+      description: "A edição de matérias da busca profunda será implementada em breve.",
+      variant: "default"
+    });
   };
 
   return (
@@ -321,13 +379,35 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
                             <div className="space-y-2">
                               <div className="flex items-start justify-between">
                                 <h4 className="font-medium text-sm">{result.retranca}</h4>
-                                <div className="flex space-x-2">
+                                <div className="flex items-center space-x-2">
                                   <Badge variant="outline" className="text-xs">
                                     {result.telejornal_nome}
                                   </Badge>
                                   <Badge variant="secondary" className="text-xs">
                                     {result.bloco_nome}
                                   </Badge>
+                                  
+                                  {/* Botões de ação */}
+                                  <div className="flex space-x-1">
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleEditMateria(result)}
+                                      className="h-6 w-6 p-0"
+                                      title="Editar matéria"
+                                    >
+                                      <Edit2 className="h-3 w-3" />
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleCopyMateria(result)}
+                                      className="h-6 w-6 p-0"
+                                      title="Copiar matéria"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
                               
