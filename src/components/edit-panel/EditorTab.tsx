@@ -61,7 +61,7 @@ export const EditorTab = ({
       { field: 'clip', value: formData.clip, maxLength: 100 },
       { field: 'reporter', value: formData.reporter, maxLength: 100 },
       { field: 'pagina', value: formData.pagina, maxLength: 50 },
-      { field: 'texto', value: formData.texto, maxLength: 5000 },
+      { field: 'texto', value: formData.texto, maxLength: 10000 },
       { field: 'cabeca', value: formData.cabeca, maxLength: 5000 },
       { field: 'gc', value: formData.gc, maxLength: 5000 },
     ];
