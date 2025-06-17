@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -157,6 +158,7 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
   const convertSearchResultToMateria = (result: DeepSearchResult) => {
     return {
       id: result.id,
+      titulo: result.retranca, // Map retranca to titulo to satisfy the interface
       retranca: result.retranca,
       clip: result.clip || '',
       duracao: 0, // Não temos duração no resultado da busca
