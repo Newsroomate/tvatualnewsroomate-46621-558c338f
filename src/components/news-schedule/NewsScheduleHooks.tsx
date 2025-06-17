@@ -83,7 +83,7 @@ export const NewsScheduleHooks = ({
   } = useItemSelection();
 
   // Clipboard functionality - updated to support blocks
-  const { copiedMateria, copiedBloco, copyMateria, clearClipboard, hasCopiedMateria, hasCopiedBloco } = useClipboard();
+  const { copiedMateria, copiedBloco, copyMateria, copyBloco, clearClipboard, hasCopiedMateria, hasCopiedBloco } = useClipboard();
   
   // Enhanced paste functionality with optimistic updates
   const { pasteMateria } = usePasteMateria({
@@ -169,6 +169,10 @@ export const NewsScheduleHooks = ({
     handleModelApplied,
     handleViewSavedModels,
     handleMateriaSelect,
+    
+    // Clipboard operations
+    copyMateria,
+    copyBloco,
     
     // Other props
     isDualViewMode,

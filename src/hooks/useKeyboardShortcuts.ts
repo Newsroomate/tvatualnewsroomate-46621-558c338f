@@ -26,27 +26,26 @@ export const useKeyboardShortcuts = ({
       }
 
       // Ctrl+C - Copy selected materia
-      if (event.ctrlKey && event.key === 'c' && selectedMateria && onCopy) {
+      if (event.ctrlKey && event.key === 'c' && selectedMateria && onCopy && !event.shiftKey) {
         event.preventDefault();
         onCopy(selectedMateria);
-        return;
-      }
-
-      // Ctrl+V - Paste materia
-      if (event.ctrlKey && event.key === 'v' && isEspelhoOpen) {
-        event.preventDefault();
-        if (onPaste) {
-          onPaste();
-        }
+        console.log('Copiando matéria via Ctrl+C:', selectedMateria.retranca);
         return;
       }
 
       // Ctrl+Shift+V - Paste bloco
-      if (event.ctrlKey && event.shiftKey && event.key === 'V' && isEspelhoOpen) {
+      if (event.ctrlKey && event.shiftKey && event.key === 'V' && isEspelhoOpen && onPasteBloco) {
         event.preventDefault();
-        if (onPasteBloco) {
-          onPasteBloco();
-        }
+        console.log('Tentando colar bloco via Ctrl+Shift+V');
+        onPasteBloco();
+        return;
+      }
+
+      // Ctrl+V - Paste materia (only if not Shift+V)
+      if (event.ctrlKey && event.key === 'v' && !event.shiftKey && isEspelhoOpen && onPaste) {
+        event.preventDefault();
+        console.log('Tentando colar matéria via Ctrl+V');
+        onPaste();
         return;
       }
     };

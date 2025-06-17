@@ -1,7 +1,7 @@
 
 import { toast } from '@/hooks/use-toast';
 import { createBloco } from '@/services/blocos-api';
-import { createMateria, updateMateriasOrdem } from '@/services/materias-api';
+import { createMateria } from '@/services/materias-api';
 import { Materia } from '@/types';
 
 interface BlocoClipboard {
@@ -31,10 +31,17 @@ export const usePasteBloco = ({
 }: UsePasteBlocoProps) => {
   
   const pasteBloco = async () => {
+    console.log('Iniciando colagem de bloco:', {
+      copiedBloco: !!copiedBloco,
+      telejornalId,
+      isEspelhoOpen,
+      blocksCount: blocks.length
+    });
+
     if (!copiedBloco) {
       toast({
         title: "Nenhum bloco copiado",
-        description: "Não há bloco na área de transferência para colar",
+        description: "Copie um bloco primeiro usando o botão de copiar",
         variant: "destructive"
       });
       return;
@@ -58,19 +65,11 @@ export const usePasteBloco = ({
       return;
     }
 
-    console.log('Iniciando processo de colar bloco:', {
-      blocoCopiado: {
-        nome: copiedBloco.nome,
-        materias: copiedBloco.materias.length,
-        totalTime: copiedBloco.totalTime
-      },
-      telejornalDestino: telejornalId,
-      blocosExistentes: blocks.length
-    });
-
     try {
-      // 1. Criar o novo bloco
-      const nextOrder = Math.max(...blocks.map(b => b.ordem), 0) + 1;
+      // 1. Determinar a próxima ordem do bloco
+      const nextOrder = Math.max(...blocks.map(b => b.ordem || 0), 0) + 1;
+      
+      // 2. Criar o novo bloco
       const newBlocoData = {
         nome: copiedBloco.nome,
         telejornal_id: telejornalId,
@@ -80,14 +79,12 @@ export const usePasteBloco = ({
       console.log('Criando novo bloco:', newBlocoData);
       const newBloco = await createBloco(newBlocoData);
 
-      // 2. Criar as matérias do bloco
-      console.log('Criando matérias do bloco...');
+      // 3. Criar as matérias do bloco
       const newMaterias: Materia[] = [];
       
       for (let i = 0; i < copiedBloco.materias.length; i++) {
         const originalMateria = copiedBloco.materias[i];
         
-        // Preparar dados da matéria preservando todos os campos
         const materiaData = {
           bloco_id: newBloco.id,
           ordem: i,
@@ -104,20 +101,14 @@ export const usePasteBloco = ({
           tipo_material: originalMateria.tipo_material || '',
           local_gravacao: originalMateria.local_gravacao || '',
           equipamento: originalMateria.equipamento || '',
-          tags: originalMateria.tags || [],
-          horario_exibicao: originalMateria.horario_exibicao || ''
+          tags: originalMateria.tags || []
         };
-
-        console.log(`Criando matéria ${i + 1}/${copiedBloco.materias.length}:`, {
-          retranca: materiaData.retranca,
-          duracao: materiaData.duracao
-        });
 
         const newMateria = await createMateria(materiaData);
         newMaterias.push(newMateria);
       }
 
-      // 3. Atualizar estado local com o novo bloco e matérias
+      // 4. Atualizar estado local
       const newBlockWithItems = {
         ...newBloco,
         items: newMaterias,
@@ -126,7 +117,7 @@ export const usePasteBloco = ({
 
       setBlocks((currentBlocks) => [...currentBlocks, newBlockWithItems]);
 
-      // 4. Limpar clipboard após sucesso
+      // 5. Limpar clipboard
       clearClipboard();
 
       toast({
@@ -134,11 +125,7 @@ export const usePasteBloco = ({
         description: `Bloco "${copiedBloco.nome}" foi colado com ${copiedBloco.materias.length} matérias`,
       });
 
-      console.log('Bloco colado com sucesso:', {
-        novoBloco: newBloco.nome,
-        materiasColadas: newMaterias.length,
-        tempoTotal: copiedBloco.totalTime
-      });
+      console.log('Bloco colado com sucesso:', newBlockWithItems);
 
     } catch (error) {
       console.error('Erro ao colar bloco:', error);
