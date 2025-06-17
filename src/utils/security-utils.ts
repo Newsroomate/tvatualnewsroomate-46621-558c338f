@@ -48,7 +48,7 @@ export const canPerformAction = (
         return ['editor', 'editor_chefe'].includes(role);
       }
       if (action === 'delete') {
-        return role === 'editor_chefe';
+        return ['editor', 'editor_chefe'].includes(role);
       }
       break;
 
@@ -57,7 +57,7 @@ export const canPerformAction = (
         return ['reporter', 'editor', 'editor_chefe'].includes(role);
       }
       if (action === 'delete') {
-        return role === 'editor_chefe';
+        return ['editor', 'editor_chefe'].includes(role);
       }
       break;
 
