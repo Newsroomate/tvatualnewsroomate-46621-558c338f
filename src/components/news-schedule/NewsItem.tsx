@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Trash2, Pencil, Copy } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -70,6 +71,8 @@ export const NewsItem = ({
       case 'VHT': return 'bg-pink-50 text-pink-700 border border-pink-200';
       case 'SON': return 'bg-indigo-50 text-indigo-700 border border-indigo-200';
       case 'NET': return 'bg-teal-50 text-teal-700 border border-teal-200';
+      case 'NC': return 'bg-gray-50 text-gray-600 border border-gray-200';
+      case 'NR': return 'bg-red-100 text-red-800 border border-red-300 font-bold';
       default: return 'bg-gray-50 text-gray-600 border border-gray-200';
     }
   };
