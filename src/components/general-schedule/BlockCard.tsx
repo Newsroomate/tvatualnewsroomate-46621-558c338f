@@ -77,10 +77,10 @@ export const BlockCard = ({
             variant="ghost"
             size="sm"
             onClick={handleCopyBlock}
-            className="p-1 h-6 w-6"
+            className="p-1 h-7 w-7 hover:bg-gray-200"
             title="Copiar bloco completo"
           >
-            <Copy className="h-3 w-3" />
+            <Copy className="h-4 w-4" />
           </Button>
         </div>
       </div>
