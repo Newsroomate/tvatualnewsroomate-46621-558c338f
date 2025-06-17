@@ -1,10 +1,11 @@
+
+
 import { useState } from "react";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
 import { useClipboard } from "@/hooks/useClipboard";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { usePasteMateria } from "@/hooks/paste-materia";
-import { usePasteBloco } from "@/hooks/usePasteBloco";
 import { useNewsScheduleDualView } from "@/hooks/useNewsScheduleDualView";
 import { useNewsScheduleActions } from "./NewsScheduleActions";
 import { useItemSelection } from "@/hooks/useItemSelection";
@@ -82,8 +83,8 @@ export const NewsScheduleHooks = ({
     isSelected
   } = useItemSelection();
 
-  // Clipboard functionality - updated to support blocks
-  const { copiedMateria, copiedBloco, copyMateria, copyBloco, clearClipboard, hasCopiedMateria, hasCopiedBloco } = useClipboard();
+  // Clipboard functionality
+  const { copiedMateria, copyMateria, clearClipboard, hasCopiedMateria } = useClipboard();
   
   // Enhanced paste functionality with optimistic updates
   const { pasteMateria } = usePasteMateria({
@@ -92,16 +93,6 @@ export const NewsScheduleHooks = ({
     selectedMateria,
     copiedMateria,
     clearClipboard
-  });
-
-  // Paste bloco functionality
-  const { pasteBloco } = usePasteBloco({
-    blocks,
-    setBlocks: setBlocksWrapper,
-    copiedBloco,
-    clearClipboard,
-    telejornalId: selectedJournal,
-    isEspelhoOpen: !!currentTelejornal?.espelho_aberto
   });
 
   // Actions handlers
@@ -123,12 +114,11 @@ export const NewsScheduleHooks = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Enhanced keyboard shortcuts - with block paste support
+  // Enhanced keyboard shortcuts - only handle materia paste when not editing text
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: copyMateria,
     onPaste: pasteMateria,
-    onPasteBloco: pasteBloco,
     isEspelhoOpen: !!currentTelejornal?.espelho_aberto
   });
 
@@ -169,10 +159,6 @@ export const NewsScheduleHooks = ({
     handleModelApplied,
     handleViewSavedModels,
     handleMateriaSelect,
-    
-    // Clipboard operations
-    copyMateria,
-    copyBloco,
     
     // Other props
     isDualViewMode,

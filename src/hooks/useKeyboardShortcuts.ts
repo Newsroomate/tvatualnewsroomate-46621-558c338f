@@ -3,10 +3,9 @@ import { useEffect } from 'react';
 import { Materia } from '@/types';
 
 interface UseKeyboardShortcutsProps {
-  selectedMateria?: Materia | null;
-  onCopy?: (materia: Materia) => void;
-  onPaste?: () => void;
-  onPasteBloco?: () => void;
+  selectedMateria: Materia | null;
+  onCopy: (materia: Materia) => void;
+  onPaste: () => void;
   isEspelhoOpen?: boolean;
 }
 
@@ -14,43 +13,38 @@ export const useKeyboardShortcuts = ({
   selectedMateria,
   onCopy,
   onPaste,
-  onPasteBloco,
   isEspelhoOpen = false
 }: UseKeyboardShortcutsProps) => {
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Skip if user is typing in an input field
-      const target = event.target as HTMLElement;
-      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.contentEditable === 'true') {
-        return;
+      // Only handle shortcuts when espelho is open
+      if (!isEspelhoOpen) return;
+      
+      // Check if user is currently editing a text field
+      const activeElement = document.activeElement as HTMLElement;
+      const isEditingText = activeElement && (
+        activeElement.tagName === 'INPUT' || 
+        activeElement.tagName === 'TEXTAREA' ||
+        activeElement.contentEditable === 'true' ||
+        activeElement.getAttribute('role') === 'textbox'
+      );
+
+      // Copy functionality (Ctrl+C)
+      if (event.ctrlKey && event.key === 'c' && !isEditingText) {
+        if (selectedMateria) {
+          event.preventDefault();
+          onCopy(selectedMateria);
+        }
       }
 
-      // Ctrl+C - Copy selected materia
-      if (event.ctrlKey && event.key === 'c' && selectedMateria && onCopy && !event.shiftKey) {
+      // Paste functionality (Ctrl+V) - only when NOT editing text
+      if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         event.preventDefault();
-        onCopy(selectedMateria);
-        console.log('Copiando matéria via Ctrl+C:', selectedMateria.retranca);
-        return;
-      }
-
-      // Ctrl+Shift+V - Paste bloco
-      if (event.ctrlKey && event.shiftKey && event.key === 'V' && isEspelhoOpen && onPasteBloco) {
-        event.preventDefault();
-        console.log('Tentando colar bloco via Ctrl+Shift+V');
-        onPasteBloco();
-        return;
-      }
-
-      // Ctrl+V - Paste materia (only if not Shift+V)
-      if (event.ctrlKey && event.key === 'v' && !event.shiftKey && isEspelhoOpen && onPaste) {
-        event.preventDefault();
-        console.log('Tentando colar matéria via Ctrl+V');
         onPaste();
-        return;
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedMateria, onCopy, onPaste, onPasteBloco, isEspelhoOpen]);
+  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen]);
 };

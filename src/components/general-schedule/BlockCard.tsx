@@ -2,15 +2,9 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight, Copy } from "lucide-react";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import { formatTime } from "../news-schedule/utils";
 import { MaterialCard } from "./MaterialCard";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 interface BlockCardProps {
   bloco: any;
@@ -18,7 +12,6 @@ interface BlockCardProps {
   isExpanded: boolean;
   onToggleExpansion: () => void;
   onCopyMateria?: (materia: any) => void;
-  onCopyBloco?: (bloco: any) => void;
   onSelectMateria?: (materia: any) => void;
   isSelected?: (materiaId: string) => boolean;
 }
@@ -39,25 +32,11 @@ export const BlockCard = ({
   isExpanded, 
   onToggleExpansion,
   onCopyMateria,
-  onCopyBloco,
   onSelectMateria,
   isSelected
 }: BlockCardProps) => {
   const materias = getMateriasList(bloco);
   const blocoDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
-
-  const handleCopyBloco = () => {
-    if (onCopyBloco) {
-      const blocoData = {
-        id: bloco.id,
-        nome: bloco.nome,
-        ordem: bloco.ordem || blocoIndex + 1,
-        materias: materias,
-        totalTime: blocoDuracao
-      };
-      onCopyBloco(blocoData);
-    }
-  };
 
   console.log(`Bloco ${bloco.nome}:`, {
     materias: materias.length,
@@ -82,27 +61,8 @@ export const BlockCard = ({
             Bloco {bloco.ordem}
           </Badge>
         </div>
-        <div className="flex items-center space-x-2">
-          <div className="text-xs text-muted-foreground">
-            {materias.length} matérias • {formatTime(blocoDuracao)}
-          </div>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={handleCopyBloco}
-                  className="p-1 h-6 w-6 hover:bg-blue-100"
-                >
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                Copiar bloco inteiro
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+        <div className="text-xs text-muted-foreground">
+          {materias.length} matérias • {formatTime(blocoDuracao)}
         </div>
       </div>
 
