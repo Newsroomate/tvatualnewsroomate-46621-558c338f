@@ -1,9 +1,13 @@
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Copy } from "lucide-react";
 import { formatTime } from "../../news-schedule/utils";
 import { MateriaViewCard } from "./MateriaViewCard";
 import { EditableMateriaForm } from "./EditableMateriaForm";
 import { EditableMateria } from "../types";
+import { useClipboard } from "@/hooks/useClipboard";
 
 interface BlocoCardProps {
   bloco: any;
@@ -47,6 +51,13 @@ export const BlocoCard = ({
   const materias = getMateriasList(bloco);
   const totalDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
   const editedCount = materias.filter((item: any) => item.isEdited).length;
+  const { copyBlock } = useClipboard();
+
+  const handleCopyBlock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    console.log('Copiando bloco completo:', bloco.nome);
+    copyBlock(bloco, materias);
+  };
 
   return (
     <Card key={bloco.id || `bloco-${blocoIndex}`}>
@@ -60,10 +71,21 @@ export const BlocoCard = ({
               </Badge>
             )}
           </CardTitle>
-          <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-            <span>{materias.length} matérias</span>
-            <span>•</span>
-            <span>{formatTime(totalDuracao)}</span>
+          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
+              <span>{materias.length} matérias</span>
+              <span>•</span>
+              <span>{formatTime(totalDuracao)}</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyBlock}
+              className="p-1 h-7 w-7 hover:bg-gray-200"
+              title="Copiar bloco completo"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </CardHeader>
