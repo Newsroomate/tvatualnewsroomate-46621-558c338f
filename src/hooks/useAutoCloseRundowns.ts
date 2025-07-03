@@ -17,9 +17,9 @@ export const useAutoCloseRundowns = () => {
     refetchInterval: 30000, // Verifica a cada 30 segundos
   });
 
-  const saveRundownBeforeClosing = async (telejornalId: string, telejornalNome: string) => {
+  const saveRundownBeforeClosing = async (telejornalId: string, telejornalNome: string, isAutomatic: boolean = false) => {
     try {
-      console.log(`Salvando snapshot antes de fechar automaticamente: ${telejornalNome}`);
+      console.log(`Salvando snapshot antes de fechar: ${telejornalNome}`, { isAutomatic });
       
       const blocks = await fetchBlocosByTelejornal(telejornalId);
       const blocksWithItems = await Promise.all(
@@ -45,17 +45,27 @@ export const useAutoCloseRundowns = () => {
         })
       );
 
-      // Usar a data de ontem como referência para o espelho fechado automaticamente
-      // Corrigir a lógica de data para evitar problemas de timezone
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
+      // Para fechamento automático, usar data de ontem
+      // Para fechamento manual, usar data atual
+      let dataReferencia: string;
       
-      const year = yesterday.getFullYear();
-      const month = String(yesterday.getMonth() + 1).padStart(2, '0');
-      const day = String(yesterday.getDate()).padStart(2, '0');
-      const dataReferencia = `${year}-${month}-${day}`;
+      if (isAutomatic) {
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        const year = yesterday.getFullYear();
+        const month = String(yesterday.getMonth() + 1).padStart(2, '0');
+        const day = String(yesterday.getDate()).padStart(2, '0');
+        dataReferencia = `${year}-${month}-${day}`;
+      } else {
+        // Fechamento manual: usar data atual do dispositivo
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        dataReferencia = `${year}-${month}-${day}`;
+      }
 
-      console.log("Saving with date reference:", dataReferencia);
+      console.log("Saving with date reference:", dataReferencia, { isAutomatic });
 
       await saveRundownSnapshot({
         telejornal_id: telejornalId,
@@ -76,8 +86,8 @@ export const useAutoCloseRundowns = () => {
     try {
       console.log(`Fechando automaticamente espelho de ${telejornal.nome}`);
       
-      // Salvar snapshot antes de fechar
-      await saveRundownBeforeClosing(telejornal.id, telejornal.nome);
+      // Salvar snapshot antes de fechar (com flag de fechamento automático)
+      await saveRundownBeforeClosing(telejornal.id, telejornal.nome, true);
       
       // Fechar o espelho
       await updateTelejornal(telejornal.id, {
@@ -135,6 +145,10 @@ export const useAutoCloseRundowns = () => {
   }, [telejornais, toast, queryClient]);
 
   return {
+    // Função para fechamento manual (sem aplicar data anterior)
+    saveRundownBeforeClosing: (telejornalId: string, telejornalNome: string) => 
+      saveRundownBeforeClosing(telejornalId, telejornalNome, false),
+    
     // Podemos expor funções se necessário no futuro
     forceCloseAllRundowns: async () => {
       const openRundowns = telejornais.filter(tj => tj.espelho_aberto);

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
@@ -105,7 +104,7 @@ const Layout = () => {
     if (!selectedJournal || !currentTelejornal) return;
 
     try {
-      console.log("Salvando snapshot do espelho atual...");
+      console.log("Salvando snapshot do espelho atual para fechamento manual...");
       
       // Fetch current blocks and materias
       const blocks = await fetchBlocosByTelejornal(selectedJournal);
@@ -132,17 +131,26 @@ const Layout = () => {
         })
       );
 
+      // Para fechamento manual, usar a data atual do dispositivo
+      const today = new Date();
+      const year = today.getFullYear();
+      const month = String(today.getMonth() + 1).padStart(2, '0');
+      const day = String(today.getDate()).padStart(2, '0');
+      const dataReferencia = `${year}-${month}-${day}`;
+
+      console.log("Fechamento manual - usando data atual:", dataReferencia);
+
       // Save the snapshot
       await saveRundownSnapshot({
         telejornal_id: selectedJournal,
-        data_referencia: new Date().toISOString().split('T')[0],
+        data_referencia: dataReferencia,
         nome: currentTelejornal.nome,
         estrutura: {
           blocos: blocksWithItems
         }
       });
 
-      console.log("Snapshot salvo com sucesso!");
+      console.log("Snapshot salvo com sucesso para fechamento manual!");
     } catch (error) {
       console.error("Erro ao salvar snapshot:", error);
       toast({
