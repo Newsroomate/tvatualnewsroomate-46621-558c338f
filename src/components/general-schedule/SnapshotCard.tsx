@@ -58,6 +58,9 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDe
     estrutura: snapshot.estrutura_completa
   });
 
+  // Garantir que a data seja exibida corretamente baseada na data_referencia
+  const displayDate = new Date(snapshot.data_referencia + 'T00:00:00');
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
@@ -75,7 +78,7 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDe
               {snapshot.nome_telejornal}
             </CardTitle>
             <Badge variant="outline" className="text-xs">
-              {format(new Date(snapshot.data_referencia), "dd/MM/yyyy")}
+              {format(displayDate, "dd/MM/yyyy")}
             </Badge>
             {snapshot.horario && (
               <Badge variant="secondary" className="text-xs">

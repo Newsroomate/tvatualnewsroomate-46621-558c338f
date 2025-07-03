@@ -111,25 +111,34 @@ export const SavedRundownsModal = ({
               </div>
             ) : savedRundowns.length > 0 ? (
               <div className="space-y-2">
-                {savedRundowns.map((rundown) => (
-                  <div 
-                    key={rundown.id}
-                    className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
-                    onClick={() => handleViewRundown(rundown)}
-                  >
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="font-medium">{rundown.nome}</h3>
-                        <p className="text-sm text-muted-foreground">
-                          Salvo em: {new Date(rundown.data_salvamento).toLocaleString('pt-BR')}
-                        </p>
+                {savedRundowns.map((rundown) => {
+                  // Garantir que a data seja exibida corretamente
+                  const displayDate = new Date(rundown.data_referencia + 'T00:00:00');
+                  const saveDate = new Date(rundown.data_salvamento);
+                  
+                  return (
+                    <div 
+                      key={rundown.id}
+                      className="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer"
+                      onClick={() => handleViewRundown(rundown)}
+                    >
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="font-medium">{rundown.nome}</h3>
+                          <p className="text-sm text-muted-foreground">
+                            Data do espelho: {format(displayDate, 'dd/MM/yyyy', { locale: ptBR })}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            Salvo em: {format(saveDate, 'dd/MM/yyyy HH:mm', { locale: ptBR })}
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          Visualizar
+                        </Button>
                       </div>
-                      <Button variant="outline" size="sm">
-                        Visualizar
-                      </Button>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-40">

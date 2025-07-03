@@ -2,6 +2,8 @@
 import { Button } from "@/components/ui/button";
 import { SavedRundown } from "@/types/saved-rundowns";
 import { formatTime } from "@/components/news-schedule/utils";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 interface SavedRundownViewProps {
   savedRundown: SavedRundown;
@@ -19,11 +21,14 @@ export const SavedRundownView = ({ savedRundown, onClose }: SavedRundownViewProp
     }
   };
 
+  // Garantir que a data seja exibida corretamente
+  const displayDate = new Date(savedRundown.data_referencia + 'T00:00:00');
+
   return (
     <>
       <div className="bg-gray-200 p-2 -mt-4 -mx-4 mb-4 flex justify-between items-center">
         <span className="font-medium text-gray-700">
-          Espelho em modo de leitura - {savedRundown.nome} - {new Date(savedRundown.data_referencia).toLocaleDateString('pt-BR')}
+          Espelho em modo de leitura - {savedRundown.nome} - {format(displayDate, 'dd/MM/yyyy', { locale: ptBR })}
         </span>
         <Button variant="outline" size="sm" onClick={onClose}>
           Voltar
