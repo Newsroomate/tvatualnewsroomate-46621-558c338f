@@ -20,7 +20,6 @@ interface ScheduleContentProps {
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
   onDuplicateItem: (item: Materia) => void;
-  onCopyItem: (item: Materia) => void;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
   journalPrefix?: string;
@@ -44,7 +43,6 @@ export const ScheduleContent = ({
   onEditItem,
   onDeleteItem,
   onDuplicateItem,
-  onCopyItem,
   onRenameBlock,
   onDeleteBlock,
   journalPrefix = "default",
@@ -116,7 +114,6 @@ export const ScheduleContent = ({
             onEditItem={onEditItem}
             onDeleteItem={onDeleteItem}
             onDuplicateItem={onDuplicateItem}
-            onCopyItem={onCopyItem}
             isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
             onRenameBlock={onRenameBlock}
             onDeleteBlock={onDeleteBlock}

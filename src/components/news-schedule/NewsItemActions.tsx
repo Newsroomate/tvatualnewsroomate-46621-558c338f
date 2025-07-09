@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Copy, Clipboard } from "lucide-react";
+import { Trash2, Pencil, Copy } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -14,7 +14,6 @@ interface NewsItemActionsProps {
   onEdit: (item: Materia) => void;
   onDelete: (item: Materia) => void;
   onDuplicate: (item: Materia) => void;
-  onCopy: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModify?: boolean;
 }
@@ -24,16 +23,9 @@ export const NewsItemActions = ({
   onEdit,
   onDelete,
   onDuplicate,
-  onCopy,
   isEspelhoOpen,
   canModify = true
 }: NewsItemActionsProps) => {
-  const handleCopyClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    console.log('Botão copiar clicado para matéria:', item.retranca);
-    onCopy(item);
-  };
-
   return (
     <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
       <TooltipProvider>
@@ -67,44 +59,22 @@ export const NewsItemActions = ({
             <Button 
               size="sm" 
               variant="ghost" 
-              onClick={handleCopyClick}
-              disabled={!isEspelhoOpen || !canModify}
-              className="text-blue-600 hover:text-blue-800"
-            >
-              <Clipboard className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            {!isEspelhoOpen 
-              ? "Abra o espelho para copiar" 
-              : !canModify 
-                ? "Sem permissão para copiar"
-                : "Copiar matéria (Ctrl+C)"
-            }
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              size="sm" 
-              variant="ghost" 
               onClick={() => onDuplicate(item)}
               disabled={!isEspelhoOpen || !canModify}
             >
               <Copy className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
-            {!isEspelhoOpen 
-              ? "Abra o espelho para duplicar" 
-              : !canModify 
-                ? "Sem permissão para duplicar"
-                : "Duplicar matéria"
-            }
-          </TooltipContent>
+          {!isEspelhoOpen && (
+            <TooltipContent>
+              Abra o espelho para duplicar
+            </TooltipContent>
+          )}
+          {!canModify && isEspelhoOpen && (
+            <TooltipContent>
+              Sem permissão para duplicar
+            </TooltipContent>
+          )}
         </Tooltip>
       </TooltipProvider>
       
@@ -121,14 +91,16 @@ export const NewsItemActions = ({
               <Trash2 className="h-4 w-4" />
             </Button>
           </TooltipTrigger>
-          <TooltipContent>
-            {!isEspelhoOpen 
-              ? "Abra o espelho para excluir" 
-              : !canModify 
-                ? "Sem permissão para excluir"
-                : "Excluir matéria"
-            }
-          </TooltipContent>
+          {!isEspelhoOpen && (
+            <TooltipContent>
+              Abra o espelho para excluir
+            </TooltipContent>
+          )}
+          {!canModify && isEspelhoOpen && (
+            <TooltipContent>
+              Sem permissão para excluir
+            </TooltipContent>
+          )}
         </Tooltip>
       </TooltipProvider>
     </div>

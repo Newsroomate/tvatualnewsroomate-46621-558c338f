@@ -1,7 +1,7 @@
 
+import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Materia } from "@/types";
 import { NewsItem } from "./NewsItem";
-import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 interface BlockContentProps {
   blockId: string;
@@ -9,100 +9,97 @@ interface BlockContentProps {
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
   onDuplicateItem: (item: Materia) => void;
-  onCopyItem: (item: Materia) => void;
   isEspelhoOpen: boolean;
-  canModifyItems: boolean;
-  
+  canModifyItems?: boolean;
   // Batch selection props
   isBatchMode?: boolean;
-  isSelected?: (id: string) => boolean;
-  onToggleSelection?: (id: string) => void;
-  
+  isSelected?: (itemId: string) => boolean;
+  onToggleSelection?: (itemId: string) => void;
   // Visual selection props
   selectedItemId?: string | null;
-  onItemClick?: (item: Materia) => void;
+  onItemClick?: (materia: Materia) => void;
 }
 
-export const BlockContent = ({
-  blockId,
-  items,
-  onEditItem,
+export const BlockContent = ({ 
+  blockId, 
+  items, 
+  onEditItem, 
   onDeleteItem,
   onDuplicateItem,
-  onCopyItem,
   isEspelhoOpen,
-  canModifyItems,
+  canModifyItems = true,
+  // Batch selection props
   isBatchMode = false,
   isSelected,
   onToggleSelection,
+  // Visual selection props
   selectedItemId,
   onItemClick
 }: BlockContentProps) => {
-  console.log('BlockContent: selectedItemId =', selectedItemId);
-  console.log('BlockContent: onItemClick =', !!onItemClick);
-
-  const handleItemClick = (item: Materia) => {
-    console.log('BlockContent: handleItemClick chamado para:', item.retranca);
-    if (onItemClick) {
-      onItemClick(item);
-    }
-  };
-
-  const handleCopyItem = (item: Materia) => {
-    console.log('BlockContent: Copiando item:', item.retranca);
-    onCopyItem(item);
-  };
-
-  if (!items || items.length === 0) {
-    return (
-      <div className="p-4 text-center text-gray-500">
-        Nenhuma matéria neste bloco
-      </div>
-    );
-  }
-
   return (
-    <div className="p-4">
-      <Droppable droppableId={`block-${blockId}`} type="MATERIA">
+    <div className="overflow-x-auto">
+      <Droppable droppableId={blockId}>
         {(provided) => (
           <div
-            {...provided.droppableProps}
             ref={provided.innerRef}
-            className="space-y-2"
+            {...provided.droppableProps}
           >
-            {items.map((item, index) => (
-              <Draggable
-                key={item.id}
-                draggableId={item.id}
-                index={index}
-                isDragDisabled={!isEspelhoOpen || !canModifyItems}
-              >
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.draggableProps}
-                    {...provided.dragHandleProps}
-                    className={snapshot.isDragging ? "opacity-50" : ""}
-                  >
-                    <NewsItem
-                      item={item}
-                      onEdit={onEditItem}
-                      onDelete={onDeleteItem}
-                      onDuplicate={onDuplicateItem}
-                      onCopy={handleCopyItem}
-                      isEspelhoOpen={isEspelhoOpen}
-                      canModifyItems={canModifyItems}
-                      isSelected={selectedItemId === item.id}
-                      onItemClick={handleItemClick}
-                      isBatchMode={isBatchMode}
-                      onToggleSelection={onToggleSelection}
-                      isSelectedForBatch={isSelected ? isSelected(item.id) : false}
-                    />
-                  </div>
+            <table className="w-full">
+              <thead className="bg-gray-50 text-xs uppercase">
+                <tr>
+                  {/* Checkbox column header */}
+                  {isBatchMode && (
+                    <th className="py-3 px-4 text-left w-12">Sel.</th>
+                  )}
+                  <th className="py-3 px-4 text-left">Página</th>
+                  <th className="py-3 px-4 text-left">Notas</th>
+                  <th className="py-3 px-4 text-left">Retranca</th>
+                  <th className="py-3 px-4 text-left">Clipe</th>
+                  <th className="py-3 px-4 text-left">Duração</th>
+                  <th className="py-3 px-4 text-left">Status</th>
+                  <th className="py-3 px-4 text-left">Repórter</th>
+                  <th className="py-3 px-4 text-left">Ações</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200">
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan={isBatchMode ? 9 : 8} className="py-4 text-center text-gray-500">
+                      Nenhuma matéria neste bloco
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((item, index) => (
+                    <Draggable
+                      key={item.id}
+                      draggableId={item.id}
+                      index={index}
+                      isDragDisabled={!isEspelhoOpen || isBatchMode}
+                    >
+                      {(provided, snapshot) => (
+                        <NewsItem
+                          item={item}
+                          onEdit={onEditItem}
+                          onDelete={onDeleteItem}
+                          onDuplicate={onDuplicateItem}
+                          provided={provided}
+                          snapshot={snapshot}
+                          isEspelhoOpen={isEspelhoOpen}
+                          onDoubleClick={onEditItem}
+                          canModify={canModifyItems}
+                          isBatchMode={isBatchMode}
+                          isSelected={isSelected ? isSelected(item.id) : false}
+                          onToggleSelection={onToggleSelection}
+                          isVisuallySelected={selectedItemId === item.id}
+                          onItemClick={onItemClick}
+                        />
+                      )}
+                    </Draggable>
+                  ))
                 )}
-              </Draggable>
-            ))}
-            {provided.placeholder}
+                {provided.placeholder}
+              </tbody>
+            </table>
           </div>
         )}
       </Droppable>

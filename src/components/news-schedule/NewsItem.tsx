@@ -1,138 +1,121 @@
 
+import { Checkbox } from "@/components/ui/checkbox";
 import { Materia } from "@/types";
-import { NewsItemActions } from "./NewsItemActions";
+import { formatTime } from "./utils";
 import { MaterialTypeBadge } from "./MaterialTypeBadge";
 import { StatusBadge } from "./StatusBadge";
-import { getNewsItemStyles } from "./NewsItemStyles";
-import { cn } from "@/lib/utils";
+import { NewsItemActions } from "./NewsItemActions";
 
 interface NewsItemProps {
   item: Materia;
   onEdit: (item: Materia) => void;
   onDelete: (item: Materia) => void;
   onDuplicate: (item: Materia) => void;
-  onCopy: (item: Materia) => void;
+  provided: any;
+  snapshot: any;
   isEspelhoOpen: boolean;
-  canModifyItems: boolean;
-  isSelected?: boolean;
-  onItemClick?: (item: Materia) => void;
+  onDoubleClick: (item: Materia) => void;
+  canModify?: boolean;
   // Batch selection props
   isBatchMode?: boolean;
-  onToggleSelection?: (id: string) => void;
-  isSelectedForBatch?: boolean;
+  isSelected?: boolean;
+  onToggleSelection?: (itemId: string) => void;
+  // Visual selection props
+  isVisuallySelected?: boolean;
+  onItemClick?: (materia: Materia) => void;
 }
 
-export const NewsItem = ({
-  item,
-  onEdit,
+export const NewsItem = ({ 
+  item, 
+  onEdit, 
   onDelete,
   onDuplicate,
-  onCopy,
+  provided, 
+  snapshot,
   isEspelhoOpen,
-  canModifyItems,
-  isSelected = false,
-  onItemClick,
+  onDoubleClick,
+  canModify = true,
+  // Batch selection props
   isBatchMode = false,
+  isSelected = false,
   onToggleSelection,
-  isSelectedForBatch = false
+  // Visual selection props
+  isVisuallySelected = false,
+  onItemClick
 }: NewsItemProps) => {
-  const styles = getNewsItemStyles(item.tipo_material || '');
+  // Ensure we have valid data for display
+  const displayRetranca = item.retranca || "Sem título";
+  const displayStatus = item.status || "draft";
+  const displayDuracao = item.duracao || 0;
 
-  const handleItemClick = () => {
-    console.log('NewsItem clicado:', item.retranca, 'isSelected:', isSelected);
-    
-    if (isBatchMode && onToggleSelection) {
+  const handleCheckboxChange = (checked: boolean) => {
+    if (onToggleSelection) {
       onToggleSelection(item.id);
-    } else if (onItemClick) {
-      console.log('Chamando onItemClick para:', item.retranca);
+    }
+  };
+
+  const handleRowClick = () => {
+    if (onItemClick && !isBatchMode) {
       onItemClick(item);
     }
   };
 
-  const handleCopyClick = (materia: Materia) => {
-    console.log('NewsItem: Copiando matéria via botão:', materia.retranca);
-    onCopy(materia);
+  // Determine row styling based on selection and drag state
+  const getRowStyling = () => {
+    let classes = "hover:bg-gray-50 transition-colors cursor-pointer";
+    
+    if (snapshot.isDragging) {
+      classes += " bg-blue-50";
+    } else if (isVisuallySelected && !isBatchMode) {
+      classes += " bg-gray-100";
+    } else if (isSelected && isBatchMode) {
+      classes += " bg-blue-50";
+    }
+    
+    return classes;
   };
-
+  
   return (
-    <div
-      onClick={handleItemClick}
-      className={cn(
-        "group border border-gray-200 rounded-lg p-3 hover:shadow-md transition-all cursor-pointer bg-white",
-        isSelected && "ring-2 ring-blue-500 bg-blue-50",
-        isSelectedForBatch && "ring-2 ring-purple-500 bg-purple-50",
-        styles.bgColor,
-        styles.borderColor
-      )}
-      data-item-id={item.id}
+    <tr 
+      ref={provided.innerRef}
+      {...provided.draggableProps}
+      {...provided.dragHandleProps}
+      className={getRowStyling()}
+      onDoubleClick={() => onDoubleClick(item)}
+      onClick={handleRowClick}
     >
-      <div className="flex justify-between items-start gap-3">
-        <div className="flex-1 min-w-0">
-          {/* Header with ordem and retranca */}
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center justify-center w-6 h-6 text-xs font-medium bg-gray-100 text-gray-700 rounded-full">
-              {item.ordem}
-            </span>
-            <h3 className="font-semibold text-gray-900 truncate">
-              {item.retranca}
-            </h3>
-            <div className="flex gap-1">
-              <MaterialTypeBadge tipoMaterial={item.tipo_material} />
-              <StatusBadge status={item.status} />
-            </div>
-          </div>
-
-          {/* Content row */}
-          <div className="grid grid-cols-12 gap-2 text-sm text-gray-600">
-            <div className="col-span-3">
-              <span className="font-medium">Clip:</span>
-              <div>{item.clip || "—"}</div>
-            </div>
-            <div className="col-span-2">
-              <span className="font-medium">Duração:</span>
-              <div>
-                {item.duracao ? 
-                  `${Math.floor(item.duracao / 60)}:${(item.duracao % 60).toString().padStart(2, '0')}` 
-                  : "—"
-                }
-              </div>
-            </div>
-            <div className="col-span-2">
-              <span className="font-medium">Página:</span>
-              <div>{item.pagina || "—"}</div>
-            </div>
-            <div className="col-span-3">
-              <span className="font-medium">Repórter:</span>
-              <div>{item.reporter || "—"}</div>
-            </div>
-            <div className="col-span-2">
-              <span className="font-medium">Local:</span>
-              <div>{item.local_gravacao || "—"}</div>
-            </div>
-          </div>
-
-          {/* Additional info if present */}
-          {(item.cabeca || item.gc) && (
-            <div className="mt-2 text-xs text-gray-500">
-              {item.cabeca && <div><strong>Cabeça:</strong> {item.cabeca}</div>}
-              {item.gc && <div><strong>GC:</strong> {item.gc}</div>}
-            </div>
-          )}
-        </div>
-
-        {/* Actions */}
-        <div className="flex-shrink-0">
-          <NewsItemActions
-            item={item}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onDuplicate={onDuplicate}
-            onCopy={handleCopyClick}
-            isEspelhoOpen={isEspelhoOpen}
-            canModify={canModifyItems}
+      {/* Checkbox column for batch selection */}
+      {isBatchMode && (
+        <td className="py-2 px-4 w-12" onClick={(e) => e.stopPropagation()}>
+          <Checkbox
+            checked={isSelected}
+            onCheckedChange={handleCheckboxChange}
+            disabled={!canModify}
           />
-        </div>
-      </div>
-    </div>
+        </td>
+      )}
+      
+      <td className="py-2 px-4">{item.pagina}</td>
+      <td className="py-2 px-4">
+        <MaterialTypeBadge tipoMaterial={item.tipo_material} />
+      </td>
+      <td className="py-2 px-4 font-medium">{displayRetranca}</td>
+      <td className="py-2 px-4 font-mono text-xs">{item.clip || ''}</td>
+      <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
+      <td className="py-2 px-4">
+        <StatusBadge status={displayStatus} />
+      </td>
+      <td className="py-2 px-4">{item.reporter || '-'}</td>
+      <td className="py-2 px-4">
+        <NewsItemActions
+          item={item}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onDuplicate={onDuplicate}
+          isEspelhoOpen={isEspelhoOpen}
+          canModify={canModify}
+        />
+      </td>
+    </tr>
   );
 };
