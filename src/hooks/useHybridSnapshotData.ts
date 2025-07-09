@@ -1,164 +1,181 @@
 
-import { useState, useEffect } from "react";
-import { fetchMateriaSnapshotsBySnapshot, MateriaSnapshot } from "@/services/materias-snapshots-api";
-import { ClosedRundownSnapshot } from "@/services/snapshots-api";
-
-interface HybridMateriaData {
-  id: string;
-  retranca: string;
-  clip?: string;
-  duracao: number;
-  texto?: string;
-  cabeca?: string;
-  gc?: string;
-  status?: string;
-  pagina?: string;
-  reporter?: string;
-  ordem: number;
-  tags?: string[];
-  local_gravacao?: string;
-  equipamento?: string;
-  bloco_id?: string;
-  bloco_nome?: string;
-  bloco_ordem?: number;
-  tipo_material?: string;
-  tempo_clip?: string;
-  isEdited?: boolean; // Flag para indicar se foi editada
-}
+import { useState, useEffect } from 'react';
+import { fetchMateriaSnapshotsBySnapshot } from '@/services/materias-snapshots-api';
+import { ClosedRundownSnapshot } from '@/services/snapshots-api';
+import { EditableMateria } from '@/components/general-schedule/types';
+import { useToast } from '@/hooks/use-toast';
 
 interface UseHybridSnapshotDataProps {
   snapshot: ClosedRundownSnapshot;
 }
 
+interface HybridBloco {
+  id: string;
+  nome: string;
+  ordem: number;
+  materias: any[];
+}
+
 export const useHybridSnapshotData = ({ snapshot }: UseHybridSnapshotDataProps) => {
-  const [hybridData, setHybridData] = useState<any[]>([]);
+  const [hybridData, setHybridData] = useState<HybridBloco[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const loadHybridData = async () => {
-    setIsLoading(true);
-    setError(null);
-    
     try {
-      console.log("Loading hybrid data for snapshot:", snapshot.id);
+      setIsLoading(true);
+      setError(null);
+
+      console.log('Carregando dados híbridos para snapshot:', snapshot.id);
+
+      // Primeiro, tentar buscar matérias da tabela materias_snapshots
+      const snapshotMaterias = await fetchMateriaSnapshotsBySnapshot(snapshot.id);
       
-      // Buscar matérias editadas da tabela materias_snapshots
-      const editedMaterias = await fetchMateriaSnapshotsBySnapshot(snapshot.id);
-      console.log("Found edited materias:", editedMaterias.length);
-      
-      // Criar mapa de matérias editadas por ID
-      const editedMateriasMap = new Map<string, MateriaSnapshot>();
-      editedMaterias.forEach(materia => {
-        if (materia.materia_original_id) {
-          editedMateriasMap.set(materia.materia_original_id, materia);
-        } else {
-          editedMateriasMap.set(materia.id, materia);
-        }
-      });
-      
-      // Processar blocos do snapshot original
-      const blocos = snapshot.estrutura_completa.blocos || [];
-      const processedBlocos = blocos.map((bloco, blocoIndex) => {
-        const materias = getMateriasList(bloco);
-        
-        const processedMaterias = materias.map(materia => {
-          // Verificar se existe versão editada
-          const editedVersion = editedMateriasMap.get(materia.id);
-          
-          if (editedVersion) {
-            console.log("Using edited version for materia:", materia.id);
-            // Usar dados editados, mas manter estrutura de bloco
-            return {
-              ...materia,
-              retranca: editedVersion.retranca,
-              clip: editedVersion.clip,
-              duracao: editedVersion.duracao,
-              texto: editedVersion.texto,
-              cabeca: editedVersion.cabeca,
-              gc: editedVersion.gc,
-              status: editedVersion.status,
-              pagina: editedVersion.pagina,
-              reporter: editedVersion.reporter,
-              tags: editedVersion.tags,
-              local_gravacao: editedVersion.local_gravacao,
-              equipamento: editedVersion.equipamento,
-              tipo_material: editedVersion.tipo_material,
-              tempo_clip: editedVersion.tempo_clip,
-              isEdited: true
-            } as HybridMateriaData;
-          }
-          
-          // Usar dados originais
-          return {
-            ...materia,
-            isEdited: false
-          } as HybridMateriaData;
-        });
-        
-        return {
-          ...bloco,
-          materias: processedMaterias,
-          items: processedMaterias // Para compatibilidade
-        };
-      });
-      
-      setHybridData(processedBlocos);
-      console.log("Hybrid data loaded successfully:", processedBlocos.length, "blocos");
-      
-    } catch (err: any) {
-      console.error("Error loading hybrid data:", err);
-      setError(err.message || "Erro ao carregar dados híbridos");
-      
-      // Fallback para dados originais
-      const originalBlocos = snapshot.estrutura_completa.blocos || [];
-      const fallbackBlocos = originalBlocos.map(bloco => ({
-        ...bloco,
-        materias: getMateriasList(bloco).map(materia => ({
-          ...materia,
-          isEdited: false
-        })),
-        items: getMateriasList(bloco).map(materia => ({
-          ...materia,
-          isEdited: false
+      console.log('Matérias do snapshot encontradas:', {
+        total: snapshotMaterias.length,
+        comGC: snapshotMaterias.filter(m => m.gc && m.gc.length > 0).length,
+        materias: snapshotMaterias.map(m => ({
+          retranca: m.retranca,
+          gc: m.gc,
+          gcLength: m.gc?.length || 0
         }))
-      }));
-      
-      setHybridData(fallbackBlocos);
+      });
+
+      // Se encontrou matérias na tabela de snapshots, usar essas
+      if (snapshotMaterias.length > 0) {
+        const blocosAgrupados: { [key: string]: HybridBloco } = {};
+
+        snapshotMaterias.forEach(materia => {
+          const blocoNome = materia.bloco_nome || 'Bloco Sem Nome';
+          const blocoOrdem = materia.bloco_ordem || 1;
+          const blocoId = `snapshot-${blocoNome}-${blocoOrdem}`;
+
+          if (!blocosAgrupados[blocoId]) {
+            blocosAgrupados[blocoId] = {
+              id: blocoId,
+              nome: blocoNome,
+              ordem: blocoOrdem,
+              materias: []
+            };
+          }
+
+          // Garantir que todos os campos sejam preservados, incluindo GC
+          const materiaCompleta = {
+            id: materia.id,
+            retranca: materia.retranca,
+            clip: materia.clip,
+            duracao: materia.duracao || 0,
+            texto: materia.texto,
+            cabeca: materia.cabeca,
+            gc: materia.gc, // Preservar GC
+            status: materia.status || 'draft',
+            pagina: materia.pagina,
+            reporter: materia.reporter,
+            ordem: materia.ordem,
+            tags: materia.tags || [],
+            local_gravacao: materia.local_gravacao,
+            equipamento: materia.equipamento,
+            tipo_material: materia.tipo_material,
+            tempo_clip: materia.tempo_clip,
+            bloco_nome: blocoNome,
+            bloco_ordem: blocoOrdem,
+            is_snapshot: true
+          };
+
+          console.log('Matéria processada (verificando GC):', {
+            retranca: materiaCompleta.retranca,
+            gc: materiaCompleta.gc,
+            gcPresente: !!materiaCompleta.gc,
+            gcLength: materiaCompleta.gc?.length || 0
+          });
+
+          blocosAgrupados[blocoId].materias.push(materiaCompleta);
+        });
+
+        // Ordenar blocos e matérias
+        const blocosOrdenados = Object.values(blocosAgrupados)
+          .sort((a, b) => a.ordem - b.ordem)
+          .map(bloco => ({
+            ...bloco,
+            materias: bloco.materias.sort((a, b) => a.ordem - b.ordem)
+          }));
+
+        console.log('Dados híbridos processados:', {
+          blocos: blocosOrdenados.length,
+          totalMaterias: blocosOrdenados.reduce((sum, b) => sum + b.materias.length, 0),
+          materiasComGC: blocosOrdenados.flatMap(b => b.materias).filter(m => m.gc && m.gc.length > 0).length
+        });
+
+        setHybridData(blocosOrdenados);
+      } else {
+        // Fallback: usar estrutura_completa do snapshot
+        console.log('Usando estrutura_completa como fallback');
+        
+        const blocos = snapshot.estrutura_completa?.blocos || [];
+        const blocosProcessados = blocos.map(bloco => ({
+          id: bloco.id,
+          nome: bloco.nome,
+          ordem: bloco.ordem,
+          materias: (bloco.materias || bloco.items || []).map(materia => ({
+            ...materia,
+            // Garantir que GC seja preservado mesmo no fallback
+            gc: materia.gc,
+            bloco_nome: bloco.nome,
+            bloco_ordem: bloco.ordem,
+            is_snapshot: true
+          }))
+        }));
+
+        console.log('Dados de fallback processados (verificando GC):', {
+          blocos: blocosProcessados.length,
+          materiasComGC: blocosProcessados.flatMap(b => b.materias).filter(m => m.gc && m.gc.length > 0).length
+        });
+
+        setHybridData(blocosProcessados);
+      }
+    } catch (err: any) {
+      console.error('Erro ao carregar dados híbridos:', err);
+      setError(err.message || 'Erro ao carregar dados');
+      toast({
+        title: "Erro ao carregar dados",
+        description: err.message || "Erro desconhecido",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const getMateriasList = (bloco: any) => {
-    if (bloco.materias && Array.isArray(bloco.materias)) {
-      return bloco.materias;
-    }
-    if (bloco.items && Array.isArray(bloco.items)) {
-      return bloco.items;
-    }
-    return [];
-  };
+  const updateLocalMateria = (materiaId: string, updates: Partial<EditableMateria>) => {
+    console.log('Atualizando matéria local (incluindo GC):', {
+      id: materiaId,
+      updates: updates,
+      gcUpdate: updates.gc,
+      gcLength: updates.gc?.length || 0
+    });
 
-  const refreshData = () => {
-    loadHybridData();
-  };
-
-  const updateLocalMateria = (materiaId: string, updates: Partial<HybridMateriaData>) => {
-    setHybridData(prevBlocos => 
-      prevBlocos.map(bloco => ({
+    setHybridData(prevData => 
+      prevData.map(bloco => ({
         ...bloco,
-        materias: bloco.materias?.map((materia: HybridMateriaData) =>
-          materia.id === materiaId
-            ? { ...materia, ...updates, isEdited: true }
-            : materia
-        ),
-        items: bloco.items?.map((materia: HybridMateriaData) =>
-          materia.id === materiaId
-            ? { ...materia, ...updates, isEdited: true }
+        materias: bloco.materias.map(materia => 
+          materia.id === materiaId 
+            ? { 
+                ...materia, 
+                ...updates,
+                // Garantir que GC seja atualizado localmente
+                gc: updates.gc !== undefined ? updates.gc : materia.gc,
+                isEdited: true 
+              }
             : materia
         )
       }))
     );
+  };
+
+  const refreshData = () => {
+    console.log('Recarregando dados híbridos...');
+    loadHybridData();
   };
 
   useEffect(() => {

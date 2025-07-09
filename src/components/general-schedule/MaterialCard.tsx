@@ -1,172 +1,219 @@
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, User, FileText, Copy, CheckCircle2 } from "lucide-react";
-import { formatTime } from "../news-schedule/utils";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Edit2, Copy, Check, X } from "lucide-react";
+import { EditableMateria } from "./types";
 
 interface MaterialCardProps {
   materia: any;
-  materiaIndex: number;
-  onCopyMateria?: (materia: any) => void;
-  onSelectMateria?: (materia: any) => void;
-  isSelected?: boolean;
+  isEditing: boolean;
+  editData: EditableMateria | null;
+  onEdit: () => void;
+  onSave: () => void;
+  onCancel: () => void;
+  onCopy: () => void;
+  onSelect: () => void;
+  onUpdateEditData: (updates: Partial<EditableMateria>) => void;
+  isSelected: boolean;
+  isSaving: boolean;
 }
 
-const getStatusColor = (status?: string) => {
-  switch (status?.toLowerCase()) {
-    case 'published': return 'bg-green-100 text-green-800';
-    case 'draft': return 'bg-gray-100 text-gray-800';
-    case 'pending': return 'bg-yellow-100 text-yellow-800';
-    case 'urgent': return 'bg-red-100 text-red-800';
-    default: return 'bg-gray-100 text-gray-800';
-  }
-};
-
-export const MaterialCard = ({ 
-  materia, 
-  materiaIndex, 
-  onCopyMateria, 
-  onSelectMateria,
-  isSelected = false 
+export const MaterialCard = ({
+  materia,
+  isEditing,
+  editData,
+  onEdit,
+  onSave,
+  onCancel,
+  onCopy,
+  onSelect,
+  onUpdateEditData,
+  isSelected,
+  isSaving
 }: MaterialCardProps) => {
-  const handleClick = () => {
-    if (onSelectMateria) {
-      onSelectMateria(materia);
+  const getStatusColor = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'published': return 'bg-green-100 text-green-800';
+      case 'draft': return 'bg-gray-100 text-gray-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'urgent': return 'bg-red-100 text-red-800';
+      default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const handleCopyClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onCopyMateria) {
-      onCopyMateria(materia);
-    }
-  };
-
-  // Contador de campos preenchidos para mostrar completude da matéria
-  const camposPreenchidos = [
-    materia.retranca,
-    materia.texto,
-    materia.clip,
-    materia.reporter,
-    materia.pagina,
-    materia.cabeca,
-    materia.gc,
-    materia.tipo_material,
-    materia.local_gravacao,
-    materia.equipamento,
-    materia.tempo_clip
-  ].filter(campo => campo && campo.toString().trim() !== '').length;
+  if (isEditing && editData) {
+    return (
+      <Card className={`border-l-4 border-l-orange-500 ${isSelected ? 'ring-2 ring-blue-500' : ''}`}>
+        <CardContent className="p-3 space-y-3">
+          <div className="space-y-2">
+            <input
+              type="text"
+              value={editData.retranca}
+              onChange={(e) => onUpdateEditData({ retranca: e.target.value })}
+              className="w-full text-sm font-medium border rounded px-2 py-1"
+              placeholder="Retranca"
+            />
+            
+            <input
+              type="text"
+              value={editData.clip || ''}
+              onChange={(e) => onUpdateEditData({ clip: e.target.value })}
+              className="w-full text-xs font-mono border rounded px-2 py-1"
+              placeholder="Clip"
+            />
+            
+            <textarea
+              value={editData.cabeca || ''}
+              onChange={(e) => onUpdateEditData({ cabeca: e.target.value })}
+              className="w-full text-xs border rounded px-2 py-1 resize-none"
+              rows={2}
+              placeholder="Cabeça"
+            />
+            
+            <textarea
+              value={editData.gc || ''}
+              onChange={(e) => onUpdateEditData({ gc: e.target.value })}
+              className="w-full text-xs border rounded px-2 py-1 resize-none"
+              rows={2}
+              placeholder="GC (Gerador de Caracteres)"
+            />
+            
+            <textarea
+              value={editData.texto || ''}
+              onChange={(e) => onUpdateEditData({ texto: e.target.value })}
+              className="w-full text-xs border rounded px-2 py-1 resize-none"
+              rows={4}
+              placeholder="Texto da matéria"
+            />
+            
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                value={editData.reporter || ''}
+                onChange={(e) => onUpdateEditData({ reporter: e.target.value })}
+                className="flex-1 text-xs border rounded px-2 py-1"
+                placeholder="Repórter"
+              />
+              <input
+                type="text"
+                value={editData.pagina || ''}
+                onChange={(e) => onUpdateEditData({ pagina: e.target.value })}
+                className="w-16 text-xs border rounded px-2 py-1"
+                placeholder="Pág."
+              />
+            </div>
+            
+            <div className="flex justify-between items-center">
+              <input
+                type="number"
+                value={editData.duracao}
+                onChange={(e) => onUpdateEditData({ duracao: parseInt(e.target.value) || 0 })}
+                className="w-20 text-xs border rounded px-2 py-1"
+                placeholder="Duração"
+              />
+              
+              <div className="flex space-x-1">
+                <Button
+                  size="sm"
+                  onClick={onSave}
+                  disabled={isSaving || !editData.retranca?.trim()}
+                  className="h-6 w-6 p-0"
+                >
+                  <Check className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onCancel}
+                  disabled={isSaving}
+                  className="h-6 w-6 p-0"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
-    <div 
-      className={`bg-white border rounded p-3 text-sm cursor-pointer transition-all duration-200 ${
-        isSelected 
-          ? 'ring-2 ring-primary bg-blue-50 border-blue-300 shadow-sm' 
-          : 'hover:bg-gray-50 hover:border-gray-300'
-      }`}
-      onClick={handleClick}
+    <Card 
+      className={`border-l-4 border-l-blue-500 cursor-pointer hover:shadow-md transition-shadow ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
+      onClick={onSelect}
     >
-      <div className="flex items-start justify-between mb-2">
-        <div className="flex-1">
-          <div className="flex items-center space-x-2 mb-1">
-            {isSelected && (
-              <CheckCircle2 className="h-4 w-4 text-blue-600" />
-            )}
-            <span className="font-medium">{materia.retranca || materia.titulo || `Matéria ${materiaIndex + 1}`}</span>
-            {materia.clip && (
-              <Badge variant="secondary" className="text-xs font-mono">
-                {materia.clip}
-              </Badge>
-            )}
+      <CardContent className="p-3">
+        <div className="space-y-2">
+          <div className="flex items-start justify-between">
+            <h4 className="font-medium text-sm">{materia.retranca}</h4>
+            <div className="flex space-x-1">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onEdit();
+                }}
+                className="h-6 w-6 p-0"
+                title="Editar matéria"
+              >
+                <Edit2 className="h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCopy();
+                }}
+                className="h-6 w-6 p-0"
+                title="Copiar matéria"
+              >
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+          
+          {materia.clip && (
+            <p className="text-xs font-mono text-muted-foreground">
+              Clip: {materia.clip}
+            </p>
+          )}
+          
+          {materia.cabeca && (
+            <div className="bg-blue-50 p-2 rounded text-xs">
+              <strong>Cabeça:</strong> {materia.cabeca}
+            </div>
+          )}
+          
+          {materia.gc && (
+            <div className="bg-green-50 p-2 rounded text-xs">
+              <strong>GC:</strong> {materia.gc}
+            </div>
+          )}
+          
+          {materia.texto && (
+            <div className="bg-gray-50 p-2 rounded text-xs max-h-24 overflow-y-auto">
+              <strong>Texto:</strong> {materia.texto}
+            </div>
+          )}
+          
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <div className="flex items-center space-x-2">
+              {materia.pagina && <span>Pág. {materia.pagina}</span>}
+              {materia.reporter && <span>• {materia.reporter}</span>}
+              {materia.duracao && <span>• {Math.floor(materia.duracao / 60)}:{(materia.duracao % 60).toString().padStart(2, '0')}</span>}
+            </div>
             {materia.status && (
-              <Badge className={`text-xs ${getStatusColor(materia.status)}`}>
+              <Badge variant="outline" className={`text-xs ${getStatusColor(materia.status)}`}>
                 {materia.status}
               </Badge>
             )}
-            {/* Indicador de completude dos campos */}
-            <Badge variant="outline" className="text-xs" title={`${camposPreenchidos} campos preenchidos`}>
-              {camposPreenchidos} campos
-            </Badge>
-          </div>
-          <div className="flex items-center space-x-4 text-xs text-muted-foreground">
-            {materia.pagina && <span>Pág. {materia.pagina}</span>}
-            {materia.reporter && (
-              <span className="flex items-center">
-                <User className="h-3 w-3 mr-1" />
-                {materia.reporter}
-              </span>
-            )}
-            <span className="flex items-center">
-              <Clock className="h-3 w-3 mr-1" />
-              {formatTime(materia.duracao || 0)}
-            </span>
-            {materia.ordem && <span>Ordem: {materia.ordem}</span>}
-            {materia.tipo_material && (
-              <Badge variant="outline" className="text-xs">
-                {materia.tipo_material}
-              </Badge>
-            )}
           </div>
         </div>
-        
-        {/* Botão de cópia melhorado */}
-        {onCopyMateria && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={handleCopyClick}
-            className={`h-7 w-7 p-0 transition-colors ${
-              isSelected 
-                ? 'hover:bg-blue-200 text-blue-700' 
-                : 'hover:bg-blue-100 text-blue-600'
-            }`}
-            title={`Copiar matéria com ${camposPreenchidos} campos preservados`}
-          >
-            <Copy className="h-3 w-3" />
-          </Button>
-        )}
-      </div>
-
-      {materia.cabeca && (
-        <div className="mt-2 p-2 bg-blue-50 rounded text-xs">
-          <div className="font-medium text-blue-800 mb-1 flex items-center">
-            <FileText className="h-3 w-3 mr-1" />
-            Cabeça:
-          </div>
-          <p className="text-blue-700">{materia.cabeca}</p>
-        </div>
-      )}
-
-      {materia.texto && (
-        <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
-          <div className="font-medium text-gray-800 mb-1">Texto:</div>
-          <p className="text-gray-700 line-clamp-3">{materia.texto}</p>
-        </div>
-      )}
-
-      {materia.gc && (
-        <div className="mt-2 p-2 bg-yellow-50 rounded text-xs">
-          <div className="font-medium text-yellow-800 mb-1">GC:</div>
-          <p className="text-yellow-700">{materia.gc}</p>
-        </div>
-      )}
-
-      {/* Indicadores adicionais para campos preenchidos */}
-      {(materia.local_gravacao || materia.equipamento || materia.tempo_clip) && (
-        <div className="mt-2 pt-2 border-t border-gray-100">
-          <div className="flex flex-wrap gap-1 text-xs text-muted-foreground">
-            {materia.local_gravacao && (
-              <Badge variant="outline" className="text-xs">Local: {materia.local_gravacao}</Badge>
-            )}
-            {materia.equipamento && (
-              <Badge variant="outline" className="text-xs">Equip: {materia.equipamento}</Badge>
-            )}
-            {materia.tempo_clip && (
-              <Badge variant="outline" className="text-xs">Tempo: {materia.tempo_clip}</Badge>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 };
