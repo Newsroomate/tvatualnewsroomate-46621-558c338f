@@ -1,4 +1,3 @@
-
 import { Materia } from '@/types';
 import { createMateria, updateMateriasOrdem } from '@/services/materias-api';
 import { toast } from '@/hooks/use-toast';
@@ -23,12 +22,13 @@ export const usePasteMateria = ({
 }: UsePasteMateriaProps) => {
   
   const pasteMateria = async () => {
-    // Validação inicial
+    // Validation with enhanced logging
     if (!validatePasteOperation(copiedMateria, blocks)) {
+      console.log('Paste validation failed:', { copiedMateria: !!copiedMateria, blocksCount: blocks.length });
       return;
     }
 
-    console.log('Iniciando processo de colar matéria do histórico:', {
+    console.log('Starting paste operation with enhanced validation:', {
       materiaCopiada: {
         id: copiedMateria!.id,
         retranca: copiedMateria!.retranca,
@@ -36,7 +36,8 @@ export const usePasteMateria = ({
         isFromSnapshot: copiedMateria!.is_from_snapshot
       },
       selectedMateria: selectedMateria?.retranca,
-      blocksCount: blocks.length
+      blocksCount: blocks.length,
+      timestamp: new Date().toISOString()
     });
 
     // Determinar onde colar
@@ -126,8 +127,14 @@ export const usePasteMateria = ({
         replaceTemporaryMateria(currentBlocks, targetBlockId, tempId, newMateria)
       );
 
+      // Clear clipboard after successful paste
+      console.log('Paste operation completed successfully, clearing clipboard');
+      setTimeout(() => {
+        clearClipboard();
+      }, 1000); // Delayed clear to prevent race conditions
+
     } catch (error) {
-      console.error('Erro ao colar matéria:', error);
+      console.error('Paste operation failed:', error);
       
       // REVERTER ATUALIZAÇÃO OTIMISTA EM CASO DE ERRO
       setBlocks((currentBlocks: any[]) => 
@@ -139,6 +146,9 @@ export const usePasteMateria = ({
         description: "Não foi possível colar a matéria. Tente novamente.",
         variant: "destructive"
       });
+
+      // Don't clear clipboard on error so user can retry
+      console.log('Clipboard preserved due to paste error');
     }
   };
 

@@ -17,6 +17,7 @@ interface UseKeyboardShortcutsProps {
   isEspelhoOpen?: boolean;
   copiedBlock?: CopiedBlock | null;
   onPasteBlock?: () => void;
+  getClipboardInfo?: () => { type: string; timestamp: number; age: number; data: string } | null;
 }
 
 export const useKeyboardShortcuts = ({
@@ -25,10 +26,11 @@ export const useKeyboardShortcuts = ({
   onPaste,
   isEspelhoOpen = false,
   copiedBlock,
-  onPasteBlock
+  onPasteBlock,
+  getClipboardInfo
 }: UseKeyboardShortcutsProps) => {
   const lastOperationRef = useRef<number>(0);
-  const DEBOUNCE_DELAY = 300; // 300ms between operations
+  const DEBOUNCE_DELAY = 150; // Reduced for better responsiveness
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -51,30 +53,51 @@ export const useKeyboardShortcuts = ({
         if (selectedMateria && now - lastOperationRef.current > DEBOUNCE_DELAY) {
           event.preventDefault();
           lastOperationRef.current = now;
+          console.log('Keyboard copy triggered for materia:', selectedMateria.retranca);
           onCopy(selectedMateria);
         }
       }
 
-      // Paste functionality (Ctrl+V) - with debouncing and conflict resolution
+      // Paste functionality (Ctrl+V) - with improved priority logic
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         if (now - lastOperationRef.current > DEBOUNCE_DELAY) {
           event.preventDefault();
           lastOperationRef.current = now;
           
-          // Priority: Block paste over materia paste if both exist
-          if (copiedBlock && onPasteBlock) {
-            console.log('Colando bloco:', copiedBlock.nome);
-            onPasteBlock();
+          // Get clipboard info to determine what was copied most recently
+          const clipboardInfo = getClipboardInfo?.();
+          
+          if (clipboardInfo) {
+            console.log('Clipboard info:', clipboardInfo);
+            
+            // Use the most recent item based on timestamp
+            if (clipboardInfo.type === 'block' && onPasteBlock) {
+              console.log('Pasting block based on timestamp priority');
+              onPasteBlock();
+            } else if (clipboardInfo.type === 'materia') {
+              console.log('Pasting materia based on timestamp priority');
+              onPaste();
+            } else {
+              console.log('Fallback to default paste behavior');
+              onPaste();
+            }
           } else {
-            onPaste();
+            // Fallback to legacy behavior if no clipboard info available
+            if (copiedBlock && onPasteBlock) {
+              console.log('Fallback: Pasting block');
+              onPasteBlock();
+            } else {
+              console.log('Fallback: Pasting materia');
+              onPaste();
+            }
           }
         } else {
-          console.log('Operação de colar muito rápida, ignorando...');
+          console.log('Paste operation too fast, ignoring...');
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock]);
+  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock, getClipboardInfo]);
 };

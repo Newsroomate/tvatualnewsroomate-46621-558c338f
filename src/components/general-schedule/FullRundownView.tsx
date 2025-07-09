@@ -1,4 +1,3 @@
-
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useClipboard } from "@/hooks/useClipboard";
@@ -36,7 +35,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     handleUpdateEditData
   } = useMateriaOperations(snapshot);
 
-  const { copyMateria, copiedBlock, clearClipboard } = useClipboard();
+  const { copyMateria, copiedBlock, clearClipboard, getClipboardInfo } = useClipboard();
 
   // Hook para colar blocos - simulando um espelho aberto temporário para permitir paste
   const { pasteBlock } = usePasteBlock({
@@ -50,25 +49,26 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     }
   });
 
-  // Atalhos de teclado para copiar - com funcionalidade aprimorada
+  // Enhanced keyboard shortcuts with timestamp-based priority
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: () => {
       if (selectedMateria) {
-        console.log('Copiando via Ctrl+C no histórico:', selectedMateria);
+        console.log('Copying via Ctrl+C in history with timestamp priority:', selectedMateria);
         copyMateria(selectedMateria);
       }
     },
     onPaste: () => {
-      console.log('Tentativa de colar no histórico (não permitido)');
-      // Não permitir colar no histórico, apenas copiar
+      console.log('Paste attempt in history (not allowed)');
+      // Don't allow pasting in history, only copying
     },
-    isEspelhoOpen: true, // Permitir copy no histórico
+    isEspelhoOpen: true, // Allow copy in history
     copiedBlock,
     onPasteBlock: () => {
-      console.log('Tentativa de colar bloco no histórico (não permitido)');
-      // Não permitir colar blocos no histórico
-    }
+      console.log('Block paste attempt in history (not allowed)');
+      // Don't allow pasting blocks in history
+    },
+    getClipboardInfo
   });
 
   if (isLoadingHybrid) {
