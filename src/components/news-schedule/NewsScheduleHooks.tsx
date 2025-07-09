@@ -1,14 +1,12 @@
-import { useState } from "react";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
-import { useClipboard } from "@/hooks/useClipboard";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { usePasteMateria } from "@/hooks/paste-materia";
-import { usePasteBlock } from "@/hooks/paste-block";
 import { useNewsScheduleDualView } from "@/hooks/useNewsScheduleDualView";
 import { useNewsScheduleActions } from "./NewsScheduleActions";
 import { useItemSelection } from "@/hooks/useItemSelection";
-import { useQueryClient } from "@tanstack/react-query";
+import { useNewsScheduleClipboard } from "@/hooks/useNewsScheduleClipboard";
+import { useNewsScheduleModals } from "@/hooks/useNewsScheduleModals";
+import { useNewsScheduleConfirmations } from "@/hooks/useNewsScheduleConfirmations";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -34,9 +32,21 @@ export const NewsScheduleHooks = ({
   onBlocksChange,
   children
 }: NewsScheduleHooksProps) => {
-  const queryClient = useQueryClient();
-  const [isSaveModelModalOpen, setIsSaveModelModalOpen] = useState(false);
-  const [isSavedModelsModalOpen, setIsSavedModelsModalOpen] = useState(false);
+  // Modal states
+  const {
+    isSaveModelModalOpen,
+    setIsSaveModelModalOpen,
+    isSavedModelsModalOpen,
+    setIsSavedModelsModalOpen
+  } = useNewsScheduleModals();
+
+  // Confirmation dialog states
+  const {
+    deleteConfirmOpen,
+    setDeleteConfirmOpen,
+    renumberConfirmOpen,
+    setRenumberConfirmOpen
+  } = useNewsScheduleConfirmations();
   
   const {
     blocks: internalBlocks,
@@ -44,10 +54,6 @@ export const NewsScheduleHooks = ({
     isLoading,
     isCreatingFirstBlock,
     newItemBlock,
-    deleteConfirmOpen,
-    setDeleteConfirmOpen,
-    renumberConfirmOpen,
-    setRenumberConfirmOpen,
     isDeleting,
     handleAddItem,
     handleDuplicateItem,
@@ -85,28 +91,20 @@ export const NewsScheduleHooks = ({
   } = useItemSelection();
 
   // Clipboard functionality
-  const { copiedMateria, copiedBlock, copyMateria, copyBlock, clearClipboard, hasCopiedMateria, hasCopiedBlock } = useClipboard();
-  
-  // Enhanced paste functionality with optimistic updates
-  const { pasteMateria } = usePasteMateria({
-    blocks,
-    setBlocks: setBlocksWrapper,
-    selectedMateria,
-    copiedMateria,
-    clearClipboard
-  });
-
-  // Block paste functionality
-  const { pasteBlock } = usePasteBlock({
-    selectedJournal,
-    currentTelejornal,
+  const {
+    copyMateria,
+    copyBlock,
+    hasCopiedMateria,
+    hasCopiedBlock,
     copiedBlock,
-    clearClipboard,
-    refreshBlocks: () => {
-      if (selectedJournal) {
-        queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
-      }
-    }
+    clipboardInfo,
+    handleUnifiedPaste
+  } = useNewsScheduleClipboard({
+    blocks,
+    setBlocksWrapper,
+    selectedMateria,
+    selectedJournal,
+    currentTelejornal
   });
 
   // Actions handlers
@@ -128,14 +126,14 @@ export const NewsScheduleHooks = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Enhanced keyboard shortcuts - support for both materia and block pasting
+  // Enhanced keyboard shortcuts - CORRIGIDO para usar paste unificado
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: copyMateria,
-    onPaste: pasteMateria,
+    onPaste: handleUnifiedPaste, // <- CORREÇÃO PRINCIPAL
     isEspelhoOpen: !!currentTelejornal?.espelho_aberto,
     copiedBlock,
-    onPasteBlock: pasteBlock
+    onPasteBlock: handleUnifiedPaste
   });
 
   return children({
@@ -176,12 +174,13 @@ export const NewsScheduleHooks = ({
     handleViewSavedModels,
     handleMateriaSelect,
     
-    // Clipboard functionality
+    // Clipboard functionality ATUALIZADO
     copyMateria,
     copyBlock,
     hasCopiedMateria,
     hasCopiedBlock,
     copiedBlock,
+    clipboardInfo, // Info adicional para debugging
     
     // Other props
     isDualViewMode,
