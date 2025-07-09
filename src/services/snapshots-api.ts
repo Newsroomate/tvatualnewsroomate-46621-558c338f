@@ -1,3 +1,4 @@
+
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
@@ -55,6 +56,12 @@ export interface ClosedRundownSnapshot {
         isEdited?: boolean;
       }>;
     }>;
+    metadata: {
+      total_blocos: number;
+      total_materias: number;
+      duracao_total: number;
+      data_fechamento: string;
+    };
   };
   created_at?: string;
   updated_at?: string;
@@ -147,6 +154,9 @@ export const closeRundown = async (
     gcLength: m.gc?.length || 0
   })));
 
+  const totalMaterias = materiasParaSnapshot.length;
+  const duracaoTotal = materiasParaSnapshot.reduce((sum, m) => sum + (m.duracao || 0), 0);
+
   // Criar snapshot com estrutura completa incluindo GC
   const snapshotData = {
     telejornal_id: telejornalId,
@@ -178,7 +188,13 @@ export const closeRundown = async (
           bloco_nome: bloco.nome,
           bloco_ordem: bloco.ordem
         })) || []
-      })) || []
+      })) || [],
+      metadata: {
+        total_blocos: blocos?.length || 0,
+        total_materias: totalMaterias,
+        duracao_total: duracaoTotal,
+        data_fechamento: new Date().toISOString()
+      }
     }
   };
 
@@ -293,6 +309,9 @@ export const fetchClosedRundowns = async (telejornalId?: string, targetDate?: st
     updated_at: item.updated_at
   })) as ClosedRundownSnapshot[] || [];
 };
+
+// Alias para manter compatibilidade
+export const fetchClosedRundownSnapshots = fetchClosedRundowns;
 
 export const deleteClosedRundown = async (snapshotId: string): Promise<boolean> => {
   console.log("Deletando espelho fechado:", snapshotId);

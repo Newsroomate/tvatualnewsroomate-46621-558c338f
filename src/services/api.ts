@@ -36,4 +36,7 @@ export {
 export { fetchClosedRundowns } from "./espelhos-api";
 
 // Export the snapshots-api functions
-export { fetchClosedRundownSnapshots } from "./snapshots-api";
+export { 
+  fetchClosedRundowns as fetchClosedRundownSnapshots,
+  ClosedRundownSnapshot
+} from "./snapshots-api";
