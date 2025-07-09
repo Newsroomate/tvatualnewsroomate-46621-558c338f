@@ -84,8 +84,18 @@ export const NewsScheduleHooks = ({
     isSelected
   } = useItemSelection();
 
-  // Clipboard functionality
-  const { copiedMateria, copiedBlock, copyMateria, copyBlock, clearClipboard, hasCopiedMateria, hasCopiedBlock } = useClipboard();
+  // Clipboard functionality UNIFICADO
+  const { 
+    copiedMateria, 
+    copiedBlock, 
+    copyMateria, 
+    copyBlock, 
+    clearClipboard, 
+    hasCopiedMateria, 
+    hasCopiedBlock,
+    clipboardItem,
+    getClipboardInfo 
+  } = useClipboard();
   
   // Enhanced paste functionality with optimistic updates
   const { pasteMateria } = usePasteMateria({
@@ -109,6 +119,34 @@ export const NewsScheduleHooks = ({
     }
   });
 
+  // FUNÇÃO UNIFICADA DE PASTE - corrige a lógica de priorização
+  const handleUnifiedPaste = async () => {
+    const clipboardInfo = getClipboardInfo();
+    
+    if (!clipboardInfo) {
+      toast({
+        title: "Nada para colar",
+        description: "Copie uma matéria ou bloco primeiro",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    console.log('=== PASTE UNIFICADO ===', {
+      type: clipboardInfo.type,
+      item: clipboardInfo.itemName,
+      age: Math.round(clipboardInfo.age / 1000) + 's',
+      session: clipboardInfo.isOwnSession ? 'própria' : 'externa'
+    });
+
+    // Executar paste baseado no tipo do último item copiado
+    if (clipboardInfo.type === 'materia') {
+      await pasteMateria();
+    } else if (clipboardInfo.type === 'block') {
+      await pasteBlock();
+    }
+  };
+
   // Actions handlers
   const {
     handleViewTeleprompter,
@@ -128,11 +166,11 @@ export const NewsScheduleHooks = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Enhanced keyboard shortcuts - support for both materia and block pasting
+  // Enhanced keyboard shortcuts - CORRIGIDO para usar paste unificado
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: copyMateria,
-    onPaste: pasteMateria,
+    onPaste: handleUnifiedPaste, // <- CORREÇÃO PRINCIPAL
     isEspelhoOpen: !!currentTelejornal?.espelho_aberto,
     copiedBlock,
     onPasteBlock: pasteBlock
@@ -176,12 +214,13 @@ export const NewsScheduleHooks = ({
     handleViewSavedModels,
     handleMateriaSelect,
     
-    // Clipboard functionality
+    // Clipboard functionality ATUALIZADO
     copyMateria,
     copyBlock,
     hasCopiedMateria,
     hasCopiedBlock,
     copiedBlock,
+    clipboardInfo: getClipboardInfo(), // Info adicional para debugging
     
     // Other props
     isDualViewMode,

@@ -2,70 +2,71 @@
 import { useEffect } from 'react';
 import { Materia } from '@/types';
 
-interface CopiedBlock {
-  id: string;
-  nome: string;
-  ordem: number;
-  materias: Materia[];
-  is_copied_block: true;
-}
-
 interface UseKeyboardShortcutsProps {
   selectedMateria: Materia | null;
   onCopy: (materia: Materia) => void;
   onPaste: () => void;
-  isEspelhoOpen?: boolean;
-  // Novos props para suporte a blocos
-  copiedBlock?: CopiedBlock | null;
-  onPasteBlock?: () => void;
+  isEspelhoOpen: boolean;
+  copiedBlock?: any;
+  onPasteBlock?: (() => void) | null;
 }
 
 export const useKeyboardShortcuts = ({
   selectedMateria,
   onCopy,
   onPaste,
-  isEspelhoOpen = false,
+  isEspelhoOpen,
   copiedBlock,
   onPasteBlock
 }: UseKeyboardShortcutsProps) => {
+  
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle shortcuts when espelho is open
-      if (!isEspelhoOpen) return;
-      
-      // Check if user is currently editing a text field
+    const handleKeyboardShortcut = (event: KeyboardEvent) => {
+      // Verificar se o usuário está editando texto (não interferir com edição)
       const activeElement = document.activeElement as HTMLElement;
       const isEditingText = activeElement && (
         activeElement.tagName === 'INPUT' || 
         activeElement.tagName === 'TEXTAREA' ||
-        activeElement.contentEditable === 'true' ||
-        activeElement.getAttribute('role') === 'textbox'
+        activeElement.contentEditable === 'true'
       );
 
-      // Copy functionality (Ctrl+C)
+      // Se está editando texto no painel de edição, permitir paste normal
+      if (isEditingText && activeElement.closest('.edit-panel-content')) {
+        return; // Não interceptar
+      }
+
+      // Ctrl+C para copiar matéria selecionada
       if (event.ctrlKey && event.key === 'c' && !isEditingText) {
         if (selectedMateria) {
           event.preventDefault();
           onCopy(selectedMateria);
+          console.log('Copiado via Ctrl+C:', selectedMateria.retranca);
         }
+        return;
       }
 
-      // Paste functionality (Ctrl+V) - only when NOT editing text
+      // Ctrl+V para colar (prioridade: último item copiado)
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
+        if (!isEspelhoOpen) {
+          console.log('Tentativa de colar com espelho fechado');
+          return;
+        }
+
         event.preventDefault();
         
-        // Se há um bloco copiado, priorizar colar o bloco
-        if (copiedBlock && onPasteBlock) {
-          console.log('Colando bloco via Ctrl+V:', copiedBlock.nome);
-          onPasteBlock();
-        } else {
-          // Caso contrário, colar matéria individual
-          onPaste();
-        }
+        // CORREÇÃO PRINCIPAL: Sempre usar onPaste que já tem a lógica correta
+        // A lógica de decidir entre matéria e bloco está no clipboard unificado
+        console.log('Ctrl+V interceptado - executando paste');
+        onPaste();
+        return;
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    // Adicionar listener com capture para interceptar antes de outros handlers
+    document.addEventListener('keydown', handleKeyboardShortcut, true);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyboardShortcut, true);
+    };
   }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock]);
 };
