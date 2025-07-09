@@ -1,13 +1,9 @@
 
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Copy } from "lucide-react";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+import { Edit, Trash2, Copy } from "lucide-react";
 import { Materia } from "@/types";
+import { useAuth } from "@/context/AuthContext";
+import { canDeleteMaterias } from "@/utils/permission-checker";
 
 interface NewsItemActionsProps {
   item: Materia;
@@ -26,83 +22,44 @@ export const NewsItemActions = ({
   isEspelhoOpen,
   canModify = true
 }: NewsItemActionsProps) => {
-  return (
-    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              onClick={() => onEdit(item)}
-              disabled={!isEspelhoOpen || !canModify}
-            >
-              <Pencil className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          {!isEspelhoOpen && (
-            <TooltipContent>
-              Abra o espelho para editar
-            </TooltipContent>
-          )}
-          {!canModify && isEspelhoOpen && (
-            <TooltipContent>
-              Sem permissão para editar
-            </TooltipContent>
-          )}
-        </Tooltip>
-      </TooltipProvider>
+  const { profile } = useAuth();
+  const canDelete = canDeleteMaterias(profile);
 
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              onClick={() => onDuplicate(item)}
-              disabled={!isEspelhoOpen || !canModify}
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          {!isEspelhoOpen && (
-            <TooltipContent>
-              Abra o espelho para duplicar
-            </TooltipContent>
-          )}
-          {!canModify && isEspelhoOpen && (
-            <TooltipContent>
-              Sem permissão para duplicar
-            </TooltipContent>
-          )}
-        </Tooltip>
-      </TooltipProvider>
-      
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button 
-              size="sm" 
-              variant="ghost" 
-              className="text-red-600 hover:text-red-800"
+  return (
+    <div className="flex space-x-1">
+      {isEspelhoOpen && canModify && (
+        <>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(item)}
+            className="h-7 w-7 p-0"
+            title="Editar matéria"
+          >
+            <Edit className="h-3 w-3" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => onDuplicate(item)}
+            className="h-7 w-7 p-0"
+            title="Duplicar matéria"
+          >
+            <Copy className="h-3 w-3" />
+          </Button>
+          {canDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => onDelete(item)}
-              disabled={!isEspelhoOpen || !canModify}
+              className="h-7 w-7 p-0 text-red-500 hover:text-red-700"
+              title="Excluir matéria"
             >
-              <Trash2 className="h-4 w-4" />
+              <Trash2 className="h-3 w-3" />
             </Button>
-          </TooltipTrigger>
-          {!isEspelhoOpen && (
-            <TooltipContent>
-              Abra o espelho para excluir
-            </TooltipContent>
           )}
-          {!canModify && isEspelhoOpen && (
-            <TooltipContent>
-              Sem permissão para excluir
-            </TooltipContent>
-          )}
-        </Tooltip>
-      </TooltipProvider>
+        </>
+      )}
     </div>
   );
 };

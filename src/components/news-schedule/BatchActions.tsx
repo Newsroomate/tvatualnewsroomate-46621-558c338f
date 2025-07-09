@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/context/AuthContext";
-import { canPerformAction } from "@/utils/security-utils";
+import { canDeleteMaterias } from "@/utils/permission-checker";
 
 interface BatchActionsProps {
   selectedCount: number;
@@ -35,7 +35,7 @@ export const BatchActions = ({
   isDeleting = false
 }: BatchActionsProps) => {
   const { profile } = useAuth();
-  const canDelete = canPerformAction(profile, 'delete', 'materia');
+  const canDelete = canDeleteMaterias(profile);
 
   return (
     <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-md p-2">
@@ -63,72 +63,70 @@ export const BatchActions = ({
         )}
       </Button>
 
-      {selectedCount > 0 && (
-        <>
-          {canDelete ? (
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-8 text-red-600 hover:text-red-800"
-                  disabled={isDeleting}
-                >
-                  {isDeleting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                      Excluindo...
-                    </>
-                  ) : (
-                    <>
-                      <Trash2 className="h-4 w-4 mr-1" />
-                      Excluir Selecionadas
-                    </>
-                  )}
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Tem certeza que deseja excluir {selectedCount} matéria{selectedCount !== 1 ? 's' : ''} selecionada{selectedCount !== 1 ? 's' : ''}? 
-                    Esta ação não pode ser desfeita.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction 
-                    className="bg-red-600 hover:bg-red-700"
-                    onClick={onDeleteSelected}
-                    disabled={isDeleting}
-                  >
-                    {isDeleting ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                        Excluindo...
-                      </>
-                    ) : (
-                      <>
-                        Excluir {selectedCount} Matéria{selectedCount !== 1 ? 's' : ''}
-                      </>
-                    )}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          ) : (
+      {selectedCount > 0 && canDelete && (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
             <Button
               size="sm"
               variant="ghost"
-              className="h-8 text-gray-400 cursor-not-allowed"
-              disabled
-              title="Você não tem permissão para excluir matérias"
+              className="h-8 text-red-600 hover:text-red-800"
+              disabled={isDeleting}
             >
-              <Shield className="h-4 w-4 mr-1" />
-              Sem Permissão
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  Excluindo...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4 mr-1" />
+                  Excluir Selecionadas
+                </>
+              )}
             </Button>
-          )}
-        </>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar Exclusão em Lote</AlertDialogTitle>
+              <AlertDialogDescription>
+                Tem certeza que deseja excluir {selectedCount} matéria{selectedCount !== 1 ? 's' : ''} selecionada{selectedCount !== 1 ? 's' : ''}? 
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+              <AlertDialogAction 
+                className="bg-red-600 hover:bg-red-700"
+                onClick={onDeleteSelected}
+                disabled={isDeleting}
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    Excluindo...
+                  </>
+                ) : (
+                  <>
+                    Excluir {selectedCount} Matéria{selectedCount !== 1 ? 's' : ''}
+                  </>
+                )}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )}
+
+      {selectedCount > 0 && !canDelete && (
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-8 text-gray-400 cursor-not-allowed"
+          disabled
+          title="Apenas o Editor-Chefe pode excluir matérias"
+        >
+          <Shield className="h-4 w-4 mr-1" />
+          Sem Permissão
+        </Button>
       )}
 
       <Button
