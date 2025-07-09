@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { fetchTelejornais } from "@/services/api";
 import { performDeepSearch, DeepSearchFilters, DeepSearchResult } from "@/services/deep-search-api";
-import { useClipboard } from "@/context/clipboard";
+import { useClipboard } from "@/context/ClipboardContext";
 import { Telejornal } from "@/types";
 import { DeepSearchFilters as FiltersComponent } from "./deep-search/DeepSearchFilters";
 import { DeepSearchResults } from "./deep-search/DeepSearchResults";

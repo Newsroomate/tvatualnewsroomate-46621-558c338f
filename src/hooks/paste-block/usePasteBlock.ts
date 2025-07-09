@@ -3,7 +3,7 @@ import { toast } from '@/hooks/use-toast';
 import { createBloco, fetchBlocosByTelejornal } from '@/services/api';
 import { createMateria } from '@/services/materias-api';
 
-import { useClipboard } from '@/context/clipboard';
+import { useClipboard } from '@/context/ClipboardContext';
 
 interface CopiedBlock {
   id: string;
@@ -17,14 +17,12 @@ interface UsePasteBlockProps {
   selectedJournal: string | null;
   currentTelejornal: any;
   refreshBlocks: () => void;
-  notifyPasteSuccess?: () => void;
 }
 
 export const usePasteBlock = ({
   selectedJournal,
   currentTelejornal,
-  refreshBlocks,
-  notifyPasteSuccess
+  refreshBlocks
 }: UsePasteBlockProps) => {
   const { copiedBlock, clearClipboard, validateClipboard } = useClipboard();
   
@@ -117,11 +115,6 @@ export const usePasteBlock = ({
 
       console.log('Bloco colado com sucesso:', newBlock.nome);
       refreshBlocks();
-
-      // Notify clipboard context about successful paste
-      if (notifyPasteSuccess) {
-        notifyPasteSuccess();
-      }
 
     } catch (error) {
       console.error('Erro ao colar bloco:', error);

@@ -1,7 +1,7 @@
 
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useClipboard } from "@/context/clipboard";
+import { useClipboard } from "@/context/ClipboardContext";
 import { usePasteBlock } from "@/hooks/paste-block";
 import { useQueryClient } from "@tanstack/react-query";
 import { FullRundownHeader } from "./full-rundown/FullRundownHeader";

@@ -1,7 +1,7 @@
 
 import { useEffect, useRef } from 'react';
 import { Materia } from '@/types';
-import { useClipboard } from '@/context/clipboard';
+import { useClipboard } from '@/context/ClipboardContext';
 
 interface UseKeyboardShortcutsProps {
   selectedMateria: Materia | null;
