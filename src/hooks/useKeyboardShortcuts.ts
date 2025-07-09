@@ -30,7 +30,7 @@ export const useKeyboardShortcuts = ({
   getClipboardInfo
 }: UseKeyboardShortcutsProps) => {
   const lastOperationRef = useRef<number>(0);
-  const DEBOUNCE_DELAY = 150; // Reduced for better responsiveness
+  const DEBOUNCE_DELAY = 150;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -58,7 +58,7 @@ export const useKeyboardShortcuts = ({
         }
       }
 
-      // Paste functionality (Ctrl+V) - with improved priority logic
+      // Paste functionality (Ctrl+V) - with corrected priority logic
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         if (now - lastOperationRef.current > DEBOUNCE_DELAY) {
           event.preventDefault();
@@ -67,27 +67,36 @@ export const useKeyboardShortcuts = ({
           // Get clipboard info to determine what was copied most recently
           const clipboardInfo = getClipboardInfo?.();
           
+          console.log('Paste triggered - Clipboard state:', {
+            clipboardInfo,
+            hasCopiedBlock: !!copiedBlock,
+            timestamp: new Date().toISOString()
+          });
+          
           if (clipboardInfo) {
-            console.log('Clipboard info:', clipboardInfo);
-            
-            // Use the most recent item based on timestamp
-            if (clipboardInfo.type === 'block' && onPasteBlock) {
-              console.log('Pasting block based on timestamp priority');
-              onPasteBlock();
+            // Use timestamp-based priority with corrected logic
+            if (clipboardInfo.type === 'block') {
+              if (onPasteBlock) {
+                console.log('Pasting block based on clipboard type:', clipboardInfo.data);
+                onPasteBlock();
+              } else {
+                console.log('Block paste not available in this context');
+              }
             } else if (clipboardInfo.type === 'materia') {
-              console.log('Pasting materia based on timestamp priority');
+              console.log('Pasting materia based on clipboard type:', clipboardInfo.data);
               onPaste();
             } else {
-              console.log('Fallback to default paste behavior');
+              console.log('Unknown clipboard type, defaulting to materia paste');
               onPaste();
             }
           } else {
-            // Fallback to legacy behavior if no clipboard info available
+            // Fallback to legacy behavior only if no clipboard info available
+            console.log('No clipboard info available, using legacy fallback');
             if (copiedBlock && onPasteBlock) {
-              console.log('Fallback: Pasting block');
+              console.log('Legacy fallback: Pasting block');
               onPasteBlock();
             } else {
-              console.log('Fallback: Pasting materia');
+              console.log('Legacy fallback: Pasting materia');
               onPaste();
             }
           }

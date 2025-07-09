@@ -101,10 +101,12 @@ export const NewsScheduleHooks = ({
     setBlocks: setBlocksWrapper,
     selectedMateria,
     copiedMateria,
-    clearClipboard
+    clearClipboard,
+    copiedBlock,
+    getClipboardInfo
   });
 
-  // Block paste functionality
+  // Block paste functionality with enhanced validation
   const { pasteBlock } = usePasteBlock({
     selectedJournal,
     currentTelejornal,
@@ -114,7 +116,8 @@ export const NewsScheduleHooks = ({
       if (selectedJournal) {
         queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
       }
-    }
+    },
+    getClipboardInfo
   });
 
   // Actions handlers
@@ -136,7 +139,7 @@ export const NewsScheduleHooks = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Enhanced keyboard shortcuts with timestamp-based priority
+  // Enhanced keyboard shortcuts with corrected priority logic
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: copyMateria,

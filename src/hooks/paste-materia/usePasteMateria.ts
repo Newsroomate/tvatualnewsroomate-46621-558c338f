@@ -18,13 +18,23 @@ export const usePasteMateria = ({
   selectedMateria,
   copiedMateria,
   clearClipboard,
-  markOptimisticUpdate
-}: UsePasteMateriaProps) => {
+  markOptimisticUpdate,
+  copiedBlock,
+  getClipboardInfo
+}: UsePasteMateriaProps & { 
+  copiedBlock?: any; 
+  getClipboardInfo?: () => { type: string; timestamp: number; age: number; data: string } | null 
+}) => {
   
   const pasteMateria = async () => {
-    // Validation with enhanced logging
-    if (!validatePasteOperation(copiedMateria, blocks)) {
-      console.log('Paste validation failed:', { copiedMateria: !!copiedMateria, blocksCount: blocks.length });
+    // Enhanced validation with clipboard context
+    if (!validatePasteOperation(copiedMateria, blocks, copiedBlock, getClipboardInfo)) {
+      console.log('Paste validation failed:', { 
+        copiedMateria: !!copiedMateria, 
+        copiedBlock: !!copiedBlock,
+        clipboardType: getClipboardInfo?.()?.type,
+        blocksCount: blocks.length 
+      });
       return;
     }
 
@@ -37,6 +47,7 @@ export const usePasteMateria = ({
       },
       selectedMateria: selectedMateria?.retranca,
       blocksCount: blocks.length,
+      clipboardType: getClipboardInfo?.()?.type,
       timestamp: new Date().toISOString()
     });
 
@@ -131,7 +142,7 @@ export const usePasteMateria = ({
       console.log('Paste operation completed successfully, clearing clipboard');
       setTimeout(() => {
         clearClipboard();
-      }, 1000); // Delayed clear to prevent race conditions
+      }, 1000);
 
     } catch (error) {
       console.error('Paste operation failed:', error);
