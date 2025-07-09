@@ -119,7 +119,7 @@ export const useClipboard = () => {
         sessionStorage.removeItem(CLIPBOARD_TIMESTAMP_KEY);
         sessionStorage.removeItem(BLOCK_CLIPBOARD_STORAGE_KEY);
         sessionStorage.removeItem(BLOCK_CLIPBOARD_TIMESTAMP_KEY);
-        setClopiedMateria(null);
+        setCopiedMateria(null);
         setCopiedBlock(null);
         setClipboardState({ type: null, timestamp: 0, data: null });
       }
