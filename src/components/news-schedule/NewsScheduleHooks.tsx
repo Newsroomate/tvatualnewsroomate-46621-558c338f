@@ -9,6 +9,7 @@ import { useNewsScheduleDualView } from "@/hooks/useNewsScheduleDualView";
 import { useNewsScheduleActions } from "./NewsScheduleActions";
 import { useItemSelection } from "@/hooks/useItemSelection";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
