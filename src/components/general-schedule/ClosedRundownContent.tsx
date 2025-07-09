@@ -17,6 +17,17 @@ interface ClosedRundownContentProps {
 
 export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownContentProps) => {
   const [selectedSnapshot, setSelectedSnapshot] = useState<ClosedRundownSnapshot | null>(null);
+  const [expandedSnapshots, setExpandedSnapshots] = useState<Set<string>>(new Set());
+
+  const toggleSnapshotExpansion = (snapshotId: string) => {
+    const newExpanded = new Set(expandedSnapshots);
+    if (newExpanded.has(snapshotId)) {
+      newExpanded.delete(snapshotId);
+    } else {
+      newExpanded.add(snapshotId);
+    }
+    setExpandedSnapshots(newExpanded);
+  };
 
   if (isLoading) {
     return <LoadingState />;
@@ -58,7 +69,9 @@ export const ClosedRundownContent = ({ snapshots, isLoading }: ClosedRundownCont
           <SnapshotCard 
             key={snapshot.id}
             snapshot={snapshot}
-            onView={() => setSelectedSnapshot(snapshot)}
+            isExpanded={expandedSnapshots.has(snapshot.id)}
+            onToggleExpansion={() => toggleSnapshotExpansion(snapshot.id)}
+            onViewDetails={(snapshot) => setSelectedSnapshot(snapshot)}
           />
         ))}
       </div>
