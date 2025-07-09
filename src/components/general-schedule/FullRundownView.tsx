@@ -10,6 +10,8 @@ import { InstructionSection } from "./full-rundown/InstructionSection";
 import { EmptyBlocosState } from "./full-rundown/EmptyBlocosState";
 import { LoadingState } from "./full-rundown/LoadingState";
 import { useMateriaOperations } from "./hooks/useMateriaOperations";
+import { useAuth } from "@/context/AuthContext";
+import { canCopyAndPasteBlocks } from "@/utils/permission-checker";
 
 interface FullRundownViewProps {
   snapshot: ClosedRundownSnapshot;
@@ -18,6 +20,9 @@ interface FullRundownViewProps {
 
 export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   const queryClient = useQueryClient();
+  const { profile } = useAuth();
+  const canCopyBlocks = canCopyAndPasteBlocks(profile);
+  
   const {
     blocos,
     isLoadingHybrid,
@@ -38,7 +43,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
 
   const { copyMateria } = useClipboard();
 
-  // Hook para colar blocos - simulando um espelho aberto temporário para permitir paste
+  // Hook para colar blocos - no histórico não é permitido colar
   const { pasteBlock } = usePasteBlock({
     selectedJournal: null, // No histórico não há journal selecionado
     currentTelejornal: { espelho_aberto: false }, // Espelho fechado no histórico
@@ -48,14 +53,14 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     }
   });
 
-  // Atalhos de teclado para copiar - com funcionalidade aprimorada
+  // Atalhos de teclado para copiar - permitir apenas copy no histórico
   useKeyboardShortcuts({
     selectedMateria,
     onPaste: () => {
       console.log('Tentativa de colar no histórico (não permitido)');
       // Não permitir colar no histórico, apenas copiar
     },
-    isEspelhoOpen: true, // Permitir copy no histórico
+    isEspelhoOpen: canCopyBlocks, // Permitir copy apenas se usuário tem permissão
     onPasteBlock: () => {
       console.log('Tentativa de colar bloco no histórico (não permitido)');
       // Não permitir colar blocos no histórico

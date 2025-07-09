@@ -2,8 +2,9 @@
 import { toast } from '@/hooks/use-toast';
 import { createBloco, fetchBlocosByTelejornal } from '@/services/api';
 import { createMateria } from '@/services/materias-api';
-
 import { useClipboard } from '@/context/ClipboardContext';
+import { useAuth } from '@/context/AuthContext';
+import { canCopyAndPasteBlocks, getPermissionErrorMessage } from '@/utils/permission-checker';
 
 interface CopiedBlock {
   id: string;
@@ -25,8 +26,23 @@ export const usePasteBlock = ({
   refreshBlocks
 }: UsePasteBlockProps) => {
   const { copiedBlock, clearClipboard, validateClipboard } = useClipboard();
+  const { profile } = useAuth();
   
   const pasteBlock = async () => {
+    console.log('Iniciando processo de colar bloco...');
+    console.log('Usuário:', profile?.full_name, 'Role:', profile?.role);
+    
+    // Verificar permissões primeiro
+    if (!canCopyAndPasteBlocks(profile)) {
+      console.log('Usuário sem permissão para colar blocos');
+      toast({
+        title: "Permissão negada",
+        description: getPermissionErrorMessage('copy_paste_block'),
+        variant: "destructive"
+      });
+      return;
+    }
+
     // Pre-paste validation
     if (!validateClipboard()) {
       toast({
@@ -71,12 +87,16 @@ export const usePasteBlock = ({
       const existingBlocks = await fetchBlocosByTelejornal(selectedJournal);
       const nextOrder = existingBlocks.length + 1;
       
+      console.log('Criando novo bloco...');
+      
       // Create new block
       const newBlock = await createBloco({
         nome: `${copiedBlock.nome} (Cópia)`,
         ordem: nextOrder,
         telejornal_id: selectedJournal
       });
+
+      console.log('Bloco criado com sucesso:', newBlock.id);
 
       // Create all materias from copied block
       const createdMaterias = [];
@@ -116,15 +136,36 @@ export const usePasteBlock = ({
       console.log('Bloco colado com sucesso:', newBlock.nome);
       refreshBlocks();
 
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro ao colar bloco:', error);
+      
+      // Handle specific RLS errors
+      if (error.code === '42501' || error.message?.includes('row-level security') || error.message?.includes('insufficient_privilege')) {
+        toast({
+          title: "Permissão negada",
+          description: getPermissionErrorMessage('create_block'),
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Handle other specific errors
+      if (error.message?.includes('duplicate key') || error.message?.includes('unique constraint')) {
+        toast({
+          title: "Erro de duplicação",
+          description: "Já existe um bloco com essas características. Tente novamente.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
       toast({
         title: "Erro ao colar bloco",
-        description: "Não foi possível colar o bloco. Tente novamente.",
+        description: `Não foi possível colar o bloco: ${error.message || 'Erro desconhecido'}`,
         variant: "destructive"
       });
     }
   };
 
-  return { pasteBlock };
+  return { pasteBlock, canPasteBlocks: canCopyAndPasteBlocks(profile) };
 };

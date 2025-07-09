@@ -1,8 +1,11 @@
+
 import React from 'react';
 import { X, FileText, Package, Copy } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useClipboard } from '@/context/ClipboardContext';
+import { useAuth } from '@/context/AuthContext';
+import { canCopyAndPasteBlocks } from '@/utils/permission-checker';
 import {
   Tooltip,
   TooltipContent,
@@ -12,6 +15,8 @@ import {
 
 export const ClipboardIndicator = () => {
   const { copiedMateria, copiedBlock, clearClipboard, hasCopiedMateria, hasCopiedBlock } = useClipboard();
+  const { profile } = useAuth();
+  const canPasteBlocks = canCopyAndPasteBlocks(profile);
 
   // Don't render if nothing is copied
   if (!hasCopiedMateria() && !hasCopiedBlock()) {
@@ -78,7 +83,8 @@ export const ClipboardIndicator = () => {
             </span>
           </div>
           <span className="text-xs text-green-600">
-            {copiedBlock.materias.length} matérias • {minutos}:{segundos.toString().padStart(2, '0')} • Ctrl+V para colar
+            {copiedBlock.materias.length} matérias • {minutos}:{segundos.toString().padStart(2, '0')} 
+            {canPasteBlocks ? ' • Ctrl+V para colar' : ' • Sem permissão para colar'}
           </span>
         </div>
         <TooltipProvider>
@@ -113,6 +119,8 @@ export const ClipboardIndicator = () => {
 // Mini indicator for inline use
 export const ClipboardMiniIndicator = () => {
   const { hasCopiedMateria, hasCopiedBlock } = useClipboard();
+  const { profile } = useAuth();
+  const canPasteBlocks = canCopyAndPasteBlocks(profile);
 
   if (!hasCopiedMateria() && !hasCopiedBlock()) {
     return null;
@@ -128,7 +136,10 @@ export const ClipboardMiniIndicator = () => {
           </div>
         </TooltipTrigger>
         <TooltipContent>
-          Pressione Ctrl+V para colar
+          {hasCopiedBlock() && !canPasteBlocks 
+            ? 'Sem permissão para colar blocos' 
+            : 'Pressione Ctrl+V para colar'
+          }
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
