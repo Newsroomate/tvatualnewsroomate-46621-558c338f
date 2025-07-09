@@ -37,6 +37,8 @@ export { fetchClosedRundowns } from "./espelhos-api";
 
 // Export the snapshots-api functions
 export { 
-  fetchClosedRundowns as fetchClosedRundownSnapshots,
-  ClosedRundownSnapshot
+  fetchClosedRundowns as fetchClosedRundownSnapshots
 } from "./snapshots-api";
+
+// Export type separately to fix isolatedModules issue
+export type { ClosedRundownSnapshot } from "./snapshots-api";

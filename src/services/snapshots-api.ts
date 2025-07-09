@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 
@@ -258,7 +257,7 @@ export const closeRundown = async (
   };
 };
 
-export const fetchClosedRundowns = async (telejornalId?: string, targetDate?: string): Promise<ClosedRundownSnapshot[]> => {
+export const fetchClosedRundowns = async (telejornalId?: string, targetDate?: string | Date): Promise<ClosedRundownSnapshot[]> => {
   console.log("Buscando espelhos fechados:", { telejornalId, targetDate });
   
   let query = supabase
@@ -284,7 +283,11 @@ export const fetchClosedRundowns = async (telejornalId?: string, targetDate?: st
 
   if (targetDate) {
     console.log("Filtering closed rundowns by date:", targetDate);
-    query = query.eq('data_referencia', targetDate);
+    // Handle both string and Date inputs
+    const dateString = targetDate instanceof Date 
+      ? format(targetDate, 'yyyy-MM-dd')
+      : targetDate;
+    query = query.eq('data_referencia', dateString);
   }
 
   query = query.order('created_at', { ascending: false });
@@ -310,7 +313,7 @@ export const fetchClosedRundowns = async (telejornalId?: string, targetDate?: st
   })) as ClosedRundownSnapshot[] || [];
 };
 
-// Alias para manter compatibilidade
+// Alias para manter compatibilidade - updated signature to match the main function
 export const fetchClosedRundownSnapshots = fetchClosedRundowns;
 
 export const deleteClosedRundown = async (snapshotId: string): Promise<boolean> => {

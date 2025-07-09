@@ -161,7 +161,7 @@ export const HistoricoEspelhosSection = ({
                       )}
                     </div>
                     <div className="text-xs text-gray-400 mt-1">
-                      {espelho.estrutura_completa.metadata.total_blocos} bloco(s)
+                      {espelho.estrutura_completa?.metadata?.total_blocos || espelho.estrutura_completa?.blocos?.length || 0} bloco(s)
                     </div>
                   </div>
                   <Button
