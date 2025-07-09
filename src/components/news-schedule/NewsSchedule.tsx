@@ -54,7 +54,7 @@ export const NewsSchedule = ({
             newItemBlock={hookProps.newItemBlock}
             isDeleting={hookProps.isDeleting}
             selectedMateria={hookProps.selectedMateria}
-            onMateriaSelect={hookProps.handleMateriaSelect}
+            handleMateriaSelect={hookProps.handleMateriaSelect}
             handleAddItem={hookProps.handleAddItem}
             handleDuplicateItem={hookProps.handleDuplicateItem}
             handleDeleteMateria={hookProps.handleDeleteMateria}
@@ -68,6 +68,7 @@ export const NewsSchedule = ({
             handleViewTeleprompter={hookProps.handleViewTeleprompter}
             handleSaveModel={hookProps.handleSaveModel}
             handleViewSavedModels={hookProps.handleViewSavedModels}
+            copyMateria={hookProps.copyMateria}
             isDualView={isDualView}
           />
 
