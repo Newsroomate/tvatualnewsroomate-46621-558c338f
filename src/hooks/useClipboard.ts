@@ -41,7 +41,10 @@ export const useClipboard = () => {
     const loadClipboardData = () => {
       try {
         const storedData = sessionStorage.getItem(CLIPBOARD_STORAGE_KEY);
-        if (!storedData) return;
+        if (!storedData) {
+          console.log('useClipboard: Nenhum dado no sessionStorage');
+          return;
+        }
 
         const parsedData: ClipboardItem = JSON.parse(storedData);
         
@@ -51,7 +54,7 @@ export const useClipboard = () => {
         
         if (now - parsedData.timestamp < expiryTime) {
           setClipboardItem(parsedData);
-          console.log('Clipboard recuperado:', {
+          console.log('useClipboard: Clipboard recuperado:', {
             type: parsedData.type,
             timestamp: new Date(parsedData.timestamp).toLocaleTimeString(),
             session: parsedData.user_session,
@@ -59,10 +62,11 @@ export const useClipboard = () => {
           });
         } else {
           // Limpar dados expirados
+          console.log('useClipboard: Dados expirados, limpando');
           sessionStorage.removeItem(CLIPBOARD_STORAGE_KEY);
         }
       } catch (error) {
-        console.error('Erro ao recuperar clipboard:', error);
+        console.error('useClipboard: Erro ao recuperar clipboard:', error);
         sessionStorage.removeItem(CLIPBOARD_STORAGE_KEY);
       }
     };
@@ -73,12 +77,15 @@ export const useClipboard = () => {
   // Função para salvar no storage com controle de concorrência
   const saveToStorage = (item: ClipboardItem) => {
     try {
-      // Implementar debounce simples para evitar escritas simultâneas
-      setTimeout(() => {
-        sessionStorage.setItem(CLIPBOARD_STORAGE_KEY, JSON.stringify(item));
-      }, 50);
+      console.log('useClipboard: Salvando no sessionStorage:', {
+        type: item.type,
+        id: item.id,
+        timestamp: new Date(item.timestamp).toLocaleTimeString()
+      });
+      
+      sessionStorage.setItem(CLIPBOARD_STORAGE_KEY, JSON.stringify(item));
     } catch (error) {
-      console.error('Erro ao salvar no clipboard:', error);
+      console.error('useClipboard: Erro ao salvar no clipboard:', error);
       toast({
         title: "Aviso sobre persistência",
         description: "O item foi copiado mas pode não persistir entre sessões",
@@ -90,7 +97,7 @@ export const useClipboard = () => {
   const copyMateria = (materia: Materia) => {
     const clipboardId = `materia_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    console.log('Copiando matéria para clipboard unificado:', {
+    console.log('useClipboard: Copiando matéria para clipboard unificado:', {
       id: materia.id,
       retranca: materia.retranca,
       clipboardId,
@@ -122,7 +129,7 @@ export const useClipboard = () => {
   const copyBlock = (block: any, materias: Materia[]) => {
     const clipboardId = `block_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
-    console.log('Copiando bloco para clipboard unificado:', {
+    console.log('useClipboard: Copiando bloco para clipboard unificado:', {
       id: block.id,
       nome: block.nome,
       totalMaterias: materias.length,
@@ -161,7 +168,7 @@ export const useClipboard = () => {
   };
 
   const clearClipboard = () => {
-    console.log('Limpando clipboard unificado:', {
+    console.log('useClipboard: Limpando clipboard unificado:', {
       session: userSessionId,
       previousItem: clipboardItem?.type
     });
@@ -174,13 +181,25 @@ export const useClipboard = () => {
   const copiedMateria = clipboardItem?.type === 'materia' ? clipboardItem.data : null;
   const copiedBlock = clipboardItem?.type === 'block' ? clipboardItem.data : null;
 
-  const hasCopiedMateria = () => clipboardItem?.type === 'materia';
-  const hasCopiedBlock = () => clipboardItem?.type === 'block';
+  const hasCopiedMateria = () => {
+    const result = clipboardItem?.type === 'materia';
+    console.log('useClipboard: hasCopiedMateria =', result);
+    return result;
+  };
+  
+  const hasCopiedBlock = () => {
+    const result = clipboardItem?.type === 'block';
+    console.log('useClipboard: hasCopiedBlock =', result);
+    return result;
+  };
 
   const getClipboardInfo = () => {
-    if (!clipboardItem) return null;
+    if (!clipboardItem) {
+      console.log('useClipboard: getClipboardInfo = null');
+      return null;
+    }
     
-    return {
+    const info = {
       type: clipboardItem.type,
       timestamp: clipboardItem.timestamp,
       age: Date.now() - clipboardItem.timestamp,
@@ -190,6 +209,9 @@ export const useClipboard = () => {
         ? clipboardItem.data.retranca 
         : clipboardItem.data.nome
     };
+    
+    console.log('useClipboard: getClipboardInfo =', info);
+    return info;
   };
 
   return {

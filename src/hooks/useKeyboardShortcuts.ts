@@ -39,8 +39,10 @@ export const useKeyboardShortcuts = ({
       if (event.ctrlKey && event.key === 'c' && !isEditingText) {
         if (selectedMateria) {
           event.preventDefault();
+          console.log('Ctrl+C: Copiando matéria selecionada:', selectedMateria.retranca);
           onCopy(selectedMateria);
-          console.log('Copiado via Ctrl+C:', selectedMateria.retranca);
+        } else {
+          console.log('Ctrl+C: Nenhuma matéria selecionada');
         }
         return;
       }
@@ -48,15 +50,13 @@ export const useKeyboardShortcuts = ({
       // Ctrl+V para colar (prioridade: último item copiado)
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         if (!isEspelhoOpen) {
-          console.log('Tentativa de colar com espelho fechado');
+          console.log('Ctrl+V: Tentativa de colar com espelho fechado');
           return;
         }
 
         event.preventDefault();
         
-        // CORREÇÃO PRINCIPAL: Sempre usar onPaste que já tem a lógica correta
-        // A lógica de decidir entre matéria e bloco está no clipboard unificado
-        console.log('Ctrl+V interceptado - executando paste');
+        console.log('Ctrl+V: Executando paste unificado');
         onPaste();
         return;
       }

@@ -14,6 +14,7 @@ interface NewsBlockProps {
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
   onDuplicateItem: (item: Materia) => void;
+  onCopyItem: (item: Materia) => void;
   isEspelhoOpen: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
@@ -31,6 +32,7 @@ export const NewsBlock = ({
   onEditItem,
   onDeleteItem,
   onDuplicateItem,
+  onCopyItem,
   isEspelhoOpen,
   onRenameBlock,
   onDeleteBlock,
@@ -70,6 +72,9 @@ export const NewsBlock = ({
   const currentSelectedMateria = selectedMateria || localSelectedMateria;
   const currentSelectedItemId = selectedMateria?.id || selectedItemId;
 
+  console.log('NewsBlock: currentSelectedItemId =', currentSelectedItemId);
+  console.log('NewsBlock: onMateriaSelect =', !!onMateriaSelect);
+
   const handleDeleteSelected = () => {
     // Get the actual materia objects for selected IDs
     const materiasToDelete = block.items.filter(item => selectedItems.includes(item.id));
@@ -87,20 +92,31 @@ export const NewsBlock = ({
   };
 
   const handleItemClick = (materia: Materia) => {
+    console.log('NewsBlock: handleItemClick para:', materia.retranca);
+    
     // If the item is already selected, deselect it
     if (currentSelectedMateria?.id === materia.id) {
       if (onMateriaSelect) {
+        console.log('NewsBlock: Desmarcando matéria via onMateriaSelect');
         onMateriaSelect(null);
       } else {
+        console.log('NewsBlock: Desmarcando matéria via clearVisualSelection');
         clearVisualSelection();
       }
     } else {
       if (onMateriaSelect) {
+        console.log('NewsBlock: Selecionando matéria via onMateriaSelect:', materia.retranca);
         onMateriaSelect(materia);
       } else {
+        console.log('NewsBlock: Selecionando matéria via selectItem:', materia.retranca);
         selectItem(materia);
       }
     }
+  };
+
+  const handleCopyItem = (item: Materia) => {
+    console.log('NewsBlock: Copiando item:', item.retranca);
+    onCopyItem(item);
   };
   
   return (
@@ -136,6 +152,7 @@ export const NewsBlock = ({
         onEditItem={onEditItem}
         onDeleteItem={onDeleteItem}
         onDuplicateItem={onDuplicateItem}
+        onCopyItem={handleCopyItem}
         isEspelhoOpen={isEspelhoOpen}
         canModifyItems={canModify}
         // Batch selection props
