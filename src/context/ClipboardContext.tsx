@@ -9,6 +9,7 @@ const BLOCK_CLIPBOARD_TIMESTAMP_KEY = 'copiedBlockTimestamp';
 const CLIPBOARD_EXPIRY_HOURS = 24;
 const DEBOUNCE_DELAY = 300;
 const AUTO_CLEANUP_DELAY = 30000; // 30 seconds
+const POST_PASTE_CLEANUP_DELAY = 3000; // 3 seconds after paste
 
 interface CopiedBlock {
   id: string;
@@ -33,6 +34,7 @@ interface ClipboardContextType extends ClipboardState {
   hasCopiedBlock: () => boolean;
   checkStoredMateria: () => boolean;
   validateClipboard: () => boolean;
+  notifyPasteSuccess: () => void;
 }
 
 const ClipboardContext = createContext<ClipboardContextType | null>(null);
@@ -59,6 +61,7 @@ export const ClipboardProvider = ({ children }: ClipboardProviderProps) => {
 
   const cleanupTimeoutRef = useRef<NodeJS.Timeout>();
   const debounceTimeoutRef = useRef<NodeJS.Timeout>();
+  const postPasteCleanupRef = useRef<NodeJS.Timeout>();
 
   // Custom event for cross-component synchronization
   const dispatchClipboardEvent = useCallback((type: 'clear' | 'materia' | 'block', data?: any) => {
@@ -96,6 +99,9 @@ export const ClipboardProvider = ({ children }: ClipboardProviderProps) => {
     }
     if (debounceTimeoutRef.current) {
       clearTimeout(debounceTimeoutRef.current);
+    }
+    if (postPasteCleanupRef.current) {
+      clearTimeout(postPasteCleanupRef.current);
     }
 
     // Notify all components
@@ -328,6 +334,22 @@ export const ClipboardProvider = ({ children }: ClipboardProviderProps) => {
     }
   }, [state.isOperationInProgress, state.lastOperation, atomicSetBlock]);
 
+  // Function to notify successful paste and trigger auto-cleanup
+  const notifyPasteSuccess = useCallback(() => {
+    console.log('🎯 Paste bem-sucedido, limpeza automática em 3 segundos');
+    
+    // Clear existing post-paste timer
+    if (postPasteCleanupRef.current) {
+      clearTimeout(postPasteCleanupRef.current);
+    }
+    
+    // Set new cleanup timer
+    postPasteCleanupRef.current = setTimeout(() => {
+      console.log('🧹 Limpeza automática pós-paste');
+      atomicClear();
+    }, POST_PASTE_CLEANUP_DELAY);
+  }, [atomicClear]);
+
   // Load stored data on initialization
   useEffect(() => {
     const loadStoredData = () => {
@@ -408,6 +430,9 @@ export const ClipboardProvider = ({ children }: ClipboardProviderProps) => {
       if (debounceTimeoutRef.current) {
         clearTimeout(debounceTimeoutRef.current);
       }
+      if (postPasteCleanupRef.current) {
+        clearTimeout(postPasteCleanupRef.current);
+      }
     };
   }, []);
 
@@ -435,7 +460,8 @@ export const ClipboardProvider = ({ children }: ClipboardProviderProps) => {
         return false;
       }
     },
-    validateClipboard
+    validateClipboard,
+    notifyPasteSuccess
   };
 
   return (

@@ -8,6 +8,7 @@ export interface UsePasteMateriaProps {
   copiedMateria: Materia | null;
   clearClipboard: () => void;
   markOptimisticUpdate?: (materiaId: string) => void;
+  notifyPasteSuccess?: () => void;
 }
 
 export interface PasteMateriaData {

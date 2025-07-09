@@ -19,7 +19,8 @@ export const usePasteMateria = ({
   selectedMateria,
   copiedMateria,
   clearClipboard,
-  markOptimisticUpdate
+  markOptimisticUpdate,
+  notifyPasteSuccess
 }: UsePasteMateriaProps) => {
   
   const pasteMateria = async () => {
@@ -125,6 +126,11 @@ export const usePasteMateria = ({
       setBlocks((currentBlocks: any[]) => 
         replaceTemporaryMateria(currentBlocks, targetBlockId, tempId, newMateria)
       );
+
+      // 5. NOTIFICAR SUCESSO PARA AUTO-LIMPEZA DO CLIPBOARD
+      if (notifyPasteSuccess) {
+        notifyPasteSuccess();
+      }
 
     } catch (error) {
       console.error('Erro ao colar matéria:', error);

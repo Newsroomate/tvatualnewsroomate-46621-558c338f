@@ -17,12 +17,14 @@ interface UsePasteBlockProps {
   selectedJournal: string | null;
   currentTelejornal: any;
   refreshBlocks: () => void;
+  notifyPasteSuccess?: () => void;
 }
 
 export const usePasteBlock = ({
   selectedJournal,
   currentTelejornal,
-  refreshBlocks
+  refreshBlocks,
+  notifyPasteSuccess
 }: UsePasteBlockProps) => {
   const { copiedBlock, clearClipboard, validateClipboard } = useClipboard();
   
@@ -115,6 +117,11 @@ export const usePasteBlock = ({
 
       console.log('Bloco colado com sucesso:', newBlock.nome);
       refreshBlocks();
+
+      // Notify clipboard context about successful paste
+      if (notifyPasteSuccess) {
+        notifyPasteSuccess();
+      }
 
     } catch (error) {
       console.error('Erro ao colar bloco:', error);

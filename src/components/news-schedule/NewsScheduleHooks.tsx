@@ -85,7 +85,7 @@ export const NewsScheduleHooks = ({
   } = useItemSelection();
 
   // Clipboard functionality
-  const { copiedMateria, copiedBlock, copyMateria, copyBlock, clearClipboard, hasCopiedMateria, hasCopiedBlock } = useClipboard();
+  const { copiedMateria, copiedBlock, copyMateria, copyBlock, clearClipboard, hasCopiedMateria, hasCopiedBlock, notifyPasteSuccess } = useClipboard();
   
   // Enhanced paste functionality with optimistic updates
   const { pasteMateria } = usePasteMateria({
@@ -93,7 +93,8 @@ export const NewsScheduleHooks = ({
     setBlocks: setBlocksWrapper,
     selectedMateria,
     copiedMateria,
-    clearClipboard
+    clearClipboard,
+    notifyPasteSuccess
   });
 
   // Block paste functionality
@@ -104,7 +105,8 @@ export const NewsScheduleHooks = ({
       if (selectedJournal) {
         queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
       }
-    }
+    },
+    notifyPasteSuccess
   });
 
   // Actions handlers
