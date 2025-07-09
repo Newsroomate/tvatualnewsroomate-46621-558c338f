@@ -7,7 +7,7 @@ import { formatTime } from "../../news-schedule/utils";
 import { MateriaViewCard } from "./MateriaViewCard";
 import { EditableMateriaForm } from "./EditableMateriaForm";
 import { EditableMateria } from "../types";
-import { useClipboard } from "@/context/ClipboardContext";
+import { useClipboard } from "@/context/clipboard";
 
 interface BlocoCardProps {
   bloco: any;

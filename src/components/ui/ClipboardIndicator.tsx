@@ -2,7 +2,7 @@ import React from 'react';
 import { X, FileText, Package, Copy } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { useClipboard } from '@/context/ClipboardContext';
+import { useClipboard } from '@/context/clipboard';
 import {
   Tooltip,
   TooltipContent,

@@ -9,7 +9,7 @@ import NotFound from "./pages/NotFound";
 import Auth from "./pages/Auth";
 import TeleprompterWindow from "./pages/TeleprompterWindow";
 import { AuthProvider } from "./context/AuthContext";
-import { ClipboardProvider } from "./context/ClipboardContext";
+import { ClipboardProvider } from "./context/clipboard";
 import { ClipboardIndicator } from "./components/ui/ClipboardIndicator";
 import { AppHeader } from "./components/AppHeader";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";

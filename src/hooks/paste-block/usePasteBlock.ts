@@ -3,7 +3,7 @@ import { toast } from '@/hooks/use-toast';
 import { createBloco, fetchBlocosByTelejornal } from '@/services/api';
 import { createMateria } from '@/services/materias-api';
 
-import { useClipboard } from '@/context/ClipboardContext';
+import { useClipboard } from '@/context/clipboard';
 
 interface CopiedBlock {
   id: string;
