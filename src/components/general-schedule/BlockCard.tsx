@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight, Copy } from "lucide-react";
 import { formatTime } from "../news-schedule/utils";
 import { MaterialCard } from "./MaterialCard";
-import { useClipboard } from "@/hooks/useClipboard";
+import { useClipboard } from "@/context/ClipboardContext";
 
 interface BlockCardProps {
   bloco: any;

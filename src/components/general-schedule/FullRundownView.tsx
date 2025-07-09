@@ -1,7 +1,7 @@
 
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useClipboard } from "@/hooks/useClipboard";
+import { useClipboard } from "@/context/ClipboardContext";
 import { usePasteBlock } from "@/hooks/paste-block";
 import { useQueryClient } from "@tanstack/react-query";
 import { FullRundownHeader } from "./full-rundown/FullRundownHeader";
@@ -36,14 +36,12 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     handleUpdateEditData
   } = useMateriaOperations(snapshot);
 
-  const { copyMateria, copiedBlock, clearClipboard } = useClipboard();
+  const { copyMateria } = useClipboard();
 
   // Hook para colar blocos - simulando um espelho aberto temporário para permitir paste
   const { pasteBlock } = usePasteBlock({
     selectedJournal: null, // No histórico não há journal selecionado
     currentTelejornal: { espelho_aberto: false }, // Espelho fechado no histórico
-    copiedBlock,
-    clearClipboard,
     refreshBlocks: () => {
       // Não faz nada no histórico, apenas para compatibilidade
       console.log('Refresh blocks chamado no histórico (sem efeito)');
@@ -53,18 +51,11 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   // Atalhos de teclado para copiar - com funcionalidade aprimorada
   useKeyboardShortcuts({
     selectedMateria,
-    onCopy: () => {
-      if (selectedMateria) {
-        console.log('Copiando via Ctrl+C no histórico:', selectedMateria);
-        copyMateria(selectedMateria);
-      }
-    },
     onPaste: () => {
       console.log('Tentativa de colar no histórico (não permitido)');
       // Não permitir colar no histórico, apenas copiar
     },
     isEspelhoOpen: true, // Permitir copy no histórico
-    copiedBlock,
     onPasteBlock: () => {
       console.log('Tentativa de colar bloco no histórico (não permitido)');
       // Não permitir colar blocos no histórico

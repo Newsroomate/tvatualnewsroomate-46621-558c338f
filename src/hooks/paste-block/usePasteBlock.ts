@@ -3,6 +3,8 @@ import { toast } from '@/hooks/use-toast';
 import { createBloco, fetchBlocosByTelejornal } from '@/services/api';
 import { createMateria } from '@/services/materias-api';
 
+import { useClipboard } from '@/context/ClipboardContext';
+
 interface CopiedBlock {
   id: string;
   nome: string;
@@ -14,21 +16,27 @@ interface CopiedBlock {
 interface UsePasteBlockProps {
   selectedJournal: string | null;
   currentTelejornal: any;
-  copiedBlock: CopiedBlock | null;
-  clearClipboard: () => void;
   refreshBlocks: () => void;
 }
 
 export const usePasteBlock = ({
   selectedJournal,
   currentTelejornal,
-  copiedBlock,
-  clearClipboard,
   refreshBlocks
 }: UsePasteBlockProps) => {
+  const { copiedBlock, clearClipboard, validateClipboard } = useClipboard();
   
   const pasteBlock = async () => {
-    // Validation checks
+    // Pre-paste validation
+    if (!validateClipboard()) {
+      toast({
+        title: "Clipboard inválido",
+        description: "Os dados do clipboard expiraram ou são inválidos",
+        variant: "destructive"
+      });
+      return;
+    }
+
     if (!copiedBlock) {
       toast({
         title: "Nenhum bloco copiado",
