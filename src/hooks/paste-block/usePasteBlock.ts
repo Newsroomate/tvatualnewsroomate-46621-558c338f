@@ -2,6 +2,7 @@
 import { toast } from '@/hooks/use-toast';
 import { createBloco, fetchBlocosByTelejornal } from '@/services/api';
 import { createMateria } from '@/services/materias-api';
+import { validateBlockPasteOperation } from '@/hooks/paste-materia/validation';
 
 interface CopiedBlock {
   id: string;
@@ -28,52 +29,35 @@ export const usePasteBlock = ({
 }: UsePasteBlockProps) => {
   
   const pasteBlock = async () => {
-    // Validation checks
-    if (!copiedBlock) {
-      toast({
-        title: "Nenhum bloco copiado",
-        description: "Copie um bloco primeiro para poder colá-lo",
-        variant: "destructive"
-      });
+    console.log('🚀 Iniciando processo de colar bloco');
+    
+    // Usar validação centralizada
+    if (!validateBlockPasteOperation(copiedBlock, selectedJournal, currentTelejornal)) {
       return;
     }
 
-    if (!selectedJournal) {
-      toast({
-        title: "Nenhum telejornal selecionado",
-        description: "Selecione um telejornal para colar o bloco",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (!currentTelejornal?.espelho_aberto) {
-      toast({
-        title: "Espelho fechado",
-        description: "O espelho precisa estar aberto para colar blocos",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    console.log('Colando bloco:', copiedBlock.nome, `(${copiedBlock.materias.length} matérias)`);
+    console.log('📦 Colando bloco:', copiedBlock!.nome, `(${copiedBlock!.materias.length} matérias)`);
 
     try {
-      // Get existing blocks to determine next order
-      const existingBlocks = await fetchBlocosByTelejornal(selectedJournal);
+      // Obter blocos existentes para determinar próxima ordem
+      const existingBlocks = await fetchBlocosByTelejornal(selectedJournal!);
       const nextOrder = existingBlocks.length + 1;
       
-      // Create new block
+      console.log('📊 Criando novo bloco na ordem:', nextOrder);
+      
+      // Criar novo bloco
       const newBlock = await createBloco({
-        nome: `${copiedBlock.nome} (Cópia)`,
+        nome: `${copiedBlock!.nome} (Cópia)`,
         ordem: nextOrder,
-        telejornal_id: selectedJournal
+        telejornal_id: selectedJournal!
       });
 
-      // Create all materias from copied block
+      console.log('✅ Bloco criado:', newBlock);
+
+      // Criar todas as matérias do bloco copiado
       const createdMaterias = [];
-      for (let i = 0; i < copiedBlock.materias.length; i++) {
-        const originalMateria = copiedBlock.materias[i];
+      for (let i = 0; i < copiedBlock!.materias.length; i++) {
+        const originalMateria = copiedBlock!.materias[i];
         
         const materiaData = {
           retranca: `${originalMateria.retranca} (Cópia)`,
@@ -86,16 +70,19 @@ export const usePasteBlock = ({
           cabeca: originalMateria.cabeca || '',
           gc: originalMateria.gc || '',
           tipo_material: originalMateria.tipo_material || 'nota',
+          local_gravacao: originalMateria.local_gravacao || '',
+          equipamento: originalMateria.equipamento || '',
+          tempo_clip: originalMateria.tempo_clip || '',
           bloco_id: newBlock.id,
-          ordem: i + 1,
-          tempo_clip: originalMateria.tempo_clip || ''
+          ordem: i + 1
         };
 
+        console.log(`📄 Criando matéria ${i + 1}/${copiedBlock!.materias.length}:`, originalMateria.retranca);
         const newMateria = await createMateria(materiaData);
         createdMaterias.push(newMateria);
       }
 
-      // Calculate total duration
+      // Calcular duração total
       const totalDuracao = createdMaterias.reduce((sum, m) => sum + (m.duracao || 0), 0);
       const minutos = Math.floor(totalDuracao / 60);
       const segundos = totalDuracao % 60;
@@ -105,11 +92,16 @@ export const usePasteBlock = ({
         description: `"${newBlock.nome}" colado com ${createdMaterias.length} matérias (${minutos}:${segundos.toString().padStart(2, '0')})`,
       });
 
-      console.log('Bloco colado com sucesso:', newBlock.nome);
+      console.log('✅ Bloco colado com sucesso:', {
+        bloco: newBlock.nome,
+        materias: createdMaterias.length,
+        duracao: `${minutos}:${segundos.toString().padStart(2, '0')}`
+      });
+      
       refreshBlocks();
 
     } catch (error) {
-      console.error('Erro ao colar bloco:', error);
+      console.error('❌ Erro ao colar bloco:', error);
       toast({
         title: "Erro ao colar bloco",
         description: "Não foi possível colar o bloco. Tente novamente.",

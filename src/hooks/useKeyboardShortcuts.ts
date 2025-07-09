@@ -17,6 +17,7 @@ interface UseKeyboardShortcutsProps {
   isEspelhoOpen?: boolean;
   copiedBlock?: CopiedBlock | null;
   onPasteBlock?: () => void;
+  getClipboardInfo?: () => { type: 'materia' | 'block' | null; hasMateria: boolean; hasBlock: boolean; };
 }
 
 export const useKeyboardShortcuts = ({
@@ -25,17 +26,16 @@ export const useKeyboardShortcuts = ({
   onPaste,
   isEspelhoOpen = false,
   copiedBlock,
-  onPasteBlock
+  onPasteBlock,
+  getClipboardInfo
 }: UseKeyboardShortcutsProps) => {
   const lastOperationRef = useRef<number>(0);
-  const DEBOUNCE_DELAY = 300; // 300ms between operations
+  const DEBOUNCE_DELAY = 300;
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Only handle shortcuts when espelho is open
       if (!isEspelhoOpen) return;
       
-      // Check if user is currently editing a text field
       const activeElement = document.activeElement as HTMLElement;
       const isEditingText = activeElement && (
         activeElement.tagName === 'INPUT' || 
@@ -46,35 +46,53 @@ export const useKeyboardShortcuts = ({
 
       const now = Date.now();
 
-      // Copy functionality (Ctrl+C) - with debouncing
+      // Copy functionality (Ctrl+C)
       if (event.ctrlKey && event.key === 'c' && !isEditingText) {
         if (selectedMateria && now - lastOperationRef.current > DEBOUNCE_DELAY) {
           event.preventDefault();
           lastOperationRef.current = now;
+          console.log('🎯 Atalho Ctrl+C - Copiando matéria:', selectedMateria.retranca);
           onCopy(selectedMateria);
         }
       }
 
-      // Paste functionality (Ctrl+V) - with debouncing and conflict resolution
+      // Paste functionality (Ctrl+V) - com lógica baseada em tipo de clipboard
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         if (now - lastOperationRef.current > DEBOUNCE_DELAY) {
           event.preventDefault();
           lastOperationRef.current = now;
           
-          // Priority: Block paste over materia paste if both exist
-          if (copiedBlock && onPasteBlock) {
-            console.log('Colando bloco:', copiedBlock.nome);
-            onPasteBlock();
+          // Usar getClipboardInfo se disponível, senão fallback para lógica antiga
+          if (getClipboardInfo) {
+            const clipboardInfo = getClipboardInfo();
+            console.log('🎯 Atalho Ctrl+V - Estado do clipboard:', clipboardInfo);
+            
+            if (clipboardInfo.type === 'block' && clipboardInfo.hasBlock && onPasteBlock) {
+              console.log('📦 Colando bloco via atalho');
+              onPasteBlock();
+            } else if (clipboardInfo.type === 'materia' && clipboardInfo.hasMateria) {
+              console.log('📄 Colando matéria via atalho');
+              onPaste();
+            } else {
+              console.log('❌ Nenhum conteúdo válido no clipboard');
+            }
           } else {
-            onPaste();
+            // Fallback para lógica antiga (compatibilidade)
+            if (copiedBlock && onPasteBlock) {
+              console.log('📦 Colando bloco via atalho (fallback)');
+              onPasteBlock();
+            } else {
+              console.log('📄 Colando matéria via atalho (fallback)');
+              onPaste();
+            }
           }
         } else {
-          console.log('Operação de colar muito rápida, ignorando...');
+          console.log('⏳ Operação muito rápida, ignorando...');
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock]);
+  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock, getClipboardInfo]);
 };

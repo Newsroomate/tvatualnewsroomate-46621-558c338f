@@ -1,4 +1,3 @@
-
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { useClipboard } from "@/hooks/useClipboard";
@@ -36,39 +35,57 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     handleUpdateEditData
   } = useMateriaOperations(snapshot);
 
-  const { copyMateria, copiedBlock, clearClipboard } = useClipboard();
+  const { copyMateria, copiedBlock, clearClipboard, getClipboardInfo } = useClipboard();
 
-  // Hook para colar blocos - simulando um espelho aberto temporário para permitir paste
+  // Hook para colar blocos - não permitir no histórico
   const { pasteBlock } = usePasteBlock({
-    selectedJournal: null, // No histórico não há journal selecionado
-    currentTelejornal: { espelho_aberto: false }, // Espelho fechado no histórico
+    selectedJournal: null,
+    currentTelejornal: { espelho_aberto: false },
     copiedBlock,
     clearClipboard,
     refreshBlocks: () => {
-      // Não faz nada no histórico, apenas para compatibilidade
-      console.log('Refresh blocks chamado no histórico (sem efeito)');
+      console.log('🚫 Refresh blocks chamado no histórico (sem efeito)');
     }
   });
 
-  // Atalhos de teclado para copiar - com funcionalidade aprimorada
+  // Atalhos de teclado com nova lógica de clipboard
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: () => {
       if (selectedMateria) {
-        console.log('Copiando via Ctrl+C no histórico:', selectedMateria);
+        console.log('📋 Copiando via Ctrl+C no histórico:', selectedMateria.retranca);
         copyMateria(selectedMateria);
       }
     },
     onPaste: () => {
-      console.log('Tentativa de colar no histórico (não permitido)');
-      // Não permitir colar no histórico, apenas copiar
+      const clipboardInfo = getClipboardInfo ? getClipboardInfo() : null;
+      console.log('🚫 Tentativa de colar no histórico (não permitido)', clipboardInfo);
+      
+      if (clipboardInfo?.type === 'block') {
+        toast({
+          title: "Paste não permitido no histórico",
+          description: "Vá para um espelho aberto para colar o bloco copiado",
+          variant: "destructive"
+        });
+      } else if (clipboardInfo?.type === 'materia') {
+        toast({
+          title: "Paste não permitido no histórico", 
+          description: "Vá para um espelho aberto para colar a matéria copiada",
+          variant: "destructive"
+        });
+      }
     },
     isEspelhoOpen: true, // Permitir copy no histórico
     copiedBlock,
     onPasteBlock: () => {
-      console.log('Tentativa de colar bloco no histórico (não permitido)');
-      // Não permitir colar blocos no histórico
-    }
+      console.log('🚫 Tentativa de colar bloco no histórico (não permitido)');
+      toast({
+        title: "Paste não permitido no histórico",
+        description: "Vá para um espelho aberto para colar o bloco",
+        variant: "destructive"
+      });
+    },
+    getClipboardInfo // Passar função para obter info do clipboard
   });
 
   if (isLoadingHybrid) {
