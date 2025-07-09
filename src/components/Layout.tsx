@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { LeftSidebar } from "./LeftSidebar";
@@ -125,6 +126,12 @@ const Layout = () => {
               status: materia.status,
               texto: materia.texto,
               cabeca: materia.cabeca,
+              gc: materia.gc,
+              tipo_material: materia.tipo_material,
+              local_gravacao: materia.local_gravacao,
+              equipamento: materia.equipamento,
+              tempo_clip: materia.tempo_clip,
+              tags: materia.tags,
               ordem: materia.ordem
             }))
           };
