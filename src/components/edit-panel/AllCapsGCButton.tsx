@@ -79,7 +79,7 @@ export const AllCapsGCButton = ({
       title="Converter texto selecionado para maiúsculas"
     >
       <Type className="h-4 w-4" />
-      ALL CAPS
+      Maiúscula
     </Button>
   );
 };
