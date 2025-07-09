@@ -1,7 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Type, HelpCircle } from "lucide-react";
+import { Type } from "lucide-react";
 import { useRef } from "react";
 
 interface AllCapsGCButtonProps {
@@ -28,38 +27,16 @@ export const AllCapsGCButton = ({
       return;
     }
 
-    // Focar no textarea
-    textarea.focus();
-
     // Obter o texto selecionado
     const selectedText = value.substring(start, end);
     
     // Converter para maiúsculas
     const upperCaseText = selectedText.toUpperCase();
     
-    // Tentar usar execCommand para preservar histórico de undo/redo
-    try {
-      // Usar execCommand para inserir texto, preservando histórico de undo
-      if (document.execCommand) {
-        // Inserir o texto em maiúsculas (substitui automaticamente o texto selecionado)
-        const success = document.execCommand('insertText', false, upperCaseText);
-        
-        if (success) {
-          // Se execCommand funcionou, selecionar o texto inserido
-          setTimeout(() => {
-            if (textarea) {
-              textarea.setSelectionRange(start, start + upperCaseText.length);
-            }
-          }, 0);
-          return; // Sair da função se execCommand funcionou
-        }
-      }
-    } catch (error) {
-      console.warn('execCommand não suportado, usando fallback');
-    }
-    
-    // Fallback: método original para navegadores que não suportam execCommand
+    // Construir o novo texto
     const newValue = value.substring(0, start) + upperCaseText + value.substring(end);
+    
+    // Atualizar o valor
     onChange(newValue);
     
     // Restaurar a seleção após a atualização
@@ -72,28 +49,15 @@ export const AllCapsGCButton = ({
   };
 
   return (
-    <div className="flex items-center gap-1">
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleAllCaps}
-        className="flex items-center gap-2"
-        title="Converter texto selecionado para maiúsculas"
-      >
-        <Type className="h-4 w-4" />
-        Maiúscula
-      </Button>
-      
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-help transition-colors" />
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>Selecione com o mouse as palavras que deseja tornar maiúsculas e clique no botão 'Maiúscula'</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </div>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={handleAllCaps}
+      className="flex items-center gap-2"
+      title="Converter texto selecionado para maiúsculas"
+    >
+      <Type className="h-4 w-4" />
+      ALL CAPS
+    </Button>
   );
 };
