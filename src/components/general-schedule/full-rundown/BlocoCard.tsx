@@ -7,9 +7,7 @@ import { formatTime } from "../../news-schedule/utils";
 import { MateriaViewCard } from "./MateriaViewCard";
 import { EditableMateriaForm } from "./EditableMateriaForm";
 import { EditableMateria } from "../types";
-import { useClipboard } from "@/context/ClipboardContext";
-import { useAuth } from "@/context/AuthContext";
-import { canCopyAndPasteBlocks } from "@/utils/permission-checker";
+import { useClipboard } from "@/hooks/useClipboard";
 
 interface BlocoCardProps {
   bloco: any;
@@ -54,8 +52,6 @@ export const BlocoCard = ({
   const totalDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
   const editedCount = materias.filter((item: any) => item.isEdited).length;
   const { copyBlock } = useClipboard();
-  const { profile } = useAuth();
-  const canCopyBlocks = canCopyAndPasteBlocks(profile);
 
   const handleCopyBlock = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -81,17 +77,15 @@ export const BlocoCard = ({
               <span>•</span>
               <span>{formatTime(totalDuracao)}</span>
             </div>
-            {canCopyBlocks && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleCopyBlock}
-                className="p-1 h-7 w-7 hover:bg-gray-200"
-                title="Copiar bloco completo"
-              >
-                <Copy className="h-4 w-4" />
-              </Button>
-            )}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCopyBlock}
+              className="p-1 h-7 w-7 hover:bg-gray-200"
+              title="Copiar bloco completo"
+            >
+              <Copy className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </CardHeader>

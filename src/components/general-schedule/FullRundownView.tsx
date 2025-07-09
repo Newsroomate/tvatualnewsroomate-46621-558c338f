@@ -1,7 +1,7 @@
 
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useClipboard } from "@/context/ClipboardContext";
+import { useClipboard } from "@/hooks/useClipboard";
 import { usePasteBlock } from "@/hooks/paste-block";
 import { useQueryClient } from "@tanstack/react-query";
 import { FullRundownHeader } from "./full-rundown/FullRundownHeader";
@@ -10,8 +10,6 @@ import { InstructionSection } from "./full-rundown/InstructionSection";
 import { EmptyBlocosState } from "./full-rundown/EmptyBlocosState";
 import { LoadingState } from "./full-rundown/LoadingState";
 import { useMateriaOperations } from "./hooks/useMateriaOperations";
-import { useAuth } from "@/context/AuthContext";
-import { canCopyAndPasteBlocks } from "@/utils/permission-checker";
 
 interface FullRundownViewProps {
   snapshot: ClosedRundownSnapshot;
@@ -20,9 +18,6 @@ interface FullRundownViewProps {
 
 export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
   const queryClient = useQueryClient();
-  const { profile } = useAuth();
-  const canCopyBlocks = canCopyAndPasteBlocks(profile);
-  
   const {
     blocos,
     isLoadingHybrid,
@@ -41,26 +36,35 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     handleUpdateEditData
   } = useMateriaOperations(snapshot);
 
-  const { copyMateria } = useClipboard();
+  const { copyMateria, copiedBlock, clearClipboard } = useClipboard();
 
-  // Hook para colar blocos - no histórico não é permitido colar
+  // Hook para colar blocos - simulando um espelho aberto temporário para permitir paste
   const { pasteBlock } = usePasteBlock({
     selectedJournal: null, // No histórico não há journal selecionado
     currentTelejornal: { espelho_aberto: false }, // Espelho fechado no histórico
+    copiedBlock,
+    clearClipboard,
     refreshBlocks: () => {
       // Não faz nada no histórico, apenas para compatibilidade
       console.log('Refresh blocks chamado no histórico (sem efeito)');
     }
   });
 
-  // Atalhos de teclado para copiar - permitir apenas copy no histórico
+  // Atalhos de teclado para copiar - com funcionalidade aprimorada
   useKeyboardShortcuts({
     selectedMateria,
+    onCopy: () => {
+      if (selectedMateria) {
+        console.log('Copiando via Ctrl+C no histórico:', selectedMateria);
+        copyMateria(selectedMateria);
+      }
+    },
     onPaste: () => {
       console.log('Tentativa de colar no histórico (não permitido)');
       // Não permitir colar no histórico, apenas copiar
     },
-    isEspelhoOpen: canCopyBlocks, // Permitir copy apenas se usuário tem permissão
+    isEspelhoOpen: true, // Permitir copy no histórico
+    copiedBlock,
     onPasteBlock: () => {
       console.log('Tentativa de colar bloco no histórico (não permitido)');
       // Não permitir colar blocos no histórico

@@ -4,7 +4,6 @@ import { BlockHeader } from "./BlockHeader";
 import { BlockContent } from "./BlockContent";
 import { useAuth } from "@/context/AuthContext";
 import { canModifyMaterias } from "@/utils/permission";
-import { canDeleteMaterias } from "@/utils/permission-checker";
 import { useBatchSelection } from "@/hooks/useBatchSelection";
 import { useItemSelection } from "@/hooks/useItemSelection";
 
@@ -43,7 +42,6 @@ export const NewsBlock = ({
 }: NewsBlockProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
-  const canDelete = canDeleteMaterias(profile);
   
   // Batch selection functionality
   const {
@@ -123,7 +121,7 @@ export const NewsBlock = ({
         onDeleteBlock={onDeleteBlock}
         // Batch selection props
         isBatchMode={isBatchMode}
-        onToggleBatchMode={canDelete ? toggleBatchMode : undefined}
+        onToggleBatchMode={toggleBatchMode}
         selectedCount={selectedCount}
         allSelected={allSelected}
         onSelectAll={selectAll}

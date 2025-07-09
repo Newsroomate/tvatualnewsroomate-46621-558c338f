@@ -5,9 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight, Copy } from "lucide-react";
 import { formatTime } from "../news-schedule/utils";
 import { MaterialCard } from "./MaterialCard";
-import { useClipboard } from "@/context/ClipboardContext";
-import { useAuth } from "@/context/AuthContext";
-import { canCopyAndPasteBlocks } from "@/utils/permission-checker";
+import { useClipboard } from "@/hooks/useClipboard";
 
 interface BlockCardProps {
   bloco: any;
@@ -41,8 +39,6 @@ export const BlockCard = ({
   const materias = getMateriasList(bloco);
   const blocoDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
   const { copyBlock } = useClipboard();
-  const { profile } = useAuth();
-  const canCopyBlocks = canCopyAndPasteBlocks(profile);
 
   console.log(`Bloco ${bloco.nome}:`, {
     materias: materias.length,
@@ -77,17 +73,15 @@ export const BlockCard = ({
           <div className="text-xs text-muted-foreground">
             {materias.length} matérias • {formatTime(blocoDuracao)}
           </div>
-          {canCopyBlocks && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCopyBlock}
-              className="p-1 h-7 w-7 hover:bg-gray-200"
-              title="Copiar bloco completo"
-            >
-              <Copy className="h-4 w-4" />
-            </Button>
-          )}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyBlock}
+            className="p-1 h-7 w-7 hover:bg-gray-200"
+            title="Copiar bloco completo"
+          >
+            <Copy className="h-4 w-4" />
+          </Button>
         </div>
       </div>
 

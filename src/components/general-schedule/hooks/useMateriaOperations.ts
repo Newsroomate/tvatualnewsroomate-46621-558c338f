@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useHybridMateriaUpdate } from "@/hooks/useHybridMateriaUpdate";
 import { useHybridSnapshotData } from "@/hooks/useHybridSnapshotData";
-import { useClipboard } from "@/context/ClipboardContext";
+import { useClipboard } from "@/hooks/useClipboard";
 import { useItemSelection } from "@/hooks/useItemSelection";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { Materia } from "@/types";

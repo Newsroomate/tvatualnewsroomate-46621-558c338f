@@ -1,22 +1,32 @@
 
 import { useEffect, useRef } from 'react';
 import { Materia } from '@/types';
-import { useClipboard } from '@/context/ClipboardContext';
+
+interface CopiedBlock {
+  id: string;
+  nome: string;
+  ordem: number;
+  materias: Materia[];
+  is_copied_block: true;
+}
 
 interface UseKeyboardShortcutsProps {
   selectedMateria: Materia | null;
+  onCopy: (materia: Materia) => void;
   onPaste: () => void;
   isEspelhoOpen?: boolean;
+  copiedBlock?: CopiedBlock | null;
   onPasteBlock?: () => void;
 }
 
 export const useKeyboardShortcuts = ({
   selectedMateria,
+  onCopy,
   onPaste,
   isEspelhoOpen = false,
+  copiedBlock,
   onPasteBlock
 }: UseKeyboardShortcutsProps) => {
-  const { copyMateria, copiedBlock, validateClipboard } = useClipboard();
   const lastOperationRef = useRef<number>(0);
   const DEBOUNCE_DELAY = 300; // 300ms between operations
 
@@ -36,43 +46,35 @@ export const useKeyboardShortcuts = ({
 
       const now = Date.now();
 
-      // Copy functionality (Ctrl+C) - with validation and debouncing
+      // Copy functionality (Ctrl+C) - with debouncing
       if (event.ctrlKey && event.key === 'c' && !isEditingText) {
         if (selectedMateria && now - lastOperationRef.current > DEBOUNCE_DELAY) {
           event.preventDefault();
           lastOperationRef.current = now;
-          console.log('⌨️ Ctrl+C detectado para matéria:', selectedMateria.retranca);
-          copyMateria(selectedMateria);
+          onCopy(selectedMateria);
         }
       }
 
-      // Paste functionality (Ctrl+V) - with validation and conflict resolution
+      // Paste functionality (Ctrl+V) - with debouncing and conflict resolution
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         if (now - lastOperationRef.current > DEBOUNCE_DELAY) {
           event.preventDefault();
           lastOperationRef.current = now;
           
-          // Validate clipboard before pasting
-          if (!validateClipboard()) {
-            console.log('❌ Clipboard inválido ou vazio');
-            return;
-          }
-          
           // Priority: Block paste over materia paste if both exist
           if (copiedBlock && onPasteBlock) {
-            console.log('⌨️ Ctrl+V: Colando bloco:', copiedBlock.nome);
+            console.log('Colando bloco:', copiedBlock.nome);
             onPasteBlock();
           } else {
-            console.log('⌨️ Ctrl+V: Colando matéria');
             onPaste();
           }
         } else {
-          console.log('⚠️ Operação de colar muito rápida, ignorando...');
+          console.log('Operação de colar muito rápida, ignorando...');
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedMateria, copyMateria, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock, validateClipboard]);
+  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock]);
 };

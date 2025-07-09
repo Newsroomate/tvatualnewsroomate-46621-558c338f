@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
-import { useClipboard } from "@/context/ClipboardContext";
+import { useClipboard } from "@/hooks/useClipboard";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { usePasteMateria } from "@/hooks/paste-materia";
 import { usePasteBlock } from "@/hooks/paste-block";
@@ -100,6 +100,8 @@ export const NewsScheduleHooks = ({
   const { pasteBlock } = usePasteBlock({
     selectedJournal,
     currentTelejornal,
+    copiedBlock,
+    clearClipboard,
     refreshBlocks: () => {
       if (selectedJournal) {
         queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
@@ -129,8 +131,10 @@ export const NewsScheduleHooks = ({
   // Enhanced keyboard shortcuts - support for both materia and block pasting
   useKeyboardShortcuts({
     selectedMateria,
+    onCopy: copyMateria,
     onPaste: pasteMateria,
     isEspelhoOpen: !!currentTelejornal?.espelho_aberto,
+    copiedBlock,
     onPasteBlock: pasteBlock
   });
 
