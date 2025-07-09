@@ -73,7 +73,10 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
 
       const data = await fetchClosedRundownSnapshots(
         selectedJornal === "all" ? undefined : selectedJornal, 
-        processedDate
+        processedDate, 
+        selectedTime,
+        showTimeRange ? startTime : undefined,
+        showTimeRange ? endTime : undefined
       );
       
       setClosedSnapshots(data);

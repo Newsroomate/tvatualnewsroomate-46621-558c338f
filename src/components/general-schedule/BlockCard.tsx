@@ -92,16 +92,10 @@ export const BlockCard = ({
               <MaterialCard
                 key={materia.id || `materia-${materiaIndex}`}
                 materia={materia}
-                isEditing={false}
-                editData={null}
-                onEdit={() => {}}
-                onSave={() => {}}
-                onCancel={() => {}}
-                onCopy={() => onCopyMateria?.(materia)}
-                onSelect={() => onSelectMateria?.(materia)}
-                onUpdateEditData={() => {}}
+                materiaIndex={materiaIndex}
+                onCopyMateria={onCopyMateria}
+                onSelectMateria={onSelectMateria}
                 isSelected={isSelected ? isSelected(materia.id) : false}
-                isSaving={false}
               />
             ))
           ) : (
