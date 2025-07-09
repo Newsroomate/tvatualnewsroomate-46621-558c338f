@@ -27,16 +27,38 @@ export const AllCapsGCButton = ({
       return;
     }
 
+    // Focar no textarea
+    textarea.focus();
+
     // Obter o texto selecionado
     const selectedText = value.substring(start, end);
     
     // Converter para maiúsculas
     const upperCaseText = selectedText.toUpperCase();
     
-    // Construir o novo texto
-    const newValue = value.substring(0, start) + upperCaseText + value.substring(end);
+    // Tentar usar execCommand para preservar histórico de undo/redo
+    try {
+      // Usar execCommand para inserir texto, preservando histórico de undo
+      if (document.execCommand) {
+        // Inserir o texto em maiúsculas (substitui automaticamente o texto selecionado)
+        const success = document.execCommand('insertText', false, upperCaseText);
+        
+        if (success) {
+          // Se execCommand funcionou, selecionar o texto inserido
+          setTimeout(() => {
+            if (textarea) {
+              textarea.setSelectionRange(start, start + upperCaseText.length);
+            }
+          }, 0);
+          return; // Sair da função se execCommand funcionou
+        }
+      }
+    } catch (error) {
+      console.warn('execCommand não suportado, usando fallback');
+    }
     
-    // Atualizar o valor
+    // Fallback: método original para navegadores que não suportam execCommand
+    const newValue = value.substring(0, start) + upperCaseText + value.substring(end);
     onChange(newValue);
     
     // Restaurar a seleção após a atualização
