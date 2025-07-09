@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { Type } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Type, HelpCircle } from "lucide-react";
 import { useRef } from "react";
 
 interface AllCapsGCButtonProps {
@@ -71,15 +72,28 @@ export const AllCapsGCButton = ({
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleAllCaps}
-      className="flex items-center gap-2"
-      title="Converter texto selecionado para maiúsculas"
-    >
-      <Type className="h-4 w-4" />
-      Maiúscula
-    </Button>
+    <div className="flex items-center gap-1">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleAllCaps}
+        className="flex items-center gap-2"
+        title="Converter texto selecionado para maiúsculas"
+      >
+        <Type className="h-4 w-4" />
+        Maiúscula
+      </Button>
+      
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground cursor-help transition-colors" />
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Selecione com o mouse as palavras que deseja tornar maiúsculas e clique no botão 'Maiúscula'</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   );
 };
