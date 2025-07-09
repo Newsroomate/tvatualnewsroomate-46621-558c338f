@@ -23,29 +23,27 @@ export const usePasteMateria = ({
 }: UsePasteMateriaProps) => {
   
   const pasteMateria = async () => {
-    // Validação inicial aprimorada
+    // Validação inicial
     if (!validatePasteOperation(copiedMateria, blocks)) {
-      console.log('Validação falhou - tentativa de paste cancelada');
       return;
     }
 
-    // Log detalhado para debugging
-    console.log('=== INICIANDO PASTE DE MATÉRIA ===', {
+    console.log('Iniciando processo de colar matéria do histórico:', {
       materiaCopiada: {
         id: copiedMateria!.id,
         retranca: copiedMateria!.retranca,
-        timestamp: new Date().toLocaleTimeString()
+        totalCampos: Object.keys(copiedMateria!).length,
+        isFromSnapshot: copiedMateria!.is_from_snapshot
       },
-      selectedMateria: selectedMateria?.retranca || 'nenhuma',
-      blocksCount: blocks.length,
-      operationId: `paste_${Date.now()}`
+      selectedMateria: selectedMateria?.retranca,
+      blocksCount: blocks.length
     });
 
     // Determinar onde colar
     const pasteTarget = determinePasteTarget(selectedMateria, blocks);
     if (!pasteTarget) {
       toast({
-        title: "❌ Erro ao colar",
+        title: "Erro ao colar",
         description: "Nenhum bloco disponível para colar a matéria",
         variant: "destructive"
       });
@@ -63,19 +61,18 @@ export const usePasteMateria = ({
       nextPageNumber
     );
 
-    console.log('Dados preparados para criação:', {
-      targetBlock: targetBlockId,
-      position: insertPosition,
-      page: nextPageNumber,
-      camposPreservados: Object.keys(materiaData).length
+    console.log('Dados da matéria a ser criada (preservando TODOS os campos do histórico):', {
+      dadosOriginais: Object.keys(copiedMateria!).length + ' campos',
+      dadosPreservados: Object.keys(materiaData).length + ' campos',
+      materiaData
     });
 
     // Gerar ID temporário para atualização otimista
-    const tempId = `temp_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    const tempId = `temp-${Date.now()}`;
     const tempMateria = createTempMateria(materiaData, tempId, copiedMateria!);
 
     // 1. ATUALIZAÇÃO OTIMISTA - Atualizar UI imediatamente
-    console.log('Aplicando atualização otimista:', { tempId, insertPosition });
+    console.log('Iniciando atualização otimista para posição:', insertPosition);
     
     // Marcar como atualização otimista para evitar duplicação realtime
     if (markOptimisticUpdate) {
@@ -90,17 +87,22 @@ export const usePasteMateria = ({
       ? `logo abaixo da matéria "${selectedMateria.retranca}"` 
       : "no final do bloco";
 
-    // Toast de sucesso imediato
+    // Mostrar toast de sucesso imediatamente
+    const camposPreservados = Object.keys(materiaData).filter(key => 
+      materiaData[key as keyof typeof materiaData] && 
+      materiaData[key as keyof typeof materiaData] !== ''
+    ).length;
+
     toast({
-      title: "✅ Matéria colada do histórico",
-      description: `"${tempMateria.retranca}" foi colada ${positionMessage} na página ${nextPageNumber}`,
+      title: "Matéria colada do histórico",
+      description: `"${tempMateria.retranca}" foi colada ${positionMessage} na página ${nextPageNumber} com ${camposPreservados} campos preservados`,
     });
 
     try {
       // 2. CRIAR NO BANCO DE DADOS
-      console.log('Criando matéria no banco...');
+      console.log('Criando matéria no banco de dados...');
       const newMateria = await createMateria(materiaData);
-      console.log('✅ Matéria criada no banco:', { id: newMateria.id, retranca: newMateria.retranca });
+      console.log('Matéria criada no banco:', newMateria);
 
       // 3. ATUALIZAR ORDENS NO BANCO
       const currentTargetBlock = blocks.find(b => b.id === targetBlockId);
@@ -114,28 +116,26 @@ export const usePasteMateria = ({
           }));
 
         if (ordersToUpdate.length > 0) {
-          console.log('Atualizando ordens:', ordersToUpdate.length + ' itens');
+          console.log('Atualizando ordens no banco:', ordersToUpdate);
           await updateMateriasOrdem(ordersToUpdate);
         }
       }
 
-      // 4. SUBSTITUIR ITEM TEMPORÁRIO PELA VERSÃO REAL
+      // 4. SUBSTITUIR ITEM TEMPORÁRIO PELA VERSÃO REAL DO BANCO
       setBlocks((currentBlocks: any[]) => 
         replaceTemporaryMateria(currentBlocks, targetBlockId, tempId, newMateria)
       );
 
-      console.log('=== PASTE DE MATÉRIA CONCLUÍDO COM SUCESSO ===');
-
     } catch (error) {
-      console.error('❌ Erro ao colar matéria:', error);
+      console.error('Erro ao colar matéria:', error);
       
-      // REVERTER ATUALIZAÇÃO OTIMISTA
+      // REVERTER ATUALIZAÇÃO OTIMISTA EM CASO DE ERRO
       setBlocks((currentBlocks: any[]) => 
         revertOptimisticUpdate(currentBlocks, targetBlockId, tempId)
       );
 
       toast({
-        title: "❌ Erro ao colar",
+        title: "Erro ao colar",
         description: "Não foi possível colar a matéria. Tente novamente.",
         variant: "destructive"
       });

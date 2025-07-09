@@ -1,10 +1,9 @@
 
-import { useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Materia } from "@/types";
-import { AllCapsGCButton } from "./AllCapsGCButton";
+import { ExportGCButton } from "./ExportGCButton";
 
 interface EditorFormFieldsProps {
   formData: Partial<Materia>;
@@ -17,20 +16,6 @@ export const EditorFormFields = ({
   onInputChange,
   disabled = false
 }: EditorFormFieldsProps) => {
-  const gcTextareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const handleGCChange = (newValue: string) => {
-    // Criar um evento sintético para manter a compatibilidade com onInputChange
-    const syntheticEvent = {
-      target: {
-        id: 'gc',
-        value: newValue
-      }
-    } as React.ChangeEvent<HTMLTextAreaElement>;
-    
-    onInputChange(syntheticEvent);
-  };
-
   return (
     <>
       <div className="space-y-1.5">
@@ -58,14 +43,9 @@ export const EditorFormFields = ({
       <div className="space-y-1.5">
         <div className="flex justify-between items-center">
           <Label htmlFor="gc">GC (Gerador de Caracteres)</Label>
-          <AllCapsGCButton 
-            textareaRef={gcTextareaRef}
-            value={formData.gc || ''}
-            onChange={handleGCChange}
-          />
+          <ExportGCButton formData={formData} />
         </div>
         <Textarea 
-          ref={gcTextareaRef}
           id="gc" 
           rows={4} 
           value={formData.gc || ''} 
