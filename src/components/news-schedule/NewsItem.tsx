@@ -36,7 +36,7 @@ export const NewsItem = ({
   onToggleSelection,
   isSelectedForBatch = false
 }: NewsItemProps) => {
-  const styles = getNewsItemStyles(item.tipo_material);
+  const styles = getNewsItemStyles(item.tipo_material || '');
 
   const handleItemClick = () => {
     console.log('NewsItem clicado:', item.retranca, 'isSelected:', isSelected);
@@ -77,7 +77,7 @@ export const NewsItem = ({
               {item.retranca}
             </h3>
             <div className="flex gap-1">
-              <MaterialTypeBadge tipo={item.tipo_material} />
+              <MaterialTypeBadge tipoMaterial={item.tipo_material} />
               <StatusBadge status={item.status} />
             </div>
           </div>

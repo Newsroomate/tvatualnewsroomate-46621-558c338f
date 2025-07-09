@@ -1,3 +1,4 @@
+
 import { NewsBlock } from "./NewsBlock";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
@@ -40,6 +41,7 @@ interface NewsScheduleCoreProps {
   handleModelApplied: () => void;
   handleViewSavedModels: () => void;
   handleMateriaSelect: (materia: Materia | null) => void;
+  onOpenRundown: () => void;
   
   // Clipboard functionality
   copyMateria: (materia: Materia) => void;
@@ -76,7 +78,8 @@ export const NewsScheduleCore = ({
   handleMateriaSelect,
   copyMateria,
   currentTelejornal,
-  journalPrefix = "default"
+  journalPrefix = "default",
+  onOpenRundown
 }: NewsScheduleCoreProps) => {
   console.log('NewsScheduleCore: selectedMateria =', selectedMateria?.retranca);
   console.log('NewsScheduleCore: handleMateriaSelect =', !!handleMateriaSelect);

@@ -28,6 +28,72 @@ export const getMaterialTypeClass = (tipo: string): string => {
   }
 };
 
+// News item styles based on material type
+export const getNewsItemStyles = (tipoMaterial: string) => {
+  switch (tipoMaterial?.toUpperCase()) {
+    case 'VT': 
+      return { 
+        bgColor: 'bg-red-25', 
+        borderColor: 'border-red-200' 
+      };
+    case 'SUP': 
+      return { 
+        bgColor: 'bg-yellow-25', 
+        borderColor: 'border-yellow-200' 
+      };
+    case 'IMG': 
+      return { 
+        bgColor: 'bg-blue-25', 
+        borderColor: 'border-blue-200' 
+      };
+    case 'EST': 
+      return { 
+        bgColor: 'bg-green-25', 
+        borderColor: 'border-green-200' 
+      };
+    case 'LINK': 
+      return { 
+        bgColor: 'bg-purple-25', 
+        borderColor: 'border-purple-200' 
+      };
+    case 'SELO': 
+      return { 
+        bgColor: 'bg-orange-25', 
+        borderColor: 'border-orange-200' 
+      };
+    case 'VHT': 
+      return { 
+        bgColor: 'bg-pink-25', 
+        borderColor: 'border-pink-200' 
+      };
+    case 'SON': 
+      return { 
+        bgColor: 'bg-indigo-25', 
+        borderColor: 'border-indigo-200' 
+      };
+    case 'NET': 
+      return { 
+        bgColor: 'bg-teal-25', 
+        borderColor: 'border-teal-200' 
+      };
+    case 'NC': 
+      return { 
+        bgColor: 'bg-gray-25', 
+        borderColor: 'border-gray-200' 
+      };
+    case 'NR': 
+      return { 
+        bgColor: 'bg-red-50', 
+        borderColor: 'border-red-300' 
+      };
+    default: 
+      return { 
+        bgColor: '', 
+        borderColor: '' 
+      };
+  }
+};
+
 // Tradução do status para português
 export const translateStatus = (status: string): string => {
   switch (status?.toLowerCase()) {
