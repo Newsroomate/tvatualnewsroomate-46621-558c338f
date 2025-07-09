@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { Materia } from '@/types';
 
 interface CopiedBlock {
@@ -15,9 +15,9 @@ interface UseKeyboardShortcutsProps {
   onCopy: (materia: Materia) => void;
   onPaste: () => void;
   isEspelhoOpen?: boolean;
+  // Novos props para suporte a blocos
   copiedBlock?: CopiedBlock | null;
   onPasteBlock?: () => void;
-  getClipboardInfo?: () => { type: 'materia' | 'block' | null; hasMateria: boolean; hasBlock: boolean; };
 }
 
 export const useKeyboardShortcuts = ({
@@ -26,16 +26,14 @@ export const useKeyboardShortcuts = ({
   onPaste,
   isEspelhoOpen = false,
   copiedBlock,
-  onPasteBlock,
-  getClipboardInfo
+  onPasteBlock
 }: UseKeyboardShortcutsProps) => {
-  const lastOperationRef = useRef<number>(0);
-  const DEBOUNCE_DELAY = 300;
-
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Only handle shortcuts when espelho is open
       if (!isEspelhoOpen) return;
       
+      // Check if user is currently editing a text field
       const activeElement = document.activeElement as HTMLElement;
       const isEditingText = activeElement && (
         activeElement.tagName === 'INPUT' || 
@@ -44,55 +42,30 @@ export const useKeyboardShortcuts = ({
         activeElement.getAttribute('role') === 'textbox'
       );
 
-      const now = Date.now();
-
       // Copy functionality (Ctrl+C)
       if (event.ctrlKey && event.key === 'c' && !isEditingText) {
-        if (selectedMateria && now - lastOperationRef.current > DEBOUNCE_DELAY) {
+        if (selectedMateria) {
           event.preventDefault();
-          lastOperationRef.current = now;
-          console.log('🎯 Atalho Ctrl+C - Copiando matéria:', selectedMateria.retranca);
           onCopy(selectedMateria);
         }
       }
 
-      // Paste functionality (Ctrl+V) - com lógica baseada em tipo de clipboard
+      // Paste functionality (Ctrl+V) - only when NOT editing text
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
-        if (now - lastOperationRef.current > DEBOUNCE_DELAY) {
-          event.preventDefault();
-          lastOperationRef.current = now;
-          
-          // Usar getClipboardInfo se disponível, senão fallback para lógica antiga
-          if (getClipboardInfo) {
-            const clipboardInfo = getClipboardInfo();
-            console.log('🎯 Atalho Ctrl+V - Estado do clipboard:', clipboardInfo);
-            
-            if (clipboardInfo.type === 'block' && clipboardInfo.hasBlock && onPasteBlock) {
-              console.log('📦 Colando bloco via atalho');
-              onPasteBlock();
-            } else if (clipboardInfo.type === 'materia' && clipboardInfo.hasMateria) {
-              console.log('📄 Colando matéria via atalho');
-              onPaste();
-            } else {
-              console.log('❌ Nenhum conteúdo válido no clipboard');
-            }
-          } else {
-            // Fallback para lógica antiga (compatibilidade)
-            if (copiedBlock && onPasteBlock) {
-              console.log('📦 Colando bloco via atalho (fallback)');
-              onPasteBlock();
-            } else {
-              console.log('📄 Colando matéria via atalho (fallback)');
-              onPaste();
-            }
-          }
+        event.preventDefault();
+        
+        // Se há um bloco copiado, priorizar colar o bloco
+        if (copiedBlock && onPasteBlock) {
+          console.log('Colando bloco via Ctrl+V:', copiedBlock.nome);
+          onPasteBlock();
         } else {
-          console.log('⏳ Operação muito rápida, ignorando...');
+          // Caso contrário, colar matéria individual
+          onPaste();
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock, getClipboardInfo]);
+  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock]);
 };

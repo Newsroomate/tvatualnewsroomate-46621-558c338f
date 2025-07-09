@@ -13,37 +13,22 @@ import {
   replaceTemporaryMateria 
 } from './optimisticUpdate';
 
-interface CopiedBlock {
-  id: string;
-  nome: string;
-  ordem: number;
-  materias: Materia[];
-  is_copied_block: true;
-}
-
-interface ExtendedUsePasteMateriaProps extends UsePasteMateriaProps {
-  copiedBlock?: CopiedBlock | null;
-}
-
 export const usePasteMateria = ({
   blocks,
   setBlocks,
   selectedMateria,
   copiedMateria,
   clearClipboard,
-  markOptimisticUpdate,
-  copiedBlock
-}: ExtendedUsePasteMateriaProps) => {
+  markOptimisticUpdate
+}: UsePasteMateriaProps) => {
   
   const pasteMateria = async () => {
-    console.log('🚀 Iniciando processo de colar matéria');
-    
-    // Validação com suporte para blocos
-    if (!validatePasteOperation(copiedMateria, blocks, copiedBlock)) {
+    // Validação inicial
+    if (!validatePasteOperation(copiedMateria, blocks)) {
       return;
     }
 
-    console.log('📋 Colando matéria do histórico:', {
+    console.log('Iniciando processo de colar matéria do histórico:', {
       materiaCopiada: {
         id: copiedMateria!.id,
         retranca: copiedMateria!.retranca,
@@ -76,7 +61,7 @@ export const usePasteMateria = ({
       nextPageNumber
     );
 
-    console.log('📄 Dados da matéria preservados:', {
+    console.log('Dados da matéria a ser criada (preservando TODOS os campos do histórico):', {
       dadosOriginais: Object.keys(copiedMateria!).length + ' campos',
       dadosPreservados: Object.keys(materiaData).length + ' campos',
       materiaData
@@ -86,9 +71,10 @@ export const usePasteMateria = ({
     const tempId = `temp-${Date.now()}`;
     const tempMateria = createTempMateria(materiaData, tempId, copiedMateria!);
 
-    // Atualização otimista
-    console.log('⚡ Aplicando atualização otimista na posição:', insertPosition);
+    // 1. ATUALIZAÇÃO OTIMISTA - Atualizar UI imediatamente
+    console.log('Iniciando atualização otimista para posição:', insertPosition);
     
+    // Marcar como atualização otimista para evitar duplicação realtime
     if (markOptimisticUpdate) {
       markOptimisticUpdate(tempId);
     }
@@ -101,6 +87,7 @@ export const usePasteMateria = ({
       ? `logo abaixo da matéria "${selectedMateria.retranca}"` 
       : "no final do bloco";
 
+    // Mostrar toast de sucesso imediatamente
     const camposPreservados = Object.keys(materiaData).filter(key => 
       materiaData[key as keyof typeof materiaData] && 
       materiaData[key as keyof typeof materiaData] !== ''
@@ -112,11 +99,12 @@ export const usePasteMateria = ({
     });
 
     try {
-      console.log('💾 Criando matéria no banco de dados...');
+      // 2. CRIAR NO BANCO DE DADOS
+      console.log('Criando matéria no banco de dados...');
       const newMateria = await createMateria(materiaData);
-      console.log('✅ Matéria criada no banco:', newMateria);
+      console.log('Matéria criada no banco:', newMateria);
 
-      // Atualizar ordens no banco
+      // 3. ATUALIZAR ORDENS NO BANCO
       const currentTargetBlock = blocks.find(b => b.id === targetBlockId);
       if (currentTargetBlock) {
         const ordersToUpdate = currentTargetBlock.items
@@ -128,22 +116,20 @@ export const usePasteMateria = ({
           }));
 
         if (ordersToUpdate.length > 0) {
-          console.log('🔄 Atualizando ordens no banco:', ordersToUpdate);
+          console.log('Atualizando ordens no banco:', ordersToUpdate);
           await updateMateriasOrdem(ordersToUpdate);
         }
       }
 
-      // Substituir item temporário pela versão real
+      // 4. SUBSTITUIR ITEM TEMPORÁRIO PELA VERSÃO REAL DO BANCO
       setBlocks((currentBlocks: any[]) => 
         replaceTemporaryMateria(currentBlocks, targetBlockId, tempId, newMateria)
       );
 
-      console.log('✅ Processo de colar matéria concluído com sucesso');
-
     } catch (error) {
-      console.error('❌ Erro ao colar matéria:', error);
+      console.error('Erro ao colar matéria:', error);
       
-      // Reverter atualização otimista
+      // REVERTER ATUALIZAÇÃO OTIMISTA EM CASO DE ERRO
       setBlocks((currentBlocks: any[]) => 
         revertOptimisticUpdate(currentBlocks, targetBlockId, tempId)
       );
