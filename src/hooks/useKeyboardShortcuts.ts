@@ -1,5 +1,5 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Materia } from '@/types';
 
 interface CopiedBlock {
@@ -15,7 +15,6 @@ interface UseKeyboardShortcutsProps {
   onCopy: (materia: Materia) => void;
   onPaste: () => void;
   isEspelhoOpen?: boolean;
-  // Novos props para suporte a blocos
   copiedBlock?: CopiedBlock | null;
   onPasteBlock?: () => void;
 }
@@ -28,6 +27,9 @@ export const useKeyboardShortcuts = ({
   copiedBlock,
   onPasteBlock
 }: UseKeyboardShortcutsProps) => {
+  const lastOperationRef = useRef<number>(0);
+  const DEBOUNCE_DELAY = 300; // 300ms between operations
+
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       // Only handle shortcuts when espelho is open
@@ -42,25 +44,32 @@ export const useKeyboardShortcuts = ({
         activeElement.getAttribute('role') === 'textbox'
       );
 
-      // Copy functionality (Ctrl+C)
+      const now = Date.now();
+
+      // Copy functionality (Ctrl+C) - with debouncing
       if (event.ctrlKey && event.key === 'c' && !isEditingText) {
-        if (selectedMateria) {
+        if (selectedMateria && now - lastOperationRef.current > DEBOUNCE_DELAY) {
           event.preventDefault();
+          lastOperationRef.current = now;
           onCopy(selectedMateria);
         }
       }
 
-      // Paste functionality (Ctrl+V) - only when NOT editing text
+      // Paste functionality (Ctrl+V) - with debouncing and conflict resolution
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
-        event.preventDefault();
-        
-        // Se há um bloco copiado, priorizar colar o bloco
-        if (copiedBlock && onPasteBlock) {
-          console.log('Colando bloco via Ctrl+V:', copiedBlock.nome);
-          onPasteBlock();
+        if (now - lastOperationRef.current > DEBOUNCE_DELAY) {
+          event.preventDefault();
+          lastOperationRef.current = now;
+          
+          // Priority: Block paste over materia paste if both exist
+          if (copiedBlock && onPasteBlock) {
+            console.log('Colando bloco:', copiedBlock.nome);
+            onPasteBlock();
+          } else {
+            onPaste();
+          }
         } else {
-          // Caso contrário, colar matéria individual
-          onPaste();
+          console.log('Operação de colar muito rápida, ignorando...');
         }
       }
     };

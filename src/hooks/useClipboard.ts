@@ -20,12 +20,13 @@ interface CopiedBlock {
 export const useClipboard = () => {
   const [copiedMateria, setCopiedMateria] = useState<Materia | null>(null);
   const [copiedBlock, setCopiedBlock] = useState<CopiedBlock | null>(null);
+  const [isOperationInProgress, setIsOperationInProgress] = useState(false);
 
-  // Verificar se há matéria copiada no sessionStorage ao inicializar
+  // Load stored data only once on initialization
   useEffect(() => {
     const loadStoredData = () => {
       try {
-        // Carregar matéria copiada
+        // Load copied materia
         const storedMateria = sessionStorage.getItem(CLIPBOARD_STORAGE_KEY);
         const storedMateriaTimestamp = sessionStorage.getItem(CLIPBOARD_TIMESTAMP_KEY);
         
@@ -37,18 +38,14 @@ export const useClipboard = () => {
           if (now - timestamp < expiryTime) {
             const parsedMateria = JSON.parse(storedMateria);
             setCopiedMateria(parsedMateria);
-            console.log('Matéria copiada recuperada do sessionStorage:', {
-              retranca: parsedMateria.retranca,
-              tempoArmazenado: Math.round((now - timestamp) / (1000 * 60)) + ' minutos',
-              totalCampos: Object.keys(parsedMateria).length
-            });
+            console.log('Matéria copiada recuperada:', parsedMateria.retranca);
           } else {
             sessionStorage.removeItem(CLIPBOARD_STORAGE_KEY);
             sessionStorage.removeItem(CLIPBOARD_TIMESTAMP_KEY);
           }
         }
 
-        // Carregar bloco copiado
+        // Load copied block
         const storedBlock = sessionStorage.getItem(BLOCK_CLIPBOARD_STORAGE_KEY);
         const storedBlockTimestamp = sessionStorage.getItem(BLOCK_CLIPBOARD_TIMESTAMP_KEY);
         
@@ -60,18 +57,15 @@ export const useClipboard = () => {
           if (now - timestamp < expiryTime) {
             const parsedBlock = JSON.parse(storedBlock);
             setCopiedBlock(parsedBlock);
-            console.log('Bloco copiado recuperado do sessionStorage:', {
-              nome: parsedBlock.nome,
-              materias: parsedBlock.materias.length,
-              tempoArmazenado: Math.round((now - timestamp) / (1000 * 60)) + ' minutos'
-            });
+            console.log('Bloco copiado recuperado:', parsedBlock.nome);
           } else {
             sessionStorage.removeItem(BLOCK_CLIPBOARD_STORAGE_KEY);
             sessionStorage.removeItem(BLOCK_CLIPBOARD_TIMESTAMP_KEY);
           }
         }
       } catch (error) {
-        console.error('Erro ao recuperar dados copiados do sessionStorage:', error);
+        console.error('Erro ao recuperar dados do clipboard:', error);
+        // Clean up corrupted data
         sessionStorage.removeItem(CLIPBOARD_STORAGE_KEY);
         sessionStorage.removeItem(CLIPBOARD_TIMESTAMP_KEY);
         sessionStorage.removeItem(BLOCK_CLIPBOARD_STORAGE_KEY);
@@ -80,119 +74,113 @@ export const useClipboard = () => {
     };
 
     loadStoredData();
-    const interval = setInterval(loadStoredData, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  }, []); // Only run once on mount
 
-  const copyMateria = (materia: Materia) => {
-    console.log('Copiando matéria para clipboard global com persistência aprimorada:', {
-      id: materia.id,
-      retranca: materia.retranca,
-      totalCampos: Object.keys(materia).length,
-      camposImportantes: {
-        texto: !!materia.texto,
-        duracao: materia.duracao,
-        reporter: !!materia.reporter,
-        clip: !!materia.clip,
-        pagina: !!materia.pagina,
-        cabeca: !!materia.cabeca,
-        gc: !!materia.gc,
-        status: !!materia.status,
-        tipo_material: !!materia.tipo_material
-      }
-    });
+  // Debounced copy function to prevent rapid successive operations
+  const copyMateria = async (materia: Materia) => {
+    if (isOperationInProgress) {
+      console.log('Operação de cópia em andamento, ignorando...');
+      return;
+    }
 
-    setCopiedMateria(materia);
-    // Limpar bloco copiado quando copiar matéria
-    setCopiedBlock(null);
-    sessionStorage.removeItem(BLOCK_CLIPBOARD_STORAGE_KEY);
-    sessionStorage.removeItem(BLOCK_CLIPBOARD_TIMESTAMP_KEY);
+    setIsOperationInProgress(true);
     
     try {
+      console.log('Copiando matéria:', materia.retranca);
+
+      setCopiedMateria(materia);
+      // Clear block when copying materia
+      setCopiedBlock(null);
+      sessionStorage.removeItem(BLOCK_CLIPBOARD_STORAGE_KEY);
+      sessionStorage.removeItem(BLOCK_CLIPBOARD_TIMESTAMP_KEY);
+      
       const timestamp = Date.now();
       sessionStorage.setItem(CLIPBOARD_STORAGE_KEY, JSON.stringify(materia));
       sessionStorage.setItem(CLIPBOARD_TIMESTAMP_KEY, timestamp.toString());
-    } catch (error) {
-      console.error('Erro ao salvar matéria no sessionStorage:', error);
+
+      const camposPreenchidos = Object.values(materia).filter(valor => 
+        valor !== null && valor !== undefined && valor !== ''
+      ).length;
+
       toast({
-        title: "Aviso sobre persistência",
-        description: "A matéria foi copiada mas pode não persistir entre sessões",
+        title: "Matéria copiada",
+        description: `"${materia.retranca}" copiada com ${camposPreenchidos} campos. Use Ctrl+V para colar.`,
+      });
+    } catch (error) {
+      console.error('Erro ao copiar matéria:', error);
+      toast({
+        title: "Erro ao copiar",
+        description: "Não foi possível copiar a matéria",
         variant: "destructive"
       });
+    } finally {
+      // Reset operation flag after a short delay
+      setTimeout(() => setIsOperationInProgress(false), 200);
     }
-
-    const camposPreenchidos = Object.values(materia).filter(valor => 
-      valor !== null && valor !== undefined && valor !== ''
-    ).length;
-
-    toast({
-      title: "Matéria copiada com sucesso",
-      description: `"${materia.retranca}" foi copiada com ${camposPreenchidos} campos preservados. Use Ctrl+V para colar no espelho atual.`,
-    });
   };
 
-  const copyBlock = (block: any, materias: Materia[]) => {
-    console.log('Copiando bloco completo para clipboard:', {
-      id: block.id,
-      nome: block.nome,
-      totalMaterias: materias.length,
-      materiasRetrancas: materias.map(m => m.retranca)
-    });
+  const copyBlock = async (block: any, materias: Materia[]) => {
+    if (isOperationInProgress) {
+      console.log('Operação de cópia em andamento, ignorando...');
+      return;
+    }
 
-    const copiedBlockData: CopiedBlock = {
-      id: block.id,
-      nome: block.nome,
-      ordem: block.ordem,
-      materias: materias,
-      is_copied_block: true
-    };
-
-    setCopiedBlock(copiedBlockData);
-    // Limpar matéria copiada quando copiar bloco
-    setCopiedMateria(null);
-    sessionStorage.removeItem(CLIPBOARD_STORAGE_KEY);
-    sessionStorage.removeItem(CLIPBOARD_TIMESTAMP_KEY);
+    setIsOperationInProgress(true);
     
     try {
+      console.log('Copiando bloco:', block.nome, 'com', materias.length, 'matérias');
+
+      const copiedBlockData: CopiedBlock = {
+        id: block.id,
+        nome: block.nome,
+        ordem: block.ordem,
+        materias: materias,
+        is_copied_block: true
+      };
+
+      setCopiedBlock(copiedBlockData);
+      // Clear materia when copying block
+      setCopiedMateria(null);
+      sessionStorage.removeItem(CLIPBOARD_STORAGE_KEY);
+      sessionStorage.removeItem(CLIPBOARD_TIMESTAMP_KEY);
+      
       const timestamp = Date.now();
       sessionStorage.setItem(BLOCK_CLIPBOARD_STORAGE_KEY, JSON.stringify(copiedBlockData));
       sessionStorage.setItem(BLOCK_CLIPBOARD_TIMESTAMP_KEY, timestamp.toString());
-    } catch (error) {
-      console.error('Erro ao salvar bloco no sessionStorage:', error);
+
+      const totalDuracao = materias.reduce((sum, m) => sum + (m.duracao || 0), 0);
+      const minutos = Math.floor(totalDuracao / 60);
+      const segundos = totalDuracao % 60;
+
       toast({
-        title: "Aviso sobre persistência",
-        description: "O bloco foi copiado mas pode não persistir entre sessões",
+        title: "Bloco copiado",
+        description: `"${block.nome}" copiado com ${materias.length} matérias (${minutos}:${segundos.toString().padStart(2, '0')}). Use Ctrl+V para colar.`,
+      });
+    } catch (error) {
+      console.error('Erro ao copiar bloco:', error);
+      toast({
+        title: "Erro ao copiar",
+        description: "Não foi possível copiar o bloco",
         variant: "destructive"
       });
+    } finally {
+      setTimeout(() => setIsOperationInProgress(false), 200);
     }
-
-    const totalDuracao = materias.reduce((sum, m) => sum + (m.duracao || 0), 0);
-    const minutos = Math.floor(totalDuracao / 60);
-    const segundos = totalDuracao % 60;
-
-    toast({
-      title: "Bloco copiado com sucesso",
-      description: `Bloco "${block.nome}" foi copiado com ${materias.length} matérias (${minutos}:${segundos.toString().padStart(2, '0')}). Use Ctrl+V para colar no espelho atual.`,
-    });
   };
 
   const clearClipboard = () => {
-    console.log('Limpando clipboard e storage');
+    console.log('Limpando clipboard');
     setCopiedMateria(null);
     setCopiedBlock(null);
     sessionStorage.removeItem(CLIPBOARD_STORAGE_KEY);
     sessionStorage.removeItem(CLIPBOARD_TIMESTAMP_KEY);
     sessionStorage.removeItem(BLOCK_CLIPBOARD_STORAGE_KEY);
     sessionStorage.removeItem(BLOCK_CLIPBOARD_TIMESTAMP_KEY);
+    setIsOperationInProgress(false);
   };
 
-  const hasCopiedMateria = () => {
-    return copiedMateria !== null;
-  };
-
-  const hasCopiedBlock = () => {
-    return copiedBlock !== null;
-  };
+  const hasCopiedMateria = () => copiedMateria !== null;
+  const hasCopiedBlock = () => copiedBlock !== null;
 
   const checkStoredMateria = () => {
     try {
@@ -220,6 +208,7 @@ export const useClipboard = () => {
     clearClipboard,
     hasCopiedMateria,
     hasCopiedBlock,
-    checkStoredMateria
+    checkStoredMateria,
+    isOperationInProgress
   };
 };

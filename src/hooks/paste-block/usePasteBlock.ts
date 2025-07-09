@@ -28,6 +28,7 @@ export const usePasteBlock = ({
 }: UsePasteBlockProps) => {
   
   const pasteBlock = async () => {
+    // Validation checks
     if (!copiedBlock) {
       toast({
         title: "Nenhum bloco copiado",
@@ -55,40 +56,30 @@ export const usePasteBlock = ({
       return;
     }
 
-    console.log('Iniciando processo de colar bloco completo:', {
-      blocoCopiado: {
-        nome: copiedBlock.nome,
-        totalMaterias: copiedBlock.materias.length,
-        materiasRetrancas: copiedBlock.materias.map(m => m.retranca)
-      },
-      telejornalDestino: selectedJournal
-    });
+    console.log('Colando bloco:', copiedBlock.nome, `(${copiedBlock.materias.length} matérias)`);
 
     try {
-      // Buscar blocos existentes para determinar a próxima ordem
+      // Get existing blocks to determine next order
       const existingBlocks = await fetchBlocosByTelejornal(selectedJournal);
       const nextOrder = existingBlocks.length + 1;
       
-      // Criar novo bloco
+      // Create new block
       const newBlock = await createBloco({
         nome: `${copiedBlock.nome} (Cópia)`,
         ordem: nextOrder,
         telejornal_id: selectedJournal
       });
 
-      console.log('Novo bloco criado:', newBlock);
-
-      // Criar todas as matérias do bloco copiado
+      // Create all materias from copied block
       const createdMaterias = [];
       for (let i = 0; i < copiedBlock.materias.length; i++) {
         const originalMateria = copiedBlock.materias[i];
         
-        // Preparar dados da matéria preservando todos os campos importantes
         const materiaData = {
           retranca: `${originalMateria.retranca} (Cópia)`,
           clip: originalMateria.clip || '',
           duracao: originalMateria.duracao || 0,
-          pagina: (i + 1).toString(), // Convert to string
+          pagina: (i + 1).toString(),
           reporter: originalMateria.reporter || '',
           status: originalMateria.status || 'draft',
           texto: originalMateria.texto || '',
@@ -97,35 +88,24 @@ export const usePasteBlock = ({
           tipo_material: originalMateria.tipo_material || 'nota',
           bloco_id: newBlock.id,
           ordem: i + 1,
-          // Preservar outros campos importantes
           tempo_clip: originalMateria.tempo_clip || ''
         };
 
         const newMateria = await createMateria(materiaData);
         createdMaterias.push(newMateria);
-        
-        console.log(`Matéria ${i + 1}/${copiedBlock.materias.length} criada:`, {
-          retranca: newMateria.retranca,
-          pagina: newMateria.pagina
-        });
       }
 
-      console.log('Bloco completo colado com sucesso:', {
-        blocoNome: newBlock.nome,
-        totalMaterias: createdMaterias.length
-      });
-
-      // Calcular duração total do bloco
+      // Calculate total duration
       const totalDuracao = createdMaterias.reduce((sum, m) => sum + (m.duracao || 0), 0);
       const minutos = Math.floor(totalDuracao / 60);
       const segundos = totalDuracao % 60;
 
       toast({
         title: "Bloco colado com sucesso",
-        description: `Bloco "${newBlock.nome}" foi colado com ${createdMaterias.length} matérias (${minutos}:${segundos.toString().padStart(2, '0')})`,
+        description: `"${newBlock.nome}" colado com ${createdMaterias.length} matérias (${minutos}:${segundos.toString().padStart(2, '0')})`,
       });
 
-      // Refresh dos blocos para mostrar o novo conteúdo
+      console.log('Bloco colado com sucesso:', newBlock.nome);
       refreshBlocks();
 
     } catch (error) {
