@@ -1,3 +1,4 @@
+
 import { Materia } from '@/types';
 import { createMateria, updateMateriasOrdem } from '@/services/materias-api';
 import { toast } from '@/hooks/use-toast';
@@ -18,27 +19,16 @@ export const usePasteMateria = ({
   selectedMateria,
   copiedMateria,
   clearClipboard,
-  markOptimisticUpdate,
-  copiedBlock,
-  getClipboardInfo
-}: UsePasteMateriaProps & { 
-  copiedBlock?: any; 
-  getClipboardInfo?: () => { type: string; timestamp: number; age: number; data: string } | null 
-}) => {
+  markOptimisticUpdate
+}: UsePasteMateriaProps) => {
   
   const pasteMateria = async () => {
-    // Enhanced validation with clipboard context
-    if (!validatePasteOperation(copiedMateria, blocks, copiedBlock, getClipboardInfo)) {
-      console.log('Paste validation failed:', { 
-        copiedMateria: !!copiedMateria, 
-        copiedBlock: !!copiedBlock,
-        clipboardType: getClipboardInfo?.()?.type,
-        blocksCount: blocks.length 
-      });
+    // Validação inicial
+    if (!validatePasteOperation(copiedMateria, blocks)) {
       return;
     }
 
-    console.log('Starting paste operation with enhanced validation:', {
+    console.log('Iniciando processo de colar matéria do histórico:', {
       materiaCopiada: {
         id: copiedMateria!.id,
         retranca: copiedMateria!.retranca,
@@ -46,9 +36,7 @@ export const usePasteMateria = ({
         isFromSnapshot: copiedMateria!.is_from_snapshot
       },
       selectedMateria: selectedMateria?.retranca,
-      blocksCount: blocks.length,
-      clipboardType: getClipboardInfo?.()?.type,
-      timestamp: new Date().toISOString()
+      blocksCount: blocks.length
     });
 
     // Determinar onde colar
@@ -138,14 +126,8 @@ export const usePasteMateria = ({
         replaceTemporaryMateria(currentBlocks, targetBlockId, tempId, newMateria)
       );
 
-      // Clear clipboard after successful paste
-      console.log('Paste operation completed successfully, clearing clipboard');
-      setTimeout(() => {
-        clearClipboard();
-      }, 1000);
-
     } catch (error) {
-      console.error('Paste operation failed:', error);
+      console.error('Erro ao colar matéria:', error);
       
       // REVERTER ATUALIZAÇÃO OTIMISTA EM CASO DE ERRO
       setBlocks((currentBlocks: any[]) => 
@@ -157,9 +139,6 @@ export const usePasteMateria = ({
         description: "Não foi possível colar a matéria. Tente novamente.",
         variant: "destructive"
       });
-
-      // Don't clear clipboard on error so user can retry
-      console.log('Clipboard preserved due to paste error');
     }
   };
 

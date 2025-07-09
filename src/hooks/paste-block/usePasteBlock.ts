@@ -17,7 +17,6 @@ interface UsePasteBlockProps {
   copiedBlock: CopiedBlock | null;
   clearClipboard: () => void;
   refreshBlocks: () => void;
-  getClipboardInfo?: () => { type: string; timestamp: number; age: number; data: string } | null;
 }
 
 export const usePasteBlock = ({
@@ -25,28 +24,15 @@ export const usePasteBlock = ({
   currentTelejornal,
   copiedBlock,
   clearClipboard,
-  refreshBlocks,
-  getClipboardInfo
+  refreshBlocks
 }: UsePasteBlockProps) => {
   
   const pasteBlock = async () => {
-    // Enhanced validation with clipboard context
-    const clipboardInfo = getClipboardInfo?.();
-    
-    console.log('Block paste validation:', {
-      copiedBlock: !!copiedBlock,
-      clipboardInfo,
-      selectedJournal,
-      espelhoAberto: currentTelejornal?.espelho_aberto
-    });
-
-    // Validation checks with improved messages
-    if (!copiedBlock && clipboardInfo?.type !== 'block') {
+    // Validation checks
+    if (!copiedBlock) {
       toast({
         title: "Nenhum bloco copiado",
-        description: clipboardInfo?.type === 'materia' 
-          ? `Uma matéria "${clipboardInfo.data}" está copiada. Para colar matérias, selecione uma matéria específica primeiro.`
-          : "Vá para o Espelho Geral e copie um bloco completo usando o botão de copiar bloco.",
+        description: "Copie um bloco primeiro para poder colá-lo",
         variant: "destructive"
       });
       return;
@@ -64,13 +50,13 @@ export const usePasteBlock = ({
     if (!currentTelejornal?.espelho_aberto) {
       toast({
         title: "Espelho fechado",
-        description: "O espelho precisa estar aberto para colar blocos. Abra o espelho primeiro.",
+        description: "O espelho precisa estar aberto para colar blocos",
         variant: "destructive"
       });
       return;
     }
 
-    console.log('Colando bloco:', copiedBlock!.nome, `(${copiedBlock!.materias.length} matérias)`);
+    console.log('Colando bloco:', copiedBlock.nome, `(${copiedBlock.materias.length} matérias)`);
 
     try {
       // Get existing blocks to determine next order
@@ -79,15 +65,15 @@ export const usePasteBlock = ({
       
       // Create new block
       const newBlock = await createBloco({
-        nome: `${copiedBlock!.nome} (Cópia)`,
+        nome: `${copiedBlock.nome} (Cópia)`,
         ordem: nextOrder,
         telejornal_id: selectedJournal
       });
 
       // Create all materias from copied block
       const createdMaterias = [];
-      for (let i = 0; i < copiedBlock!.materias.length; i++) {
-        const originalMateria = copiedBlock!.materias[i];
+      for (let i = 0; i < copiedBlock.materias.length; i++) {
+        const originalMateria = copiedBlock.materias[i];
         
         const materiaData = {
           retranca: `${originalMateria.retranca} (Cópia)`,
@@ -120,19 +106,13 @@ export const usePasteBlock = ({
       });
 
       console.log('Bloco colado com sucesso:', newBlock.nome);
-      
-      // Clear clipboard after successful paste
-      setTimeout(() => {
-        clearClipboard();
-      }, 1000);
-      
       refreshBlocks();
 
     } catch (error) {
       console.error('Erro ao colar bloco:', error);
       toast({
         title: "Erro ao colar bloco",
-        description: "Não foi possível colar o bloco. Verifique se o espelho está aberto e tente novamente.",
+        description: "Não foi possível colar o bloco. Tente novamente.",
         variant: "destructive"
       });
     }

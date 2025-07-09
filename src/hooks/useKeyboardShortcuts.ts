@@ -17,7 +17,6 @@ interface UseKeyboardShortcutsProps {
   isEspelhoOpen?: boolean;
   copiedBlock?: CopiedBlock | null;
   onPasteBlock?: () => void;
-  getClipboardInfo?: () => { type: string; timestamp: number; age: number; data: string } | null;
 }
 
 export const useKeyboardShortcuts = ({
@@ -26,11 +25,10 @@ export const useKeyboardShortcuts = ({
   onPaste,
   isEspelhoOpen = false,
   copiedBlock,
-  onPasteBlock,
-  getClipboardInfo
+  onPasteBlock
 }: UseKeyboardShortcutsProps) => {
   const lastOperationRef = useRef<number>(0);
-  const DEBOUNCE_DELAY = 150;
+  const DEBOUNCE_DELAY = 300; // 300ms between operations
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -53,60 +51,30 @@ export const useKeyboardShortcuts = ({
         if (selectedMateria && now - lastOperationRef.current > DEBOUNCE_DELAY) {
           event.preventDefault();
           lastOperationRef.current = now;
-          console.log('Keyboard copy triggered for materia:', selectedMateria.retranca);
           onCopy(selectedMateria);
         }
       }
 
-      // Paste functionality (Ctrl+V) - with corrected priority logic
+      // Paste functionality (Ctrl+V) - with debouncing and conflict resolution
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         if (now - lastOperationRef.current > DEBOUNCE_DELAY) {
           event.preventDefault();
           lastOperationRef.current = now;
           
-          // Get clipboard info to determine what was copied most recently
-          const clipboardInfo = getClipboardInfo?.();
-          
-          console.log('Paste triggered - Clipboard state:', {
-            clipboardInfo,
-            hasCopiedBlock: !!copiedBlock,
-            timestamp: new Date().toISOString()
-          });
-          
-          if (clipboardInfo) {
-            // Use timestamp-based priority with corrected logic
-            if (clipboardInfo.type === 'block') {
-              if (onPasteBlock) {
-                console.log('Pasting block based on clipboard type:', clipboardInfo.data);
-                onPasteBlock();
-              } else {
-                console.log('Block paste not available in this context');
-              }
-            } else if (clipboardInfo.type === 'materia') {
-              console.log('Pasting materia based on clipboard type:', clipboardInfo.data);
-              onPaste();
-            } else {
-              console.log('Unknown clipboard type, defaulting to materia paste');
-              onPaste();
-            }
+          // Priority: Block paste over materia paste if both exist
+          if (copiedBlock && onPasteBlock) {
+            console.log('Colando bloco:', copiedBlock.nome);
+            onPasteBlock();
           } else {
-            // Fallback to legacy behavior only if no clipboard info available
-            console.log('No clipboard info available, using legacy fallback');
-            if (copiedBlock && onPasteBlock) {
-              console.log('Legacy fallback: Pasting block');
-              onPasteBlock();
-            } else {
-              console.log('Legacy fallback: Pasting materia');
-              onPaste();
-            }
+            onPaste();
           }
         } else {
-          console.log('Paste operation too fast, ignoring...');
+          console.log('Operação de colar muito rápida, ignorando...');
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock, getClipboardInfo]);
+  }, [selectedMateria, onCopy, onPaste, isEspelhoOpen, copiedBlock, onPasteBlock]);
 };

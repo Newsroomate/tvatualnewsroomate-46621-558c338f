@@ -84,29 +84,19 @@ export const NewsScheduleHooks = ({
     isSelected
   } = useItemSelection();
 
-  // Clipboard functionality with improved sync
-  const { 
-    copiedMateria, 
-    copiedBlock, 
-    copyMateria, 
-    copyBlock, 
-    clearClipboard, 
-    hasCopiedMateria, 
-    hasCopiedBlock,
-    getClipboardInfo
-  } = useClipboard();
+  // Clipboard functionality
+  const { copiedMateria, copiedBlock, copyMateria, copyBlock, clearClipboard, hasCopiedMateria, hasCopiedBlock } = useClipboard();
   
+  // Enhanced paste functionality with optimistic updates
   const { pasteMateria } = usePasteMateria({
     blocks,
     setBlocks: setBlocksWrapper,
     selectedMateria,
     copiedMateria,
-    clearClipboard,
-    copiedBlock,
-    getClipboardInfo
+    clearClipboard
   });
 
-  // Block paste functionality with enhanced validation
+  // Block paste functionality
   const { pasteBlock } = usePasteBlock({
     selectedJournal,
     currentTelejornal,
@@ -116,8 +106,7 @@ export const NewsScheduleHooks = ({
       if (selectedJournal) {
         queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
       }
-    },
-    getClipboardInfo
+    }
   });
 
   // Actions handlers
@@ -139,15 +128,14 @@ export const NewsScheduleHooks = ({
     onSetSavedModelsModalOpen: setIsSavedModelsModalOpen
   });
 
-  // Enhanced keyboard shortcuts with corrected priority logic
+  // Enhanced keyboard shortcuts - support for both materia and block pasting
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: copyMateria,
     onPaste: pasteMateria,
     isEspelhoOpen: !!currentTelejornal?.espelho_aberto,
     copiedBlock,
-    onPasteBlock: pasteBlock,
-    getClipboardInfo
+    onPasteBlock: pasteBlock
   });
 
   return children({
@@ -194,7 +182,6 @@ export const NewsScheduleHooks = ({
     hasCopiedMateria,
     hasCopiedBlock,
     copiedBlock,
-    getClipboardInfo,
     
     // Other props
     isDualViewMode,
