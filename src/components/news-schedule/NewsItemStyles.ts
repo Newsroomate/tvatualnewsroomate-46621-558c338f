@@ -6,6 +6,8 @@ export const getStatusClass = (status: string): string => {
     case 'draft': return 'bg-gray-100 text-gray-800';
     case 'pending': return 'bg-yellow-100 text-yellow-800';
     case 'urgent': return 'bg-red-100 text-red-800';
+    case 'review': return 'bg-blue-100 text-blue-800';
+    case 'approved': return 'bg-emerald-100 text-emerald-800';
     default: return 'bg-gray-100 text-gray-800';
   }
 };
@@ -28,13 +30,15 @@ export const getMaterialTypeClass = (tipo: string): string => {
   }
 };
 
-// Tradução do status para português
+// Tradução do status para português - incluindo todos os status possíveis
 export const translateStatus = (status: string): string => {
   switch (status?.toLowerCase()) {
     case 'published': return 'Publicado';
     case 'draft': return 'Rascunho';
     case 'pending': return 'Pendente';
     case 'urgent': return 'Urgente';
+    case 'review': return 'Em Revisão';
+    case 'approved': return 'Aprovado';
     default: return status || 'Rascunho';
   }
 };
