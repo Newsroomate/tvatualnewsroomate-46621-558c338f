@@ -119,12 +119,19 @@ const Layout = () => {
               id: materia.id,
               retranca: materia.retranca,
               clip: materia.clip,
+              tempo_clip: materia.tempo_clip,
               duracao: materia.duracao || 0,
               pagina: materia.pagina,
               reporter: materia.reporter,
               status: materia.status,
               texto: materia.texto,
               cabeca: materia.cabeca,
+              gc: materia.gc,
+              tipo_material: materia.tipo_material,
+              local_gravacao: materia.local_gravacao,
+              tags: materia.tags,
+              equipamento: materia.equipamento,
+              horario_exibicao: materia.horario_exibicao,
               ordem: materia.ordem
             }))
           };
