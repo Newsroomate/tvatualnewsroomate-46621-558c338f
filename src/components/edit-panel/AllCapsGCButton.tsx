@@ -1,6 +1,7 @@
 
 import { Button } from "@/components/ui/button";
-import { Type } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Type, Info } from "lucide-react";
 import { useState, useEffect } from "react";
 
 interface AllCapsGCButtonProps {
@@ -69,16 +70,41 @@ export const AllCapsGCButton = ({
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={handleAllCaps}
-      disabled={!hasSelection}
-      className="flex items-center gap-2"
-      title={hasSelection ? "Converter seleção para maiúsculas" : "Selecione o texto no campo GC para converter em maiúsculas"}
-    >
-      <Type className="h-4 w-4" />
-      MAIÚSCULAS
-    </Button>
+    <div className="flex items-center gap-2">
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={handleAllCaps}
+        disabled={!hasSelection}
+        className="flex items-center gap-2"
+        title={hasSelection ? "Converter seleção para maiúsculas" : "Selecione o texto no campo GC para converter em maiúsculas"}
+      >
+        <Type className="h-4 w-4" />
+        MAIÚSCULAS
+      </Button>
+      
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <div className="flex items-center justify-center w-5 h-5 rounded-full bg-blue-100 hover:bg-blue-200 cursor-help">
+              <Info className="h-3 w-3 text-blue-600" />
+            </div>
+          </TooltipTrigger>
+          <TooltipContent side="bottom" className="max-w-xs">
+            <div className="text-sm">
+              <p className="font-semibold mb-1">Como usar MAIÚSCULAS:</p>
+              <ol className="list-decimal list-inside space-y-1 text-xs">
+                <li>Selecione o texto desejado no campo GC</li>
+                <li>Clique no botão MAIÚSCULAS</li>
+                <li>Apenas o texto selecionado será convertido</li>
+              </ol>
+              <p className="text-xs text-muted-foreground mt-2">
+                💡 Dica: Use para destacar nomes, títulos ou palavras importantes
+              </p>
+            </div>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+    </div>
   );
 };
