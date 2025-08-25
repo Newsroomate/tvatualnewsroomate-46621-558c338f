@@ -5,13 +5,20 @@ import { SavedRundown, SavedRundownCreateInput } from "@/types/saved-rundowns";
 export const saveRundownSnapshot = async (rundownData: SavedRundownCreateInput): Promise<SavedRundown> => {
   console.log("Salvando snapshot do espelho:", rundownData);
   
+  const { data: currentUser } = await supabase.auth.getUser();
+  
+  if (!currentUser.user) {
+    throw new Error("Usuário não autenticado");
+  }
+  
   const { data, error } = await supabase
     .from('espelhos_salvos')
     .insert({
       telejornal_id: rundownData.telejornal_id,
       data_referencia: rundownData.data_referencia,
       nome: rundownData.nome,
-      estrutura: rundownData.estrutura
+      estrutura: rundownData.estrutura,
+      user_id: currentUser.user.id
     })
     .select()
     .single();
@@ -21,7 +28,10 @@ export const saveRundownSnapshot = async (rundownData: SavedRundownCreateInput):
     throw error;
   }
 
-  return data as SavedRundown;
+  return {
+    ...data,
+    estrutura: data.estrutura as SavedRundown['estrutura']
+  } as SavedRundown;
 };
 
 export const fetchLastSavedRundown = async (telejornalId: string): Promise<SavedRundown | null> => {
@@ -40,7 +50,14 @@ export const fetchLastSavedRundown = async (telejornalId: string): Promise<Saved
     throw error;
   }
 
-  return data as SavedRundown | null;
+  if (!data) {
+    return null;
+  }
+
+  return {
+    ...data,
+    estrutura: data.estrutura as SavedRundown['estrutura']
+  } as SavedRundown;
 };
 
 export const fetchSavedRundownsByDate = async (
@@ -61,7 +78,10 @@ export const fetchSavedRundownsByDate = async (
     throw error;
   }
 
-  return data as SavedRundown[] || [];
+  return data?.map(item => ({
+    ...item,
+    estrutura: item.estrutura as SavedRundown['estrutura']
+  } as SavedRundown)) || [];
 };
 
 export const fetchAllSavedRundowns = async (
@@ -107,8 +127,9 @@ export const fetchAllSavedRundowns = async (
     data_salvamento: item.data_salvamento,
     data_referencia: item.data_referencia,
     nome: item.nome,
-    estrutura: item.estrutura as SavedRundown['estrutura'], // Explicit type assertion
+    estrutura: item.estrutura as SavedRundown['estrutura'],
     created_at: item.created_at,
-    updated_at: item.updated_at
+    updated_at: item.updated_at,
+    user_id: item.user_id
   })) as SavedRundown[] || [];
 };
