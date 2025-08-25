@@ -1,6 +1,6 @@
 
 // Import realtime setup (this will automatically enable realtime when the module is loaded)
-import "./materias-realtime";
+import "./realtime-setup";
 
 // Re-export all the functions from the specialized modules
 export { fetchMateriasByBloco } from "./materias-fetch";

@@ -14,6 +14,8 @@ import { PostCloseRundownModal } from "./PostCloseRundownModal";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
+import { useRealtimeTelejornais } from "@/hooks/useRealtimeTelejornais";
+import { useRealtimeInvalidation } from "@/hooks/useRealtimeInvalidation";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -41,6 +43,29 @@ const Layout = () => {
   const [isDualViewActive, setIsDualViewActive] = useState(false);
   const [secondaryJournal, setSecondaryJournal] = useState<string | null>(null);
   const [secondaryTelejornal, setSecondaryTelejornal] = useState<Telejornal | null>(null);
+
+  // Setup realtime subscription for telejornais
+  useRealtimeTelejornais({
+    onTelejornalUpdate: (updatedTelejornal: Telejornal) => {
+      // Atualizar o telejornal principal se necessário
+      if (currentTelejornal && updatedTelejornal.id === currentTelejornal.id) {
+        console.log('Atualizando telejornal principal via realtime:', updatedTelejornal);
+        setCurrentTelejornal(updatedTelejornal);
+      }
+      
+      // Atualizar o telejornal secundário se necessário  
+      if (secondaryTelejornal && updatedTelejornal.id === secondaryTelejornal.id) {
+        console.log('Atualizando telejornal secundário via realtime:', updatedTelejornal);
+        setSecondaryTelejornal(updatedTelejornal);
+      }
+      
+      // Invalidar queries para garantir consistência
+      queryClient.invalidateQueries({ queryKey: ['telejornais'] });
+    }
+  });
+
+  // Setup global realtime invalidation
+  useRealtimeInvalidation();
 
   const handleSelectJournal = (journalId: string) => {
     setSelectedJournal(journalId);

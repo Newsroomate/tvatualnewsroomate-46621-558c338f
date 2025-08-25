@@ -9,6 +9,7 @@ import { useNewsScheduleDualView } from "@/hooks/useNewsScheduleDualView";
 import { useNewsScheduleActions } from "./NewsScheduleActions";
 import { useItemSelection } from "@/hooks/useItemSelection";
 import { useQueryClient } from "@tanstack/react-query";
+import { useRealtimeBlocos } from "@/hooks/useRealtimeBlocos";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -74,6 +75,30 @@ export const NewsScheduleHooks = ({
     externalBlocks,
     onBlocksChange,
     internalBlocks
+  });
+
+  // Setup realtime subscription for blocos
+  useRealtimeBlocos({
+    telejornalId: selectedJournal,
+    onBlocoUpdate: (updatedBloco: Bloco) => {
+      console.log('Bloco atualizado via realtime:', updatedBloco);
+      // Invalidar queries para atualizar a UI
+      if (selectedJournal) {
+        queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
+      }
+    },
+    onBlocoInsert: (newBloco: Bloco) => {
+      console.log('Novo bloco adicionado via realtime:', newBloco);
+      if (selectedJournal) {
+        queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
+      }
+    },
+    onBlocoDelete: (blocoId: string) => {
+      console.log('Bloco removido via realtime:', blocoId);
+      if (selectedJournal) {
+        queryClient.invalidateQueries({ queryKey: ['blocos', selectedJournal] });
+      }
+    }
   });
   
   // Item selection

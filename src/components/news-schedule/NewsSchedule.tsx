@@ -3,6 +3,7 @@ import { Bloco, Materia, Telejornal } from "@/types";
 import { NewsScheduleHooks } from "./NewsScheduleHooks";
 import { NewsScheduleCore } from "./NewsScheduleCore";
 import { NewsScheduleDialogs } from "./NewsScheduleDialogs";
+import { useRealtimeBlocos } from "@/hooks/useRealtimeBlocos";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
