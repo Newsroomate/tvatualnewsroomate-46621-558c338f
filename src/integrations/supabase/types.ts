@@ -14,16 +14,409 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      blocos: {
+        Row: {
+          created_at: string | null
+          id: string
+          nome: string
+          ordem: number
+          telejornal_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nome: string
+          ordem: number
+          telejornal_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nome?: string
+          ordem?: number
+          telejornal_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "blocos_telejornal_id_fkey"
+            columns: ["telejornal_id"]
+            isOneToOne: false
+            referencedRelation: "telejornais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      espelhos_salvos: {
+        Row: {
+          created_at: string
+          data_referencia: string
+          data_salvamento: string
+          estrutura: Json
+          id: string
+          nome: string
+          telejornal_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          data_referencia: string
+          data_salvamento?: string
+          estrutura: Json
+          id?: string
+          nome: string
+          telejornal_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          data_referencia?: string
+          data_salvamento?: string
+          estrutura?: Json
+          id?: string
+          nome?: string
+          telejornal_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "espelhos_salvos_telejornal_id_fkey"
+            columns: ["telejornal_id"]
+            isOneToOne: false
+            referencedRelation: "telejornais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materias: {
+        Row: {
+          bloco_id: string | null
+          cabeca: string | null
+          clip: string | null
+          created_at: string | null
+          duracao: number | null
+          equipamento: string | null
+          gc: string | null
+          horario_exibicao: string | null
+          id: string
+          is_from_snapshot: boolean | null
+          local_gravacao: string | null
+          ordem: number
+          pagina: string | null
+          reporter: string | null
+          retranca: string
+          status: string | null
+          tags: string[] | null
+          tempo_clip: string | null
+          texto: string | null
+          tipo_material: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bloco_id?: string | null
+          cabeca?: string | null
+          clip?: string | null
+          created_at?: string | null
+          duracao?: number | null
+          equipamento?: string | null
+          gc?: string | null
+          horario_exibicao?: string | null
+          id?: string
+          is_from_snapshot?: boolean | null
+          local_gravacao?: string | null
+          ordem: number
+          pagina?: string | null
+          reporter?: string | null
+          retranca: string
+          status?: string | null
+          tags?: string[] | null
+          tempo_clip?: string | null
+          texto?: string | null
+          tipo_material?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bloco_id?: string | null
+          cabeca?: string | null
+          clip?: string | null
+          created_at?: string | null
+          duracao?: number | null
+          equipamento?: string | null
+          gc?: string | null
+          horario_exibicao?: string | null
+          id?: string
+          is_from_snapshot?: boolean | null
+          local_gravacao?: string | null
+          ordem?: number
+          pagina?: string | null
+          reporter?: string | null
+          retranca?: string
+          status?: string | null
+          tags?: string[] | null
+          tempo_clip?: string | null
+          texto?: string | null
+          tipo_material?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "materias_bloco_id_fkey"
+            columns: ["bloco_id"]
+            isOneToOne: false
+            referencedRelation: "blocos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      materias_locks: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          locked_at: string
+          materia_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          locked_at?: string
+          materia_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          locked_at?: string
+          materia_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      materias_snapshots: {
+        Row: {
+          bloco_nome: string | null
+          bloco_ordem: number | null
+          cabeca: string | null
+          clip: string | null
+          created_at: string | null
+          duracao: number | null
+          equipamento: string | null
+          gc: string | null
+          horario_exibicao: string | null
+          id: string
+          is_snapshot: boolean | null
+          local_gravacao: string | null
+          materia_original_id: string | null
+          ordem: number
+          pagina: string | null
+          reporter: string | null
+          retranca: string
+          snapshot_id: string | null
+          status: string | null
+          tags: string[] | null
+          tempo_clip: string | null
+          texto: string | null
+          tipo_material: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          bloco_nome?: string | null
+          bloco_ordem?: number | null
+          cabeca?: string | null
+          clip?: string | null
+          created_at?: string | null
+          duracao?: number | null
+          equipamento?: string | null
+          gc?: string | null
+          horario_exibicao?: string | null
+          id?: string
+          is_snapshot?: boolean | null
+          local_gravacao?: string | null
+          materia_original_id?: string | null
+          ordem?: number
+          pagina?: string | null
+          reporter?: string | null
+          retranca: string
+          snapshot_id?: string | null
+          status?: string | null
+          tags?: string[] | null
+          tempo_clip?: string | null
+          texto?: string | null
+          tipo_material?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          bloco_nome?: string | null
+          bloco_ordem?: number | null
+          cabeca?: string | null
+          clip?: string | null
+          created_at?: string | null
+          duracao?: number | null
+          equipamento?: string | null
+          gc?: string | null
+          horario_exibicao?: string | null
+          id?: string
+          is_snapshot?: boolean | null
+          local_gravacao?: string | null
+          materia_original_id?: string | null
+          ordem?: number
+          pagina?: string | null
+          reporter?: string | null
+          retranca?: string
+          snapshot_id?: string | null
+          status?: string | null
+          tags?: string[] | null
+          tempo_clip?: string | null
+          texto?: string | null
+          tipo_material?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      modelos_salvos: {
+        Row: {
+          created_at: string
+          descricao: string | null
+          estrutura: Json
+          id: string
+          nome: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          descricao?: string | null
+          estrutura: Json
+          id?: string
+          nome: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          descricao?: string | null
+          estrutura?: Json
+          id?: string
+          nome?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      pautas: {
+        Row: {
+          created_at: string | null
+          data_cobertura: string | null
+          descricao: string | null
+          entrevistado: string | null
+          horario: string | null
+          id: string
+          local: string | null
+          produtor: string | null
+          status: string | null
+          titulo: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_cobertura?: string | null
+          descricao?: string | null
+          entrevistado?: string | null
+          horario?: string | null
+          id?: string
+          local?: string | null
+          produtor?: string | null
+          status?: string | null
+          titulo: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_cobertura?: string | null
+          descricao?: string | null
+          entrevistado?: string | null
+          horario?: string | null
+          id?: string
+          local?: string | null
+          produtor?: string | null
+          status?: string | null
+          titulo?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          full_name?: string | null
+          id: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      telejornais: {
+        Row: {
+          created_at: string | null
+          espelho_aberto: boolean | null
+          horario: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          espelho_aberto?: boolean | null
+          horario?: string | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          espelho_aberto?: boolean | null
+          horario?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cleanup_expired_locks: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
+      get_current_user_role: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      user_role: "reporter" | "editor" | "editor_chefe" | "produtor"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +543,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      user_role: ["reporter", "editor", "editor_chefe", "produtor"],
+    },
   },
 } as const
