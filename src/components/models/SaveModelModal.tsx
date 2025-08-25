@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { saveCurrentStructureAsModel } from "@/services/models-api";
 import { Loader2 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { isAtLeastEditor } from "@/utils/permission";
 
 interface SaveModelModalProps {
   isOpen: boolean;
@@ -24,6 +26,7 @@ export const SaveModelModal = ({
   const [descricao, setDescricao] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   const handleSave = async () => {
     if (!nome.trim()) {
@@ -35,13 +38,22 @@ export const SaveModelModal = ({
       return;
     }
 
+    if (!isAtLeastEditor(profile)) {
+      toast({
+        title: "Acesso negado",
+        description: "Apenas editores podem salvar modelos",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       await saveCurrentStructureAsModel(telejornalId, {
         nome: nome.trim(),
         descricao: descricao.trim() || undefined,
         estrutura: { blocos: [] } // Será preenchido pela função
-      });
+      }, profile);
 
       toast({
         title: "Modelo salvo",
@@ -56,7 +68,7 @@ export const SaveModelModal = ({
       console.error("Erro ao salvar modelo:", error);
       toast({
         title: "Erro ao salvar modelo",
-        description: "Não foi possível salvar o modelo",
+        description: error instanceof Error ? error.message : "Não foi possível salvar o modelo",
         variant: "destructive"
       });
     } finally {
@@ -113,7 +125,7 @@ export const SaveModelModal = ({
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isSaving}
+              disabled={isSaving || !isAtLeastEditor(profile)}
             >
               {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Salvar Modelo

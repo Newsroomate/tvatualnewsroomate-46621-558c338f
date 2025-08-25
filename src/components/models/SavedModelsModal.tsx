@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { fetchAllSavedModels, deleteSavedModel, applyModelToTelejornal, SavedModel } from "@/services/models-api";
 import { Loader2, Trash2, FileText, Eye } from "lucide-react";
 import { format } from "date-fns";
+import { useAuth } from "@/context/AuthContext";
+import { isEditorChefe, isAtLeastEditor } from "@/utils/permission";
 
 interface SavedModelsModalProps {
   isOpen: boolean;
@@ -28,6 +30,7 @@ export const SavedModelsModal = ({
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isApplying, setIsApplying] = useState<string | null>(null);
   const { toast } = useToast();
+  const { profile } = useAuth();
 
   useEffect(() => {
     if (isOpen) {
@@ -53,9 +56,18 @@ export const SavedModelsModal = ({
   };
 
   const handleDeleteModel = async (modelId: string) => {
+    if (!isEditorChefe(profile)) {
+      toast({
+        title: "Acesso negado",
+        description: "Apenas editor-chefe pode excluir modelos",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsDeleting(modelId);
     try {
-      await deleteSavedModel(modelId);
+      await deleteSavedModel(modelId, profile);
       setModels(models.filter(m => m.id !== modelId));
       toast({
         title: "Modelo excluído",
@@ -65,7 +77,7 @@ export const SavedModelsModal = ({
       console.error("Erro ao excluir modelo:", error);
       toast({
         title: "Erro ao excluir modelo",
-        description: "Não foi possível excluir o modelo",
+        description: error instanceof Error ? error.message : "Não foi possível excluir o modelo",
         variant: "destructive"
       });
     } finally {
@@ -83,9 +95,18 @@ export const SavedModelsModal = ({
       return;
     }
 
+    if (!isAtLeastEditor(profile)) {
+      toast({
+        title: "Acesso negado",
+        description: "Apenas editores podem aplicar modelos",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsApplying(model.id);
     try {
-      await applyModelToTelejornal(model, telejornalId);
+      await applyModelToTelejornal(model, telejornalId, profile);
       
       toast({
         title: "Modelo aplicado",
@@ -106,7 +127,7 @@ export const SavedModelsModal = ({
       console.error("Erro ao aplicar modelo:", error);
       toast({
         title: "Erro ao aplicar modelo",
-        description: "Não foi possível aplicar o modelo",
+        description: error instanceof Error ? error.message : "Não foi possível aplicar o modelo",
         variant: "destructive"
       });
     } finally {
@@ -174,7 +195,7 @@ export const SavedModelsModal = ({
               <Button
                 variant="destructive"
                 onClick={() => handleDeleteModel(selectedModel.id)}
-                disabled={isDeleting === selectedModel.id}
+                disabled={isDeleting === selectedModel.id || !isEditorChefe(profile)}
               >
                 {isDeleting === selectedModel.id && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 <Trash2 className="h-4 w-4 mr-2" />
@@ -182,7 +203,7 @@ export const SavedModelsModal = ({
               </Button>
               <Button
                 onClick={() => handleUseModel(selectedModel)}
-                disabled={isApplying === selectedModel.id || !telejornalId}
+                disabled={isApplying === selectedModel.id || !telejornalId || !isAtLeastEditor(profile)}
               >
                 {isApplying === selectedModel.id && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 <FileText className="h-4 w-4 mr-2" />
@@ -244,7 +265,7 @@ export const SavedModelsModal = ({
                         variant="destructive"
                         size="sm"
                         onClick={() => handleDeleteModel(model.id)}
-                        disabled={isDeleting === model.id}
+                        disabled={isDeleting === model.id || !isEditorChefe(profile)}
                       >
                         {isDeleting === model.id ? (
                           <Loader2 className="h-4 w-4 animate-spin" />
@@ -255,7 +276,7 @@ export const SavedModelsModal = ({
                       <Button
                         size="sm"
                         onClick={() => handleUseModel(model)}
-                        disabled={isApplying === model.id || !telejornalId}
+                        disabled={isApplying === model.id || !telejornalId || !isAtLeastEditor(profile)}
                       >
                         {isApplying === model.id && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                         <FileText className="h-4 w-4 mr-2" />

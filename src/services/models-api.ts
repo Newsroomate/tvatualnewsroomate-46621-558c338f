@@ -59,7 +59,8 @@ export interface SavedModelCreateInput {
 
 export const saveCurrentStructureAsModel = async (
   telejornalId: string,
-  modelData: SavedModelCreateInput
+  modelData: SavedModelCreateInput,
+  profile: any = null
 ): Promise<SavedModel> => {
   console.log("Salvando estrutura atual como modelo:", modelData);
   
@@ -130,7 +131,7 @@ export const fetchAllSavedModels = async (): Promise<SavedModel[]> => {
   return data as SavedModel[] || [];
 };
 
-export const deleteSavedModel = async (modelId: string): Promise<void> => {
+export const deleteSavedModel = async (modelId: string, profile: any = null): Promise<void> => {
   console.log("Excluindo modelo:", modelId);
   
   const { error } = await supabase
@@ -146,7 +147,8 @@ export const deleteSavedModel = async (modelId: string): Promise<void> => {
 
 export const applyModelToTelejornal = async (
   model: SavedModel,
-  telejornalId: string
+  telejornalId: string,
+  profile: any = null
 ): Promise<void> => {
   console.log("Aplicando modelo ao telejornal:", model.nome, telejornalId);
   
