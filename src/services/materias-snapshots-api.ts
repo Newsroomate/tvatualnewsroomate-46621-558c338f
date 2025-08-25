@@ -25,6 +25,7 @@ export interface MateriaSnapshot {
   equipamento?: string;
   horario_exibicao?: string;
   is_snapshot: boolean;
+  created_by?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -52,9 +53,18 @@ export interface MateriaSnapshotCreateInput {
 }
 
 export const createMateriaSnapshot = async (materia: MateriaSnapshotCreateInput): Promise<MateriaSnapshot> => {
+  const { data: currentUser } = await supabase.auth.getUser();
+  
+  if (!currentUser.user) {
+    throw new Error("Usuário não autenticado");
+  }
+
   const { data, error } = await supabase
     .from('materias_snapshots')
-    .insert(materia)
+    .insert({
+      ...materia,
+      created_by: currentUser.user.id
+    })
     .select()
     .single();
 
@@ -78,6 +88,9 @@ export const updateMateriaSnapshot = async (id: string, updates: Partial<Materia
   // Create a copy of the updates object to avoid modifying the original
   const updatesToSend = { ...updates };
   
+  // Remove created_by from updates to prevent unauthorized ownership changes
+  delete updatesToSend.created_by;
+  
   // Ensure retranca is included since it's a required field
   if (updatesToSend.retranca === undefined || updatesToSend.retranca === null || updatesToSend.retranca.trim() === '') {
     console.error('updateMateriaSnapshot: Missing or empty retranca field', { id, updates });
@@ -86,10 +99,10 @@ export const updateMateriaSnapshot = async (id: string, updates: Partial<Materia
   
   console.log('updateMateriaSnapshot: Sending updates to database:', { id, updates: updatesToSend });
 
-  // First, check if the materia snapshot exists
+  // First, check if the materia snapshot exists and user has permission
   const { data: existingMateria, error: checkError } = await supabase
     .from('materias_snapshots')
-    .select('id, retranca, snapshot_id')
+    .select('id, retranca, snapshot_id, created_by')
     .eq('id', id)
     .maybeSingle();
 
@@ -98,12 +111,18 @@ export const updateMateriaSnapshot = async (id: string, updates: Partial<Materia
     throw new Error(`Erro ao verificar se a matéria snapshot existe: ${checkError.message}`);
   }
 
-  // If materia snapshot doesn't exist, create it
+  // If materia snapshot doesn't exist, create it with proper ownership
   if (!existingMateria) {
     console.log('updateMateriaSnapshot: Materia snapshot not found, creating new one:', { id });
     
+    const { data: currentUser } = await supabase.auth.getUser();
+    
+    if (!currentUser.user) {
+      throw new Error("Usuário não autenticado");
+    }
+
     const createData: MateriaSnapshotCreateInput = {
-      materia_original_id: id, // Use the ID as original reference
+      materia_original_id: id,
       retranca: updatesToSend.retranca,
       bloco_nome: updatesToSend.bloco_nome || 'Bloco',
       bloco_ordem: updatesToSend.bloco_ordem || 1,
@@ -125,7 +144,11 @@ export const updateMateriaSnapshot = async (id: string, updates: Partial<Materia
 
     const { data: createdMateria, error: createError } = await supabase
       .from('materias_snapshots')
-      .insert({ ...createData, id })
+      .insert({
+        ...createData,
+        id,
+        created_by: currentUser.user.id
+      })
       .select()
       .single();
 
@@ -149,7 +172,13 @@ export const updateMateriaSnapshot = async (id: string, updates: Partial<Materia
   if (error) {
     console.error('updateMateriaSnapshot: Database error during update:', error);
     const errorMessage = error.message || 'Erro desconhecido ao atualizar matéria snapshot';
-    toastService.error("Erro ao atualizar matéria snapshot", errorMessage);
+    
+    // Check if it's a permission error
+    if (error.code === 'PGRST116' || error.message.includes('permission')) {
+      toastService.error("Acesso negado", "Você não tem permissão para editar esta matéria snapshot");
+    } else {
+      toastService.error("Erro ao atualizar matéria snapshot", errorMessage);
+    }
     throw new Error(`Erro ao atualizar matéria snapshot: ${errorMessage}`);
   }
 
@@ -185,7 +214,13 @@ export const deleteMateriaSnapshot = async (id: string): Promise<boolean> => {
 
   if (error) {
     console.error('Erro ao excluir matéria snapshot:', error);
-    toastService.error("Erro ao excluir matéria snapshot", error.message);
+    
+    // Check if it's a permission error
+    if (error.code === 'PGRST116' || error.message.includes('permission')) {
+      toastService.error("Acesso negado", "Você não tem permissão para excluir esta matéria snapshot");
+    } else {
+      toastService.error("Erro ao excluir matéria snapshot", error.message);
+    }
     throw error;
   }
 

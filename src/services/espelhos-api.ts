@@ -12,6 +12,7 @@ export interface ClosedRundown {
   dataFormatted: string;
   hora: string;
   status: string;
+  user_id?: string;
   estrutura?: {
     blocos: Array<{
       id: string;
@@ -57,6 +58,7 @@ export async function fetchClosedRundowns(
       nome,
       estrutura,
       created_at,
+      user_id,
       telejornais!inner(nome, horario)
     `);
 
@@ -97,7 +99,62 @@ export async function fetchClosedRundowns(
       dataFormatted: format(createdDate, "dd/MM/yyyy"),
       hora: rundown.telejornais?.horario || "",
       status: "Fechado",
+      user_id: rundown.user_id,
       estrutura: rundown.estrutura as ClosedRundown['estrutura']
     };
   });
+}
+
+export async function saveRundown(
+  telejornalId: string,
+  nome: string,
+  dataReferencia: string,
+  estrutura: any
+): Promise<ClosedRundown> {
+  const { data: currentUser } = await supabase.auth.getUser();
+  
+  if (!currentUser.user) {
+    throw new Error("Usuário não autenticado");
+  }
+
+  const { data, error } = await supabase
+    .from("espelhos_salvos")
+    .insert({
+      telejornal_id: telejornalId,
+      nome,
+      data_referencia: dataReferencia,
+      estrutura,
+      user_id: currentUser.user.id
+    })
+    .select(`
+      id,
+      telejornal_id,
+      data_referencia,
+      nome,
+      estrutura,
+      created_at,
+      user_id,
+      telejornais!inner(nome, horario)
+    `)
+    .single();
+
+  if (error) {
+    console.error("Error saving rundown:", error);
+    throw error;
+  }
+
+  const createdDate = new Date(data.created_at);
+  return {
+    id: data.id,
+    telejornal_id: data.telejornal_id,
+    data_referencia: data.data_referencia,
+    nome: data.nome,
+    jornal: data.telejornais?.nome || "",
+    data: createdDate,
+    dataFormatted: format(createdDate, "dd/MM/yyyy"),
+    hora: data.telejornais?.horario || "",
+    status: "Fechado",
+    user_id: data.user_id,
+    estrutura: data.estrutura as ClosedRundown['estrutura']
+  };
 }
