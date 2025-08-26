@@ -48,7 +48,36 @@ export const LeftSidebar = ({
         },
         (payload) => {
           console.log('Telejornal atualizado:', payload);
-          // Recarregar apenas os dados, sem alterar seleção
+          // Atualizar apenas o telejornal específico que mudou
+          const updatedTelejornal = payload.new as Telejornal;
+          setTelejornais(prev => 
+            prev.map(tj => 
+              tj.id === updatedTelejornal.id ? updatedTelejornal : tj
+            )
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'telejornais' 
+        },
+        (payload) => {
+          console.log('Telejornal inserido:', payload);
+          loadDataWithoutSelection();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { 
+          event: 'DELETE', 
+          schema: 'public', 
+          table: 'telejornais' 
+        },
+        (payload) => {
+          console.log('Telejornal deletado:', payload);
           loadDataWithoutSelection();
         }
       )
