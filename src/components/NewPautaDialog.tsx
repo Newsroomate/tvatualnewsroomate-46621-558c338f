@@ -110,7 +110,8 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
                 value={local}
                 onChange={(e) => setLocal(e.target.value)}
                 placeholder="Local da cobertura"
-                rows={1}
+                rows={2}
+                className="resize-y"
               />
             </div>
             
@@ -133,7 +134,8 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
                 value={entrevistado}
                 onChange={(e) => setEntrevistado(e.target.value)}
                 placeholder="Nome do entrevistado"
-                rows={1}
+                rows={2}
+                className="resize-y"
               />
             </div>
             
@@ -144,7 +146,8 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
                 value={produtor}
                 onChange={(e) => setProdutor(e.target.value)}
                 placeholder="Nome do produtor"
-                rows={1}
+                rows={2}
+                className="resize-y"
               />
             </div>
           </div>

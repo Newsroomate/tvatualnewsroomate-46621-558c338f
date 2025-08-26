@@ -104,7 +104,8 @@ export const EditPautaDialog = ({
                 value={local}
                 onChange={(e) => setLocal(e.target.value)}
                 placeholder="Local da cobertura"
-                rows={1}
+                rows={2}
+                className="resize-y"
               />
             </div>
             
@@ -127,7 +128,8 @@ export const EditPautaDialog = ({
                 value={entrevistado}
                 onChange={(e) => setEntrevistado(e.target.value)}
                 placeholder="Nome do entrevistado"
-                rows={1}
+                rows={2}
+                className="resize-y"
               />
             </div>
             
@@ -138,7 +140,8 @@ export const EditPautaDialog = ({
                 value={produtor}
                 onChange={(e) => setProdutor(e.target.value)}
                 placeholder="Nome do produtor"
-                rows={1}
+                rows={2}
+                className="resize-y"
               />
             </div>
           </div>
