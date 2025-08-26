@@ -77,6 +77,9 @@ export interface Pauta {
   horario?: string;
   entrevistado?: string;
   produtor?: string;
+  proposta?: string;
+  encaminhamento?: string;
+  informacoes?: string;
   user_id?: string;
 }
 
@@ -87,6 +90,9 @@ export interface PautaCreateInput {
   horario?: string;
   entrevistado?: string;
   produtor?: string;
+  proposta?: string;
+  encaminhamento?: string;
+  informacoes?: string;
   status?: string;
   data_cobertura?: string;
   user_id?: string;

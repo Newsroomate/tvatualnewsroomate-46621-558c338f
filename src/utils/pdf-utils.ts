@@ -77,6 +77,39 @@ export const generatePautaPDF = (pauta: Pauta) => {
     yPosition += lineHeight * 1.5;
   }
   
+  // Proposta
+  if (pauta.proposta) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('PROPOSTA:', margin, yPosition);
+    yPosition += lineHeight;
+    doc.setFont('helvetica', 'normal');
+    const propostaLines = doc.splitTextToSize(pauta.proposta, pageWidth - margin * 2);
+    doc.text(propostaLines, margin, yPosition);
+    yPosition += lineHeight * propostaLines.length + lineHeight;
+  }
+  
+  // Encaminhamento
+  if (pauta.encaminhamento) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('ENCAMINHAMENTO:', margin, yPosition);
+    yPosition += lineHeight;
+    doc.setFont('helvetica', 'normal');
+    const encaminhamentoLines = doc.splitTextToSize(pauta.encaminhamento, pageWidth - margin * 2);
+    doc.text(encaminhamentoLines, margin, yPosition);
+    yPosition += lineHeight * encaminhamentoLines.length + lineHeight;
+  }
+  
+  // Informações
+  if (pauta.informacoes) {
+    doc.setFont('helvetica', 'bold');
+    doc.text('INFORMAÇÕES:', margin, yPosition);
+    yPosition += lineHeight;
+    doc.setFont('helvetica', 'normal');
+    const informacoesLines = doc.splitTextToSize(pauta.informacoes, pageWidth - margin * 2);
+    doc.text(informacoesLines, margin, yPosition);
+    yPosition += lineHeight * informacoesLines.length + lineHeight;
+  }
+  
   // Data de criação
   if (pauta.created_at) {
     yPosition += lineHeight;

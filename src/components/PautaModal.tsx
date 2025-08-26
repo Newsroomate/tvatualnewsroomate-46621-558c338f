@@ -22,6 +22,9 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
   const [horario, setHorario] = useState("");
   const [entrevistado, setEntrevistado] = useState("");
   const [produtor, setProdutor] = useState("");
+  const [proposta, setProposta] = useState("");
+  const [encaminhamento, setEncaminhamento] = useState("");
+  const [informacoes, setInformacoes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
@@ -48,6 +51,9 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
         horario,
         entrevistado,
         produtor,
+        proposta,
+        encaminhamento,
+        informacoes,
         status: "pendente",
       });
       
@@ -72,6 +78,9 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
     setHorario("");
     setEntrevistado("");
     setProdutor("");
+    setProposta("");
+    setEncaminhamento("");
+    setInformacoes("");
     onClose();
   };
 
@@ -147,6 +156,39 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
                 placeholder="Nome do produtor"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="proposta">Proposta</Label>
+            <Textarea
+              id="proposta"
+              value={proposta}
+              onChange={(e) => setProposta(e.target.value)}
+              placeholder="Digite a proposta"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="encaminhamento">Encaminhamento</Label>
+            <Textarea
+              id="encaminhamento"
+              value={encaminhamento}
+              onChange={(e) => setEncaminhamento(e.target.value)}
+              placeholder="Digite o encaminhamento"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="informacoes">Informações</Label>
+            <Textarea
+              id="informacoes"
+              value={informacoes}
+              onChange={(e) => setInformacoes(e.target.value)}
+              placeholder="Digite as informações adicionais"
+              rows={3}
+            />
           </div>
           
           <DialogFooter>

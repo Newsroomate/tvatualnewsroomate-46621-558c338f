@@ -28,6 +28,9 @@ export const EditPautaDialog = ({
   const [horario, setHorario] = useState(pauta.horario || "");
   const [entrevistado, setEntrevistado] = useState(pauta.entrevistado || "");
   const [produtor, setProdutor] = useState(pauta.produtor || "");
+  const [proposta, setProposta] = useState(pauta.proposta || "");
+  const [encaminhamento, setEncaminhamento] = useState(pauta.encaminhamento || "");
+  const [informacoes, setInformacoes] = useState(pauta.informacoes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
 
@@ -43,7 +46,10 @@ export const EditPautaDialog = ({
         local,
         horario,
         entrevistado,
-        produtor
+        produtor,
+        proposta,
+        encaminhamento,
+        informacoes
       });
       
       onPautaUpdated();
@@ -132,6 +138,39 @@ export const EditPautaDialog = ({
                 placeholder="Nome do produtor"
               />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="proposta">Proposta</Label>
+            <Textarea
+              id="proposta"
+              value={proposta}
+              onChange={(e) => setProposta(e.target.value)}
+              placeholder="Digite a proposta"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="encaminhamento">Encaminhamento</Label>
+            <Textarea
+              id="encaminhamento"
+              value={encaminhamento}
+              onChange={(e) => setEncaminhamento(e.target.value)}
+              placeholder="Digite o encaminhamento"
+              rows={3}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="informacoes">Informações</Label>
+            <Textarea
+              id="informacoes"
+              value={informacoes}
+              onChange={(e) => setInformacoes(e.target.value)}
+              placeholder="Digite as informações adicionais"
+              rows={3}
+            />
           </div>
           
           <DialogFooter>
