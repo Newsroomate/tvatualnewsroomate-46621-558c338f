@@ -44,96 +44,122 @@ export const ScheduleHeader = ({
   };
 
   return (
-    <div className="bg-white border-b border-gray-200 p-4 flex justify-between items-center sticky top-0 z-10">
-      <div>
-        <h1 className="text-xl font-bold">
-          {currentTelejornal ? currentTelejornal.nome : "Selecione um Telejornal"}
-        </h1>
-        <p className="text-sm text-gray-500">
-          {new Date().toLocaleDateString('pt-BR')}
-        </p>
-      </div>
-      <div className="flex gap-2 items-center">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onAddBlock}
-          disabled={!currentTelejornal?.espelho_aberto}
-        >
-          <PlusCircle className="h-4 w-4 mr-2" />
-          Adicionar Novo Bloco
-        </Button>
+    <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
+      {/* Header Principal */}
+      <div className="p-4 flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+        {/* Informações do Telejornal */}
+        <div className="flex-shrink-0">
+          <h1 className="text-xl font-bold">
+            {currentTelejornal ? currentTelejornal.nome : "Selecione um Telejornal"}
+          </h1>
+          <p className="text-sm text-gray-500">
+            {new Date().toLocaleDateString('pt-BR')}
+          </p>
+        </div>
         
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onSaveModel}
-          disabled={!currentTelejornal || !hasBlocks}
-        >
-          <Save className="h-4 w-4 mr-2" />
-          Salvar Modelo
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onViewSavedModels}
-        >
-          <FolderOpen className="h-4 w-4 mr-2" />
-          Modelos Salvos
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleExportGC}
-          disabled={!currentTelejornal || !hasBlocks}
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Exportar GC
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={handleExportPlayout}
-          disabled={!currentTelejornal || !hasBlocks}
-        >
-          <FileText className="h-4 w-4 mr-2" />
-          Exportar PLAYOUT
-        </Button>
-        
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={onViewTeleprompter}
-          disabled={!currentTelejornal}
-        >
-          <Eye className="h-4 w-4 mr-2" />
-          Visualizar Teleprompter
-        </Button>
-        
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div>
-                <Button variant="outline" size="sm" onClick={onRenumberItems} disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}>
-                  <ArrowDownUp className="h-4 w-4 mr-2" />
-                  Reordenar Numeração
-                </Button>
-              </div>
-            </TooltipTrigger>
-            {!currentTelejornal?.espelho_aberto && (
-              <TooltipContent>
-                Abra o espelho para reorganizar a numeração
-              </TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
-        
-        <div className="text-right">
+        {/* Tempo Total */}
+        <div className="text-right flex-shrink-0 lg:order-last">
           <p className="text-sm font-medium">Tempo Total:</p>
           <p className="text-lg font-bold">{formatTime(totalJournalTime)}</p>
+        </div>
+      </div>
+      
+      {/* Seção de Botões */}
+      <div className="px-4 pb-4">
+        <div className="flex flex-wrap gap-2">
+          {/* Ações Principais */}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onAddBlock}
+              disabled={!currentTelejornal?.espelho_aberto}
+            >
+              <PlusCircle className="h-4 w-4 mr-2" />
+              Adicionar Novo Bloco
+            </Button>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={onRenumberItems} 
+                      disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                    >
+                      <ArrowDownUp className="h-4 w-4 mr-2" />
+                      Reordenar Numeração
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                {!currentTelejornal?.espelho_aberto && (
+                  <TooltipContent>
+                    Abra o espelho para reorganizar a numeração
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+          
+          {/* Modelos */}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onSaveModel}
+              disabled={!currentTelejornal || !hasBlocks}
+            >
+              <Save className="h-4 w-4 mr-2" />
+              Salvar Modelo
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onViewSavedModels}
+            >
+              <FolderOpen className="h-4 w-4 mr-2" />
+              Modelos Salvos
+            </Button>
+          </div>
+          
+          {/* Exportações */}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportGC}
+              disabled={!currentTelejornal || !hasBlocks}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Exportar GC
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleExportPlayout}
+              disabled={!currentTelejornal || !hasBlocks}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Exportar PLAYOUT
+            </Button>
+          </div>
+          
+          {/* Visualização */}
+          <div className="flex flex-wrap gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={onViewTeleprompter}
+              disabled={!currentTelejornal}
+            >
+              <Eye className="h-4 w-4 mr-2" />
+              Visualizar Teleprompter
+            </Button>
+          </div>
         </div>
       </div>
     </div>
