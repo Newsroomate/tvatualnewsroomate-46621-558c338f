@@ -46,21 +46,21 @@ export const ScheduleHeader = ({
   return (
     <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
       {/* Header Principal */}
-      <div className="p-4 flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4">
+      <div className="p-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         {/* Informações do Telejornal */}
         <div className="flex-shrink-0">
-          <h1 className="text-xl font-bold">
+          <h1 className="text-2xl font-bold text-foreground">
             {currentTelejornal ? currentTelejornal.nome : "Selecione um Telejornal"}
           </h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-muted-foreground mt-1">
             {new Date().toLocaleDateString('pt-BR')}
           </p>
         </div>
         
         {/* Tempo Total */}
-        <div className="text-right flex-shrink-0 lg:order-last">
-          <p className="text-sm font-medium">Tempo Total:</p>
-          <p className="text-lg font-bold">{formatTime(totalJournalTime)}</p>
+        <div className="text-left sm:text-right flex-shrink-0">
+          <p className="text-sm font-medium text-muted-foreground">Tempo Total:</p>
+          <p className="text-3xl font-bold text-foreground">{formatTime(totalJournalTime)}</p>
         </div>
       </div>
       
