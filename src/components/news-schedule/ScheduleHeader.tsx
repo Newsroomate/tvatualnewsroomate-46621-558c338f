@@ -74,6 +74,7 @@ export const ScheduleHeader = ({
               size="sm" 
               onClick={onAddBlock}
               disabled={!currentTelejornal?.espelho_aberto}
+              className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
             >
               <PlusCircle className="h-4 w-4 mr-2" />
               Adicionar Novo Bloco
@@ -88,6 +89,7 @@ export const ScheduleHeader = ({
                       size="sm" 
                       onClick={onRenumberItems} 
                       disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                      className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
                     >
                       <ArrowDownUp className="h-4 w-4 mr-2" />
                       Reordenar Numeração
@@ -109,7 +111,8 @@ export const ScheduleHeader = ({
               variant="outline" 
               size="sm" 
               onClick={onSaveModel}
-              disabled={!currentTelejornal || !hasBlocks}
+              disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+              className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
             >
               <Save className="h-4 w-4 mr-2" />
               Salvar Modelo
@@ -119,6 +122,8 @@ export const ScheduleHeader = ({
               variant="outline" 
               size="sm" 
               onClick={onViewSavedModels}
+              disabled={!currentTelejornal?.espelho_aberto}
+              className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
             >
               <FolderOpen className="h-4 w-4 mr-2" />
               Modelos Salvos
@@ -131,7 +136,8 @@ export const ScheduleHeader = ({
               variant="outline" 
               size="sm" 
               onClick={handleExportGC}
-              disabled={!currentTelejornal || !hasBlocks}
+              disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+              className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
             >
               <Download className="h-4 w-4 mr-2" />
               Exportar GC
@@ -141,7 +147,8 @@ export const ScheduleHeader = ({
               variant="outline" 
               size="sm" 
               onClick={handleExportPlayout}
-              disabled={!currentTelejornal || !hasBlocks}
+              disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+              className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
             >
               <FileText className="h-4 w-4 mr-2" />
               Exportar PLAYOUT
@@ -154,7 +161,8 @@ export const ScheduleHeader = ({
               variant="outline" 
               size="sm" 
               onClick={onViewTeleprompter}
-              disabled={!currentTelejornal}
+              disabled={!currentTelejornal?.espelho_aberto}
+              className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
             >
               <Eye className="h-4 w-4 mr-2" />
               Visualizar Teleprompter
