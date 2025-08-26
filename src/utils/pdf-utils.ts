@@ -6,315 +6,176 @@ export const generatePautaPDF = (pauta: Pauta) => {
   const doc = new jsPDF();
   
   // Configurações iniciais
-  const margin = 10;
+  const margin = 15;
   let yPosition = margin;
+  const lineHeight = 6;
   const pageWidth = doc.internal.pageSize.width;
   const contentWidth = pageWidth - margin * 2;
   
-  // Função para criar caixas com bordas
-  const createBox = (x: number, y: number, width: number, height: number, fillColor?: number[]) => {
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    if (fillColor) {
-      doc.setFillColor(fillColor[0], fillColor[1], fillColor[2]);
-      doc.rect(x, y, width, height, 'FD');
-    } else {
-      doc.rect(x, y, width, height);
+  // Função para criar caixas de campo
+  const createFieldBox = (label: string, content: string, yPos: number, height: number = 15, isMultiLine: boolean = false) => {
+    // Caixa do campo
+    doc.setDrawColor(100, 100, 100);
+    doc.setLineWidth(0.3);
+    doc.rect(margin, yPos, contentWidth, height);
+    
+    // Label em caixa cinza
+    doc.setFillColor(230, 230, 230);
+    doc.rect(margin, yPos, contentWidth, 8, 'F');
+    
+    // Texto do label
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(0, 0, 0);
+    doc.text(label, margin + 3, yPos + 5.5);
+    
+    // Conteúdo
+    if (content && content.trim()) {
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      if (isMultiLine) {
+        const lines = doc.splitTextToSize(content, contentWidth - 6);
+        doc.text(lines, margin + 3, yPos + 12);
+      } else {
+        doc.text(content, margin + 3, yPos + 12);
+      }
     }
+    
+    return yPos + height + 3;
   };
 
-  // Função para adicionar texto em caixa
-  const addTextInBox = (text: string, x: number, y: number, width: number, height: number, options: {
-    fontSize?: number;
-    fontStyle?: string;
-    align?: 'left' | 'center' | 'right';
-    color?: number[];
-    fillColor?: number[];
-  } = {}) => {
-    const { fontSize = 10, fontStyle = 'normal', align = 'left', color = [0, 0, 0], fillColor } = options;
-    
-    createBox(x, y, width, height, fillColor);
-    
-    doc.setFontSize(fontSize);
-    doc.setFont('helvetica', fontStyle as any);
-    doc.setTextColor(color[0], color[1], color[2]);
-    
-    const textY = y + height / 2 + fontSize / 3;
-    if (align === 'center') {
-      doc.text(text, x + width / 2, textY, { align: 'center' });
-    } else if (align === 'right') {
-      doc.text(text, x + width - 3, textY);
-    } else {
-      doc.text(text, x + 3, textY);
-    }
-  };
-
-  // CABEÇALHO COM LOGO
-  // Logo NEWS
-  doc.setFillColor(23, 87, 174);
-  doc.circle(margin + 12, yPosition + 12, 12, 'F');
+  // CABEÇALHO PRINCIPAL
+  doc.setFillColor(20, 50, 100);
+  doc.rect(0, 0, pageWidth, 25, 'F');
+  
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(16);
+  doc.setFontSize(18);
   doc.setFont('helvetica', 'bold');
-  doc.text('NEWS', margin + 12, yPosition + 16, { align: 'center' });
+  doc.text('PAUTA JORNALÍSTICA', pageWidth / 2, 16, { align: 'center' });
   
-  // Reset text color
+  yPosition = 35;
   doc.setTextColor(0, 0, 0);
-  
-  // Tabela do cabeçalho - estrutura como no modelo
-  const headerY = yPosition + 30;
-  
-  // Primeira linha - labels principais
-  const row1Labels = ['DATA', 'RETRANCA', 'PROGRAMA'];
-  const row1Values = [
-    pauta.created_at ? new Date(pauta.created_at).toLocaleDateString('pt-BR') : '',
-    pauta.titulo || '',
-    'NEWS'
-  ];
-  
-  // Segunda linha - labels adicionais  
-  const row2Labels = ['PAUTEIROS', 'REPÓRTER', 'IMAGENS'];
-  const row2Values = [
-    pauta.produtor || '',
-    pauta.entrevistado || '',
-    'ESSENCIAIS'
-  ];
-  
-  // Larguras das colunas
-  const col1Width = contentWidth * 0.25;
-  const col2Width = contentWidth * 0.4;
-  const col3Width = contentWidth * 0.35;
-  
-  // Primeira linha
-  let currentX = margin;
-  addTextInBox(row1Labels[0], currentX, headerY, col1Width, 6, { 
-    fontSize: 7, 
-    fontStyle: 'bold',
-    fillColor: [180, 180, 180],
-    align: 'center'
-  });
-  addTextInBox(row1Values[0], currentX, headerY + 6, col1Width, 8, { 
-    fontSize: 8,
-    align: 'center'
-  });
-  
-  currentX += col1Width;
-  addTextInBox(row1Labels[1], currentX, headerY, col2Width, 6, { 
-    fontSize: 7, 
-    fontStyle: 'bold',
-    fillColor: [180, 180, 180],
-    align: 'center'
-  });
-  addTextInBox(row1Values[1], currentX, headerY + 6, col2Width, 8, { 
-    fontSize: 8,
-    align: 'center'
-  });
-  
-  currentX += col2Width;
-  addTextInBox(row1Labels[2], currentX, headerY, col3Width, 6, { 
-    fontSize: 7, 
-    fontStyle: 'bold',
-    fillColor: [180, 180, 180],
-    align: 'center'
-  });
-  addTextInBox(row1Values[2], currentX, headerY + 6, col3Width, 8, { 
-    fontSize: 8,
-    align: 'center'
-  });
-  
-  // Segunda linha
-  currentX = margin;
-  addTextInBox(row2Labels[0], currentX, headerY + 14, col1Width, 6, { 
-    fontSize: 7, 
-    fontStyle: 'bold',
-    fillColor: [180, 180, 180],
-    align: 'center'
-  });
-  addTextInBox(row2Values[0], currentX, headerY + 20, col1Width, 8, { 
-    fontSize: 8,
-    align: 'center'
-  });
-  
-  currentX += col1Width;
-  addTextInBox(row2Labels[1], currentX, headerY + 14, col2Width, 6, { 
-    fontSize: 7, 
-    fontStyle: 'bold',
-    fillColor: [180, 180, 180],
-    align: 'center'
-  });
-  addTextInBox(row2Values[1], currentX, headerY + 20, col2Width, 8, { 
-    fontSize: 8,
-    align: 'center'
-  });
-  
-  currentX += col2Width;
-  addTextInBox(row2Labels[2], currentX, headerY + 14, col3Width, 6, { 
-    fontSize: 7, 
-    fontStyle: 'bold',
-    fillColor: [180, 180, 180],
-    align: 'center'
-  });
-  addTextInBox(row2Values[2], currentX, headerY + 20, col3Width, 8, { 
-    fontSize: 8,
-    align: 'center'
-  });
-  
-  yPosition = headerY + 35;
 
-  // ROTEIRO 1
-  addTextInBox('ROTEIRO 1', margin, yPosition, contentWidth, 10, {
-    fontSize: 10,
-    fontStyle: 'bold',
-    fillColor: [50, 50, 50],
-    color: [255, 255, 255],
-    align: 'left'
-  });
-  yPosition += 15;
+  // SEÇÃO 1: IDENTIFICAÇÃO
+  doc.setFillColor(41, 128, 185);
+  doc.rect(margin, yPosition, contentWidth, 12, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('IDENTIFICAÇÃO DA PAUTA', margin + 5, yPosition + 8);
+  yPosition += 18;
+  doc.setTextColor(0, 0, 0);
 
-  // DATA DO EVENTO - formato como no modelo
-  addTextInBox('DATA DO EVENTO:', margin, yPosition, contentWidth, 8, {
-    fontSize: 9,
-    fontStyle: 'bold',
-    fillColor: [50, 50, 50],
-    color: [255, 255, 255]
-  });
+  // Campos da seção 1
+  yPosition = createFieldBox('TÍTULO', pauta.titulo, yPosition, 15);
   
-  const eventDate = pauta.created_at ? 
-    new Date(pauta.created_at).toLocaleDateString('pt-BR', { 
-      weekday: 'long', 
-      day: '2-digit', 
-      month: 'long', 
-      year: 'numeric' 
-    }) : 'Não informado';
+  if (pauta.descricao) {
+    const descHeight = Math.max(25, Math.ceil(pauta.descricao.length / 80) * 8 + 15);
+    yPosition = createFieldBox('DESCRIÇÃO', pauta.descricao, yPosition, descHeight, true);
+  }
+
+  // SEÇÃO 2: LOGÍSTICA DE PRODUÇÃO
+  yPosition += 5;
+  doc.setFillColor(41, 128, 185);
+  doc.rect(margin, yPosition, contentWidth, 12, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('LOGÍSTICA DE PRODUÇÃO', margin + 5, yPosition + 8);
+  yPosition += 18;
+  doc.setTextColor(0, 0, 0);
+
+  // Campos lado a lado para LOCAL e HORÁRIO
+  const halfWidth = (contentWidth - 3) / 2;
   
-  createBox(margin, yPosition + 8, contentWidth, 12);
+  // LOCAL (lado esquerdo)
+  doc.setDrawColor(100, 100, 100);
+  doc.setLineWidth(0.3);
+  doc.rect(margin, yPosition, halfWidth, 15);
+  doc.setFillColor(230, 230, 230);
+  doc.rect(margin, yPosition, halfWidth, 8, 'F');
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(0, 0, 0);
-  doc.text(eventDate, margin + 3, yPosition + 16);
-  yPosition += 25;
+  doc.setFont('helvetica', 'bold');
+  doc.text('LOCAL', margin + 3, yPosition + 5.5);
+  if (pauta.local) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(pauta.local, margin + 3, yPosition + 12);
+  }
 
-  // LOCAL - formato como no modelo
-  addTextInBox('LOCAL:', margin, yPosition, contentWidth, 8, {
-    fontSize: 9,
-    fontStyle: 'bold',
-    fillColor: [50, 50, 50],
-    color: [255, 255, 255]
-  });
-  
-  const localInfo = pauta.local || 'Não informado';
-  const localLines = doc.splitTextToSize(localInfo, contentWidth - 6);
-  const localHeight = Math.max(12, localLines.length * 4 + 8);
-  
-  createBox(margin, yPosition + 8, contentWidth, localHeight);
+  // HORÁRIO (lado direito)
+  const rightX = margin + halfWidth + 3;
+  doc.rect(rightX, yPosition, halfWidth, 15);
+  doc.setFillColor(230, 230, 230);
+  doc.rect(rightX, yPosition, halfWidth, 8, 'F');
   doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(0, 0, 0);
-  doc.text(localLines, margin + 3, yPosition + 14);
-  yPosition += localHeight + 13;
-
-  // HORÁRIO - formato como no modelo
-  addTextInBox('HORÁRIO:', margin, yPosition, contentWidth, 8, {
-    fontSize: 9,
-    fontStyle: 'bold',
-    fillColor: [50, 50, 50],
-    color: [255, 255, 255]
-  });
+  doc.setFont('helvetica', 'bold');
+  doc.text('HORÁRIO', rightX + 3, yPosition + 5.5);
+  if (pauta.horario) {
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(pauta.horario, rightX + 3, yPosition + 12);
+  }
   
-  createBox(margin, yPosition + 8, contentWidth, 12);
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'normal');
-  doc.setTextColor(0, 0, 0);
-  doc.text(pauta.horario || 'Não informado', margin + 3, yPosition + 16);
-  yPosition += 25;
+  yPosition += 18;
 
-  // ENTREVISTADOS - formato como no modelo
+  // ENTREVISTADO
   if (pauta.entrevistado) {
-    addTextInBox('ENTREVISTADOS', margin, yPosition, contentWidth, 8, {
-      fontSize: 9,
-      fontStyle: 'bold',
-      fillColor: [50, 50, 50],
-      color: [255, 255, 255]
-    });
-    
-    const entrevistadoLines = doc.splitTextToSize(pauta.entrevistado, contentWidth - 6);
-    const entrevistadoHeight = Math.max(12, entrevistadoLines.length * 4 + 8);
-    
-    createBox(margin, yPosition + 8, contentWidth, entrevistadoHeight);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-    doc.text(entrevistadoLines, margin + 3, yPosition + 14);
-    yPosition += entrevistadoHeight + 13;
+    const entrevistadoHeight = Math.max(20, Math.ceil(pauta.entrevistado.length / 80) * 6 + 15);
+    yPosition = createFieldBox('ENTREVISTADO(S)', pauta.entrevistado, yPosition, entrevistadoHeight, true);
   }
 
-  // PROPOSTA - formato como no modelo
+  // PRODUTOR RESPONSÁVEL
+  yPosition = createFieldBox('PRODUTOR RESPONSÁVEL', pauta.produtor || 'Não informado', yPosition, 15);
+
+  // SEÇÃO 3: DESENVOLVIMENTO EDITORIAL
+  yPosition += 5;
+  doc.setFillColor(41, 128, 185);
+  doc.rect(margin, yPosition, contentWidth, 12, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(12);
+  doc.setFont('helvetica', 'bold');
+  doc.text('DESENVOLVIMENTO EDITORIAL', margin + 5, yPosition + 8);
+  yPosition += 18;
+  doc.setTextColor(0, 0, 0);
+
+  // PROPOSTA
   if (pauta.proposta) {
-    addTextInBox('PROPOSTA', margin, yPosition, contentWidth, 8, {
-      fontSize: 9,
-      fontStyle: 'bold',
-      fillColor: [50, 50, 50],
-      color: [255, 255, 255]
-    });
-    
-    const propostaLines = doc.splitTextToSize(pauta.proposta, contentWidth - 6);
-    const propostaHeight = Math.max(20, propostaLines.length * 4 + 8);
-    
-    createBox(margin, yPosition + 8, contentWidth, propostaHeight);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-    doc.text(propostaLines, margin + 3, yPosition + 14);
-    yPosition += propostaHeight + 13;
+    const propostaHeight = Math.max(30, Math.ceil(pauta.proposta.length / 80) * 6 + 15);
+    yPosition = createFieldBox('PROPOSTA DA MATÉRIA', pauta.proposta, yPosition, propostaHeight, true);
   }
 
-  // ENCAMINHAMENTO DE PRODUÇÃO - formato como no modelo
+  // ENCAMINHAMENTO
   if (pauta.encaminhamento) {
-    addTextInBox('ENCAMINHAMENTO DE PRODUÇÃO', margin, yPosition, contentWidth, 8, {
-      fontSize: 9,
-      fontStyle: 'bold',
-      fillColor: [50, 50, 50],
-      color: [255, 255, 255]
-    });
-    
-    const encaminhamentoLines = doc.splitTextToSize(pauta.encaminhamento, contentWidth - 6);
-    const encaminhamentoHeight = Math.max(20, encaminhamentoLines.length * 4 + 8);
-    
-    createBox(margin, yPosition + 8, contentWidth, encaminhamentoHeight);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-    doc.text(encaminhamentoLines, margin + 3, yPosition + 14);
-    yPosition += encaminhamentoHeight + 13;
+    const encaminhamentoHeight = Math.max(30, Math.ceil(pauta.encaminhamento.length / 80) * 6 + 15);
+    yPosition = createFieldBox('ENCAMINHAMENTO', pauta.encaminhamento, yPosition, encaminhamentoHeight, true);
   }
 
-  // INFORMAÇÕES - formato como no modelo
+  // INFORMAÇÕES ADICIONAIS
   if (pauta.informacoes) {
-    addTextInBox('INFORMAÇÕES', margin, yPosition, contentWidth, 8, {
-      fontSize: 9,
-      fontStyle: 'bold',
-      fillColor: [50, 50, 50],
-      color: [255, 255, 255]
-    });
-    
-    const informacoesLines = doc.splitTextToSize(pauta.informacoes, contentWidth - 6);
-    const informacoesHeight = Math.max(20, informacoesLines.length * 4 + 8);
-    
-    createBox(margin, yPosition + 8, contentWidth, informacoesHeight);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-    doc.text(informacoesLines, margin + 3, yPosition + 14);
-    yPosition += informacoesHeight + 13;
+    const informacoesHeight = Math.max(30, Math.ceil(pauta.informacoes.length / 80) * 6 + 15);
+    yPosition = createFieldBox('INFORMAÇÕES ADICIONAIS', pauta.informacoes, yPosition, informacoesHeight, true);
   }
 
-  // Produtor no final
-  if (pauta.produtor) {
-    yPosition += 10;
+  // RODAPÉ COM DATA
+  yPosition += 10;
+  if (pauta.created_at) {
+    doc.setFillColor(245, 245, 245);
+    doc.rect(margin, yPosition, contentWidth, 12, 'F');
+    doc.setDrawColor(100, 100, 100);
+    doc.rect(margin, yPosition, contentWidth, 12);
+    
     doc.setFontSize(9);
     doc.setFont('helvetica', 'italic');
     doc.setTextColor(80, 80, 80);
-    doc.text(`Produtor: ${pauta.produtor}`, margin, yPosition);
+    const dataFormatada = new Date(pauta.created_at).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    doc.text(`Pauta criada em: ${dataFormatada}`, margin + 5, yPosition + 7.5);
   }
   
   // Salvar o PDF
