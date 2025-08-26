@@ -105,6 +105,28 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                   </div>
                 ) : null}
                 
+                {/* Tipo de Material */}
+                {materia.tipo_material && (
+                  <div 
+                    className="text-orange-400 font-semibold"
+                    style={{ 
+                      fontSize: `${fontSize * 0.8}px`,
+                      padding: 0,
+                      margin: '0 0 12px 0',
+                      textAlign: 'center',
+                      wordWrap: 'break-word',
+                      overflowWrap: 'break-word',
+                      hyphens: 'auto',
+                      maxWidth: '100%',
+                      width: '100%',
+                      textTransform: 'uppercase',
+                      letterSpacing: '1px'
+                    }}
+                  >
+                    [{materia.tipo_material}]
+                  </div>
+                )}
+                
                 {/* Retranca com cor customizada */}
                 <div 
                   className="font-bold"
