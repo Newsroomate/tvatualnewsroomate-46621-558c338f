@@ -6,176 +6,242 @@ export const generatePautaPDF = (pauta: Pauta) => {
   const doc = new jsPDF();
   
   // Configurações iniciais
-  const margin = 15;
+  const margin = 10;
   let yPosition = margin;
-  const lineHeight = 6;
   const pageWidth = doc.internal.pageSize.width;
   const contentWidth = pageWidth - margin * 2;
   
-  // Função para criar caixas de campo
-  const createFieldBox = (label: string, content: string, yPos: number, height: number = 15, isMultiLine: boolean = false) => {
-    // Caixa do campo
-    doc.setDrawColor(100, 100, 100);
-    doc.setLineWidth(0.3);
-    doc.rect(margin, yPos, contentWidth, height);
-    
-    // Label em caixa cinza
-    doc.setFillColor(230, 230, 230);
-    doc.rect(margin, yPos, contentWidth, 8, 'F');
-    
-    // Texto do label
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text(label, margin + 3, yPos + 5.5);
-    
-    // Conteúdo
-    if (content && content.trim()) {
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      if (isMultiLine) {
-        const lines = doc.splitTextToSize(content, contentWidth - 6);
-        doc.text(lines, margin + 3, yPos + 12);
-      } else {
-        doc.text(content, margin + 3, yPos + 12);
-      }
+  // Função para criar caixas com bordas
+  const createBox = (x: number, y: number, width: number, height: number, fillColor?: number[]) => {
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(0.5);
+    if (fillColor) {
+      doc.setFillColor(fillColor[0], fillColor[1], fillColor[2]);
+      doc.rect(x, y, width, height, 'FD');
+    } else {
+      doc.rect(x, y, width, height);
     }
-    
-    return yPos + height + 3;
   };
 
-  // CABEÇALHO PRINCIPAL
-  doc.setFillColor(20, 50, 100);
-  doc.rect(0, 0, pageWidth, 25, 'F');
-  
+  // Função para adicionar texto em caixa
+  const addTextInBox = (text: string, x: number, y: number, width: number, height: number, options: {
+    fontSize?: number;
+    fontStyle?: string;
+    align?: 'left' | 'center' | 'right';
+    color?: number[];
+    fillColor?: number[];
+  } = {}) => {
+    const { fontSize = 10, fontStyle = 'normal', align = 'left', color = [0, 0, 0], fillColor } = options;
+    
+    createBox(x, y, width, height, fillColor);
+    
+    doc.setFontSize(fontSize);
+    doc.setFont('helvetica', fontStyle as any);
+    doc.setTextColor(color[0], color[1], color[2]);
+    
+    const textY = y + height / 2 + fontSize / 3;
+    if (align === 'center') {
+      doc.text(text, x + width / 2, textY, { align: 'center' });
+    } else if (align === 'right') {
+      doc.text(text, x + width - 3, textY);
+    } else {
+      doc.text(text, x + 3, textY);
+    }
+  };
+
+  // CABEÇALHO COM LOGO
+  // Logo NEWS
+  doc.setFillColor(23, 87, 174);
+  doc.circle(margin + 12, yPosition + 12, 12, 'F');
   doc.setTextColor(255, 255, 255);
-  doc.setFontSize(18);
+  doc.setFontSize(16);
   doc.setFont('helvetica', 'bold');
-  doc.text('PAUTA JORNALÍSTICA', pageWidth / 2, 16, { align: 'center' });
+  doc.text('NEWS', margin + 12, yPosition + 16, { align: 'center' });
   
-  yPosition = 35;
+  // Reset text color
   doc.setTextColor(0, 0, 0);
-
-  // SEÇÃO 1: IDENTIFICAÇÃO
-  doc.setFillColor(41, 128, 185);
-  doc.rect(margin, yPosition, contentWidth, 12, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('IDENTIFICAÇÃO DA PAUTA', margin + 5, yPosition + 8);
-  yPosition += 18;
-  doc.setTextColor(0, 0, 0);
-
-  // Campos da seção 1
-  yPosition = createFieldBox('TÍTULO', pauta.titulo, yPosition, 15);
   
-  if (pauta.descricao) {
-    const descHeight = Math.max(25, Math.ceil(pauta.descricao.length / 80) * 8 + 15);
-    yPosition = createFieldBox('DESCRIÇÃO', pauta.descricao, yPosition, descHeight, true);
-  }
-
-  // SEÇÃO 2: LOGÍSTICA DE PRODUÇÃO
-  yPosition += 5;
-  doc.setFillColor(41, 128, 185);
-  doc.rect(margin, yPosition, contentWidth, 12, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('LOGÍSTICA DE PRODUÇÃO', margin + 5, yPosition + 8);
-  yPosition += 18;
-  doc.setTextColor(0, 0, 0);
-
-  // Campos lado a lado para LOCAL e HORÁRIO
-  const halfWidth = (contentWidth - 3) / 2;
+  // Tabela do cabeçalho
+  const headerY = yPosition + 30;
+  const colWidths = [25, 25, 25, 25, 25, 25, 25, 25];
+  const colsPerRow = 8;
+  const cellWidth = contentWidth / colsPerRow;
   
-  // LOCAL (lado esquerdo)
-  doc.setDrawColor(100, 100, 100);
-  doc.setLineWidth(0.3);
-  doc.rect(margin, yPosition, halfWidth, 15);
-  doc.setFillColor(230, 230, 230);
-  doc.rect(margin, yPosition, halfWidth, 8, 'F');
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text('LOCAL', margin + 3, yPosition + 5.5);
-  if (pauta.local) {
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(pauta.local, margin + 3, yPosition + 12);
-  }
-
-  // HORÁRIO (lado direito)
-  const rightX = margin + halfWidth + 3;
-  doc.rect(rightX, yPosition, halfWidth, 15);
-  doc.setFillColor(230, 230, 230);
-  doc.rect(rightX, yPosition, halfWidth, 8, 'F');
-  doc.setFontSize(9);
-  doc.setFont('helvetica', 'bold');
-  doc.text('HORÁRIO', rightX + 3, yPosition + 5.5);
-  if (pauta.horario) {
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(pauta.horario, rightX + 3, yPosition + 12);
+  // Primeira linha do cabeçalho
+  const headerLabels = ['DATA', 'RETRANCA', 'PROGRAMA', '', '', '', '', ''];
+  const headerValues = [
+    pauta.created_at ? new Date(pauta.created_at).toLocaleDateString('pt-BR') : '',
+    pauta.titulo || '',
+    'NEWS',
+    '', '', '', '', ''
+  ];
+  
+  // Criar células do cabeçalho
+  for (let i = 0; i < colsPerRow; i++) {
+    const x = margin + (i * cellWidth);
+    addTextInBox(headerLabels[i], x, headerY, cellWidth, 8, { 
+      fontSize: 8, 
+      fontStyle: 'bold',
+      fillColor: [200, 200, 200],
+      align: 'center'
+    });
+    addTextInBox(headerValues[i], x, headerY + 8, cellWidth, 8, { 
+      fontSize: 8,
+      align: 'center'
+    });
   }
   
-  yPosition += 18;
+  yPosition = headerY + 25;
 
-  // ENTREVISTADO
+  // ROTEIRO 1
+  addTextInBox('ROTEIRO 1', margin, yPosition, contentWidth, 12, {
+    fontSize: 12,
+    fontStyle: 'bold',
+    fillColor: [150, 150, 150],
+    color: [255, 255, 255]
+  });
+  yPosition += 15;
+
+  // BLOCO: DATA DO EVENTO
+  addTextInBox('DATA DO EVENTO:', margin, yPosition, contentWidth/3, 10, {
+    fontSize: 10,
+    fontStyle: 'bold',
+    fillColor: [100, 100, 100],
+    color: [255, 255, 255]
+  });
+  
+  const eventDate = pauta.created_at ? 
+    new Date(pauta.created_at).toLocaleDateString('pt-BR', { 
+      weekday: 'long', 
+      day: '2-digit', 
+      month: 'long', 
+      year: 'numeric' 
+    }) : 'Não informado';
+  
+  addTextInBox(eventDate, margin, yPosition + 10, contentWidth, 15, {
+    fontSize: 10
+  });
+  yPosition += 30;
+
+  // LOCAL
+  addTextInBox('LOCAL:', margin, yPosition, contentWidth, 10, {
+    fontSize: 10,
+    fontStyle: 'bold',
+    fillColor: [100, 100, 100],
+    color: [255, 255, 255]
+  });
+  
+  const localInfo = pauta.local || 'Não informado';
+  const localLines = doc.splitTextToSize(localInfo, contentWidth - 6);
+  const localHeight = Math.max(15, localLines.length * 5 + 10);
+  
+  createBox(margin, yPosition + 10, contentWidth, localHeight);
+  doc.setFontSize(10);
+  doc.setFont('helvetica', 'normal');
+  doc.setTextColor(0, 0, 0);
+  doc.text(localLines, margin + 3, yPosition + 18);
+  yPosition += localHeight + 15;
+
+  // HORÁRIO
+  addTextInBox('HORÁRIO:', margin, yPosition, contentWidth, 10, {
+    fontSize: 10,
+    fontStyle: 'bold',
+    fillColor: [100, 100, 100],
+    color: [255, 255, 255]
+  });
+  
+  addTextInBox(pauta.horario || 'Não informado', margin, yPosition + 10, contentWidth, 15, {
+    fontSize: 10
+  });
+  yPosition += 30;
+
+  // ENTREVISTADOS
   if (pauta.entrevistado) {
-    const entrevistadoHeight = Math.max(20, Math.ceil(pauta.entrevistado.length / 80) * 6 + 15);
-    yPosition = createFieldBox('ENTREVISTADO(S)', pauta.entrevistado, yPosition, entrevistadoHeight, true);
+    addTextInBox('ENTREVISTADOS', margin, yPosition, contentWidth, 10, {
+      fontSize: 10,
+      fontStyle: 'bold',
+      fillColor: [100, 100, 100],
+      color: [255, 255, 255]
+    });
+    
+    const entrevistadoLines = doc.splitTextToSize(pauta.entrevistado, contentWidth - 6);
+    const entrevistadoHeight = Math.max(20, entrevistadoLines.length * 5 + 10);
+    
+    createBox(margin, yPosition + 10, contentWidth, entrevistadoHeight);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text(entrevistadoLines, margin + 3, yPosition + 18);
+    yPosition += entrevistadoHeight + 15;
   }
-
-  // PRODUTOR RESPONSÁVEL
-  yPosition = createFieldBox('PRODUTOR RESPONSÁVEL', pauta.produtor || 'Não informado', yPosition, 15);
-
-  // SEÇÃO 3: DESENVOLVIMENTO EDITORIAL
-  yPosition += 5;
-  doc.setFillColor(41, 128, 185);
-  doc.rect(margin, yPosition, contentWidth, 12, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(12);
-  doc.setFont('helvetica', 'bold');
-  doc.text('DESENVOLVIMENTO EDITORIAL', margin + 5, yPosition + 8);
-  yPosition += 18;
-  doc.setTextColor(0, 0, 0);
 
   // PROPOSTA
   if (pauta.proposta) {
-    const propostaHeight = Math.max(30, Math.ceil(pauta.proposta.length / 80) * 6 + 15);
-    yPosition = createFieldBox('PROPOSTA DA MATÉRIA', pauta.proposta, yPosition, propostaHeight, true);
-  }
-
-  // ENCAMINHAMENTO
-  if (pauta.encaminhamento) {
-    const encaminhamentoHeight = Math.max(30, Math.ceil(pauta.encaminhamento.length / 80) * 6 + 15);
-    yPosition = createFieldBox('ENCAMINHAMENTO', pauta.encaminhamento, yPosition, encaminhamentoHeight, true);
-  }
-
-  // INFORMAÇÕES ADICIONAIS
-  if (pauta.informacoes) {
-    const informacoesHeight = Math.max(30, Math.ceil(pauta.informacoes.length / 80) * 6 + 15);
-    yPosition = createFieldBox('INFORMAÇÕES ADICIONAIS', pauta.informacoes, yPosition, informacoesHeight, true);
-  }
-
-  // RODAPÉ COM DATA
-  yPosition += 10;
-  if (pauta.created_at) {
-    doc.setFillColor(245, 245, 245);
-    doc.rect(margin, yPosition, contentWidth, 12, 'F');
-    doc.setDrawColor(100, 100, 100);
-    doc.rect(margin, yPosition, contentWidth, 12);
+    addTextInBox('PROPOSTA', margin, yPosition, contentWidth, 10, {
+      fontSize: 10,
+      fontStyle: 'bold',
+      fillColor: [100, 100, 100],
+      color: [255, 255, 255]
+    });
     
+    const propostaLines = doc.splitTextToSize(pauta.proposta, contentWidth - 6);
+    const propostaHeight = Math.max(30, propostaLines.length * 5 + 10);
+    
+    createBox(margin, yPosition + 10, contentWidth, propostaHeight);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text(propostaLines, margin + 3, yPosition + 18);
+    yPosition += propostaHeight + 15;
+  }
+
+  // ENCAMINHAMENTO DE PRODUÇÃO
+  if (pauta.encaminhamento) {
+    addTextInBox('ENCAMINHAMENTO DE PRODUÇÃO', margin, yPosition, contentWidth, 10, {
+      fontSize: 10,
+      fontStyle: 'bold',
+      fillColor: [100, 100, 100],
+      color: [255, 255, 255]
+    });
+    
+    const encaminhamentoLines = doc.splitTextToSize(pauta.encaminhamento, contentWidth - 6);
+    const encaminhamentoHeight = Math.max(30, encaminhamentoLines.length * 5 + 10);
+    
+    createBox(margin, yPosition + 10, contentWidth, encaminhamentoHeight);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text(encaminhamentoLines, margin + 3, yPosition + 18);
+    yPosition += encaminhamentoHeight + 15;
+  }
+
+  // INFORMAÇÕES
+  if (pauta.informacoes) {
+    addTextInBox('INFORMAÇÕES', margin, yPosition, contentWidth, 10, {
+      fontSize: 10,
+      fontStyle: 'bold',
+      fillColor: [100, 100, 100],
+      color: [255, 255, 255]
+    });
+    
+    const informacoesLines = doc.splitTextToSize(pauta.informacoes, contentWidth - 6);
+    const informacoesHeight = Math.max(30, informacoesLines.length * 5 + 10);
+    
+    createBox(margin, yPosition + 10, contentWidth, informacoesHeight);
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.text(informacoesLines, margin + 3, yPosition + 18);
+    yPosition += informacoesHeight + 15;
+  }
+
+  // Produtor no final
+  if (pauta.produtor) {
+    yPosition += 10;
     doc.setFontSize(9);
     doc.setFont('helvetica', 'italic');
     doc.setTextColor(80, 80, 80);
-    const dataFormatada = new Date(pauta.created_at).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-    doc.text(`Pauta criada em: ${dataFormatada}`, margin + 5, yPosition + 7.5);
+    doc.text(`Produtor: ${pauta.produtor}`, margin, yPosition);
   }
   
   // Salvar o PDF
