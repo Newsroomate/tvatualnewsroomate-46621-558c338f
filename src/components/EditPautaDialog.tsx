@@ -104,7 +104,7 @@ export const EditPautaDialog = ({
                 value={local}
                 onChange={(e) => setLocal(e.target.value)}
                 placeholder="Local da cobertura"
-                rows={2}
+                rows={1}
               />
             </div>
             
@@ -122,21 +122,23 @@ export const EditPautaDialog = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label htmlFor="entrevistado">Entrevistado</Label>
-              <Input
+              <Textarea
                 id="entrevistado"
                 value={entrevistado}
                 onChange={(e) => setEntrevistado(e.target.value)}
                 placeholder="Nome do entrevistado"
+                rows={1}
               />
             </div>
             
             <div className="space-y-1">
               <Label htmlFor="produtor">Produtor</Label>
-              <Input
+              <Textarea
                 id="produtor"
                 value={produtor}
                 onChange={(e) => setProdutor(e.target.value)}
                 placeholder="Nome do produtor"
+                rows={1}
               />
             </div>
           </div>
