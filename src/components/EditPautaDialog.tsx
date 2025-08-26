@@ -121,11 +121,12 @@ export const EditPautaDialog = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="entrevistado">Entrevistado</Label>
-              <Input
+              <Textarea
                 id="entrevistado"
                 value={entrevistado}
                 onChange={(e) => setEntrevistado(e.target.value)}
                 placeholder="Nome do entrevistado"
+                rows={3}
               />
             </div>
             
