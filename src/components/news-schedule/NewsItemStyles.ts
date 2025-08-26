@@ -26,6 +26,11 @@ export const getMaterialTypeClass = (tipo: string): string => {
     case 'NET': return 'bg-teal-50 text-teal-700 border border-teal-200';
     case 'NC': return 'bg-gray-50 text-gray-600 border border-gray-200';
     case 'NR': return 'bg-red-100 text-red-800 border border-red-300 font-bold';
+    case 'MCHAN': return 'bg-cyan-50 text-cyan-700 border border-cyan-200';
+    case 'BREAK': return 'bg-amber-50 text-amber-700 border border-amber-200';
+    case 'FIM': return 'bg-rose-50 text-rose-700 border border-rose-200';
+    case 'ZAP': return 'bg-lime-50 text-lime-700 border border-lime-200';
+    case 'REDES': return 'bg-violet-50 text-violet-700 border border-violet-200';
     default: return 'bg-gray-50 text-gray-600 border border-gray-200';
   }
 };
