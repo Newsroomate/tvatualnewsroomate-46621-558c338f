@@ -2,11 +2,11 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { createPauta } from "@/services/pautas-api";
-import { toast } from "sonner";
 import { PautaCreateInput } from "@/types";
+import { useToast } from "@/hooks/use-toast";
 
 interface NewPautaDialogProps {
   isOpen: boolean;
@@ -14,7 +14,7 @@ interface NewPautaDialogProps {
   onPautaCreated: () => void;
 }
 
-export function NewPautaDialog({ isOpen, onClose, onPautaCreated }: NewPautaDialogProps) {
+export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDialogProps) => {
   const [titulo, setTitulo] = useState("");
   const [descricao, setDescricao] = useState("");
   const [local, setLocal] = useState("");
@@ -25,28 +25,24 @@ export function NewPautaDialog({ isOpen, onClose, onPautaCreated }: NewPautaDial
   const [encaminhamento, setEncaminhamento] = useState("");
   const [informacoes, setInformacoes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!titulo.trim()) return;
     
-    if (!titulo.trim()) {
-      toast.error("O título da pauta é obrigatório");
-      return;
-    }
-
     setIsSubmitting(true);
-
     try {
       const newPauta: PautaCreateInput = {
-        titulo: titulo.trim(),
-        descricao: descricao.trim() || undefined,
-        local: local.trim() || undefined,
-        horario: horario.trim() || undefined,
-        entrevistado: entrevistado.trim() || undefined,
-        produtor: produtor.trim() || undefined,
-        proposta: proposta.trim() || undefined,
-        encaminhamento: encaminhamento.trim() || undefined,
-        informacoes: informacoes.trim() || undefined,
+        titulo,
+        descricao,
+        local,
+        horario,
+        entrevistado,
+        produtor,
+        proposta,
+        encaminhamento,
+        informacoes
       };
 
       await createPauta(newPauta);
@@ -64,10 +60,13 @@ export function NewPautaDialog({ isOpen, onClose, onPautaCreated }: NewPautaDial
       
       onPautaCreated();
       onClose();
-      toast.success("Pauta criada com sucesso!");
     } catch (error) {
       console.error("Erro ao criar pauta:", error);
-      toast.error("Erro ao criar pauta");
+      toast({
+        title: "Erro ao criar pauta",
+        description: "Ocorreu um erro ao criar a pauta. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -75,12 +74,12 @@ export function NewPautaDialog({ isOpen, onClose, onPautaCreated }: NewPautaDial
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nova Pauta</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="space-y-2">
             <Label htmlFor="titulo">Título da Pauta</Label>
             <Input
@@ -91,7 +90,7 @@ export function NewPautaDialog({ isOpen, onClose, onPautaCreated }: NewPautaDial
               required
             />
           </div>
-
+          
           <div className="space-y-2">
             <Label htmlFor="descricao">Descrição</Label>
             <Textarea
@@ -99,28 +98,29 @@ export function NewPautaDialog({ isOpen, onClose, onPautaCreated }: NewPautaDial
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Descreva os detalhes da pauta"
-              className="h-20 resize-none"
+              rows={2}
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="local">Local</Label>
-              <Input
+              <Textarea
                 id="local"
                 value={local}
                 onChange={(e) => setLocal(e.target.value)}
                 placeholder="Local da cobertura"
+                rows={2}
               />
             </div>
-
+            
             <div className="space-y-2">
               <Label htmlFor="horario">Horário</Label>
               <Input
                 id="horario"
+                type="time"
                 value={horario}
                 onChange={(e) => setHorario(e.target.value)}
-                placeholder="--:--"
               />
             </div>
           </div>
@@ -128,15 +128,14 @@ export function NewPautaDialog({ isOpen, onClose, onPautaCreated }: NewPautaDial
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="entrevistado">Entrevistado</Label>
-              <Textarea
+              <Input
                 id="entrevistado"
                 value={entrevistado}
                 onChange={(e) => setEntrevistado(e.target.value)}
                 placeholder="Nome do entrevistado"
-                className="h-16 resize-none"
               />
             </div>
-
+            
             <div className="space-y-2">
               <Label htmlFor="produtor">Produtor</Label>
               <Input
@@ -156,10 +155,10 @@ export function NewPautaDialog({ isOpen, onClose, onPautaCreated }: NewPautaDial
                 value={proposta}
                 onChange={(e) => setProposta(e.target.value)}
                 placeholder="Digite a proposta"
-                className="h-16 resize-none"
+                rows={2}
               />
             </div>
-
+            
             <div className="space-y-2">
               <Label htmlFor="encaminhamento">Encaminhamento</Label>
               <Textarea
@@ -167,35 +166,40 @@ export function NewPautaDialog({ isOpen, onClose, onPautaCreated }: NewPautaDial
                 value={encaminhamento}
                 onChange={(e) => setEncaminhamento(e.target.value)}
                 placeholder="Digite o encaminhamento"
-                className="h-16 resize-none"
+                rows={2}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="informacoes">Informações</Label>
+            <Label htmlFor="informacoes">Informações Adicionais</Label>
             <Textarea
               id="informacoes"
               value={informacoes}
               onChange={(e) => setInformacoes(e.target.value)}
               placeholder="Digite as informações adicionais"
-              className="h-16 resize-none"
+              rows={2}
             />
           </div>
-
+          
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Cancelar
             </Button>
             <Button 
               type="submit" 
               disabled={!titulo.trim() || isSubmitting}
             >
-              Salvar Pauta
+              {isSubmitting ? "Salvando..." : "Salvar Pauta"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
   );
-}
+};
