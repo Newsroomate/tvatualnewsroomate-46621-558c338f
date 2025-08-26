@@ -140,26 +140,28 @@ export const EditPautaDialog = ({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="proposta">Proposta</Label>
-            <Textarea
-              id="proposta"
-              value={proposta}
-              onChange={(e) => setProposta(e.target.value)}
-              placeholder="Digite a proposta"
-              rows={3}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="encaminhamento">Encaminhamento</Label>
-            <Textarea
-              id="encaminhamento"
-              value={encaminhamento}
-              onChange={(e) => setEncaminhamento(e.target.value)}
-              placeholder="Digite o encaminhamento"
-              rows={3}
-            />
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="proposta">Proposta</Label>
+              <Textarea
+                id="proposta"
+                value={proposta}
+                onChange={(e) => setProposta(e.target.value)}
+                placeholder="Digite a proposta"
+                rows={3}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="encaminhamento">Encaminhamento</Label>
+              <Textarea
+                id="encaminhamento"
+                value={encaminhamento}
+                onChange={(e) => setEncaminhamento(e.target.value)}
+                placeholder="Digite o encaminhamento"
+                rows={3}
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
