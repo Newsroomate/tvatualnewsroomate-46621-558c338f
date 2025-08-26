@@ -170,6 +170,11 @@ export const EditorMetaFields = ({
               <SelectItem value="NET">NET</SelectItem>
               <SelectItem value="NC">NC</SelectItem>
               <SelectItem value="NR">NR</SelectItem>
+              <SelectItem value="MCHAN">MCHAN</SelectItem>
+              <SelectItem value="BREAK">BREAK</SelectItem>
+              <SelectItem value="FIM">FIM</SelectItem>
+              <SelectItem value="ZAP">ZAP</SelectItem>
+              <SelectItem value="REDES">REDES</SelectItem>
             </SelectContent>
           </Select>
         </div>
