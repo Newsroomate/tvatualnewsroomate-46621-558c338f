@@ -53,95 +53,85 @@ export const ScheduleHeader = ({
           {new Date().toLocaleDateString('pt-BR')}
         </p>
       </div>
-      <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center">
-        {/* Grupo de Ações Principais */}
-        <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onAddBlock}
-            disabled={!currentTelejornal?.espelho_aberto}
-          >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            Adicionar Novo Bloco
-          </Button>
-          
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div>
-                  <Button variant="outline" size="sm" onClick={onRenumberItems} disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}>
-                    <ArrowDownUp className="h-4 w-4 mr-2" />
-                    Reordenar Numeração
-                  </Button>
-                </div>
-              </TooltipTrigger>
-              {!currentTelejornal?.espelho_aberto && (
-                <TooltipContent>
-                  Abra o espelho para reorganizar a numeração
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-
-        {/* Grupo de Modelos */}
-        <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onSaveModel}
-            disabled={!currentTelejornal || !hasBlocks}
-          >
-            <Save className="h-4 w-4 mr-2" />
-            Salvar Modelo
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onViewSavedModels}
-          >
-            <FolderOpen className="h-4 w-4 mr-2" />
-            Modelos Salvos
-          </Button>
-        </div>
-
-        {/* Grupo de Exportação */}
-        <div className="flex flex-wrap gap-2">
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportGC}
-            disabled={!currentTelejornal || !hasBlocks}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exportar GC
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={handleExportPlayout}
-            disabled={!currentTelejornal || !hasBlocks}
-          >
-            <FileText className="h-4 w-4 mr-2" />
-            Exportar PLAYOUT
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            size="sm" 
-            onClick={onViewTeleprompter}
-            disabled={!currentTelejornal}
-          >
-            <Eye className="h-4 w-4 mr-2" />
-            Visualizar Teleprompter
-          </Button>
-        </div>
+      <div className="flex gap-2 items-center">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onAddBlock}
+          disabled={!currentTelejornal?.espelho_aberto}
+        >
+          <PlusCircle className="h-4 w-4 mr-2" />
+          Adicionar Novo Bloco
+        </Button>
         
-        {/* Informação de Tempo Total */}
-        <div className="text-right ml-auto">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onSaveModel}
+          disabled={!currentTelejornal || !hasBlocks}
+        >
+          <Save className="h-4 w-4 mr-2" />
+          Salvar Modelo
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onViewSavedModels}
+        >
+          <FolderOpen className="h-4 w-4 mr-2" />
+          Modelos Salvos
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleExportGC}
+          disabled={!currentTelejornal || !hasBlocks}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Exportar GC
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={handleExportPlayout}
+          disabled={!currentTelejornal || !hasBlocks}
+        >
+          <FileText className="h-4 w-4 mr-2" />
+          Exportar PLAYOUT
+        </Button>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={onViewTeleprompter}
+          disabled={!currentTelejornal}
+        >
+          <Eye className="h-4 w-4 mr-2" />
+          Visualizar Teleprompter
+        </Button>
+        
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <Button variant="outline" size="sm" onClick={onRenumberItems} disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}>
+                  <ArrowDownUp className="h-4 w-4 mr-2" />
+                  Reordenar Numeração
+                </Button>
+              </div>
+            </TooltipTrigger>
+            {!currentTelejornal?.espelho_aberto && (
+              <TooltipContent>
+                Abra o espelho para reorganizar a numeração
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
+        
+        <div className="text-right">
           <p className="text-sm font-medium">Tempo Total:</p>
           <p className="text-lg font-bold">{formatTime(totalJournalTime)}</p>
         </div>
