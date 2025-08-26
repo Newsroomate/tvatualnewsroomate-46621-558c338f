@@ -24,6 +24,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [cabecaColor, setCabecaColor] = useState("#ffffff");
   const [retrancaColor, setRetrancaColor] = useState("#facc15");
+  const [tipoMaterialColor, setTipoMaterialColor] = useState("#f97316");
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -192,6 +193,10 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     setRetrancaColor(color);
   };
 
+  const handleTipoMaterialColorChange = (color: string) => {
+    setTipoMaterialColor(color);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl h-[80vh] flex flex-col relative" style={{ width: '90vw', maxWidth: '90vw' }}>
@@ -225,8 +230,10 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
             <TeleprompterColorControls
               cabecaColor={cabecaColor}
               retrancaColor={retrancaColor}
+              tipoMaterialColor={tipoMaterialColor}
               onCabecaColorChange={handleCabecaColorChange}
               onRetrancaColorChange={handleRetrancaColorChange}
+              onTipoMaterialColorChange={handleTipoMaterialColorChange}
             />
 
             <TeleprompterExport
@@ -244,6 +251,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
             fontSize={fontSize}
             cabecaColor={cabecaColor}
             retrancaColor={retrancaColor}
+            tipoMaterialColor={tipoMaterialColor}
           />
         </div>
 

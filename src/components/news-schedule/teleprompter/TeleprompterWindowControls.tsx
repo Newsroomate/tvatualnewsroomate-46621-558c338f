@@ -14,6 +14,7 @@ interface TeleprompterWindowControlsProps {
   telejornal: Telejornal | null;
   cabecaColor: string;
   retrancaColor: string;
+  tipoMaterialColor: string;
   onPlayPause: () => void;
   onSpeedChange: (value: number[]) => void;
   onReset: () => void;
@@ -22,6 +23,7 @@ interface TeleprompterWindowControlsProps {
   onFontSizeChange: (newSize: number) => void;
   onCabecaColorChange: (color: string) => void;
   onRetrancaColorChange: (color: string) => void;
+  onTipoMaterialColorChange: (color: string) => void;
   onClose: () => void;
 }
 
@@ -34,6 +36,7 @@ export const TeleprompterWindowControls = ({
   telejornal,
   cabecaColor,
   retrancaColor,
+  tipoMaterialColor,
   onPlayPause,
   onSpeedChange,
   onReset,
@@ -42,6 +45,7 @@ export const TeleprompterWindowControls = ({
   onFontSizeChange,
   onCabecaColorChange,
   onRetrancaColorChange,
+  onTipoMaterialColorChange,
   onClose
 }: TeleprompterWindowControlsProps) => {
   if (isFullscreen) return null;
@@ -66,8 +70,10 @@ export const TeleprompterWindowControls = ({
       <TeleprompterColorControls
         cabecaColor={cabecaColor}
         retrancaColor={retrancaColor}
+        tipoMaterialColor={tipoMaterialColor}
         onCabecaColorChange={onCabecaColorChange}
         onRetrancaColorChange={onRetrancaColorChange}
+        onTipoMaterialColorChange={onTipoMaterialColorChange}
       />
 
       <TeleprompterExport

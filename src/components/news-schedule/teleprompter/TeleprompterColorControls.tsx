@@ -4,15 +4,19 @@ import { Label } from "@/components/ui/label";
 interface TeleprompterColorControlsProps {
   cabecaColor: string;
   retrancaColor: string;
+  tipoMaterialColor: string;
   onCabecaColorChange: (color: string) => void;
   onRetrancaColorChange: (color: string) => void;
+  onTipoMaterialColorChange: (color: string) => void;
 }
 
 export const TeleprompterColorControls = ({
   cabecaColor,
   retrancaColor,
+  tipoMaterialColor,
   onCabecaColorChange,
-  onRetrancaColorChange
+  onRetrancaColorChange,
+  onTipoMaterialColorChange
 }: TeleprompterColorControlsProps) => {
   const colorOptions = [
     { name: "Branco", value: "#ffffff" },
@@ -50,6 +54,22 @@ export const TeleprompterColorControls = ({
           onChange={(e) => onRetrancaColorChange(e.target.value)}
           className="px-2 py-1 border rounded text-sm"
           style={{ backgroundColor: retrancaColor, color: retrancaColor === "#ffffff" ? "#000" : "#fff" }}
+        >
+          {colorOptions.map((color) => (
+            <option key={color.value} value={color.value}>
+              {color.name}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Label className="text-sm text-gray-600">Tipo Material:</Label>
+        <select
+          value={tipoMaterialColor}
+          onChange={(e) => onTipoMaterialColorChange(e.target.value)}
+          className="px-2 py-1 border rounded text-sm"
+          style={{ backgroundColor: tipoMaterialColor, color: tipoMaterialColor === "#ffffff" ? "#000" : "#fff" }}
         >
           {colorOptions.map((color) => (
             <option key={color.value} value={color.value}>

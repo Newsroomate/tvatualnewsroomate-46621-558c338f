@@ -25,6 +25,7 @@ const TeleprompterWindow = () => {
     setIsFullscreen,
     cabecaColor,
     retrancaColor,
+    tipoMaterialColor,
     
     // Refs
     contentRef,
@@ -39,7 +40,8 @@ const TeleprompterWindow = () => {
     decreaseFontSize,
     handleFontSizeChange,
     handleCabecaColorChange,
-    handleRetrancaColorChange
+    handleRetrancaColorChange,
+    handleTipoMaterialColorChange
   } = useTeleprompterWindowState();
 
   // Setup keyboard controls with scroll position sync
@@ -97,6 +99,7 @@ const TeleprompterWindow = () => {
         telejornal={telejornal}
         cabecaColor={cabecaColor}
         retrancaColor={retrancaColor}
+        tipoMaterialColor={tipoMaterialColor}
         onPlayPause={handlePlayPause}
         onSpeedChange={handleSpeedChange}
         onReset={resetPosition}
@@ -105,6 +108,7 @@ const TeleprompterWindow = () => {
         onFontSizeChange={handleFontSizeChange}
         onCabecaColorChange={handleCabecaColorChange}
         onRetrancaColorChange={handleRetrancaColorChange}
+        onTipoMaterialColorChange={handleTipoMaterialColorChange}
         onClose={() => window.close()}
       />
 
@@ -116,6 +120,7 @@ const TeleprompterWindow = () => {
           fontSize={fontSize}
           cabecaColor={cabecaColor}
           retrancaColor={retrancaColor}
+          tipoMaterialColor={tipoMaterialColor}
         />
       </div>
       

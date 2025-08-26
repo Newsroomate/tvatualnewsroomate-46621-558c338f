@@ -13,6 +13,7 @@ export const useTeleprompterWindowState = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [cabecaColor, setCabecaColor] = useState("#ffffff");
   const [retrancaColor, setRetrancaColor] = useState("#facc15");
+  const [tipoMaterialColor, setTipoMaterialColor] = useState("#f97316");
   
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -66,6 +67,11 @@ export const useTeleprompterWindowState = () => {
     console.log("Retranca color changed to:", color);
   };
 
+  const handleTipoMaterialColorChange = (color: string) => {
+    setTipoMaterialColor(color);
+    console.log("Tipo Material color changed to:", color);
+  };
+
   return {
     // State
     blocks,
@@ -84,6 +90,7 @@ export const useTeleprompterWindowState = () => {
     setIsFullscreen,
     cabecaColor,
     retrancaColor,
+    tipoMaterialColor,
     
     // Refs
     contentRef,
@@ -98,6 +105,7 @@ export const useTeleprompterWindowState = () => {
     decreaseFontSize,
     handleFontSizeChange,
     handleCabecaColorChange,
-    handleRetrancaColorChange
+    handleRetrancaColorChange,
+    handleTipoMaterialColorChange
   };
 };

@@ -7,10 +7,11 @@ interface TeleprompterContentProps {
   fontSize: number;
   cabecaColor?: string;
   retrancaColor?: string;
+  tipoMaterialColor?: string;
 }
 
 export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterContentProps>(
-  ({ blocks, fontSize, cabecaColor = "#ffffff", retrancaColor = "#facc15" }, ref) => {
+  ({ blocks, fontSize, cabecaColor = "#ffffff", retrancaColor = "#facc15", tipoMaterialColor = "#f97316" }, ref) => {
     console.log("TeleprompterContent received blocks:", blocks);
 
     // Sort blocks by ordem and then get all materias in the correct order
@@ -111,6 +112,7 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                     className="text-orange-400 font-semibold"
                     style={{ 
                       fontSize: `${fontSize * 0.8}px`,
+                      color: tipoMaterialColor,
                       padding: 0,
                       margin: '0 0 12px 0',
                       textAlign: 'center',
