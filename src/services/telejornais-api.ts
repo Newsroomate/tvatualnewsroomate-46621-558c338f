@@ -33,6 +33,8 @@ export const createTelejornal = async (telejornal: TablesInsert<'telejornais'>):
 };
 
 export const updateTelejornal = async (id: string, updates: TablesInsert<'telejornais'>): Promise<Telejornal | null> => {
+  console.log('updateTelejornal - Iniciando atualização:', { id, updates });
+  
   const { data, error } = await supabase
     .from('telejornais')
     .update(updates)
@@ -45,6 +47,7 @@ export const updateTelejornal = async (id: string, updates: TablesInsert<'telejo
     throw error;
   }
 
+  console.log('updateTelejornal - Telejornal atualizado com sucesso:', data);
   return data as Telejornal;
 };
 

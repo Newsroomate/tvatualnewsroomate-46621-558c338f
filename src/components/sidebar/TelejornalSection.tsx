@@ -41,27 +41,32 @@ export const TelejornalSection = ({
         <p className="text-sm text-gray-500">Carregando...</p>
       ) : (
         <ul className="space-y-1">
-          {telejornais.map(jornal => (
-            <li key={jornal.id} className="relative">
-              <Button 
-                variant={selectedJournal === jornal.id ? "secondary" : "ghost"} 
-                className={`w-full justify-start text-left ${jornal.espelho_aberto ? 'border-l-4 border-green-500 pl-3' : ''}`}
-                onClick={() => handleSelectTelejornal(jornal.id)}
-              >
-                <span className="truncate">{jornal.nome}</span>
-                {jornal.espelho_aberto && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="ml-2 h-2 w-2 rounded-full bg-green-500" />
-                      </TooltipTrigger>
-                      <TooltipContent>Espelho aberto</TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </Button>
-            </li>
-          ))}
+          {telejornais.map(jornal => {
+            const isEspelhoAberto = jornal.espelho_aberto;
+            console.log(`TelejornalSection - ${jornal.nome}: espelho_aberto = ${isEspelhoAberto}`);
+            
+            return (
+              <li key={jornal.id} className="relative">
+                <Button 
+                  variant={selectedJournal === jornal.id ? "secondary" : "ghost"} 
+                  className={`w-full justify-start text-left ${isEspelhoAberto ? 'border-l-4 border-green-500 pl-3' : ''}`}
+                  onClick={() => handleSelectTelejornal(jornal.id)}
+                >
+                  <span className="truncate">{jornal.nome}</span>
+                  {isEspelhoAberto && (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span className="ml-2 h-2 w-2 rounded-full bg-green-500" />
+                        </TooltipTrigger>
+                        <TooltipContent>Espelho aberto</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  )}
+                </Button>
+              </li>
+            );
+          })}
         </ul>
       )}
     </div>

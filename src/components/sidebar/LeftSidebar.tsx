@@ -38,7 +38,7 @@ export const LeftSidebar = ({
 
     // Configurando a inscrição para ouvir atualizações em tempo real da tabela telejornais
     const telejornaisChannel = supabase
-      .channel('telejornais-changes')
+      .channel('sidebar-telejornais-changes')
       .on(
         'postgres_changes',
         { 
@@ -47,7 +47,7 @@ export const LeftSidebar = ({
           table: 'telejornais' 
         },
         (payload) => {
-          console.log('Telejornal atualizado:', payload);
+          console.log('Telejornal atualizado na sidebar:', payload);
           // Atualizar apenas o telejornal específico que mudou
           const updatedTelejornal = payload.new as Telejornal;
           setTelejornais(prev => 
@@ -65,7 +65,7 @@ export const LeftSidebar = ({
           table: 'telejornais' 
         },
         (payload) => {
-          console.log('Telejornal inserido:', payload);
+          console.log('Telejornal inserido na sidebar:', payload);
           loadDataWithoutSelection();
         }
       )
@@ -77,7 +77,7 @@ export const LeftSidebar = ({
           table: 'telejornais' 
         },
         (payload) => {
-          console.log('Telejornal deletado:', payload);
+          console.log('Telejornal deletado na sidebar:', payload);
           loadDataWithoutSelection();
         }
       )

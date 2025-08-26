@@ -13,14 +13,15 @@ export const useRealtimeTelejornais = ({ onTelejornalUpdate }: UseRealtimeTelejo
     console.log('Setting up realtime subscription for telejornais');
     
     const channel = supabase
-      .channel('telejornais-changes')
+      .channel('layout-telejornais-changes')
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
         table: 'telejornais',
       }, (payload) => {
         const updatedTelejornal = payload.new as Telejornal;
-        console.log('Telejornal updated via realtime:', updatedTelejornal);
+        console.log('useRealtimeTelejornais - Telejornal updated via realtime:', updatedTelejornal);
+        console.log('useRealtimeTelejornais - Campo espelho_aberto:', updatedTelejornal.espelho_aberto);
         
         // Notificar sobre a atualização
         onTelejornalUpdate?.(updatedTelejornal);

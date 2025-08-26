@@ -47,20 +47,19 @@ const Layout = () => {
   // Setup realtime subscription for telejornais
   useRealtimeTelejornais({
     onTelejornalUpdate: (updatedTelejornal: Telejornal) => {
+      console.log('Telejornal atualizado via realtime no Layout:', updatedTelejornal);
+      
       // Atualizar o telejornal principal se necessário
       if (currentTelejornal && updatedTelejornal.id === currentTelejornal.id) {
-        console.log('Atualizando telejornal principal via realtime:', updatedTelejornal);
+        console.log('Atualizando telejornal principal:', updatedTelejornal);
         setCurrentTelejornal(updatedTelejornal);
       }
       
       // Atualizar o telejornal secundário se necessário  
       if (secondaryTelejornal && updatedTelejornal.id === secondaryTelejornal.id) {
-        console.log('Atualizando telejornal secundário via realtime:', updatedTelejornal);
+        console.log('Atualizando telejornal secundário:', updatedTelejornal);
         setSecondaryTelejornal(updatedTelejornal);
       }
-      
-      // Invalidar queries para garantir consistência
-      queryClient.invalidateQueries({ queryKey: ['telejornais'] });
     }
   });
 
@@ -75,7 +74,10 @@ const Layout = () => {
     // Fetch telejornal details - mantendo o estado do espelho
     if (journalId) {
       fetchTelejornal(journalId).then(journal => {
+        console.log('Telejornal carregado no Layout:', journal);
         setCurrentTelejornal(journal);
+      }).catch(error => {
+        console.error('Erro ao carregar telejornal:', error);
       });
     } else {
       setCurrentTelejornal(null);
@@ -227,16 +229,19 @@ const Layout = () => {
       await saveCurrentRundownSnapshot();
       
       // Fechar o espelho do telejornal
+      console.log('Fechando espelho do telejornal:', selectedJournal, currentTelejornal);
       await updateTelejornal(selectedJournal, {
         ...currentTelejornal,
         espelho_aberto: false
       });
       
       // Atualizar o estado local
-      setCurrentTelejornal({
+      const updatedTelejornal = {
         ...currentTelejornal,
         espelho_aberto: false
-      });
+      };
+      console.log('Atualizando estado local para espelho fechado:', updatedTelejornal);
+      setCurrentTelejornal(updatedTelejornal);
       
       toast({
         title: "Espelho fechado",
@@ -269,16 +274,19 @@ const Layout = () => {
       await deleteAllBlocos(selectedJournal);
       
       // Open the rundown
+      console.log('Abrindo espelho do telejornal:', selectedJournal, currentTelejornal);
       await updateTelejornal(selectedJournal, {
         ...currentTelejornal,
         espelho_aberto: true
       });
       
       // Update local state
-      setCurrentTelejornal({
+      const updatedTelejornal = {
         ...currentTelejornal,
         espelho_aberto: true
-      });
+      };
+      console.log('Atualizando estado local para espelho aberto:', updatedTelejornal);
+      setCurrentTelejornal(updatedTelejornal);
       
       // O primeiro bloco será criado automaticamente pelo componente NewsSchedule
       // quando detectar espelho aberto sem blocos (bloco vazio sem dados anteriores)
