@@ -73,8 +73,8 @@ export const EditPautaDialog = ({
           <DialogTitle>Editar Pauta</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="titulo">Título da Pauta</Label>
             <Input
               id="titulo"
@@ -85,7 +85,7 @@ export const EditPautaDialog = ({
             />
           </div>
           
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="descricao">Descrição</Label>
             <Textarea
               id="descricao"
@@ -97,7 +97,7 @@ export const EditPautaDialog = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2 md:col-span-2">
+            <div className="space-y-1 md:col-span-2">
               <Label htmlFor="local">Local</Label>
               <Textarea
                 id="local"
@@ -108,7 +108,7 @@ export const EditPautaDialog = ({
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="horario">Horário</Label>
               <Input
                 id="horario"
@@ -120,7 +120,7 @@ export const EditPautaDialog = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="entrevistado">Entrevistado</Label>
               <Input
                 id="entrevistado"
@@ -130,7 +130,7 @@ export const EditPautaDialog = ({
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="produtor">Produtor</Label>
               <Input
                 id="produtor"
@@ -142,7 +142,7 @@ export const EditPautaDialog = ({
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="proposta">Proposta</Label>
               <Textarea
                 id="proposta"
@@ -153,7 +153,7 @@ export const EditPautaDialog = ({
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="encaminhamento">Encaminhamento</Label>
               <Textarea
                 id="encaminhamento"
@@ -165,7 +165,7 @@ export const EditPautaDialog = ({
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="informacoes">Informações Adicionais</Label>
             <Textarea
               id="informacoes"
