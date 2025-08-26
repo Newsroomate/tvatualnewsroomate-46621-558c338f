@@ -92,7 +92,7 @@ export const NewPautaDialog = ({
           <DialogTitle>Nova Pauta</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-3">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="titulo">Título da Pauta</Label>
             <Input
@@ -111,19 +111,19 @@ export const NewPautaDialog = ({
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Descreva os detalhes da pauta"
-              rows={2}
+              rows={3}
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2 md:col-span-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
               <Label htmlFor="local">Local</Label>
               <Textarea
                 id="local"
                 value={local}
                 onChange={(e) => setLocal(e.target.value)}
                 placeholder="Local da cobertura"
-                rows={2}
+                rows={3}
               />
             </div>
             
@@ -138,7 +138,7 @@ export const NewPautaDialog = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="entrevistado">Entrevistado</Label>
               <Input
@@ -160,7 +160,7 @@ export const NewPautaDialog = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="proposta">Proposta</Label>
               <Textarea
@@ -168,7 +168,7 @@ export const NewPautaDialog = ({
                 value={proposta}
                 onChange={(e) => setProposta(e.target.value)}
                 placeholder="Digite a proposta"
-                rows={2}
+                rows={3}
               />
             </div>
             
@@ -179,7 +179,7 @@ export const NewPautaDialog = ({
                 value={encaminhamento}
                 onChange={(e) => setEncaminhamento(e.target.value)}
                 placeholder="Digite o encaminhamento"
-                rows={2}
+                rows={3}
               />
             </div>
           </div>
@@ -191,7 +191,7 @@ export const NewPautaDialog = ({
               value={informacoes}
               onChange={(e) => setInformacoes(e.target.value)}
               placeholder="Digite as informações adicionais"
-              rows={2}
+              rows={3}
             />
           </div>
           
