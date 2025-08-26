@@ -68,12 +68,12 @@ export const EditPautaDialog = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Pauta</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <div className="space-y-2">
             <Label htmlFor="titulo">Título da Pauta</Label>
             <Input
@@ -92,19 +92,19 @@ export const EditPautaDialog = ({
               value={descricao}
               onChange={(e) => setDescricao(e.target.value)}
               placeholder="Descreva os detalhes da pauta"
-              rows={3}
+              rows={2}
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="space-y-2 md:col-span-2">
               <Label htmlFor="local">Local</Label>
               <Textarea
                 id="local"
                 value={local}
                 onChange={(e) => setLocal(e.target.value)}
                 placeholder="Local da cobertura"
-                rows={3}
+                rows={2}
               />
             </div>
             
@@ -119,31 +119,29 @@ export const EditPautaDialog = ({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="entrevistado">Entrevistado</Label>
-              <Textarea
+              <Input
                 id="entrevistado"
                 value={entrevistado}
                 onChange={(e) => setEntrevistado(e.target.value)}
                 placeholder="Nome do entrevistado"
-                rows={3}
               />
             </div>
             
             <div className="space-y-2">
               <Label htmlFor="produtor">Produtor</Label>
-              <Textarea
+              <Input
                 id="produtor"
                 value={produtor}
                 onChange={(e) => setProdutor(e.target.value)}
                 placeholder="Nome do produtor"
-                rows={3}
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="proposta">Proposta</Label>
               <Textarea
@@ -151,7 +149,7 @@ export const EditPautaDialog = ({
                 value={proposta}
                 onChange={(e) => setProposta(e.target.value)}
                 placeholder="Digite a proposta"
-                rows={3}
+                rows={2}
               />
             </div>
             
@@ -162,19 +160,19 @@ export const EditPautaDialog = ({
                 value={encaminhamento}
                 onChange={(e) => setEncaminhamento(e.target.value)}
                 placeholder="Digite o encaminhamento"
-                rows={3}
+                rows={2}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="informacoes">Informações</Label>
+            <Label htmlFor="informacoes">Informações Adicionais</Label>
             <Textarea
               id="informacoes"
               value={informacoes}
               onChange={(e) => setInformacoes(e.target.value)}
               placeholder="Digite as informações adicionais"
-              rows={3}
+              rows={2}
             />
           </div>
           
