@@ -133,18 +133,6 @@ export const EditPautaDialog = ({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="imagens">IMAGENS</Label>
-            <Textarea
-              id="imagens"
-              value={imagens}
-              onChange={(e) => setImagens(e.target.value)}
-              placeholder="Informações sobre imagens"
-              rows={2}
-              className="resize-y"
-            />
-          </div>
-          
-          <div className="space-y-1">
             <Label htmlFor="programas">PROGRAMAS</Label>
             <Textarea
               id="programas"
@@ -211,6 +199,18 @@ export const EditPautaDialog = ({
               value={informacoes}
               onChange={(e) => setInformacoes(e.target.value)}
               placeholder="Informações adicionais"
+              rows={2}
+              className="resize-y"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="imagens">IMAGENS</Label>
+            <Textarea
+              id="imagens"
+              value={imagens}
+              onChange={(e) => setImagens(e.target.value)}
+              placeholder="Informações sobre imagens"
               rows={2}
               className="resize-y"
             />
