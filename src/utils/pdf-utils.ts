@@ -30,8 +30,13 @@ export const generatePautaPDF = (pauta: Pauta) => {
   const formatBrazilianDate = (dateString: string | undefined) => {
     if (!dateString) return '-';
     try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('pt-BR');
+      // Parse YYYY-MM-DD format manually to avoid timezone issues
+      const parts = dateString.split('-');
+      if (parts.length === 3) {
+        const [year, month, day] = parts;
+        return `${day}/${month}/${year}`;
+      }
+      return dateString;
     } catch {
       return dateString;
     }
