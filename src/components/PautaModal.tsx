@@ -154,30 +154,28 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="imagens">IMAGENS</Label>
-              <Textarea
-                id="imagens"
-                value={imagens}
-                onChange={(e) => setImagens(e.target.value)}
-                placeholder="Informações sobre imagens"
-                rows={2}
-                className="resize-y"
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="programas">PROGRAMAS</Label>
-              <Textarea
-                id="programas"
-                value={programas}
-                onChange={(e) => setProgramas(e.target.value)}
-                placeholder="Programas relacionados"
-                rows={2}
-                className="resize-y"
-              />
-            </div>
+          <div className="space-y-1">
+            <Label htmlFor="imagens">IMAGENS</Label>
+            <Textarea
+              id="imagens"
+              value={imagens}
+              onChange={(e) => setImagens(e.target.value)}
+              placeholder="Informações sobre imagens"
+              rows={2}
+              className="resize-y"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="programas">PROGRAMAS</Label>
+            <Textarea
+              id="programas"
+              value={programas}
+              onChange={(e) => setProgramas(e.target.value)}
+              placeholder="Programas relacionados"
+              rows={2}
+              className="resize-y"
+            />
           </div>
 
           <div className="space-y-1">
@@ -204,30 +202,28 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="proposta">PROPOSTA</Label>
-              <Textarea
-                id="proposta"
-                value={proposta}
-                onChange={(e) => setProposta(e.target.value)}
-                placeholder="Descrição da proposta"
-                rows={2}
-                className="resize-y"
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="encaminhamento">ENCAMINHAMENTO</Label>
-              <Textarea
-                id="encaminhamento"
-                value={encaminhamento}
-                onChange={(e) => setEncaminhamento(e.target.value)}
-                placeholder="Encaminhamento da pauta"
-                rows={2}
-                className="resize-y"
-              />
-            </div>
+          <div className="space-y-1">
+            <Label htmlFor="proposta">PROPOSTA</Label>
+            <Textarea
+              id="proposta"
+              value={proposta}
+              onChange={(e) => setProposta(e.target.value)}
+              placeholder="Descrição da proposta"
+              rows={2}
+              className="resize-y"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="encaminhamento">ENCAMINHAMENTO</Label>
+            <Textarea
+              id="encaminhamento"
+              value={encaminhamento}
+              onChange={(e) => setEncaminhamento(e.target.value)}
+              placeholder="Encaminhamento da pauta"
+              rows={2}
+              className="resize-y"
+            />
           </div>
 
           <div className="space-y-1">
