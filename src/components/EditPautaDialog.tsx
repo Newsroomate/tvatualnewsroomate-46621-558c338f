@@ -29,6 +29,7 @@ export const EditPautaDialog = ({ isOpen, onClose, pauta, onPautaUpdated }: Edit
   const [informacoes, setInformacoes] = useState(pauta.informacoes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!retranca.trim()) return;
