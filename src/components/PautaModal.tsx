@@ -16,12 +16,15 @@ interface PautaModalProps {
 }
 
 export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps) => {
-  const [titulo, setTitulo] = useState("");
-  const [descricao, setDescricao] = useState("");
-  const [local, setLocal] = useState("");
-  const [horario, setHorario] = useState("");
-  const [entrevistado, setEntrevistado] = useState("");
-  const [produtor, setProdutor] = useState("");
+  const [data, setData] = useState("");
+  const [retranca, setRetranca] = useState("");
+  const [programa, setPrograma] = useState("");
+  const [pauteiros, setPauteiros] = useState("");
+  const [reporter, setReporter] = useState("");
+  const [imagens, setImagens] = useState("");
+  const [programas, setProgramas] = useState("");
+  const [roteiro1, setRoteiro1] = useState("");
+  const [entrevistados, setEntrevistados] = useState("");
   const [proposta, setProposta] = useState("");
   const [encaminhamento, setEncaminhamento] = useState("");
   const [informacoes, setInformacoes] = useState("");
@@ -31,7 +34,7 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!titulo.trim()) return;
+    if (!retranca.trim()) return;
 
     if (!user) {
       toast({
@@ -45,12 +48,12 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
     setIsSubmitting(true);
     try {
       await createPauta({
-        titulo,
-        descricao,
-        local,
-        horario,
-        entrevistado,
-        produtor,
+        titulo: retranca, // Use retranca as titulo for compatibility
+        descricao: roteiro1,
+        local: imagens,
+        horario: data,
+        entrevistado: entrevistados,
+        produtor: pauteiros,
         proposta,
         encaminhamento,
         informacoes,
@@ -72,12 +75,15 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
   };
 
   const handleClose = () => {
-    setTitulo("");
-    setDescricao("");
-    setLocal("");
-    setHorario("");
-    setEntrevistado("");
-    setProdutor("");
+    setData("");
+    setRetranca("");
+    setPrograma("");
+    setPauteiros("");
+    setReporter("");
+    setImagens("");
+    setProgramas("");
+    setRoteiro1("");
+    setEntrevistados("");
     setProposta("");
     setEncaminhamento("");
     setInformacoes("");
@@ -92,111 +98,146 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="data">DATA</Label>
+              <Input
+                id="data"
+                type="date"
+                value={data}
+                onChange={(e) => setData(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="retranca">RETRANCA</Label>
+              <Input
+                id="retranca"
+                value={retranca}
+                onChange={(e) => setRetranca(e.target.value)}
+                placeholder="Digite a retranca"
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="programa">PROGRAMA</Label>
+              <Input
+                id="programa"
+                value={programa}
+                onChange={(e) => setPrograma(e.target.value)}
+                placeholder="Nome do programa"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="pauteiros">PAUTEIROS</Label>
+              <Input
+                id="pauteiros"
+                value={pauteiros}
+                onChange={(e) => setPauteiros(e.target.value)}
+                placeholder="Nome dos pauteiros"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="reporter">REPÓRTER</Label>
+              <Input
+                id="reporter"
+                value={reporter}
+                onChange={(e) => setReporter(e.target.value)}
+                placeholder="Nome do repórter"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="imagens">IMAGENS</Label>
+              <Textarea
+                id="imagens"
+                value={imagens}
+                onChange={(e) => setImagens(e.target.value)}
+                placeholder="Informações sobre imagens"
+                rows={2}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="programas">PROGRAMAS</Label>
+              <Textarea
+                id="programas"
+                value={programas}
+                onChange={(e) => setProgramas(e.target.value)}
+                placeholder="Programas relacionados"
+                rows={2}
+              />
+            </div>
+          </div>
+
           <div className="space-y-2">
-            <Label htmlFor="titulo">Título da Pauta</Label>
-            <Input
-              id="titulo"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-              placeholder="Digite o título da pauta"
-              required
+            <Label htmlFor="roteiro1">ROTEIRO 1</Label>
+            <Textarea
+              id="roteiro1"
+              value={roteiro1}
+              onChange={(e) => setRoteiro1(e.target.value)}
+              placeholder="Conteúdo do roteiro"
+              rows={4}
             />
           </div>
-          
+
           <div className="space-y-2">
-            <Label htmlFor="descricao">Descrição</Label>
+            <Label htmlFor="entrevistados">ENTREVISTADOS</Label>
             <Textarea
-              id="descricao"
-              value={descricao}
-              onChange={(e) => setDescricao(e.target.value)}
-              placeholder="Descreva os detalhes da pauta"
+              id="entrevistados"
+              value={entrevistados}
+              onChange={(e) => setEntrevistados(e.target.value)}
+              placeholder="Lista de entrevistados"
               rows={3}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="local">Local</Label>
-              <Input
-                id="local"
-                value={local}
-                onChange={(e) => setLocal(e.target.value)}
-                placeholder="Local da cobertura"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="horario">Horário</Label>
-              <Input
-                id="horario"
-                type="time"
-                value={horario}
-                onChange={(e) => setHorario(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="entrevistado">Entrevistado</Label>
-              <Textarea
-                id="entrevistado"
-                value={entrevistado}
-                onChange={(e) => setEntrevistado(e.target.value)}
-                placeholder="Nome do entrevistado"
-                rows={3}
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="produtor">Produtor</Label>
-              <Input
-                id="produtor"
-                value={produtor}
-                onChange={(e) => setProdutor(e.target.value)}
-                placeholder="Nome do produtor"
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="proposta">Proposta</Label>
+              <Label htmlFor="proposta">PROPOSTA</Label>
               <Textarea
                 id="proposta"
                 value={proposta}
                 onChange={(e) => setProposta(e.target.value)}
-                placeholder="Digite a proposta"
+                placeholder="Descrição da proposta"
                 rows={3}
               />
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="encaminhamento">Encaminhamento</Label>
+              <Label htmlFor="encaminhamento">ENCAMINHAMENTO</Label>
               <Textarea
                 id="encaminhamento"
                 value={encaminhamento}
                 onChange={(e) => setEncaminhamento(e.target.value)}
-                placeholder="Digite o encaminhamento"
+                placeholder="Encaminhamento da pauta"
                 rows={3}
               />
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="informacoes">Informações</Label>
+            <Label htmlFor="informacoes">INFORMAÇÕES</Label>
             <Textarea
               id="informacoes"
               value={informacoes}
               onChange={(e) => setInformacoes(e.target.value)}
-              placeholder="Digite as informações adicionais"
+              placeholder="Informações adicionais"
               rows={3}
             />
           </div>
           
           <DialogFooter>
             <Button type="button" variant="outline" onClick={handleClose}>Cancelar</Button>
-            <Button type="submit" disabled={isSubmitting || !titulo.trim()}>
+            <Button type="submit" disabled={isSubmitting || !retranca.trim()}>
               {isSubmitting ? "Salvando..." : "Salvar Pauta"}
             </Button>
           </DialogFooter>
