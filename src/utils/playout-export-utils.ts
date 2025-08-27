@@ -62,23 +62,17 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
     doc.setFont("helvetica", "bold");
     
     const colWidths = {
-      numero: 20,
-      retranca: 60,
-      tipo: 40,
-      clip: 30,
-      pagina: 25
+      numero: 30,
+      tipo: 60,
+      clip: 40
     };
     
     let xPos = margin;
     doc.text("Pág", xPos, yPosition);
     xPos += colWidths.numero;
-    doc.text("RETRANCA", xPos, yPosition);
-    xPos += colWidths.retranca;
     doc.text("TIPO", xPos, yPosition);
     xPos += colWidths.tipo;
     doc.text("CLIP", xPos, yPosition);
-    xPos += colWidths.clip;
-    doc.text("PÁG", xPos, yPosition);
     
     yPosition += lineHeight;
     
@@ -100,18 +94,9 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
       doc.text(materia.ordem.toString(), xPos, yPosition);
       xPos += colWidths.numero;
       
-      // Retranca (truncate if too long)
-      const retranca = materia.retranca || 'Sem retranca';
-      const maxRetrancaLength = 25;
-      const displayRetranca = retranca.length > maxRetrancaLength 
-        ? retranca.substring(0, maxRetrancaLength) + '...' 
-        : retranca;
-      doc.text(displayRetranca, xPos, yPosition);
-      xPos += colWidths.retranca;
-      
       // Tipo de material
       const tipoMaterial = materia.tipo_material || '-';
-      const maxTipoLength = 15;
+      const maxTipoLength = 25;
       const displayTipo = tipoMaterial.length > maxTipoLength 
         ? tipoMaterial.substring(0, maxTipoLength) + '...' 
         : tipoMaterial;
@@ -121,11 +106,6 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
       // Clip
       const clip = materia.clip || '-';
       doc.text(clip, xPos, yPosition);
-      xPos += colWidths.clip;
-      
-      // Página
-      const pagina = materia.pagina || '-';
-      doc.text(pagina, xPos, yPosition);
 
       yPosition += lineHeight;
     });
