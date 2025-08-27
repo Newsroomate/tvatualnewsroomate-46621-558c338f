@@ -18,21 +18,8 @@ export const generatePautaPDF = (pauta: Pauta) => {
     }
   };
 
-  // Add main title
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(16);
-  doc.setTextColor(0, 0, 0);
-  doc.text("PAUTA DE PRODUÇÃO", pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 15;
-
-  // Add generation info
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-  const now = new Date();
-  const generationInfo = `Gerado em: ${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
-  doc.text(generationInfo, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += 20;
+  // Start directly with the table
+  yPosition = margin;
 
   // Create adaptive header table
   const tableStartY = yPosition;
