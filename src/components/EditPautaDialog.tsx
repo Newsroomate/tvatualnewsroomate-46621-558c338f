@@ -76,7 +76,7 @@ export const EditPautaDialog = ({
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="data">DATA</Label>
               <Input
@@ -84,17 +84,6 @@ export const EditPautaDialog = ({
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="retranca">RETRANCA</Label>
-              <Input
-                id="retranca"
-                value={retranca}
-                onChange={(e) => setRetranca(e.target.value)}
-                placeholder="Digite a retranca"
                 required
               />
             </div>
@@ -108,6 +97,17 @@ export const EditPautaDialog = ({
                 placeholder="Nome do programa"
               />
             </div>
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="retranca">RETRANCA</Label>
+            <Input
+              id="retranca"
+              value={retranca}
+              onChange={(e) => setRetranca(e.target.value)}
+              placeholder="Digite a retranca"
+              required
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
