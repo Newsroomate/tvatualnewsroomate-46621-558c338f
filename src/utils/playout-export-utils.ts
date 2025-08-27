@@ -93,8 +93,8 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
 
       xPos = margin;
       
-      // Página da matéria (ordem)
-      doc.text(materia.ordem.toString(), xPos, yPosition);
+      // Página da matéria (número sequencial da página)
+      doc.text((index + 1).toString(), xPos, yPosition);
       xPos += colWidths.numero;
       
       // Tipo de material
