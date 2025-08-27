@@ -73,10 +73,15 @@ export const EditPautaDialog = ({
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label htmlFor="data">DATA</Label>
               <Input id="data" type="date" value={data} onChange={e => setData(e.target.value)} required />
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="imagens">IMAGENS</Label>
+              <Input id="imagens" value={imagens} onChange={e => setImagens(e.target.value)} placeholder="Informações sobre imagens" />
             </div>
             
             <div className="space-y-1">
@@ -127,11 +132,6 @@ export const EditPautaDialog = ({
           <div className="space-y-1">
             <Label htmlFor="informacoes">INFORMAÇÕES</Label>
             <Textarea id="informacoes" value={informacoes} onChange={e => setInformacoes(e.target.value)} placeholder="Informações adicionais" rows={2} className="resize-y" />
-          </div>
-          
-          <div className="space-y-1">
-            <Label htmlFor="imagens">IMAGENS</Label>
-            <Textarea id="imagens" value={imagens} onChange={e => setImagens(e.target.value)} placeholder="Informações sobre imagens" rows={2} className="resize-y" />
           </div>
           
           <DialogFooter className="pt-3">
