@@ -105,51 +105,64 @@ export const generatePautaPDF = (pauta: Pauta) => {
   
   yPosition += lineHeight * 3;
 
-  // Content sections
-  const createContentSection = (title: string, content: string) => {
-    checkNewPage(lineHeight * 5);
+  // Content sections - block style like the reference image
+  const createContentBlock = (title: string, content: string) => {
+    checkNewPage(lineHeight * 8);
     
-    // Section title
+    // Block header with dark background
+    doc.setFillColor(60, 60, 60); // Dark gray background
+    doc.rect(margin, yPosition - 3, pageWidth - margin * 2, lineHeight + 2, 'F');
+    
+    // Block title with white text
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(12);
-    doc.text(title, margin, yPosition);
-    yPosition += lineHeight;
+    doc.setFontSize(11);
+    doc.setTextColor(255, 255, 255); // White text
+    doc.text(title, margin + 3, yPosition + 4);
+    yPosition += lineHeight + 2;
     
-    // Section separator line
-    doc.setLineWidth(0.3);
-    doc.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += lineHeight;
+    // Reset text color to black
+    doc.setTextColor(0, 0, 0);
     
-    // Section content
+    // Content area with border
+    const contentHeight = content && content.trim() ? 
+      Math.max(lineHeight * 3, doc.splitTextToSize(content, pageWidth - margin * 2 - 6).length * lineHeight + 6) : 
+      lineHeight * 3;
+    
+    doc.setDrawColor(60, 60, 60);
+    doc.setLineWidth(0.5);
+    doc.rect(margin, yPosition, pageWidth - margin * 2, contentHeight);
+    
+    // Content text
     if (content && content.trim()) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      const maxWidth = pageWidth - margin * 2;
+      const maxWidth = pageWidth - margin * 2 - 6;
       const lines = doc.splitTextToSize(content, maxWidth);
       
+      let contentY = yPosition + lineHeight;
       lines.forEach((line: string) => {
-        checkNewPage();
-        doc.text(line, margin, yPosition);
-        yPosition += lineHeight;
+        if (contentY + lineHeight > yPosition + contentHeight - 3) return; // Prevent overflow
+        doc.text(line, margin + 3, contentY);
+        contentY += lineHeight;
       });
     } else {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(128, 128, 128);
-      doc.text('(Nenhuma informação)', margin, yPosition);
+      doc.text('*CONTEÚDO AQUI*', margin + 3, yPosition + lineHeight * 1.5);
       doc.setTextColor(0, 0, 0);
-      yPosition += lineHeight;
     }
     
-    yPosition += lineHeight;
+    yPosition += contentHeight + lineHeight;
   };
 
-  // Add all content sections
-  createContentSection('ROTEIRO 1', pauta.descricao || '');
-  createContentSection('ENTREVISTADOS', pauta.entrevistado || '');
-  createContentSection('PROPOSTA', pauta.proposta || '');
-  createContentSection('ENCAMINHAMENTO', pauta.encaminhamento || '');
-  createContentSection('INFORMAÇÕES', pauta.informacoes || '');
+  // Add all content blocks in the same order as the form
+  createContentBlock('ROTEIRO 1', pauta.descricao || '');
+  createContentBlock('ENTREVISTADOS', pauta.entrevistado || '');
+  createContentBlock('PROPOSTA', pauta.proposta || '');
+  createContentBlock('ENCAMINHAMENTO', pauta.encaminhamento || '');
+  createContentBlock('INFORMAÇÕES', pauta.informacoes || '');
+  createContentBlock('IMAGENS', pauta.local || ''); // Using 'local' field for images
 
   // Add page numbers
   const totalPages = doc.getNumberOfPages();
