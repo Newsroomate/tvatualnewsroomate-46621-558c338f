@@ -109,27 +109,62 @@ export const EditPautaDialog = ({ isOpen, onClose, pauta, onPautaUpdated }: Edit
 
           <div className="space-y-1">
             <Label htmlFor="roteiro1">ROTEIRO 1</Label>
-            <Textarea id="roteiro1" value={roteiro1} onChange={e => setRoteiro1(e.target.value)} placeholder="Conteúdo do roteiro" rows={2} className="resize-y" />
+            <Textarea 
+              id="roteiro1" 
+              value={roteiro1} 
+              onChange={e => setRoteiro1(e.target.value)} 
+              placeholder="Conteúdo do roteiro" 
+              rows={4} 
+              className="min-h-[100px] resize-y" 
+            />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="entrevistados">ENTREVISTADOS</Label>
-            <Textarea id="entrevistados" value={entrevistados} onChange={e => setEntrevistados(e.target.value)} placeholder="Lista de entrevistados" rows={2} className="resize-y" />
+            <Textarea 
+              id="entrevistados" 
+              value={entrevistados} 
+              onChange={e => setEntrevistados(e.target.value)} 
+              placeholder="Lista de entrevistados" 
+              rows={4} 
+              className="min-h-[100px] resize-y" 
+            />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="proposta">PROPOSTA</Label>
-            <Textarea id="proposta" value={proposta} onChange={e => setProposta(e.target.value)} placeholder="Descrição da proposta" rows={2} className="resize-y" />
+            <Textarea 
+              id="proposta" 
+              value={proposta} 
+              onChange={e => setProposta(e.target.value)} 
+              placeholder="Descrição da proposta" 
+              rows={4} 
+              className="min-h-[100px] resize-y" 
+            />
           </div>
           
           <div className="space-y-1">
             <Label htmlFor="encaminhamento">ENCAMINHAMENTO</Label>
-            <Textarea id="encaminhamento" value={encaminhamento} onChange={e => setEncaminhamento(e.target.value)} placeholder="Encaminhamento da pauta" rows={2} className="resize-y" />
+            <Textarea 
+              id="encaminhamento" 
+              value={encaminhamento} 
+              onChange={e => setEncaminhamento(e.target.value)} 
+              placeholder="Encaminhamento da pauta" 
+              rows={4} 
+              className="min-h-[100px] resize-y" 
+            />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="informacoes">INFORMAÇÕES</Label>
-            <Textarea id="informacoes" value={informacoes} onChange={e => setInformacoes(e.target.value)} placeholder="Informações adicionais" rows={2} className="resize-y" />
+            <Textarea 
+              id="informacoes" 
+              value={informacoes} 
+              onChange={e => setInformacoes(e.target.value)} 
+              placeholder="Informações adicionais" 
+              rows={4} 
+              className="min-h-[100px] resize-y" 
+            />
           </div>
           
           <DialogFooter className="pt-3">
