@@ -7,18 +7,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { updatePauta } from "@/services/pautas-api";
 import { Pauta } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+
 interface EditPautaDialogProps {
   isOpen: boolean;
   onClose: () => void;
   pauta: Pauta;
   onPautaUpdated: () => void;
 }
-export const EditPautaDialog = ({
-  isOpen,
-  onClose,
-  pauta,
-  onPautaUpdated
-}: EditPautaDialogProps) => {
+
+export const EditPautaDialog = ({ isOpen, onClose, pauta, onPautaUpdated }: EditPautaDialogProps) => {
   const [data, setData] = useState(pauta.data_cobertura || pauta.horario || "");
   const [retranca, setRetranca] = useState(pauta.titulo);
   const [programa, setPrograma] = useState("");
@@ -31,17 +28,15 @@ export const EditPautaDialog = ({
   const [encaminhamento, setEncaminhamento] = useState(pauta.encaminhamento || "");
   const [informacoes, setInformacoes] = useState(pauta.informacoes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!retranca.trim()) return;
+    
     setIsSubmitting(true);
     try {
       await updatePauta(pauta.id, {
-        titulo: retranca,
-        // Use retranca as titulo for compatibility
+        titulo: retranca, // Use retranca as titulo for compatibility
         descricao: roteiro1,
         local: imagens,
         horario: data,
@@ -52,6 +47,7 @@ export const EditPautaDialog = ({
         informacoes,
         data_cobertura: data // Map DATA field to data_cobertura
       });
+      
       onPautaUpdated();
       onClose();
     } catch (error) {
@@ -59,13 +55,15 @@ export const EditPautaDialog = ({
       toast({
         title: "Erro ao atualizar pauta",
         description: "Ocorreu um erro ao atualizar a pauta. Tente novamente.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  return <Dialog open={isOpen} onOpenChange={onClose}>
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Pauta</DialogTitle>
@@ -134,14 +132,23 @@ export const EditPautaDialog = ({
           </div>
           
           <DialogFooter className="pt-3">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={!retranca.trim() || isSubmitting}>
+            <Button 
+              type="submit" 
+              disabled={!retranca.trim() || isSubmitting}
+            >
               {isSubmitting ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
