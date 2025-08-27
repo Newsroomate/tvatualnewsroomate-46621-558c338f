@@ -81,7 +81,7 @@ export const EditPautaDialog = ({
             
             <div className="space-y-1">
               <Label htmlFor="imagens">IMAGENS</Label>
-              <AutoTextarea id="imagens" value={imagens} onChange={e => setImagens(e.target.value)} placeholder="Informações sobre imagens" />
+              <Input id="imagens" value={imagens} onChange={e => setImagens(e.target.value)} placeholder="Informações sobre imagens" />
             </div>
             
             <div className="space-y-1">
