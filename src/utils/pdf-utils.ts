@@ -18,30 +18,39 @@ export const generatePautaPDF = (pauta: Pauta) => {
     }
   };
 
-  // Document title
-  doc.setFontSize(20);
-  doc.setFont("helvetica", "bold");
-  doc.setTextColor(0, 0, 0);
-  doc.text(`PAUTA - ${pauta.titulo || 'Nova Pauta'}`, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += lineHeight * 2;
+  // Start directly with the table - no unnecessary header
+  yPosition = margin;
 
-  // Date and time
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
-  const currentDate = new Date().toLocaleString('pt-BR');
-  doc.text(`Gerado em: ${currentDate}`, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += lineHeight * 2;
-
-  // Separator line
-  doc.setLineWidth(0.5);
-  doc.line(margin, yPosition, pageWidth - margin, yPosition);
-  yPosition += lineHeight * 2;
-
-  // Create header table with dark background
+  // Create adaptive header table
   const tableStartY = yPosition;
   const tableWidth = pageWidth - margin * 2;
   const colWidth = tableWidth / 3;
-  const rowHeight = 12;
+  const baseRowHeight = 12;
+  
+  // Prepare data for adaptive sizing
+  const dataCobertura = pauta.data_cobertura || pauta.horario || '-';
+  const retranca = pauta.titulo || '-';
+  const programa = '-'; // PROGRAMA field
+  const pauteiros = pauta.produtor || '-';
+  const reporter = '-'; // REPÓRTER field  
+  const imagens = pauta.local || '-'; // IMAGENS field
+  
+  // Calculate required height for each row based on content
+  const maxContentWidth = colWidth - 4; // Account for padding
+  
+  // First row content lines
+  const dataLines = doc.splitTextToSize(dataCobertura, maxContentWidth);
+  const retrancaLines = doc.splitTextToSize(retranca, maxContentWidth);
+  const programaLines = doc.splitTextToSize(programa, maxContentWidth);
+  const firstRowLines = Math.max(dataLines.length, retrancaLines.length, programaLines.length);
+  const firstRowHeight = Math.max(baseRowHeight, firstRowLines * 6 + 6);
+  
+  // Second row content lines
+  const pauteirosLines = doc.splitTextToSize(pauteiros, maxContentWidth);
+  const reporterLines = doc.splitTextToSize(reporter, maxContentWidth);
+  const imagensLines = doc.splitTextToSize(imagens, maxContentWidth);
+  const secondRowLines = Math.max(pauteirosLines.length, reporterLines.length, imagensLines.length);
+  const secondRowHeight = Math.max(baseRowHeight, secondRowLines * 6 + 6);
   
   // Draw table structure
   doc.setDrawColor(0, 0, 0);
@@ -49,9 +58,9 @@ export const generatePautaPDF = (pauta: Pauta) => {
   
   // First row - headers with dark background
   doc.setFillColor(60, 60, 60);
-  doc.rect(margin, yPosition, tableWidth, rowHeight, 'FD');
+  doc.rect(margin, yPosition, tableWidth, baseRowHeight, 'FD');
   
-  // First row text - white text on dark background
+  // First row header text - white text on dark background
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(255, 255, 255);
@@ -61,36 +70,47 @@ export const generatePautaPDF = (pauta: Pauta) => {
   doc.text("PROGRAMA", margin + colWidth * 2 + 2, yPosition + 8);
   
   // Draw vertical lines for first row
-  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + rowHeight);
-  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + rowHeight);
+  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + baseRowHeight);
+  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + baseRowHeight);
   
-  yPosition += rowHeight;
+  yPosition += baseRowHeight;
   
-  // First row data - white background
+  // First row data - white background with adaptive height
   doc.setFillColor(255, 255, 255);
-  doc.rect(margin, yPosition, tableWidth, rowHeight, 'FD');
+  doc.rect(margin, yPosition, tableWidth, firstRowHeight, 'FD');
   
   // First row data text - black text
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
   
-  const dataCobertura = pauta.data_cobertura || pauta.horario || '-';
-  doc.text(dataCobertura, margin + 2, yPosition + 8);
-  doc.text(pauta.titulo || '-', margin + colWidth + 2, yPosition + 8);
-  doc.text('-', margin + colWidth * 2 + 2, yPosition + 8); // PROGRAMA field
+  // Draw text with line wrapping
+  let textY = yPosition + 7;
+  dataLines.forEach((line: string, index: number) => {
+    doc.text(line, margin + 2, textY + (index * 6));
+  });
+  
+  textY = yPosition + 7;
+  retrancaLines.forEach((line: string, index: number) => {
+    doc.text(line, margin + colWidth + 2, textY + (index * 6));
+  });
+  
+  textY = yPosition + 7;
+  programaLines.forEach((line: string, index: number) => {
+    doc.text(line, margin + colWidth * 2 + 2, textY + (index * 6));
+  });
   
   // Draw vertical lines for first data row
-  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + rowHeight);
-  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + rowHeight);
+  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + firstRowHeight);
+  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + firstRowHeight);
   
-  yPosition += rowHeight;
+  yPosition += firstRowHeight;
   
   // Second row - headers with dark background
   doc.setFillColor(60, 60, 60);
-  doc.rect(margin, yPosition, tableWidth, rowHeight, 'FD');
+  doc.rect(margin, yPosition, tableWidth, baseRowHeight, 'FD');
   
-  // Second row text - white text on dark background
+  // Second row header text - white text on dark background
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
   doc.setTextColor(255, 255, 255);
@@ -100,29 +120,41 @@ export const generatePautaPDF = (pauta: Pauta) => {
   doc.text("IMAGENS", margin + colWidth * 2 + 2, yPosition + 8);
   
   // Draw vertical lines for second row
-  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + rowHeight);
-  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + rowHeight);
+  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + baseRowHeight);
+  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + baseRowHeight);
   
-  yPosition += rowHeight;
+  yPosition += baseRowHeight;
   
-  // Second row data - white background
+  // Second row data - white background with adaptive height
   doc.setFillColor(255, 255, 255);
-  doc.rect(margin, yPosition, tableWidth, rowHeight, 'FD');
+  doc.rect(margin, yPosition, tableWidth, secondRowHeight, 'FD');
   
   // Second row data text - black text
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   doc.setTextColor(0, 0, 0);
   
-  doc.text(pauta.produtor || '-', margin + 2, yPosition + 8);
-  doc.text('-', margin + colWidth + 2, yPosition + 8); // REPÓRTER field
-  doc.text(pauta.local || '-', margin + colWidth * 2 + 2, yPosition + 8); // IMAGENS field
+  // Draw text with line wrapping
+  textY = yPosition + 7;
+  pauteirosLines.forEach((line: string, index: number) => {
+    doc.text(line, margin + 2, textY + (index * 6));
+  });
+  
+  textY = yPosition + 7;
+  reporterLines.forEach((line: string, index: number) => {
+    doc.text(line, margin + colWidth + 2, textY + (index * 6));
+  });
+  
+  textY = yPosition + 7;
+  imagensLines.forEach((line: string, index: number) => {
+    doc.text(line, margin + colWidth * 2 + 2, textY + (index * 6));
+  });
   
   // Draw vertical lines for second data row
-  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + rowHeight);
-  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + rowHeight);
+  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + secondRowHeight);
+  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + secondRowHeight);
   
-  yPosition += rowHeight + lineHeight * 2;
+  yPosition += secondRowHeight + lineHeight * 2;
 
   // Content sections - block style like the reference image
   const createContentBlock = (title: string, content: string) => {
