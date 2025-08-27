@@ -3,19 +3,30 @@ import jsPDF from 'jspdf';
 import { Pauta } from '@/types';
 
 export const generatePautaPDF = (pauta: Pauta) => {
-  const doc = new jsPDF();
+  // Configure PDF for optimal printing compatibility
+  const doc = new jsPDF({
+    orientation: 'portrait',
+    unit: 'mm',
+    format: 'a4',
+    compress: true,
+    putOnlyUsedFonts: true
+  });
+  
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
-  let yPosition = 30;
-  const lineHeight = 8;
-
-  // Function to check if we need a new page
-  const checkNewPage = (requiredSpace: number = lineHeight * 3) => {
-    if (yPosition + requiredSpace > pageHeight - margin) {
+  const margin = 15; // Reduced margin for better printer compatibility
+  let yPosition = 25;
+  const lineHeight = 6; // Optimized line height for better spacing
+  
+  // Enhanced page break function with better spacing control
+  const checkNewPage = (requiredSpace: number = lineHeight * 4) => {
+    const bottomMargin = 15; // Ensure consistent bottom margin
+    if (yPosition + requiredSpace > pageHeight - bottomMargin) {
       doc.addPage();
       yPosition = margin;
+      return true;
     }
+    return false;
   };
 
   // Start directly with the table
