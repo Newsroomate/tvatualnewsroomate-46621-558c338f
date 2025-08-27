@@ -98,21 +98,21 @@ export const PautaModal = ({
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="space-y-1">
               <Label htmlFor="data">DATA</Label>
               <Input id="data" type="date" value={data} onChange={e => setData(e.target.value)} required />
             </div>
             
             <div className="space-y-1">
+              <Label htmlFor="imagens">IMAGENS</Label>
+              <Input id="imagens" value={imagens} onChange={e => setImagens(e.target.value)} placeholder="Informações sobre imagens" />
+            </div>
+            
+            <div className="space-y-1">
               <Label htmlFor="programa">PROGRAMA</Label>
               <Input id="programa" value={programa} onChange={e => setPrograma(e.target.value)} placeholder="Nome do programa" />
             </div>
-          </div>
-          
-          <div className="space-y-1">
-            <Label htmlFor="imagens">IMAGENS</Label>
-            <Textarea id="imagens" value={imagens} onChange={e => setImagens(e.target.value)} placeholder="Informações sobre imagens" rows={2} className="resize-y" />
           </div>
           
           <div className="space-y-1">
