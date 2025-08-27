@@ -37,73 +37,92 @@ export const generatePautaPDF = (pauta: Pauta) => {
   doc.line(margin, yPosition, pageWidth - margin, yPosition);
   yPosition += lineHeight * 2;
 
-  // Table headers for main fields
-  doc.setFontSize(12);
+  // Create header table with dark background
+  const tableStartY = yPosition;
+  const tableWidth = pageWidth - margin * 2;
+  const colWidth = tableWidth / 3;
+  const rowHeight = 12;
+  
+  // Draw table structure
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.5);
+  
+  // First row - headers with dark background
+  doc.setFillColor(60, 60, 60);
+  doc.rect(margin, yPosition, tableWidth, rowHeight, 'FD');
+  
+  // First row text - white text on dark background
   doc.setFont("helvetica", "bold");
-  
-  const colWidths = {
-    field1: 60,
-    field2: 65,
-    field3: 50
-  };
-  
-  let xPos = margin;
-  doc.text("DATA", xPos, yPosition);
-  xPos += colWidths.field1;
-  doc.text("RETRANCA", xPos, yPosition);
-  xPos += colWidths.field2;
-  doc.text("PROGRAMA", xPos, yPosition);
-  
-  yPosition += lineHeight;
-  
-  // Header separator line
-  doc.setLineWidth(0.3);
-  doc.line(margin, yPosition, pageWidth - margin, yPosition);
-  yPosition += lineHeight;
-
-  // First row data
-  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
   
-  xPos = margin;
+  doc.text("DATA", margin + 2, yPosition + 8);
+  doc.text("RETRANCA", margin + colWidth + 2, yPosition + 8);
+  doc.text("PROGRAMA", margin + colWidth * 2 + 2, yPosition + 8);
+  
+  // Draw vertical lines for first row
+  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + rowHeight);
+  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + rowHeight);
+  
+  yPosition += rowHeight;
+  
+  // First row data - white background
+  doc.setFillColor(255, 255, 255);
+  doc.rect(margin, yPosition, tableWidth, rowHeight, 'FD');
+  
+  // First row data text - black text
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
+  
   const dataCobertura = pauta.data_cobertura || pauta.horario || '-';
-  doc.text(dataCobertura, xPos, yPosition);
-  xPos += colWidths.field1;
-  doc.text(pauta.titulo || '-', xPos, yPosition);
-  xPos += colWidths.field2;
-  doc.text('-', xPos, yPosition); // PROGRAMA field - to be added later
+  doc.text(dataCobertura, margin + 2, yPosition + 8);
+  doc.text(pauta.titulo || '-', margin + colWidth + 2, yPosition + 8);
+  doc.text('-', margin + colWidth * 2 + 2, yPosition + 8); // PROGRAMA field
   
-  yPosition += lineHeight * 2;
-
-  // Second row headers
+  // Draw vertical lines for first data row
+  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + rowHeight);
+  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + rowHeight);
+  
+  yPosition += rowHeight;
+  
+  // Second row - headers with dark background
+  doc.setFillColor(60, 60, 60);
+  doc.rect(margin, yPosition, tableWidth, rowHeight, 'FD');
+  
+  // Second row text - white text on dark background
   doc.setFont("helvetica", "bold");
-  doc.setFontSize(12);
-  
-  xPos = margin;
-  doc.text("PAUTEIROS", xPos, yPosition);
-  xPos += colWidths.field1;
-  doc.text("REPÓRTER", xPos, yPosition);
-  xPos += colWidths.field2;
-  doc.text("IMAGENS", xPos, yPosition);
-  
-  yPosition += lineHeight;
-  
-  // Second row separator line
-  doc.line(margin, yPosition, pageWidth - margin, yPosition);
-  yPosition += lineHeight;
-
-  // Second row data
-  doc.setFont("helvetica", "normal");
   doc.setFontSize(10);
+  doc.setTextColor(255, 255, 255);
   
-  xPos = margin;
-  doc.text(pauta.produtor || '-', xPos, yPosition);
-  xPos += colWidths.field1;
-  doc.text('-', xPos, yPosition); // REPÓRTER field - to be added later
-  xPos += colWidths.field2;
-  doc.text(pauta.local || '-', xPos, yPosition); // IMAGENS field using local field
+  doc.text("PAUTEIROS", margin + 2, yPosition + 8);
+  doc.text("REPÓRTER", margin + colWidth + 2, yPosition + 8);
+  doc.text("IMAGENS", margin + colWidth * 2 + 2, yPosition + 8);
   
-  yPosition += lineHeight * 3;
+  // Draw vertical lines for second row
+  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + rowHeight);
+  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + rowHeight);
+  
+  yPosition += rowHeight;
+  
+  // Second row data - white background
+  doc.setFillColor(255, 255, 255);
+  doc.rect(margin, yPosition, tableWidth, rowHeight, 'FD');
+  
+  // Second row data text - black text
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(0, 0, 0);
+  
+  doc.text(pauta.produtor || '-', margin + 2, yPosition + 8);
+  doc.text('-', margin + colWidth + 2, yPosition + 8); // REPÓRTER field
+  doc.text(pauta.local || '-', margin + colWidth * 2 + 2, yPosition + 8); // IMAGENS field
+  
+  // Draw vertical lines for second data row
+  doc.line(margin + colWidth, yPosition, margin + colWidth, yPosition + rowHeight);
+  doc.line(margin + colWidth * 2, yPosition, margin + colWidth * 2, yPosition + rowHeight);
+  
+  yPosition += rowHeight + lineHeight * 2;
 
   // Content sections - block style like the reference image
   const createContentBlock = (title: string, content: string) => {
