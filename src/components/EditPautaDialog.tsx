@@ -23,11 +23,9 @@ export const EditPautaDialog = ({
 }: EditPautaDialogProps) => {
   const [data, setData] = useState(pauta.data_cobertura || pauta.horario || "");
   const [retranca, setRetranca] = useState(pauta.titulo);
-  const [programa, setPrograma] = useState("");
   const [pauteiros, setPauteiros] = useState(pauta.produtor || "");
   const [reporter, setReporter] = useState("");
   const [imagens, setImagens] = useState(pauta.local || "");
-  const [programas, setProgramas] = useState("");
   const [roteiro1, setRoteiro1] = useState(pauta.descricao || "");
   const [entrevistados, setEntrevistados] = useState(pauta.entrevistado || "");
   const [proposta, setProposta] = useState(pauta.proposta || "");
@@ -89,15 +87,6 @@ export const EditPautaDialog = ({
               />
             </div>
             
-            <div className="space-y-1">
-              <Label htmlFor="programa">PROGRAMA</Label>
-              <Input
-                id="programa"
-                value={programa}
-                onChange={(e) => setPrograma(e.target.value)}
-                placeholder="Nome do programa"
-              />
-            </div>
           </div>
           
           <div className="space-y-1">
@@ -133,17 +122,6 @@ export const EditPautaDialog = ({
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="programas">PROGRAMAS</Label>
-            <Textarea
-              id="programas"
-              value={programas}
-              onChange={(e) => setProgramas(e.target.value)}
-              placeholder="Programas relacionados"
-              rows={2}
-              className="resize-y"
-            />
-          </div>
 
           <div className="space-y-1">
             <Label htmlFor="roteiro1">ROTEIRO 1</Label>

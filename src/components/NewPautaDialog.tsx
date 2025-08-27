@@ -17,11 +17,9 @@ interface NewPautaDialogProps {
 export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDialogProps) => {
   const [data, setData] = useState("");
   const [retranca, setRetranca] = useState("");
-  const [programa, setPrograma] = useState("");
   const [pauteiros, setPauteiros] = useState("");
   const [reporter, setReporter] = useState("");
   const [imagens, setImagens] = useState("");
-  const [programas, setProgramas] = useState("");
   const [roteiro1, setRoteiro1] = useState("");
   const [entrevistados, setEntrevistados] = useState("");
   const [proposta, setProposta] = useState("");
@@ -54,11 +52,9 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
       // Reset form
       setData("");
       setRetranca("");
-      setPrograma("");
       setPauteiros("");
       setReporter("");
       setImagens("");
-      setProgramas("");
       setRoteiro1("");
       setEntrevistados("");
       setProposta("");
@@ -99,15 +95,6 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
               />
             </div>
             
-            <div className="space-y-1">
-              <Label htmlFor="programa">PROGRAMA</Label>
-              <Input
-                id="programa"
-                value={programa}
-                onChange={(e) => setPrograma(e.target.value)}
-                placeholder="Nome do programa"
-              />
-            </div>
           </div>
           
           <div className="space-y-1">
@@ -143,17 +130,6 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
             </div>
           </div>
 
-          <div className="space-y-1">
-            <Label htmlFor="programas">PROGRAMAS</Label>
-            <Textarea
-              id="programas"
-              value={programas}
-              onChange={(e) => setProgramas(e.target.value)}
-              placeholder="Programas relacionados"
-              rows={2}
-              className="resize-y"
-            />
-          </div>
 
           <div className="space-y-1">
             <Label htmlFor="roteiro1">ROTEIRO 1</Label>
