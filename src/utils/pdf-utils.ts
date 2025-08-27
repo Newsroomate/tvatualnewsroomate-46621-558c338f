@@ -4,117 +4,175 @@ import { Pauta } from '@/types';
 
 export const generatePautaPDF = (pauta: Pauta) => {
   const doc = new jsPDF();
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 20;
+  let yPosition = 30;
+  const lineHeight = 8;
+
+  // Function to check if we need a new page
+  const checkNewPage = (requiredSpace: number = lineHeight * 3) => {
+    if (yPosition + requiredSpace > pageHeight - margin) {
+      doc.addPage();
+      yPosition = margin;
+    }
+  };
+
+  // Document title
+  doc.setFontSize(20);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.text(`PAUTA - ${pauta.titulo || 'Nova Pauta'}`, pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += lineHeight * 2;
+
+  // Date and time
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "normal");
+  const currentDate = new Date().toLocaleString('pt-BR');
+  doc.text(`Gerado em: ${currentDate}`, pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += lineHeight * 2;
+
+  // Separator line
+  doc.setLineWidth(0.5);
+  doc.line(margin, yPosition, pageWidth - margin, yPosition);
+  yPosition += lineHeight * 2;
+
+  // Table headers for main fields
+  doc.setFontSize(12);
+  doc.setFont("helvetica", "bold");
   
-  // Configurações iniciais
-  const margin = 10;
-  let yPosition = margin;
-  const pageWidth = doc.internal.pageSize.width;
-  const contentWidth = pageWidth - margin * 2;
+  const colWidths = {
+    field1: 60,
+    field2: 65,
+    field3: 50
+  };
   
-  // Função para criar células da tabela do cabeçalho
-  const createHeaderCell = (x: number, y: number, width: number, height: number, label: string, content: string = '') => {
-    // Fundo cinza claro para o título
-    doc.setFillColor(240, 240, 240);
-    doc.rect(x, y, width, 12, 'F');
+  let xPos = margin;
+  doc.text("DATA", xPos, yPosition);
+  xPos += colWidths.field1;
+  doc.text("RETRANCA", xPos, yPosition);
+  xPos += colWidths.field2;
+  doc.text("PROGRAMA", xPos, yPosition);
+  
+  yPosition += lineHeight;
+  
+  // Header separator line
+  doc.setLineWidth(0.3);
+  doc.line(margin, yPosition, pageWidth - margin, yPosition);
+  yPosition += lineHeight;
+
+  // First row data
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  
+  xPos = margin;
+  const dataCobertura = pauta.data_cobertura || pauta.horario || new Date().toLocaleDateString('pt-BR');
+  doc.text(dataCobertura, xPos, yPosition);
+  xPos += colWidths.field1;
+  doc.text(pauta.titulo || '-', xPos, yPosition);
+  xPos += colWidths.field2;
+  doc.text('-', xPos, yPosition); // PROGRAMA field - currently not captured
+  
+  yPosition += lineHeight * 2;
+
+  // Second row headers
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(12);
+  
+  xPos = margin;
+  doc.text("PAUTEIROS", xPos, yPosition);
+  xPos += colWidths.field1;
+  doc.text("REPÓRTER", xPos, yPosition);
+  xPos += colWidths.field2;
+  doc.text("IMAGENS", xPos, yPosition);
+  
+  yPosition += lineHeight;
+  
+  // Second row separator line
+  doc.line(margin, yPosition, pageWidth - margin, yPosition);
+  yPosition += lineHeight;
+
+  // Second row data
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10);
+  
+  xPos = margin;
+  doc.text(pauta.produtor || '-', xPos, yPosition);
+  xPos += colWidths.field1;
+  doc.text('-', xPos, yPosition); // REPÓRTER field - currently not captured
+  xPos += colWidths.field2;
+  doc.text('-', xPos, yPosition); // IMAGENS field - currently not captured
+  
+  yPosition += lineHeight * 3;
+
+  // Content sections
+  const createContentSection = (title: string, content: string) => {
+    checkNewPage(lineHeight * 5);
     
-    // Fundo branco para o conteúdo
-    doc.setFillColor(255, 255, 255);
-    doc.rect(x, y + 12, width, height - 12, 'F');
+    // Section title
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(12);
+    doc.text(title, margin, yPosition);
+    yPosition += lineHeight;
     
-    // Bordas
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.rect(x, y, width, height);
-    doc.rect(x, y, width, 12); // Linha separando título do conteúdo
+    // Section separator line
+    doc.setLineWidth(0.3);
+    doc.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += lineHeight;
     
-    // Texto do título
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(9);
-    doc.setFont('helvetica', 'bold');
-    doc.text(label, x + 2, y + 8);
-    
-    // Conteúdo
-    if (content) {
-      doc.setTextColor(0, 0, 0);
-      doc.setFont('helvetica', 'normal');
+    // Section content
+    if (content && content.trim()) {
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      const maxWidth = width - 4;
+      const maxWidth = pageWidth - margin * 2;
       const lines = doc.splitTextToSize(content, maxWidth);
-      doc.text(lines, x + 2, y + 18);
-    }
-  };
-  
-  // Função para criar seção de conteúdo
-  const createContentSection = (y: number, label: string, content: string = '') => {
-    const sectionHeight = Math.max(40, Math.ceil((content || '').length / 100) * 6 + 30);
-    
-    // Cabeçalho da seção (fundo cinza claro)
-    doc.setFillColor(240, 240, 240);
-    doc.rect(margin, y, contentWidth, 12, 'F');
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(0.5);
-    doc.rect(margin, y, contentWidth, 12);
-    
-    // Texto do cabeçalho
-    doc.setTextColor(0, 0, 0);
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'bold');
-    doc.text(label, margin + 3, y + 8);
-    
-    // Área de conteúdo
-    doc.setFillColor(255, 255, 255);
-    doc.rect(margin, y + 12, contentWidth, sectionHeight - 12, 'F');
-    doc.setDrawColor(0, 0, 0);
-    doc.rect(margin, y + 12, contentWidth, sectionHeight - 12);
-    
-    // Conteúdo
-    if (content) {
-      doc.setTextColor(0, 0, 0);
+      
+      lines.forEach((line: string) => {
+        checkNewPage();
+        doc.text(line, margin, yPosition);
+        yPosition += lineHeight;
+      });
+    } else {
+      doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      const lines = doc.splitTextToSize(content, contentWidth - 6);
-      doc.text(lines, margin + 3, y + 22);
+      doc.setTextColor(128, 128, 128);
+      doc.text('(Nenhuma informação)', margin, yPosition);
+      doc.setTextColor(0, 0, 0);
+      yPosition += lineHeight;
     }
     
-    return y + sectionHeight + 3;
+    yPosition += lineHeight;
   };
 
-  // Início do documento
-  yPosition = margin;
+  // Add all content sections
+  createContentSection('ROTEIRO 1', pauta.descricao || '');
+  createContentSection('ENTREVISTADOS', pauta.entrevistado || '');
+  createContentSection('PROPOSTA', pauta.proposta || '');
+  createContentSection('ENCAMINHAMENTO', pauta.encaminhamento || '');
+  createContentSection('INFORMAÇÕES', pauta.informacoes || '');
 
-  // TABELA SUPERIOR
-  const cellHeight = 30;
-  const thirdWidth = contentWidth / 3;
-  
-  // Data atual de hoje
-  const dataAtual = new Date().toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
-  
-  // Primeira linha da tabela
-  createHeaderCell(margin, yPosition, thirdWidth, cellHeight, 'DATA', dataAtual);
-  createHeaderCell(margin + thirdWidth, yPosition, thirdWidth, cellHeight, 'RETRANCA', pauta.titulo || '');
-  createHeaderCell(margin + (thirdWidth * 2), yPosition, thirdWidth, cellHeight, 'PROGRAMA', '');
-  
-  yPosition += cellHeight;
-  
-  // Segunda linha da tabela
-  createHeaderCell(margin, yPosition, thirdWidth, cellHeight, 'PAUTEIROS', pauta.produtor || '');
-  createHeaderCell(margin + thirdWidth, yPosition, thirdWidth, cellHeight, 'REPÓRTER', '');
-  createHeaderCell(margin + (thirdWidth * 2), yPosition, thirdWidth, cellHeight, 'IMAGENS', '');
-  
-  yPosition += cellHeight + 8;
+  // Add page numbers
+  const totalPages = doc.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    doc.setPage(i);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(150, 150, 150);
+    doc.text(
+      `Página ${i} de ${totalPages}`,
+      pageWidth / 2,
+      pageHeight - 10,
+      { align: 'center' }
+    );
+  }
 
-  // SEÇÕES DE CONTEÚDO
-  yPosition = createContentSection(yPosition, 'ROTEIRO 1', pauta.descricao);
-  yPosition = createContentSection(yPosition, 'ENTREVISTADOS', pauta.entrevistado);
-  yPosition = createContentSection(yPosition, 'PROPOSTA', pauta.proposta);
-  yPosition = createContentSection(yPosition, 'ENCAMINHAMENTO', pauta.encaminhamento);
-  yPosition = createContentSection(yPosition, 'INFORMAÇÕES', pauta.informacoes);
-  
-  // Salvar o PDF
-  const filename = `pauta_${pauta.titulo.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase()}.pdf`;
+  // Generate filename
+  const pautaName = (pauta.titulo || 'nova_pauta').replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+  const dateFormatted = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
+  const timeFormatted = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(/:/g, 'h');
+  const filename = `pauta_${pautaName}_${dateFormatted}_${timeFormatted}.pdf`;
+
+  // Save the PDF
   doc.save(filename);
+  console.log("Pauta PDF exported:", filename);
 };
