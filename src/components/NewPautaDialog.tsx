@@ -45,7 +45,8 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
         produtor: pauteiros,
         proposta,
         encaminhamento,
-        informacoes
+        informacoes,
+        data_cobertura: data // Map DATA field to data_cobertura
       };
 
       await createPauta(newPauta);
@@ -86,7 +87,7 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="data">DATA</Label>
               <Input
@@ -94,17 +95,6 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
                 type="date"
                 value={data}
                 onChange={(e) => setData(e.target.value)}
-                required
-              />
-            </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="retranca">RETRANCA</Label>
-              <Input
-                id="retranca"
-                value={retranca}
-                onChange={(e) => setRetranca(e.target.value)}
-                placeholder="Digite a retranca"
                 required
               />
             </div>
@@ -118,6 +108,17 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
                 placeholder="Nome do programa"
               />
             </div>
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="retranca">RETRANCA</Label>
+            <Input
+              id="retranca"
+              value={retranca}
+              onChange={(e) => setRetranca(e.target.value)}
+              placeholder="Digite a retranca"
+              required
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">

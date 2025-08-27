@@ -21,7 +21,7 @@ export const EditPautaDialog = ({
   pauta,
   onPautaUpdated,
 }: EditPautaDialogProps) => {
-  const [data, setData] = useState(pauta.horario || "");
+  const [data, setData] = useState(pauta.data_cobertura || pauta.horario || "");
   const [retranca, setRetranca] = useState(pauta.titulo);
   const [programa, setPrograma] = useState("");
   const [pauteiros, setPauteiros] = useState(pauta.produtor || "");
@@ -51,7 +51,8 @@ export const EditPautaDialog = ({
         produtor: pauteiros,
         proposta,
         encaminhamento,
-        informacoes
+        informacoes,
+        data_cobertura: data // Map DATA field to data_cobertura
       });
       
       onPautaUpdated();

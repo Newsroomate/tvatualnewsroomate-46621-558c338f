@@ -52,6 +52,7 @@ export const updatePauta = async (id: string, updates: {
   proposta?: string;
   encaminhamento?: string;
   informacoes?: string;
+  data_cobertura?: string;
 }) => {
   const { data, error } = await supabase
     .from('pautas')

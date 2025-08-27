@@ -58,6 +58,7 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
         encaminhamento,
         informacoes,
         status: "pendente",
+        data_cobertura: data // Map DATA field to data_cobertura
       });
       
       onPautaCreated();

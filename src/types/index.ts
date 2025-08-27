@@ -81,6 +81,8 @@ export interface Pauta {
   encaminhamento?: string;
   informacoes?: string;
   user_id?: string;
+  data_cobertura?: string;
+  status?: string;
 }
 
 export interface PautaCreateInput {
