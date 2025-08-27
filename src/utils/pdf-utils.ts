@@ -66,12 +66,12 @@ export const generatePautaPDF = (pauta: Pauta) => {
   doc.setFontSize(10);
   
   xPos = margin;
-  const dataCobertura = pauta.data_cobertura || pauta.horario || new Date().toLocaleDateString('pt-BR');
+  const dataCobertura = pauta.data_cobertura || pauta.horario || '-';
   doc.text(dataCobertura, xPos, yPosition);
   xPos += colWidths.field1;
   doc.text(pauta.titulo || '-', xPos, yPosition);
   xPos += colWidths.field2;
-  doc.text('-', xPos, yPosition); // PROGRAMA field - currently not captured
+  doc.text('-', xPos, yPosition); // PROGRAMA field - to be added later
   
   yPosition += lineHeight * 2;
 
@@ -99,9 +99,9 @@ export const generatePautaPDF = (pauta: Pauta) => {
   xPos = margin;
   doc.text(pauta.produtor || '-', xPos, yPosition);
   xPos += colWidths.field1;
-  doc.text('-', xPos, yPosition); // REPÓRTER field - currently not captured
+  doc.text('-', xPos, yPosition); // REPÓRTER field - to be added later
   xPos += colWidths.field2;
-  doc.text('-', xPos, yPosition); // IMAGENS field - currently not captured
+  doc.text(pauta.local || '-', xPos, yPosition); // IMAGENS field using local field
   
   yPosition += lineHeight * 3;
 
