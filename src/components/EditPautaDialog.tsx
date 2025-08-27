@@ -25,7 +25,6 @@ export const EditPautaDialog = ({
   const [pauteiros, setPauteiros] = useState(pauta.produtor || "");
   const [reporter, setReporter] = useState("");
   const [imagens, setImagens] = useState(pauta.local || "");
-  const [programas, setProgramas] = useState("");
   const [roteiro1, setRoteiro1] = useState(pauta.descricao || "");
   const [entrevistados, setEntrevistados] = useState(pauta.entrevistado || "");
   const [proposta, setProposta] = useState(pauta.proposta || "");
