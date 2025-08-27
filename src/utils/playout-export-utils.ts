@@ -63,7 +63,8 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
     
     const colWidths = {
       numero: 25,
-      tipo: 40,
+      tipo: 35,
+      reporter: 45,
       retranca: 50,
       clip: 30
     };
@@ -73,6 +74,8 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
     xPos += colWidths.numero;
     doc.text("TIPO", xPos, yPosition);
     xPos += colWidths.tipo;
+    doc.text("REPÓRTER", xPos, yPosition);
+    xPos += colWidths.reporter;
     doc.text("RETRANCA", xPos, yPosition);
     xPos += colWidths.retranca;
     doc.text("CLIP", xPos, yPosition);
@@ -99,20 +102,25 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
       
       // Tipo de material
       const tipoMaterial = materia.tipo_material || '-';
-      const maxTipoLength = 15;
+      const maxTipoLength = 12;
       const displayTipo = tipoMaterial.length > maxTipoLength 
         ? tipoMaterial.substring(0, maxTipoLength) + '...' 
         : tipoMaterial;
       doc.text(displayTipo, xPos, yPosition);
       xPos += colWidths.tipo;
       
-      // Retranca (truncate if too long)
+      // Repórter
+      const reporter = materia.reporter || '-';
+      const maxReporterLength = 18;
+      const displayReporter = reporter.length > maxReporterLength 
+        ? reporter.substring(0, maxReporterLength) + '...' 
+        : reporter;
+      doc.text(displayReporter, xPos, yPosition);
+      xPos += colWidths.reporter;
+      
+      // Retranca
       const retranca = materia.retranca || 'Sem retranca';
-      const maxRetrancaLength = 20;
-      const displayRetranca = retranca.length > maxRetrancaLength 
-        ? retranca.substring(0, maxRetrancaLength) + '...' 
-        : retranca;
-      doc.text(displayRetranca, xPos, yPosition);
+      doc.text(retranca, xPos, yPosition);
       xPos += colWidths.retranca;
       
       // Clip
