@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { updatePauta } from "@/services/pautas-api";
 import { Pauta } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -111,27 +111,27 @@ export const EditPautaDialog = ({
 
           <div className="space-y-1">
             <Label htmlFor="roteiro1">ROTEIRO 1</Label>
-            <Textarea id="roteiro1" value={roteiro1} onChange={e => setRoteiro1(e.target.value)} placeholder="Conteúdo do roteiro" rows={2} className="resize-y" />
+            <AutoTextarea id="roteiro1" value={roteiro1} onChange={e => setRoteiro1(e.target.value)} placeholder="Conteúdo do roteiro" />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="entrevistados">ENTREVISTADOS</Label>
-            <Textarea id="entrevistados" value={entrevistados} onChange={e => setEntrevistados(e.target.value)} placeholder="Lista de entrevistados" rows={2} className="resize-y" />
+            <AutoTextarea id="entrevistados" value={entrevistados} onChange={e => setEntrevistados(e.target.value)} placeholder="Lista de entrevistados" />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="proposta">PROPOSTA</Label>
-            <Textarea id="proposta" value={proposta} onChange={e => setProposta(e.target.value)} placeholder="Descrição da proposta" rows={2} className="resize-y" />
+            <AutoTextarea id="proposta" value={proposta} onChange={e => setProposta(e.target.value)} placeholder="Descrição da proposta" />
           </div>
           
           <div className="space-y-1">
             <Label htmlFor="encaminhamento">ENCAMINHAMENTO</Label>
-            <Textarea id="encaminhamento" value={encaminhamento} onChange={e => setEncaminhamento(e.target.value)} placeholder="Encaminhamento da pauta" rows={2} className="resize-y" />
+            <AutoTextarea id="encaminhamento" value={encaminhamento} onChange={e => setEncaminhamento(e.target.value)} placeholder="Encaminhamento da pauta" />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="informacoes">INFORMAÇÕES</Label>
-            <Textarea id="informacoes" value={informacoes} onChange={e => setInformacoes(e.target.value)} placeholder="Informações adicionais" rows={2} className="resize-y" />
+            <AutoTextarea id="informacoes" value={informacoes} onChange={e => setInformacoes(e.target.value)} placeholder="Informações adicionais" />
           </div>
           
           <DialogFooter className="pt-3">

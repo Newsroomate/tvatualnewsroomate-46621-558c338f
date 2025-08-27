@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { createPauta } from "@/services/pautas-api";
 import { PautaCreateInput } from "@/types";
 import { useToast } from "@/hooks/use-toast";
@@ -145,85 +145,71 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
 
           <div className="space-y-1">
             <Label htmlFor="programas">PROGRAMAS</Label>
-            <Textarea
+            <AutoTextarea
               id="programas"
               value={programas}
               onChange={(e) => setProgramas(e.target.value)}
               placeholder="Programas relacionados"
-              rows={2}
-              className="resize-y"
             />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="roteiro1">ROTEIRO 1</Label>
-            <Textarea
+            <AutoTextarea
               id="roteiro1"
               value={roteiro1}
               onChange={(e) => setRoteiro1(e.target.value)}
               placeholder="Conteúdo do roteiro"
-              rows={2}
-              className="resize-y"
             />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="entrevistados">ENTREVISTADOS</Label>
-            <Textarea
+            <AutoTextarea
               id="entrevistados"
               value={entrevistados}
               onChange={(e) => setEntrevistados(e.target.value)}
               placeholder="Lista de entrevistados"
-              rows={2}
-              className="resize-y"
             />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="proposta">PROPOSTA</Label>
-            <Textarea
+            <AutoTextarea
               id="proposta"
               value={proposta}
               onChange={(e) => setProposta(e.target.value)}
               placeholder="Descrição da proposta"
-              rows={2}
-              className="resize-y"
             />
           </div>
           
           <div className="space-y-1">
             <Label htmlFor="encaminhamento">ENCAMINHAMENTO</Label>
-            <Textarea
+            <AutoTextarea
               id="encaminhamento"
               value={encaminhamento}
               onChange={(e) => setEncaminhamento(e.target.value)}
               placeholder="Encaminhamento da pauta"
-              rows={2}
-              className="resize-y"
             />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="informacoes">INFORMAÇÕES</Label>
-            <Textarea
+            <AutoTextarea
               id="informacoes"
               value={informacoes}
               onChange={(e) => setInformacoes(e.target.value)}
               placeholder="Informações adicionais"
-              rows={2}
-              className="resize-y"
             />
           </div>
           
           <div className="space-y-1">
             <Label htmlFor="imagens">IMAGENS</Label>
-            <Textarea
+            <AutoTextarea
               id="imagens"
               value={imagens}
               onChange={(e) => setImagens(e.target.value)}
               placeholder="Informações sobre imagens"
-              rows={2}
-              className="resize-y"
             />
           </div>
           
