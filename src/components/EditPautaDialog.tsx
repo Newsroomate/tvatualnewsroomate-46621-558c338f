@@ -85,7 +85,7 @@ export const EditPautaDialog = ({
             </div>
             
             <div className="space-y-1">
-              <Label htmlFor="programas">PROGRAMAS</Label>
+              <Label htmlFor="programas">PROGRAMA</Label>
               <Input id="programas" value={programas} onChange={e => setProgramas(e.target.value)} placeholder="Lista de programas" />
             </div>
           </div>
