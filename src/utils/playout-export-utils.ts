@@ -63,9 +63,9 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
     
     const colWidths = {
       numero: 25,
-      tipo: 35,
-      retranca: 70,
-      clip: 25
+      tipo: 40,
+      retranca: 50,
+      clip: 30
     };
     
     let xPos = margin;
@@ -106,9 +106,13 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
       doc.text(displayTipo, xPos, yPosition);
       xPos += colWidths.tipo;
       
-      // Retranca (display full text)
+      // Retranca (truncate if too long)
       const retranca = materia.retranca || 'Sem retranca';
-      doc.text(retranca, xPos, yPosition);
+      const maxRetrancaLength = 20;
+      const displayRetranca = retranca.length > maxRetrancaLength 
+        ? retranca.substring(0, maxRetrancaLength) + '...' 
+        : retranca;
+      doc.text(displayRetranca, xPos, yPosition);
       xPos += colWidths.retranca;
       
       // Clip
