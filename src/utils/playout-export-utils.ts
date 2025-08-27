@@ -62,9 +62,10 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
     doc.setFont("helvetica", "bold");
     
     const colWidths = {
-      numero: 30,
-      tipo: 60,
-      clip: 40
+      numero: 25,
+      tipo: 40,
+      retranca: 50,
+      clip: 30
     };
     
     let xPos = margin;
@@ -72,6 +73,8 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
     xPos += colWidths.numero;
     doc.text("TIPO", xPos, yPosition);
     xPos += colWidths.tipo;
+    doc.text("RETRANCA", xPos, yPosition);
+    xPos += colWidths.retranca;
     doc.text("CLIP", xPos, yPosition);
     
     yPosition += lineHeight;
@@ -96,12 +99,21 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
       
       // Tipo de material
       const tipoMaterial = materia.tipo_material || '-';
-      const maxTipoLength = 25;
+      const maxTipoLength = 15;
       const displayTipo = tipoMaterial.length > maxTipoLength 
         ? tipoMaterial.substring(0, maxTipoLength) + '...' 
         : tipoMaterial;
       doc.text(displayTipo, xPos, yPosition);
       xPos += colWidths.tipo;
+      
+      // Retranca (truncate if too long)
+      const retranca = materia.retranca || 'Sem retranca';
+      const maxRetrancaLength = 20;
+      const displayRetranca = retranca.length > maxRetrancaLength 
+        ? retranca.substring(0, maxRetrancaLength) + '...' 
+        : retranca;
+      doc.text(displayRetranca, xPos, yPosition);
+      xPos += colWidths.retranca;
       
       // Clip
       const clip = materia.clip || '-';
