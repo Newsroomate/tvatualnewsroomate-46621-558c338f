@@ -7,37 +7,42 @@ import { Textarea } from "@/components/ui/textarea";
 import { updatePauta } from "@/services/pautas-api";
 import { Pauta } from "@/types";
 import { useToast } from "@/hooks/use-toast";
-
 interface EditPautaDialogProps {
   isOpen: boolean;
   onClose: () => void;
   pauta: Pauta;
   onPautaUpdated: () => void;
 }
-
-export const EditPautaDialog = ({ isOpen, onClose, pauta, onPautaUpdated }: EditPautaDialogProps) => {
+export const EditPautaDialog = ({
+  isOpen,
+  onClose,
+  pauta,
+  onPautaUpdated
+}: EditPautaDialogProps) => {
   const [data, setData] = useState(pauta.data_cobertura || pauta.horario || "");
   const [retranca, setRetranca] = useState(pauta.titulo);
   const [programa, setPrograma] = useState("");
   const [pauteiros, setPauteiros] = useState(pauta.produtor || "");
   const [reporter, setReporter] = useState("");
   const [imagens, setImagens] = useState(pauta.local || "");
+  const [programas, setProgramas] = useState("");
   const [roteiro1, setRoteiro1] = useState(pauta.descricao || "");
   const [entrevistados, setEntrevistados] = useState(pauta.entrevistado || "");
   const [proposta, setProposta] = useState(pauta.proposta || "");
   const [encaminhamento, setEncaminhamento] = useState(pauta.encaminhamento || "");
   const [informacoes, setInformacoes] = useState(pauta.informacoes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
-
+  const {
+    toast
+  } = useToast();
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!retranca.trim()) return;
-    
     setIsSubmitting(true);
     try {
       await updatePauta(pauta.id, {
-        titulo: retranca, // Use retranca as titulo for compatibility
+        titulo: retranca,
+        // Use retranca as titulo for compatibility
         descricao: roteiro1,
         local: imagens,
         horario: data,
@@ -48,7 +53,6 @@ export const EditPautaDialog = ({ isOpen, onClose, pauta, onPautaUpdated }: Edit
         informacoes,
         data_cobertura: data // Map DATA field to data_cobertura
       });
-      
       onPautaUpdated();
       onClose();
     } catch (error) {
@@ -56,15 +60,13 @@ export const EditPautaDialog = ({ isOpen, onClose, pauta, onPautaUpdated }: Edit
       toast({
         title: "Erro ao atualizar pauta",
         description: "Ocorreu um erro ao atualizar a pauta. Tente novamente.",
-        variant: "destructive",
+        variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+  return <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Pauta</DialogTitle>
@@ -109,82 +111,38 @@ export const EditPautaDialog = ({ isOpen, onClose, pauta, onPautaUpdated }: Edit
 
           <div className="space-y-1">
             <Label htmlFor="roteiro1">ROTEIRO 1</Label>
-            <Textarea 
-              id="roteiro1" 
-              value={roteiro1} 
-              onChange={e => setRoteiro1(e.target.value)} 
-              placeholder="Conteúdo do roteiro" 
-              rows={4} 
-              className="min-h-[100px] resize-y" 
-            />
+            <Textarea id="roteiro1" value={roteiro1} onChange={e => setRoteiro1(e.target.value)} placeholder="Conteúdo do roteiro" rows={2} className="resize-y" />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="entrevistados">ENTREVISTADOS</Label>
-            <Textarea 
-              id="entrevistados" 
-              value={entrevistados} 
-              onChange={e => setEntrevistados(e.target.value)} 
-              placeholder="Lista de entrevistados" 
-              rows={4} 
-              className="min-h-[100px] resize-y" 
-            />
+            <Textarea id="entrevistados" value={entrevistados} onChange={e => setEntrevistados(e.target.value)} placeholder="Lista de entrevistados" rows={2} className="resize-y" />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="proposta">PROPOSTA</Label>
-            <Textarea 
-              id="proposta" 
-              value={proposta} 
-              onChange={e => setProposta(e.target.value)} 
-              placeholder="Descrição da proposta" 
-              rows={4} 
-              className="min-h-[100px] resize-y" 
-            />
+            <Textarea id="proposta" value={proposta} onChange={e => setProposta(e.target.value)} placeholder="Descrição da proposta" rows={2} className="resize-y" />
           </div>
           
           <div className="space-y-1">
             <Label htmlFor="encaminhamento">ENCAMINHAMENTO</Label>
-            <Textarea 
-              id="encaminhamento" 
-              value={encaminhamento} 
-              onChange={e => setEncaminhamento(e.target.value)} 
-              placeholder="Encaminhamento da pauta" 
-              rows={4} 
-              className="min-h-[100px] resize-y" 
-            />
+            <Textarea id="encaminhamento" value={encaminhamento} onChange={e => setEncaminhamento(e.target.value)} placeholder="Encaminhamento da pauta" rows={2} className="resize-y" />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="informacoes">INFORMAÇÕES</Label>
-            <Textarea 
-              id="informacoes" 
-              value={informacoes} 
-              onChange={e => setInformacoes(e.target.value)} 
-              placeholder="Informações adicionais" 
-              rows={4} 
-              className="min-h-[100px] resize-y" 
-            />
+            <Textarea id="informacoes" value={informacoes} onChange={e => setInformacoes(e.target.value)} placeholder="Informações adicionais" rows={2} className="resize-y" />
           </div>
           
           <DialogFooter className="pt-3">
-            <Button 
-              type="button" 
-              variant="outline" 
-              onClick={onClose}
-              disabled={isSubmitting}
-            >
+            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
               Cancelar
             </Button>
-            <Button 
-              type="submit" 
-              disabled={!retranca.trim() || isSubmitting}
-            >
+            <Button type="submit" disabled={!retranca.trim() || isSubmitting}>
               {isSubmitting ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog>
-  );
+    </Dialog>;
 };
