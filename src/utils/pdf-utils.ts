@@ -13,9 +13,9 @@ export const generatePautaPDF = (pauta: Pauta) => {
   
   // Função para criar células da tabela
   const createTableCell = (x: number, y: number, width: number, height: number, label: string, content: string = '', isHeader: boolean = false) => {
-    // Cor de fundo cinza claro sutil
+    // Cor de fundo
     if (isHeader) {
-      doc.setFillColor(240, 240, 240);
+      doc.setFillColor(60, 60, 60);
     } else {
       doc.setFillColor(255, 255, 255);
     }
@@ -27,7 +27,7 @@ export const generatePautaPDF = (pauta: Pauta) => {
     doc.rect(x, y, width, height);
     
     // Texto do label (cabeçalho)
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(isHeader ? 255 : 0, isHeader ? 255 : 0, isHeader ? 255 : 0);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
     
@@ -50,15 +50,15 @@ export const generatePautaPDF = (pauta: Pauta) => {
   const createContentSection = (y: number, label: string, content: string = '') => {
     const sectionHeight = Math.max(25, Math.ceil((content || '').length / 120) * 8 + 20);
     
-    // Cabeçalho da seção com cinza claro
-    doc.setFillColor(235, 235, 235);
+    // Cabeçalho da seção (fundo escuro)
+    doc.setFillColor(60, 60, 60);
     doc.rect(margin, y, contentWidth, 12, 'F');
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
     doc.rect(margin, y, contentWidth, 12);
     
     // Texto do cabeçalho
-    doc.setTextColor(0, 0, 0);
+    doc.setTextColor(255, 255, 255);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text(label, margin + 3, y + 8);
@@ -93,12 +93,13 @@ export const generatePautaPDF = (pauta: Pauta) => {
   const cellHeight = 20;
   const thirdWidth = contentWidth / 3;
   
-  // Primeira linha da tabela - sempre usar data atual
-  const dataFormatada = new Date().toLocaleDateString('pt-BR', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric'
-  });
+  // Primeira linha da tabela
+  const dataFormatada = pauta.created_at ? 
+    new Date(pauta.created_at).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    }) : '';
   
   createTableCell(margin, yPosition, thirdWidth, cellHeight, 'DATA', dataFormatada, true);
   createTableCell(margin + thirdWidth, yPosition, thirdWidth, cellHeight, 'RETRANCA', pauta.titulo || '', true);
