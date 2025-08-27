@@ -111,6 +111,11 @@ export const PautaModal = ({
           </div>
           
           <div className="space-y-1">
+            <Label htmlFor="imagens">IMAGENS</Label>
+            <Textarea id="imagens" value={imagens} onChange={e => setImagens(e.target.value)} placeholder="Informações sobre imagens" rows={2} className="resize-y" />
+          </div>
+          
+          <div className="space-y-1">
             <Label htmlFor="retranca">RETRANCA</Label>
             <Input id="retranca" value={retranca} onChange={e => setRetranca(e.target.value)} placeholder="Digite a retranca" required />
           </div>
@@ -152,11 +157,6 @@ export const PautaModal = ({
           <div className="space-y-1">
             <Label htmlFor="informacoes">INFORMAÇÕES</Label>
             <Textarea id="informacoes" value={informacoes} onChange={e => setInformacoes(e.target.value)} placeholder="Informações adicionais" rows={2} className="resize-y" />
-          </div>
-          
-          <div className="space-y-1">
-            <Label htmlFor="imagens">IMAGENS</Label>
-            <Textarea id="imagens" value={imagens} onChange={e => setImagens(e.target.value)} placeholder="Informações sobre imagens" rows={2} className="resize-y" />
           </div>
           
           <DialogFooter className="pt-3">
