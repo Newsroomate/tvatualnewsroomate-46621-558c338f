@@ -62,11 +62,10 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
     doc.setFont("helvetica", "bold");
     
     const colWidths = {
-      numero: 20,
-      tipo: 30,
-      reporter: 35,
-      retranca: 40,
-      clip: 25
+      numero: 25,
+      tipo: 40,
+      reporter: 50,
+      retranca: 60
     };
     
     let xPos = margin;
@@ -77,8 +76,6 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
     doc.text("REPÓRTER", xPos, yPosition);
     xPos += colWidths.reporter;
     doc.text("RETRANCA", xPos, yPosition);
-    xPos += colWidths.retranca;
-    doc.text("CLIP", xPos, yPosition);
     
     yPosition += lineHeight;
     
@@ -102,7 +99,7 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
       
       // Tipo de material
       const tipoMaterial = materia.tipo_material || '-';
-      const maxTipoLength = 10;
+      const maxTipoLength = 15;
       const displayTipo = tipoMaterial.length > maxTipoLength 
         ? tipoMaterial.substring(0, maxTipoLength) + '...' 
         : tipoMaterial;
@@ -111,7 +108,7 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
       
       // Repórter
       const reporter = materia.reporter || '-';
-      const maxReporterLength = 12;
+      const maxReporterLength = 20;
       const displayReporter = reporter.length > maxReporterLength 
         ? reporter.substring(0, maxReporterLength) + '...' 
         : reporter;
@@ -125,15 +122,6 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
         ? retrancaWords.slice(0, 4).join(' ') + '...'
         : retranca;
       doc.text(displayRetranca, xPos, yPosition);
-      xPos += colWidths.retranca;
-      
-      // Clip
-      const clip = materia.clip || '-';
-      const maxClipLength = 8;
-      const displayClip = clip.length > maxClipLength 
-        ? clip.substring(0, maxClipLength) + '...' 
-        : clip;
-      doc.text(displayClip, xPos, yPosition);
 
       yPosition += lineHeight;
     });
