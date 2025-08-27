@@ -27,7 +27,17 @@ export const generatePautaPDF = (pauta: Pauta) => {
   const baseRowHeight = 12;
   
   // Prepare data for adaptive sizing - connect all fields properly
-  const dataCobertura = pauta.data_cobertura || pauta.horario || '-';
+  const formatBrazilianDate = (dateString: string | undefined) => {
+    if (!dateString) return '-';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('pt-BR');
+    } catch {
+      return dateString;
+    }
+  };
+  
+  const dataCobertura = formatBrazilianDate(pauta.data_cobertura) || pauta.horario || '-';
   const retranca = pauta.titulo || '-';
   const programa = pauta.programa || '-'; // Connect to pauta.programa field
   const pauteiros = pauta.produtor || '-';
