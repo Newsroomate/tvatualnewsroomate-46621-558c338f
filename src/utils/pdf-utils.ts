@@ -34,64 +34,57 @@ export const generatePautaPDF = (pauta: Pauta) => {
   const reporter = '-'; // REPÓRTER field  
   const imagens = pauta.local || '-'; // IMAGENS field
   
-  // Calculate required width for each field based on content
+  // Calculate required width for each field based on content independently for each row
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9);
   
-  // Calculate text widths for dynamic column sizing
-  const dataWidth = Math.max(doc.getTextWidth("DATA") + 4, doc.getTextWidth(dataCobertura) + 4);
-  const retrancaWidth = Math.max(doc.getTextWidth("RETRANCA") + 4, doc.getTextWidth(retranca) + 4);
-  const programaWidth = Math.max(doc.getTextWidth("PROGRAMA") + 4, doc.getTextWidth(programa) + 4);
-  const pauteirosWidth = Math.max(doc.getTextWidth("PAUTEIROS") + 4, doc.getTextWidth(pauteiros) + 4);
-  const reporterWidth = Math.max(doc.getTextWidth("REPÓRTER") + 4, doc.getTextWidth(reporter) + 4);
-  const imagensWidth = Math.max(doc.getTextWidth("IMAGENS") + 4, doc.getTextWidth(imagens) + 4);
-  
-  // Calculate optimal column widths
-  const firstRowTotalContent = dataWidth + retrancaWidth + programaWidth;
-  const secondRowTotalContent = pauteirosWidth + reporterWidth + imagensWidth;
-  const maxContentWidth = Math.max(firstRowTotalContent, secondRowTotalContent);
-  
-  // Scale columns proportionally if content exceeds available width
-  let col1Width, col2Width, col3Width;
-  
-  if (maxContentWidth > tableWidth) {
-    // Scale down proportionally
-    const scale = tableWidth / maxContentWidth;
-    if (firstRowTotalContent >= secondRowTotalContent) {
-      col1Width = dataWidth * scale;
-      col2Width = retrancaWidth * scale;
-      col3Width = programaWidth * scale;
-    } else {
-      col1Width = pauteirosWidth * scale;
-      col2Width = reporterWidth * scale;
-      col3Width = imagensWidth * scale;
-    }
-  } else {
-    // Use natural sizes and distribute remaining space
-    const remainingSpace = tableWidth - maxContentWidth;
-    const extraPerColumn = remainingSpace / 3;
+  // Function to calculate optimal widths for a row
+  const calculateRowWidths = (field1: string, field2: string, field3: string, label1: string, label2: string, label3: string) => {
+    const minWidth1 = Math.max(doc.getTextWidth(label1) + 4, doc.getTextWidth(field1) + 8);
+    const minWidth2 = Math.max(doc.getTextWidth(label2) + 4, doc.getTextWidth(field2) + 8);
+    const minWidth3 = Math.max(doc.getTextWidth(label3) + 4, doc.getTextWidth(field3) + 8);
     
-    if (firstRowTotalContent >= secondRowTotalContent) {
-      col1Width = dataWidth + extraPerColumn;
-      col2Width = retrancaWidth + extraPerColumn;
-      col3Width = programaWidth + extraPerColumn;
+    const totalMinWidth = minWidth1 + minWidth2 + minWidth3;
+    
+    if (totalMinWidth <= tableWidth) {
+      // Distribute remaining space proportionally
+      const remainingSpace = tableWidth - totalMinWidth;
+      const proportion1 = minWidth1 / totalMinWidth;
+      const proportion2 = minWidth2 / totalMinWidth;
+      const proportion3 = minWidth3 / totalMinWidth;
+      
+      return {
+        col1: minWidth1 + (remainingSpace * proportion1),
+        col2: minWidth2 + (remainingSpace * proportion2),
+        col3: minWidth3 + (remainingSpace * proportion3)
+      };
     } else {
-      col1Width = pauteirosWidth + extraPerColumn;
-      col2Width = reporterWidth + extraPerColumn;
-      col3Width = imagensWidth + extraPerColumn;
+      // Scale down proportionally
+      const scale = tableWidth / totalMinWidth;
+      return {
+        col1: minWidth1 * scale,
+        col2: minWidth2 * scale,
+        col3: minWidth3 * scale
+      };
     }
-  }
+  };
+  
+  // Calculate widths for first row (DATA, RETRANCA, PROGRAMA)
+  const firstRowWidths = calculateRowWidths(dataCobertura, retranca, programa, "DATA", "RETRANCA", "PROGRAMA");
+  
+  // Calculate widths for second row (PAUTEIROS, REPÓRTER, IMAGENS)
+  const secondRowWidths = calculateRowWidths(pauteiros, reporter, imagens, "PAUTEIROS", "REPÓRTER", "IMAGENS");
   
   // Calculate required height for each row based on content and column width
-  const dataLines = doc.splitTextToSize(dataCobertura, col1Width - 4);
-  const retrancaLines = doc.splitTextToSize(retranca, col2Width - 4);
-  const programaLines = doc.splitTextToSize(programa, col3Width - 4);
+  const dataLines = doc.splitTextToSize(dataCobertura, firstRowWidths.col1 - 4);
+  const retrancaLines = doc.splitTextToSize(retranca, firstRowWidths.col2 - 4);
+  const programaLines = doc.splitTextToSize(programa, firstRowWidths.col3 - 4);
   const firstRowLines = Math.max(dataLines.length, retrancaLines.length, programaLines.length);
   const firstRowHeight = Math.max(baseRowHeight, firstRowLines * 6 + 6);
   
-  const pauteirosLines = doc.splitTextToSize(pauteiros, col1Width - 4);
-  const reporterLines = doc.splitTextToSize(reporter, col2Width - 4);
-  const imagensLines = doc.splitTextToSize(imagens, col3Width - 4);
+  const pauteirosLines = doc.splitTextToSize(pauteiros, secondRowWidths.col1 - 4);
+  const reporterLines = doc.splitTextToSize(reporter, secondRowWidths.col2 - 4);
+  const imagensLines = doc.splitTextToSize(imagens, secondRowWidths.col3 - 4);
   const secondRowLines = Math.max(pauteirosLines.length, reporterLines.length, imagensLines.length);
   const secondRowHeight = Math.max(baseRowHeight, secondRowLines * 6 + 6);
   
@@ -109,12 +102,12 @@ export const generatePautaPDF = (pauta: Pauta) => {
   doc.setTextColor(255, 255, 255);
   
   doc.text("DATA", margin + 2, yPosition + 8);
-  doc.text("RETRANCA", margin + col1Width + 2, yPosition + 8);
-  doc.text("PROGRAMA", margin + col1Width + col2Width + 2, yPosition + 8);
+  doc.text("RETRANCA", margin + firstRowWidths.col1 + 2, yPosition + 8);
+  doc.text("PROGRAMA", margin + firstRowWidths.col1 + firstRowWidths.col2 + 2, yPosition + 8);
   
   // Draw vertical lines for first row
-  doc.line(margin + col1Width, yPosition, margin + col1Width, yPosition + baseRowHeight);
-  doc.line(margin + col1Width + col2Width, yPosition, margin + col1Width + col2Width, yPosition + baseRowHeight);
+  doc.line(margin + firstRowWidths.col1, yPosition, margin + firstRowWidths.col1, yPosition + baseRowHeight);
+  doc.line(margin + firstRowWidths.col1 + firstRowWidths.col2, yPosition, margin + firstRowWidths.col1 + firstRowWidths.col2, yPosition + baseRowHeight);
   
   yPosition += baseRowHeight;
   
@@ -135,17 +128,17 @@ export const generatePautaPDF = (pauta: Pauta) => {
   
   textY = yPosition + 7;
   retrancaLines.forEach((line: string, index: number) => {
-    doc.text(line, margin + col1Width + 2, textY + (index * 6));
+    doc.text(line, margin + firstRowWidths.col1 + 2, textY + (index * 6));
   });
   
   textY = yPosition + 7;
   programaLines.forEach((line: string, index: number) => {
-    doc.text(line, margin + col1Width + col2Width + 2, textY + (index * 6));
+    doc.text(line, margin + firstRowWidths.col1 + firstRowWidths.col2 + 2, textY + (index * 6));
   });
   
   // Draw vertical lines for first data row
-  doc.line(margin + col1Width, yPosition, margin + col1Width, yPosition + firstRowHeight);
-  doc.line(margin + col1Width + col2Width, yPosition, margin + col1Width + col2Width, yPosition + firstRowHeight);
+  doc.line(margin + firstRowWidths.col1, yPosition, margin + firstRowWidths.col1, yPosition + firstRowHeight);
+  doc.line(margin + firstRowWidths.col1 + firstRowWidths.col2, yPosition, margin + firstRowWidths.col1 + firstRowWidths.col2, yPosition + firstRowHeight);
   
   yPosition += firstRowHeight;
   
@@ -159,12 +152,12 @@ export const generatePautaPDF = (pauta: Pauta) => {
   doc.setTextColor(255, 255, 255);
   
   doc.text("PAUTEIROS", margin + 2, yPosition + 8);
-  doc.text("REPÓRTER", margin + col1Width + 2, yPosition + 8);
-  doc.text("IMAGENS", margin + col1Width + col2Width + 2, yPosition + 8);
+  doc.text("REPÓRTER", margin + secondRowWidths.col1 + 2, yPosition + 8);
+  doc.text("IMAGENS", margin + secondRowWidths.col1 + secondRowWidths.col2 + 2, yPosition + 8);
   
   // Draw vertical lines for second row
-  doc.line(margin + col1Width, yPosition, margin + col1Width, yPosition + baseRowHeight);
-  doc.line(margin + col1Width + col2Width, yPosition, margin + col1Width + col2Width, yPosition + baseRowHeight);
+  doc.line(margin + secondRowWidths.col1, yPosition, margin + secondRowWidths.col1, yPosition + baseRowHeight);
+  doc.line(margin + secondRowWidths.col1 + secondRowWidths.col2, yPosition, margin + secondRowWidths.col1 + secondRowWidths.col2, yPosition + baseRowHeight);
   
   yPosition += baseRowHeight;
   
@@ -185,17 +178,17 @@ export const generatePautaPDF = (pauta: Pauta) => {
   
   textY = yPosition + 7;
   reporterLines.forEach((line: string, index: number) => {
-    doc.text(line, margin + col1Width + 2, textY + (index * 6));
+    doc.text(line, margin + secondRowWidths.col1 + 2, textY + (index * 6));
   });
   
   textY = yPosition + 7;
   imagensLines.forEach((line: string, index: number) => {
-    doc.text(line, margin + col1Width + col2Width + 2, textY + (index * 6));
+    doc.text(line, margin + secondRowWidths.col1 + secondRowWidths.col2 + 2, textY + (index * 6));
   });
   
   // Draw vertical lines for second data row
-  doc.line(margin + col1Width, yPosition, margin + col1Width, yPosition + secondRowHeight);
-  doc.line(margin + col1Width + col2Width, yPosition, margin + col1Width + col2Width, yPosition + secondRowHeight);
+  doc.line(margin + secondRowWidths.col1, yPosition, margin + secondRowWidths.col1, yPosition + secondRowHeight);
+  doc.line(margin + secondRowWidths.col1 + secondRowWidths.col2, yPosition, margin + secondRowWidths.col1 + secondRowWidths.col2, yPosition + secondRowHeight);
   
   yPosition += secondRowHeight + lineHeight * 2;
 
