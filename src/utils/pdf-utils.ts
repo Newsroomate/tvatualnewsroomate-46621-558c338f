@@ -18,21 +18,34 @@ export const generatePautaPDF = (pauta: Pauta) => {
     }
   };
 
-  // Start directly with the table - no unnecessary header
-  yPosition = margin;
+  // Add main title
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.setTextColor(0, 0, 0);
+  doc.text("PAUTA DE PRODUÇÃO", pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 15;
+
+  // Add generation info
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(100, 100, 100);
+  const now = new Date();
+  const generationInfo = `Gerado em: ${now.toLocaleDateString('pt-BR')} às ${now.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}`;
+  doc.text(generationInfo, pageWidth / 2, yPosition, { align: 'center' });
+  yPosition += 20;
 
   // Create adaptive header table
   const tableStartY = yPosition;
   const tableWidth = pageWidth - margin * 2;
   const baseRowHeight = 12;
   
-  // Prepare data for adaptive sizing
+  // Prepare data for adaptive sizing - connect all fields properly
   const dataCobertura = pauta.data_cobertura || pauta.horario || '-';
   const retranca = pauta.titulo || '-';
-  const programa = '-'; // PROGRAMA field
+  const programa = pauta.programa || '-'; // Connect to pauta.programa field
   const pauteiros = pauta.produtor || '-';
-  const reporter = '-'; // REPÓRTER field  
-  const imagens = pauta.local || '-'; // IMAGENS field
+  const reporter = pauta.reporter || '-'; // Connect to pauta.reporter field  
+  const imagens = pauta.local || '-'; // IMAGENS maps to local field
   
   // Calculate required width for each field based on content independently for each row
   doc.setFont("helvetica", "normal");
@@ -69,22 +82,27 @@ export const generatePautaPDF = (pauta: Pauta) => {
     }
   };
   
-  // Calculate widths for first row (DATA, RETRANCA, PROGRAMA)
-  const firstRowWidths = calculateRowWidths(dataCobertura, retranca, programa, "DATA", "RETRANCA", "PROGRAMA");
+  // Use unified column widths for both rows for better alignment
+  const unifiedCol1Width = tableWidth * 0.25; // 25% for first column
+  const unifiedCol2Width = tableWidth * 0.45; // 45% for middle column  
+  const unifiedCol3Width = tableWidth * 0.30; // 30% for last column
   
-  // Calculate widths for second row (PAUTEIROS, REPÓRTER, IMAGENS)
-  const secondRowWidths = calculateRowWidths(pauteiros, reporter, imagens, "PAUTEIROS", "REPÓRTER", "IMAGENS");
+  const unifiedWidths = {
+    col1: unifiedCol1Width,
+    col2: unifiedCol2Width,
+    col3: unifiedCol3Width
+  };
   
-  // Calculate required height for each row based on content and column width
-  const dataLines = doc.splitTextToSize(dataCobertura, firstRowWidths.col1 - 4);
-  const retrancaLines = doc.splitTextToSize(retranca, firstRowWidths.col2 - 4);
-  const programaLines = doc.splitTextToSize(programa, firstRowWidths.col3 - 4);
+  // Calculate required height for each row based on content and unified column width
+  const dataLines = doc.splitTextToSize(dataCobertura, unifiedWidths.col1 - 4);
+  const retrancaLines = doc.splitTextToSize(retranca, unifiedWidths.col2 - 4);
+  const programaLines = doc.splitTextToSize(programa, unifiedWidths.col3 - 4);
   const firstRowLines = Math.max(dataLines.length, retrancaLines.length, programaLines.length);
   const firstRowHeight = Math.max(baseRowHeight, firstRowLines * 6 + 6);
   
-  const pauteirosLines = doc.splitTextToSize(pauteiros, secondRowWidths.col1 - 4);
-  const reporterLines = doc.splitTextToSize(reporter, secondRowWidths.col2 - 4);
-  const imagensLines = doc.splitTextToSize(imagens, secondRowWidths.col3 - 4);
+  const pauteirosLines = doc.splitTextToSize(pauteiros, unifiedWidths.col1 - 4);
+  const reporterLines = doc.splitTextToSize(reporter, unifiedWidths.col2 - 4);
+  const imagensLines = doc.splitTextToSize(imagens, unifiedWidths.col3 - 4);
   const secondRowLines = Math.max(pauteirosLines.length, reporterLines.length, imagensLines.length);
   const secondRowHeight = Math.max(baseRowHeight, secondRowLines * 6 + 6);
   
@@ -102,12 +120,12 @@ export const generatePautaPDF = (pauta: Pauta) => {
   doc.setTextColor(255, 255, 255);
   
   doc.text("DATA", margin + 2, yPosition + 8);
-  doc.text("RETRANCA", margin + firstRowWidths.col1 + 2, yPosition + 8);
-  doc.text("PROGRAMA", margin + firstRowWidths.col1 + firstRowWidths.col2 + 2, yPosition + 8);
+  doc.text("RETRANCA", margin + unifiedWidths.col1 + 2, yPosition + 8);
+  doc.text("PROGRAMA", margin + unifiedWidths.col1 + unifiedWidths.col2 + 2, yPosition + 8);
   
   // Draw vertical lines for first row
-  doc.line(margin + firstRowWidths.col1, yPosition, margin + firstRowWidths.col1, yPosition + baseRowHeight);
-  doc.line(margin + firstRowWidths.col1 + firstRowWidths.col2, yPosition, margin + firstRowWidths.col1 + firstRowWidths.col2, yPosition + baseRowHeight);
+  doc.line(margin + unifiedWidths.col1, yPosition, margin + unifiedWidths.col1, yPosition + baseRowHeight);
+  doc.line(margin + unifiedWidths.col1 + unifiedWidths.col2, yPosition, margin + unifiedWidths.col1 + unifiedWidths.col2, yPosition + baseRowHeight);
   
   yPosition += baseRowHeight;
   
@@ -128,17 +146,17 @@ export const generatePautaPDF = (pauta: Pauta) => {
   
   textY = yPosition + 7;
   retrancaLines.forEach((line: string, index: number) => {
-    doc.text(line, margin + firstRowWidths.col1 + 2, textY + (index * 6));
+    doc.text(line, margin + unifiedWidths.col1 + 2, textY + (index * 6));
   });
   
   textY = yPosition + 7;
   programaLines.forEach((line: string, index: number) => {
-    doc.text(line, margin + firstRowWidths.col1 + firstRowWidths.col2 + 2, textY + (index * 6));
+    doc.text(line, margin + unifiedWidths.col1 + unifiedWidths.col2 + 2, textY + (index * 6));
   });
   
   // Draw vertical lines for first data row
-  doc.line(margin + firstRowWidths.col1, yPosition, margin + firstRowWidths.col1, yPosition + firstRowHeight);
-  doc.line(margin + firstRowWidths.col1 + firstRowWidths.col2, yPosition, margin + firstRowWidths.col1 + firstRowWidths.col2, yPosition + firstRowHeight);
+  doc.line(margin + unifiedWidths.col1, yPosition, margin + unifiedWidths.col1, yPosition + firstRowHeight);
+  doc.line(margin + unifiedWidths.col1 + unifiedWidths.col2, yPosition, margin + unifiedWidths.col1 + unifiedWidths.col2, yPosition + firstRowHeight);
   
   yPosition += firstRowHeight;
   
@@ -152,12 +170,12 @@ export const generatePautaPDF = (pauta: Pauta) => {
   doc.setTextColor(255, 255, 255);
   
   doc.text("PAUTEIROS", margin + 2, yPosition + 8);
-  doc.text("REPÓRTER", margin + secondRowWidths.col1 + 2, yPosition + 8);
-  doc.text("IMAGENS", margin + secondRowWidths.col1 + secondRowWidths.col2 + 2, yPosition + 8);
+  doc.text("REPÓRTER", margin + unifiedWidths.col1 + 2, yPosition + 8);
+  doc.text("IMAGENS", margin + unifiedWidths.col1 + unifiedWidths.col2 + 2, yPosition + 8);
   
   // Draw vertical lines for second row
-  doc.line(margin + secondRowWidths.col1, yPosition, margin + secondRowWidths.col1, yPosition + baseRowHeight);
-  doc.line(margin + secondRowWidths.col1 + secondRowWidths.col2, yPosition, margin + secondRowWidths.col1 + secondRowWidths.col2, yPosition + baseRowHeight);
+  doc.line(margin + unifiedWidths.col1, yPosition, margin + unifiedWidths.col1, yPosition + baseRowHeight);
+  doc.line(margin + unifiedWidths.col1 + unifiedWidths.col2, yPosition, margin + unifiedWidths.col1 + unifiedWidths.col2, yPosition + baseRowHeight);
   
   yPosition += baseRowHeight;
   
@@ -178,17 +196,17 @@ export const generatePautaPDF = (pauta: Pauta) => {
   
   textY = yPosition + 7;
   reporterLines.forEach((line: string, index: number) => {
-    doc.text(line, margin + secondRowWidths.col1 + 2, textY + (index * 6));
+    doc.text(line, margin + unifiedWidths.col1 + 2, textY + (index * 6));
   });
   
   textY = yPosition + 7;
   imagensLines.forEach((line: string, index: number) => {
-    doc.text(line, margin + secondRowWidths.col1 + secondRowWidths.col2 + 2, textY + (index * 6));
+    doc.text(line, margin + unifiedWidths.col1 + unifiedWidths.col2 + 2, textY + (index * 6));
   });
   
   // Draw vertical lines for second data row
-  doc.line(margin + secondRowWidths.col1, yPosition, margin + secondRowWidths.col1, yPosition + secondRowHeight);
-  doc.line(margin + secondRowWidths.col1 + secondRowWidths.col2, yPosition, margin + secondRowWidths.col1 + secondRowWidths.col2, yPosition + secondRowHeight);
+  doc.line(margin + unifiedWidths.col1, yPosition, margin + unifiedWidths.col1, yPosition + secondRowHeight);
+  doc.line(margin + unifiedWidths.col1 + unifiedWidths.col2, yPosition, margin + unifiedWidths.col1 + unifiedWidths.col2, yPosition + secondRowHeight);
   
   yPosition += secondRowHeight + lineHeight * 2;
 
@@ -243,13 +261,12 @@ export const generatePautaPDF = (pauta: Pauta) => {
     yPosition += contentHeight + lineHeight;
   };
 
-  // Add all content blocks in the same order as the form
+  // Add all content blocks in the same order as the form (remove duplicate IMAGENS)
   createContentBlock('ROTEIRO 1', pauta.descricao || '');
   createContentBlock('ENTREVISTADOS', pauta.entrevistado || '');
   createContentBlock('PROPOSTA', pauta.proposta || '');
   createContentBlock('ENCAMINHAMENTO', pauta.encaminhamento || '');
   createContentBlock('INFORMAÇÕES', pauta.informacoes || '');
-  createContentBlock('IMAGENS', pauta.local || ''); // Using 'local' field for images
 
   // Add page numbers
   const totalPages = doc.getNumberOfPages();
