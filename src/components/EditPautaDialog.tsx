@@ -21,11 +21,10 @@ export const EditPautaDialog = ({
 }: EditPautaDialogProps) => {
   const [data, setData] = useState(pauta.data_cobertura || pauta.horario || "");
   const [retranca, setRetranca] = useState(pauta.titulo);
-  const [programa, setPrograma] = useState("");
+  const [programa, setPrograma] = useState(pauta.programa || "");
   const [pauteiros, setPauteiros] = useState(pauta.produtor || "");
-  const [reporter, setReporter] = useState("");
+  const [reporter, setReporter] = useState(pauta.reporter || "");
   const [imagens, setImagens] = useState(pauta.local || "");
-  const [programas, setProgramas] = useState("");
   const [roteiro1, setRoteiro1] = useState(pauta.descricao || "");
   const [entrevistados, setEntrevistados] = useState(pauta.entrevistado || "");
   const [proposta, setProposta] = useState(pauta.proposta || "");
@@ -42,7 +41,6 @@ export const EditPautaDialog = ({
     try {
       await updatePauta(pauta.id, {
         titulo: retranca,
-        // Use retranca as titulo for compatibility
         descricao: roteiro1,
         local: imagens,
         horario: data,
@@ -51,7 +49,9 @@ export const EditPautaDialog = ({
         proposta,
         encaminhamento,
         informacoes,
-        data_cobertura: data // Map DATA field to data_cobertura
+        data_cobertura: data,
+        programa,
+        reporter
       });
       onPautaUpdated();
       onClose();
@@ -73,7 +73,7 @@ export const EditPautaDialog = ({
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
               <Label htmlFor="data">DATA</Label>
               <Input id="data" type="date" value={data} onChange={e => setData(e.target.value)} required />
@@ -82,11 +82,6 @@ export const EditPautaDialog = ({
             <div className="space-y-1">
               <Label htmlFor="programa">PROGRAMA</Label>
               <Input id="programa" value={programa} onChange={e => setPrograma(e.target.value)} placeholder="Nome do programa" />
-            </div>
-            
-            <div className="space-y-1">
-              <Label htmlFor="programas">PROGRAMA</Label>
-              <Input id="programas" value={programas} onChange={e => setProgramas(e.target.value)} placeholder="Lista de programas" />
             </div>
           </div>
           

@@ -323,7 +323,9 @@ export type Database = {
           informacoes: string | null
           local: string | null
           produtor: string | null
+          programa: string | null
           proposta: string | null
+          reporter: string | null
           status: string | null
           titulo: string
           updated_at: string | null
@@ -340,7 +342,9 @@ export type Database = {
           informacoes?: string | null
           local?: string | null
           produtor?: string | null
+          programa?: string | null
           proposta?: string | null
+          reporter?: string | null
           status?: string | null
           titulo: string
           updated_at?: string | null
@@ -357,7 +361,9 @@ export type Database = {
           informacoes?: string | null
           local?: string | null
           produtor?: string | null
+          programa?: string | null
           proposta?: string | null
+          reporter?: string | null
           status?: string | null
           titulo?: string
           updated_at?: string | null
