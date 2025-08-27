@@ -29,6 +29,7 @@ export const generatePautaPDF = (pauta: Pauta) => {
   // Prepare data for adaptive sizing
   const dataCobertura = pauta.data_cobertura || pauta.horario || '-';
   const retranca = pauta.titulo || '-';
+  const programa = '-'; // PROGRAMA field
   const pauteiros = pauta.produtor || '-';
   const reporter = '-'; // REPÓRTER field  
   const imagens = pauta.local || '-'; // IMAGENS field
@@ -68,16 +69,17 @@ export const generatePautaPDF = (pauta: Pauta) => {
     }
   };
   
-  // Calculate widths for first row (DATA, RETRANCA)
-  const firstRowWidths = calculateRowWidths(dataCobertura, retranca, "", "DATA", "RETRANCA", "");
+  // Calculate widths for first row (DATA, RETRANCA, PROGRAMA)
+  const firstRowWidths = calculateRowWidths(dataCobertura, retranca, programa, "DATA", "RETRANCA", "PROGRAMA");
   
   // Calculate widths for second row (PAUTEIROS, REPÓRTER, IMAGENS)
   const secondRowWidths = calculateRowWidths(pauteiros, reporter, imagens, "PAUTEIROS", "REPÓRTER", "IMAGENS");
   
   // Calculate required height for each row based on content and column width
   const dataLines = doc.splitTextToSize(dataCobertura, firstRowWidths.col1 - 4);
-  const retrancaLines = doc.splitTextToSize(retranca, firstRowWidths.col1 + firstRowWidths.col2 - 4);
-  const firstRowLines = Math.max(dataLines.length, retrancaLines.length);
+  const retrancaLines = doc.splitTextToSize(retranca, firstRowWidths.col2 - 4);
+  const programaLines = doc.splitTextToSize(programa, firstRowWidths.col3 - 4);
+  const firstRowLines = Math.max(dataLines.length, retrancaLines.length, programaLines.length);
   const firstRowHeight = Math.max(baseRowHeight, firstRowLines * 6 + 6);
   
   const pauteirosLines = doc.splitTextToSize(pauteiros, secondRowWidths.col1 - 4);
@@ -101,6 +103,7 @@ export const generatePautaPDF = (pauta: Pauta) => {
   
   doc.text("DATA", margin + 2, yPosition + 8);
   doc.text("RETRANCA", margin + firstRowWidths.col1 + 2, yPosition + 8);
+  doc.text("PROGRAMA", margin + firstRowWidths.col1 + firstRowWidths.col2 + 2, yPosition + 8);
   
   // Draw vertical lines for first row
   doc.line(margin + firstRowWidths.col1, yPosition, margin + firstRowWidths.col1, yPosition + baseRowHeight);
@@ -128,6 +131,10 @@ export const generatePautaPDF = (pauta: Pauta) => {
     doc.text(line, margin + firstRowWidths.col1 + 2, textY + (index * 6));
   });
   
+  textY = yPosition + 7;
+  programaLines.forEach((line: string, index: number) => {
+    doc.text(line, margin + firstRowWidths.col1 + firstRowWidths.col2 + 2, textY + (index * 6));
+  });
   
   // Draw vertical lines for first data row
   doc.line(margin + firstRowWidths.col1, yPosition, margin + firstRowWidths.col1, yPosition + firstRowHeight);
