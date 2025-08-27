@@ -62,11 +62,11 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
     doc.setFont("helvetica", "bold");
     
     const colWidths = {
-      numero: 25,
-      tipo: 35,
-      reporter: 45,
-      retranca: 50,
-      clip: 30
+      numero: 20,
+      tipo: 30,
+      reporter: 35,
+      retranca: 40,
+      clip: 25
     };
     
     let xPos = margin;
@@ -102,7 +102,7 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
       
       // Tipo de material
       const tipoMaterial = materia.tipo_material || '-';
-      const maxTipoLength = 12;
+      const maxTipoLength = 10;
       const displayTipo = tipoMaterial.length > maxTipoLength 
         ? tipoMaterial.substring(0, maxTipoLength) + '...' 
         : tipoMaterial;
@@ -111,21 +111,29 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
       
       // Repórter
       const reporter = materia.reporter || '-';
-      const maxReporterLength = 18;
+      const maxReporterLength = 12;
       const displayReporter = reporter.length > maxReporterLength 
         ? reporter.substring(0, maxReporterLength) + '...' 
         : reporter;
       doc.text(displayReporter, xPos, yPosition);
       xPos += colWidths.reporter;
       
-      // Retranca
+      // Retranca (limitar a 3-4 palavras)
       const retranca = materia.retranca || 'Sem retranca';
-      doc.text(retranca, xPos, yPosition);
+      const retrancaWords = retranca.split(' ');
+      const displayRetranca = retrancaWords.length > 4 
+        ? retrancaWords.slice(0, 4).join(' ') + '...'
+        : retranca;
+      doc.text(displayRetranca, xPos, yPosition);
       xPos += colWidths.retranca;
       
       // Clip
       const clip = materia.clip || '-';
-      doc.text(clip, xPos, yPosition);
+      const maxClipLength = 8;
+      const displayClip = clip.length > maxClipLength 
+        ? clip.substring(0, maxClipLength) + '...' 
+        : clip;
+      doc.text(displayClip, xPos, yPosition);
 
       yPosition += lineHeight;
     });
