@@ -46,9 +46,9 @@ export const generatePautaPDF = (pauta: Pauta) => {
   };
 
   // CABEÇALHO COM LOGO E CAMPOS
-  // Logo NEWS - usando a logo fornecida
+  // Logo NEWS - usando a nova logo da Record NEWS
   try {
-    const logoPath = '/lovable-uploads/51de25cb-c3f7-49cc-8683-bd91fcf5c8e4.png';
+    const logoPath = '/lovable-uploads/a9067d29-344c-4afe-baf1-3abd4f0334a3.png';
     doc.addImage(logoPath, 'PNG', margin, yPosition, 35, 20);
   } catch (error) {
     // Fallback para texto se a imagem não carregar
