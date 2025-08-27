@@ -92,14 +92,14 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Nova Pauta</DialogTitle>
         </DialogHeader>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="space-y-1">
               <Label htmlFor="data">DATA</Label>
               <Input
                 id="data"
@@ -110,7 +110,7 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="retranca">RETRANCA</Label>
               <Input
                 id="retranca"
@@ -121,7 +121,7 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="programa">PROGRAMA</Label>
               <Input
                 id="programa"
@@ -132,8 +132,8 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
               <Label htmlFor="pauteiros">PAUTEIROS</Label>
               <Input
                 id="pauteiros"
@@ -143,7 +143,7 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="reporter">REPÓRTER</Label>
               <Input
                 id="reporter"
@@ -154,8 +154,8 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
               <Label htmlFor="imagens">IMAGENS</Label>
               <Textarea
                 id="imagens"
@@ -163,10 +163,11 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
                 onChange={(e) => setImagens(e.target.value)}
                 placeholder="Informações sobre imagens"
                 rows={2}
+                className="resize-y"
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="programas">PROGRAMAS</Label>
               <Textarea
                 id="programas"
@@ -174,70 +175,86 @@ export const PautaModal = ({ isOpen, onClose, onPautaCreated }: PautaModalProps)
                 onChange={(e) => setProgramas(e.target.value)}
                 placeholder="Programas relacionados"
                 rows={2}
+                className="resize-y"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="roteiro1">ROTEIRO 1</Label>
             <Textarea
               id="roteiro1"
               value={roteiro1}
               onChange={(e) => setRoteiro1(e.target.value)}
               placeholder="Conteúdo do roteiro"
-              rows={4}
+              rows={2}
+              className="resize-y"
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="entrevistados">ENTREVISTADOS</Label>
             <Textarea
               id="entrevistados"
               value={entrevistados}
               onChange={(e) => setEntrevistados(e.target.value)}
               placeholder="Lista de entrevistados"
-              rows={3}
+              rows={2}
+              className="resize-y"
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="space-y-1">
               <Label htmlFor="proposta">PROPOSTA</Label>
               <Textarea
                 id="proposta"
                 value={proposta}
                 onChange={(e) => setProposta(e.target.value)}
                 placeholder="Descrição da proposta"
-                rows={3}
+                rows={2}
+                className="resize-y"
               />
             </div>
             
-            <div className="space-y-2">
+            <div className="space-y-1">
               <Label htmlFor="encaminhamento">ENCAMINHAMENTO</Label>
               <Textarea
                 id="encaminhamento"
                 value={encaminhamento}
                 onChange={(e) => setEncaminhamento(e.target.value)}
                 placeholder="Encaminhamento da pauta"
-                rows={3}
+                rows={2}
+                className="resize-y"
               />
             </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-1">
             <Label htmlFor="informacoes">INFORMAÇÕES</Label>
             <Textarea
               id="informacoes"
               value={informacoes}
               onChange={(e) => setInformacoes(e.target.value)}
               placeholder="Informações adicionais"
-              rows={3}
+              rows={2}
+              className="resize-y"
             />
           </div>
           
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={handleClose}>Cancelar</Button>
-            <Button type="submit" disabled={isSubmitting || !retranca.trim()}>
+          <DialogFooter className="pt-3">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={handleClose}
+              disabled={isSubmitting}
+            >
+              Cancelar
+            </Button>
+            <Button 
+              type="submit" 
+              disabled={isSubmitting || !retranca.trim()}
+            >
               {isSubmitting ? "Salvando..." : "Salvar Pauta"}
             </Button>
           </DialogFooter>

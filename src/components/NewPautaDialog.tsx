@@ -175,7 +175,7 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
               value={roteiro1}
               onChange={(e) => setRoteiro1(e.target.value)}
               placeholder="Conteúdo do roteiro"
-              rows={4}
+              rows={2}
               className="resize-y"
             />
           </div>
@@ -187,7 +187,7 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
               value={entrevistados}
               onChange={(e) => setEntrevistados(e.target.value)}
               placeholder="Lista de entrevistados"
-              rows={3}
+              rows={2}
               className="resize-y"
             />
           </div>
@@ -200,7 +200,7 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
                 value={proposta}
                 onChange={(e) => setProposta(e.target.value)}
                 placeholder="Descrição da proposta"
-                rows={3}
+                rows={2}
                 className="resize-y"
               />
             </div>
@@ -212,7 +212,7 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
                 value={encaminhamento}
                 onChange={(e) => setEncaminhamento(e.target.value)}
                 placeholder="Encaminhamento da pauta"
-                rows={3}
+                rows={2}
                 className="resize-y"
               />
             </div>
@@ -225,7 +225,7 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
               value={informacoes}
               onChange={(e) => setInformacoes(e.target.value)}
               placeholder="Informações adicionais"
-              rows={3}
+              rows={2}
               className="resize-y"
             />
           </div>
