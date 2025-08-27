@@ -105,68 +105,51 @@ export const generatePautaPDF = (pauta: Pauta) => {
   
   yPosition += lineHeight * 3;
 
-  // Content sections with block styling
-  const createContentBlock = (title: string, content: string) => {
-    checkNewPage(lineHeight * 8);
+  // Content sections
+  const createContentSection = (title: string, content: string) => {
+    checkNewPage(lineHeight * 5);
     
-    // Block background for title
-    const blockHeight = 8;
-    doc.setFillColor(50, 50, 50); // Dark gray background
-    doc.rect(margin, yPosition - 5, pageWidth - margin * 2, blockHeight, 'F');
-    
-    // Section title in white text
+    // Section title
     doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(255, 255, 255); // White text
-    doc.text(title, margin + 3, yPosition);
+    doc.setFontSize(12);
+    doc.text(title, margin, yPosition);
     yPosition += lineHeight;
     
-    // Reset text color to black
-    doc.setTextColor(0, 0, 0);
-    
-    // Content area with border
-    const contentStartY = yPosition;
-    yPosition += 3; // Small padding
+    // Section separator line
+    doc.setLineWidth(0.3);
+    doc.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += lineHeight;
     
     // Section content
     if (content && content.trim()) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
-      const maxWidth = pageWidth - margin * 2 - 6; // Account for padding
+      const maxWidth = pageWidth - margin * 2;
       const lines = doc.splitTextToSize(content, maxWidth);
       
       lines.forEach((line: string) => {
         checkNewPage();
-        doc.text(line, margin + 3, yPosition);
+        doc.text(line, margin, yPosition);
         yPosition += lineHeight;
       });
     } else {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(128, 128, 128);
-      doc.text('**CONTEÚDO AQUI**', margin + 3, yPosition);
+      doc.text('(Nenhuma informação)', margin, yPosition);
       doc.setTextColor(0, 0, 0);
       yPosition += lineHeight;
     }
     
-    yPosition += 3; // Bottom padding
-    
-    // Draw border around content area
-    const contentHeight = yPosition - contentStartY;
-    doc.setDrawColor(50, 50, 50);
-    doc.setLineWidth(0.5);
-    doc.rect(margin, contentStartY, pageWidth - margin * 2, contentHeight);
-    
-    yPosition += lineHeight; // Space between blocks
+    yPosition += lineHeight;
   };
 
   // Add all content sections
-  createContentBlock('ROTEIRO 1', pauta.descricao || '');
-  createContentBlock('ENTREVISTADOS', pauta.entrevistado || '');
-  createContentBlock('PROPOSTA', pauta.proposta || '');
-  createContentBlock('ENCAMINHAMENTO', pauta.encaminhamento || '');
-  createContentBlock('INFORMAÇÕES', pauta.informacoes || '');
-  createContentBlock('IMAGENS', '-'); // Placeholder for images section
+  createContentSection('ROTEIRO 1', pauta.descricao || '');
+  createContentSection('ENTREVISTADOS', pauta.entrevistado || '');
+  createContentSection('PROPOSTA', pauta.proposta || '');
+  createContentSection('ENCAMINHAMENTO', pauta.encaminhamento || '');
+  createContentSection('INFORMAÇÕES', pauta.informacoes || '');
 
   // Add page numbers
   const totalPages = doc.getNumberOfPages();
