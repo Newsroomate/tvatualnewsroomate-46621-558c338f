@@ -46,13 +46,19 @@ export const generatePautaPDF = (pauta: Pauta) => {
   };
 
   // CABEÇALHO COM LOGO E CAMPOS
-  // Logo NEWS (simulada com texto por enquanto)
-  doc.setFillColor(0, 102, 204);
-  doc.rect(margin, yPosition, 35, 20, 'F');
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(14);
-  doc.setFont('helvetica', 'bold');
-  doc.text('NEWS', margin + 8, yPosition + 13);
+  // Logo NEWS - usando a logo fornecida
+  try {
+    const logoPath = '/lovable-uploads/51de25cb-c3f7-49cc-8683-bd91fcf5c8e4.png';
+    doc.addImage(logoPath, 'PNG', margin, yPosition, 35, 20);
+  } catch (error) {
+    // Fallback para texto se a imagem não carregar
+    doc.setFillColor(0, 102, 204);
+    doc.rect(margin, yPosition, 35, 20, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.text('NEWS', margin + 8, yPosition + 13);
+  }
   
   // Grid de campos do cabeçalho
   const headerStartX = margin + 40;
