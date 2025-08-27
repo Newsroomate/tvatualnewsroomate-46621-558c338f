@@ -58,9 +58,10 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
               padding: 0,
               margin: 0,
               textAlign: 'center',
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word',
-              hyphens: 'auto',
+              wordBreak: 'keep-all',
+              overflowWrap: 'normal',
+              hyphens: 'none',
+              whiteSpace: 'pre-wrap',
               maxWidth: '100%'
             }}
           >
@@ -95,9 +96,10 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                       padding: 0,
                       margin: '0 0 16px 0',
                       textAlign: 'center',
-                      wordWrap: 'break-word',
-                      overflowWrap: 'break-word',
-                      hyphens: 'auto',
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'normal',
+                      hyphens: 'none',
+                      whiteSpace: 'pre-wrap',
                       maxWidth: '100%',
                       width: '100%'
                     }}
@@ -116,9 +118,10 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                       padding: 0,
                       margin: '0 0 12px 0',
                       textAlign: 'center',
-                      wordWrap: 'break-word',
-                      overflowWrap: 'break-word',
-                      hyphens: 'auto',
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'normal',
+                      hyphens: 'none',
+                      whiteSpace: 'pre-wrap',
                       maxWidth: '100%',
                       width: '100%',
                       textTransform: 'uppercase',
@@ -138,12 +141,12 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                     padding: 0,
                     margin: '0 0 8px 0',
                     textAlign: 'center',
-                    wordWrap: 'break-word',
-                    overflowWrap: 'break-word',
-                    hyphens: 'auto',
+                    wordBreak: 'keep-all',
+                    overflowWrap: 'normal',
+                    hyphens: 'none',
+                    whiteSpace: 'pre-wrap',
                     maxWidth: '100%',
-                    width: '100%',
-                    whiteSpace: 'pre-wrap'
+                    width: '100%'
                   }}
                 >
                   {materia.retranca || `Matéria ${materia.ordem}`}
@@ -159,12 +162,12 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                       padding: 0,
                       margin: '0 0 8px 0',
                       textAlign: 'left',
-                      wordWrap: 'break-word',
-                      overflowWrap: 'break-word',
-                      hyphens: 'auto',
+                      wordBreak: 'keep-all',
+                      overflowWrap: 'normal',
+                      hyphens: 'none',
+                      whiteSpace: 'pre-wrap',
                       maxWidth: '100%',
-                      width: '100%',
-                      whiteSpace: 'pre-wrap'
+                      width: '100%'
                     }}
                   >
                     {materia.cabeca}
