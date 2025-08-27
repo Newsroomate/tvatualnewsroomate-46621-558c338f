@@ -11,54 +11,52 @@ export const generatePautaPDF = (pauta: Pauta) => {
   const pageWidth = doc.internal.pageSize.width;
   const contentWidth = pageWidth - margin * 2;
   
-  // Função para criar células da tabela
-  const createTableCell = (x: number, y: number, width: number, height: number, label: string, content: string = '', isHeader: boolean = false) => {
-    // Cor de fundo
-    if (isHeader) {
-      doc.setFillColor(60, 60, 60);
-    } else {
-      doc.setFillColor(255, 255, 255);
-    }
-    doc.rect(x, y, width, height, 'F');
+  // Função para criar células da tabela do cabeçalho
+  const createHeaderCell = (x: number, y: number, width: number, height: number, label: string, content: string = '') => {
+    // Fundo cinza claro para o título
+    doc.setFillColor(240, 240, 240);
+    doc.rect(x, y, width, 12, 'F');
+    
+    // Fundo branco para o conteúdo
+    doc.setFillColor(255, 255, 255);
+    doc.rect(x, y + 12, width, height - 12, 'F');
     
     // Bordas
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
     doc.rect(x, y, width, height);
+    doc.rect(x, y, width, 12); // Linha separando título do conteúdo
     
-    // Texto do label (cabeçalho)
-    doc.setTextColor(isHeader ? 255 : 0, isHeader ? 255 : 0, isHeader ? 255 : 0);
+    // Texto do título
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(9);
     doc.setFont('helvetica', 'bold');
+    doc.text(label, x + 2, y + 8);
     
-    const labelY = y + (height / 2) + 2;
-    doc.text(label, x + 2, labelY);
-    
-    // Conteúdo (se houver e não for header)
-    if (content && !isHeader) {
+    // Conteúdo
+    if (content) {
       doc.setTextColor(0, 0, 0);
       doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      const contentY = y + height - 3;
+      doc.setFontSize(10);
       const maxWidth = width - 4;
       const lines = doc.splitTextToSize(content, maxWidth);
-      doc.text(lines[0] || '', x + 2, contentY);
+      doc.text(lines, x + 2, y + 18);
     }
   };
   
   // Função para criar seção de conteúdo
   const createContentSection = (y: number, label: string, content: string = '') => {
-    const sectionHeight = Math.max(25, Math.ceil((content || '').length / 120) * 8 + 20);
+    const sectionHeight = Math.max(40, Math.ceil((content || '').length / 100) * 6 + 30);
     
-    // Cabeçalho da seção (fundo escuro)
-    doc.setFillColor(60, 60, 60);
+    // Cabeçalho da seção (fundo cinza claro)
+    doc.setFillColor(240, 240, 240);
     doc.rect(margin, y, contentWidth, 12, 'F');
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(0.5);
     doc.rect(margin, y, contentWidth, 12);
     
     // Texto do cabeçalho
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(0, 0, 0);
     doc.setFontSize(10);
     doc.setFont('helvetica', 'bold');
     doc.text(label, margin + 3, y + 8);
@@ -72,15 +70,10 @@ export const generatePautaPDF = (pauta: Pauta) => {
     // Conteúdo
     if (content) {
       doc.setTextColor(0, 0, 0);
-      doc.setFontSize(9);
+      doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
       const lines = doc.splitTextToSize(content, contentWidth - 6);
-      doc.text(lines, margin + 3, y + 20);
-    } else {
-      // Placeholder
-      doc.setTextColor(150, 150, 150);
-      doc.setFont('helvetica', 'italic');
-      doc.text('*CONTEÚDO AQUI*', margin + 3, y + 20);
+      doc.text(lines, margin + 3, y + 22);
     }
     
     return y + sectionHeight + 3;
@@ -90,29 +83,29 @@ export const generatePautaPDF = (pauta: Pauta) => {
   yPosition = margin;
 
   // TABELA SUPERIOR
-  const cellHeight = 20;
+  const cellHeight = 30;
   const thirdWidth = contentWidth / 3;
   
-  // Primeira linha da tabela
-  const dataFormatada = pauta.created_at ? 
-    new Date(pauta.created_at).toLocaleDateString('pt-BR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    }) : '';
+  // Data atual de hoje
+  const dataAtual = new Date().toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
   
-  createTableCell(margin, yPosition, thirdWidth, cellHeight, 'DATA', dataFormatada, true);
-  createTableCell(margin + thirdWidth, yPosition, thirdWidth, cellHeight, 'RETRANCA', pauta.titulo || '', true);
-  createTableCell(margin + (thirdWidth * 2), yPosition, thirdWidth, cellHeight, 'PROGRAMA', '', true);
+  // Primeira linha da tabela
+  createHeaderCell(margin, yPosition, thirdWidth, cellHeight, 'DATA', dataAtual);
+  createHeaderCell(margin + thirdWidth, yPosition, thirdWidth, cellHeight, 'RETRANCA', pauta.titulo || '');
+  createHeaderCell(margin + (thirdWidth * 2), yPosition, thirdWidth, cellHeight, 'PROGRAMA', '');
   
   yPosition += cellHeight;
   
   // Segunda linha da tabela
-  createTableCell(margin, yPosition, thirdWidth, cellHeight, 'PAUTEIROS', pauta.produtor || '', true);
-  createTableCell(margin + thirdWidth, yPosition, thirdWidth, cellHeight, 'REPÓRTER', '', true);
-  createTableCell(margin + (thirdWidth * 2), yPosition, thirdWidth, cellHeight, 'IMAGENS', '', true);
+  createHeaderCell(margin, yPosition, thirdWidth, cellHeight, 'PAUTEIROS', pauta.produtor || '');
+  createHeaderCell(margin + thirdWidth, yPosition, thirdWidth, cellHeight, 'REPÓRTER', '');
+  createHeaderCell(margin + (thirdWidth * 2), yPosition, thirdWidth, cellHeight, 'IMAGENS', '');
   
-  yPosition += cellHeight + 5;
+  yPosition += cellHeight + 8;
 
   // SEÇÕES DE CONTEÚDO
   yPosition = createContentSection(yPosition, 'ROTEIRO 1', pauta.descricao);
