@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { createPauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
@@ -23,7 +23,7 @@ export const PautaModal = ({
   const [pauteiros, setPauteiros] = useState("");
   const [reporter, setReporter] = useState("");
   const [imagens, setImagens] = useState("");
-  const [programas, setProgramas] = useState("");
+  
   const [roteiro1, setRoteiro1] = useState("");
   const [entrevistados, setEntrevistados] = useState("");
   const [proposta, setProposta] = useState("");
@@ -51,7 +51,6 @@ export const PautaModal = ({
     try {
       await createPauta({
         titulo: retranca,
-        // Use retranca as titulo for compatibility
         descricao: roteiro1,
         local: imagens,
         horario: data,
@@ -61,7 +60,9 @@ export const PautaModal = ({
         encaminhamento,
         informacoes,
         status: "pendente",
-        data_cobertura: data // Map DATA field to data_cobertura
+        data_cobertura: data,
+        programa,
+        reporter
       });
       onPautaCreated();
       handleClose();
@@ -83,7 +84,7 @@ export const PautaModal = ({
     setPauteiros("");
     setReporter("");
     setImagens("");
-    setProgramas("");
+    
     setRoteiro1("");
     setEntrevistados("");
     setProposta("");
@@ -136,27 +137,27 @@ export const PautaModal = ({
 
           <div className="space-y-1">
             <Label htmlFor="roteiro1">ROTEIRO 1</Label>
-            <Textarea id="roteiro1" value={roteiro1} onChange={e => setRoteiro1(e.target.value)} placeholder="Conteúdo do roteiro" rows={2} className="resize-y" />
+            <AutoTextarea id="roteiro1" value={roteiro1} onChange={e => setRoteiro1(e.target.value)} placeholder="Conteúdo do roteiro" />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="entrevistados">ENTREVISTADOS</Label>
-            <Textarea id="entrevistados" value={entrevistados} onChange={e => setEntrevistados(e.target.value)} placeholder="Lista de entrevistados" rows={2} className="resize-y" />
+            <AutoTextarea id="entrevistados" value={entrevistados} onChange={e => setEntrevistados(e.target.value)} placeholder="Lista de entrevistados" />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="proposta">PROPOSTA</Label>
-            <Textarea id="proposta" value={proposta} onChange={e => setProposta(e.target.value)} placeholder="Descrição da proposta" rows={2} className="resize-y" />
+            <AutoTextarea id="proposta" value={proposta} onChange={e => setProposta(e.target.value)} placeholder="Descrição da proposta" />
           </div>
           
           <div className="space-y-1">
             <Label htmlFor="encaminhamento">ENCAMINHAMENTO</Label>
-            <Textarea id="encaminhamento" value={encaminhamento} onChange={e => setEncaminhamento(e.target.value)} placeholder="Encaminhamento da pauta" rows={2} className="resize-y" />
+            <AutoTextarea id="encaminhamento" value={encaminhamento} onChange={e => setEncaminhamento(e.target.value)} placeholder="Encaminhamento da pauta" />
           </div>
 
           <div className="space-y-1">
             <Label htmlFor="informacoes">INFORMAÇÕES</Label>
-            <Textarea id="informacoes" value={informacoes} onChange={e => setInformacoes(e.target.value)} placeholder="Informações adicionais" rows={2} className="resize-y" />
+            <AutoTextarea id="informacoes" value={informacoes} onChange={e => setInformacoes(e.target.value)} placeholder="Informações adicionais" />
           </div>
           
           <DialogFooter className="pt-3">
