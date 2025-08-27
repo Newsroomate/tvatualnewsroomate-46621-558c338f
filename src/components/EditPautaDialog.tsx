@@ -80,13 +80,13 @@ export const EditPautaDialog = ({
             </div>
             
             <div className="space-y-1">
-              <Label htmlFor="imagens">IMAGENS</Label>
-              <Input id="imagens" value={imagens} onChange={e => setImagens(e.target.value)} placeholder="Informações sobre imagens" />
+              <Label htmlFor="programa">PROGRAMA</Label>
+              <Input id="programa" value={programa} onChange={e => setPrograma(e.target.value)} placeholder="Nome do programa" />
             </div>
             
             <div className="space-y-1">
-              <Label htmlFor="programa">PROGRAMA</Label>
-              <Input id="programa" value={programa} onChange={e => setPrograma(e.target.value)} placeholder="Nome do programa" />
+              <Label htmlFor="programas">PROGRAMAS</Label>
+              <Input id="programas" value={programas} onChange={e => setProgramas(e.target.value)} placeholder="Lista de programas" />
             </div>
           </div>
           
@@ -105,6 +105,11 @@ export const EditPautaDialog = ({
               <Label htmlFor="reporter">REPÓRTER</Label>
               <Input id="reporter" value={reporter} onChange={e => setReporter(e.target.value)} placeholder="Nome do repórter" />
             </div>
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="imagens">IMAGENS</Label>
+            <AutoTextarea id="imagens" value={imagens} onChange={e => setImagens(e.target.value)} placeholder="Informações sobre imagens" />
           </div>
 
           
