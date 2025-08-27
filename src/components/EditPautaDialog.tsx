@@ -7,47 +7,54 @@ import { Textarea } from "@/components/ui/textarea";
 import { updatePauta } from "@/services/pautas-api";
 import { Pauta } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+
 interface EditPautaDialogProps {
   isOpen: boolean;
   onClose: () => void;
   pauta: Pauta;
   onPautaUpdated: () => void;
 }
+
 export const EditPautaDialog = ({
   isOpen,
   onClose,
   pauta,
-  onPautaUpdated
+  onPautaUpdated,
 }: EditPautaDialogProps) => {
-  const [titulo, setTitulo] = useState(pauta.titulo);
-  const [descricao, setDescricao] = useState(pauta.descricao || "");
-  const [local, setLocal] = useState(pauta.local || "");
-  const [horario, setHorario] = useState(pauta.horario || "");
-  const [entrevistado, setEntrevistado] = useState(pauta.entrevistado || "");
-  const [produtor, setProdutor] = useState(pauta.produtor || "");
+  const [data, setData] = useState(pauta.data_cobertura || pauta.horario || "");
+  const [retranca, setRetranca] = useState(pauta.titulo);
+  const [programa, setPrograma] = useState("");
+  const [pauteiros, setPauteiros] = useState(pauta.produtor || "");
+  const [reporter, setReporter] = useState("");
+  const [imagens, setImagens] = useState(pauta.local || "");
+  const [programas, setProgramas] = useState("");
+  const [roteiro1, setRoteiro1] = useState(pauta.descricao || "");
+  const [entrevistados, setEntrevistados] = useState(pauta.entrevistado || "");
   const [proposta, setProposta] = useState(pauta.proposta || "");
   const [encaminhamento, setEncaminhamento] = useState(pauta.encaminhamento || "");
   const [informacoes, setInformacoes] = useState(pauta.informacoes || "");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    toast
-  } = useToast();
+  const { toast } = useToast();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!titulo.trim()) return;
+    if (!retranca.trim()) return;
+    
     setIsSubmitting(true);
     try {
-      await updatePauta(pauta.id, {
-        titulo,
-        descricao,
-        local,
-        horario,
-        entrevistado,
-        produtor,
+      await updatePauta(pauta.id, { 
+        titulo: retranca, // Use retranca as titulo for compatibility
+        descricao: roteiro1,
+        local: imagens,
+        horario: data,
+        entrevistado: entrevistados,
+        produtor: pauteiros,
         proposta,
         encaminhamento,
-        informacoes
+        informacoes,
+        data_cobertura: data // Map DATA field to data_cobertura
       });
+      
       onPautaUpdated();
       onClose();
     } catch (error) {
@@ -55,13 +62,15 @@ export const EditPautaDialog = ({
       toast({
         title: "Erro ao atualizar pauta",
         description: "Ocorreu um erro ao atualizar a pauta. Tente novamente.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
   };
-  return <Dialog open={isOpen} onOpenChange={onClose}>
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Editar Pauta</DialogTitle>
@@ -70,61 +79,162 @@ export const EditPautaDialog = ({
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="titulo">Título da Pauta</Label>
-              <Input id="titulo" value={titulo} onChange={e => setTitulo(e.target.value)} placeholder="Digite o título da pauta" required />
+              <Label htmlFor="data">DATA</Label>
+              <Input
+                id="data"
+                type="date"
+                value={data}
+                onChange={(e) => setData(e.target.value)}
+                required
+              />
             </div>
             
             <div className="space-y-1">
-              <Label htmlFor="horario">Horário</Label>
-              <Input id="horario" type="time" value={horario} onChange={e => setHorario(e.target.value)} />
+              <Label htmlFor="programa">PROGRAMA</Label>
+              <Input
+                id="programa"
+                value={programa}
+                onChange={(e) => setPrograma(e.target.value)}
+                placeholder="Nome do programa"
+              />
             </div>
           </div>
           
           <div className="space-y-1">
-            <Label htmlFor="descricao">Descrição</Label>
-            <Textarea id="descricao" value={descricao} onChange={e => setDescricao(e.target.value)} placeholder="Descreva os detalhes da pauta" rows={2} className="resize-y" />
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="local">Local</Label>
-            <Textarea id="local" value={local} onChange={e => setLocal(e.target.value)} placeholder="Local da cobertura" rows={2} className="resize-y" />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            <div className="space-y-1">
-              <Label htmlFor="entrevistado">Entrevistado</Label>
-              <Textarea id="entrevistado" value={entrevistado} onChange={e => setEntrevistado(e.target.value)} placeholder="Nome do entrevistado" rows={2} className="resize-y" />
-            </div>
-            
-            
+            <Label htmlFor="retranca">RETRANCA</Label>
+            <Input
+              id="retranca"
+              value={retranca}
+              onChange={(e) => setRetranca(e.target.value)}
+              placeholder="Digite a retranca"
+              required
+            />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="proposta">Proposta</Label>
-              <Textarea id="proposta" value={proposta} onChange={e => setProposta(e.target.value)} placeholder="Digite a proposta" rows={2} className="resize-y" />
+              <Label htmlFor="pauteiros">PAUTEIROS</Label>
+              <Input
+                id="pauteiros"
+                value={pauteiros}
+                onChange={(e) => setPauteiros(e.target.value)}
+                placeholder="Nome dos pauteiros"
+              />
             </div>
             
             <div className="space-y-1">
-              <Label htmlFor="encaminhamento">Encaminhamento</Label>
-              <Textarea id="encaminhamento" value={encaminhamento} onChange={e => setEncaminhamento(e.target.value)} placeholder="Digite o encaminhamento" rows={2} className="resize-y" />
+              <Label htmlFor="reporter">REPÓRTER</Label>
+              <Input
+                id="reporter"
+                value={reporter}
+                onChange={(e) => setReporter(e.target.value)}
+                placeholder="Nome do repórter"
+              />
             </div>
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="informacoes">Informações Adicionais</Label>
-            <Textarea id="informacoes" value={informacoes} onChange={e => setInformacoes(e.target.value)} placeholder="Digite as informações adicionais" rows={2} className="resize-y" />
+            <Label htmlFor="programas">PROGRAMAS</Label>
+            <Textarea
+              id="programas"
+              value={programas}
+              onChange={(e) => setProgramas(e.target.value)}
+              placeholder="Programas relacionados"
+              rows={2}
+              className="resize-y"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="roteiro1">ROTEIRO 1</Label>
+            <Textarea
+              id="roteiro1"
+              value={roteiro1}
+              onChange={(e) => setRoteiro1(e.target.value)}
+              placeholder="Conteúdo do roteiro"
+              rows={2}
+              className="resize-y"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="entrevistados">ENTREVISTADOS</Label>
+            <Textarea
+              id="entrevistados"
+              value={entrevistados}
+              onChange={(e) => setEntrevistados(e.target.value)}
+              placeholder="Lista de entrevistados"
+              rows={2}
+              className="resize-y"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="proposta">PROPOSTA</Label>
+            <Textarea
+              id="proposta"
+              value={proposta}
+              onChange={(e) => setProposta(e.target.value)}
+              placeholder="Descrição da proposta"
+              rows={2}
+              className="resize-y"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="encaminhamento">ENCAMINHAMENTO</Label>
+            <Textarea
+              id="encaminhamento"
+              value={encaminhamento}
+              onChange={(e) => setEncaminhamento(e.target.value)}
+              placeholder="Encaminhamento da pauta"
+              rows={2}
+              className="resize-y"
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="informacoes">INFORMAÇÕES</Label>
+            <Textarea
+              id="informacoes"
+              value={informacoes}
+              onChange={(e) => setInformacoes(e.target.value)}
+              placeholder="Informações adicionais"
+              rows={2}
+              className="resize-y"
+            />
+          </div>
+          
+          <div className="space-y-1">
+            <Label htmlFor="imagens">IMAGENS</Label>
+            <Textarea
+              id="imagens"
+              value={imagens}
+              onChange={(e) => setImagens(e.target.value)}
+              placeholder="Informações sobre imagens"
+              rows={2}
+              className="resize-y"
+            />
           </div>
           
           <DialogFooter className="pt-3">
-            <Button type="button" variant="outline" onClick={onClose} disabled={isSubmitting}>
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={onClose}
+              disabled={isSubmitting}
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={!titulo.trim() || isSubmitting}>
+            <Button 
+              type="submit" 
+              disabled={!retranca.trim() || isSubmitting}
+            >
               {isSubmitting ? "Salvando..." : "Salvar Alterações"}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };
