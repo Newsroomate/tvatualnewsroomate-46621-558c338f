@@ -5,6 +5,9 @@ import { formatTime } from "./utils";
 import { MaterialTypeBadge } from "./MaterialTypeBadge";
 import { StatusBadge } from "./StatusBadge";
 import { NewsItemActions } from "./NewsItemActions";
+import { InlineEditCell } from "./InlineEditCell";
+import { updateMateria } from "@/services/materias-api";
+import { toast } from "@/hooks/use-toast";
 
 interface NewsItemProps {
   item: Materia;
@@ -60,6 +63,34 @@ export const NewsItem = ({
     }
   };
 
+  // Status options for inline editing
+  const statusOptions = [
+    { value: "draft", label: "Rascunho" },
+    { value: "review", label: "Em revisão" },
+    { value: "approved", label: "Aprovado" },
+    { value: "published", label: "Publicado" }
+  ];
+
+  // Handle inline field updates
+  const handleInlineUpdate = async (field: string, value: string) => {
+    if (!canModify || !isEspelhoOpen) return;
+
+    try {
+      await updateMateria(item.id, { [field]: value });
+      toast({
+        title: "Campo atualizado",
+        description: `${field === 'retranca' ? 'Retranca' : field === 'status' ? 'Status' : 'Repórter'} atualizado com sucesso.`,
+      });
+    } catch (error) {
+      console.error('Erro ao atualizar campo:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao atualizar o campo. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Determine row styling based on selection and drag state
   const getRowStyling = () => {
     let classes = "hover:bg-gray-50 transition-colors cursor-pointer";
@@ -99,13 +130,33 @@ export const NewsItem = ({
       <td className="py-2 px-4">
         <MaterialTypeBadge tipoMaterial={item.tipo_material} />
       </td>
-      <td className="py-2 px-4 font-medium">{displayRetranca}</td>
+      <td className="py-2 px-4 font-medium" onClick={(e) => e.stopPropagation()}>
+        <InlineEditCell
+          value={displayRetranca}
+          onSave={(value) => handleInlineUpdate('retranca', value)}
+          disabled={!canModify || !isEspelhoOpen}
+          placeholder="Sem título"
+        />
+      </td>
       <td className="py-2 px-4 font-mono text-xs">{item.clip || ''}</td>
       <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
-      <td className="py-2 px-4">
-        <StatusBadge status={displayStatus} />
+      <td className="py-2 px-4" onClick={(e) => e.stopPropagation()}>
+        <InlineEditCell
+          value={displayStatus}
+          onSave={(value) => handleInlineUpdate('status', value)}
+          type="select"
+          options={statusOptions}
+          disabled={!canModify || !isEspelhoOpen}
+        />
       </td>
-      <td className="py-2 px-4">{item.reporter || '-'}</td>
+      <td className="py-2 px-4" onClick={(e) => e.stopPropagation()}>
+        <InlineEditCell
+          value={item.reporter || ''}
+          onSave={(value) => handleInlineUpdate('reporter', value)}
+          disabled={!canModify || !isEspelhoOpen}
+          placeholder="Sem repórter"
+        />
+      </td>
       <td className="py-2 px-4">
         <NewsItemActions
           item={item}
