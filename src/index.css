@@ -67,13 +67,6 @@
   }
 }
  
-/* Teleprompter highlight effect */
-.teleprompter-highlight {
-  background-color: rgba(255, 255, 0, 0.3) !important;
-  border: 2px solid #fbbf24 !important;
-  border-radius: 4px !important;
-  transition: all 0.3s ease !important;
-}
 
 @layer base {
   * {

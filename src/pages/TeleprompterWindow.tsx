@@ -90,12 +90,6 @@ const TeleprompterWindow = () => {
         if (materiaElement) {
           console.log("Found materia element, scrolling to it:", materiaElement);
           
-          // Add a visual highlight temporarily
-          materiaElement.classList.add('teleprompter-highlight');
-          setTimeout(() => {
-            materiaElement.classList.remove('teleprompter-highlight');
-          }, 2000);
-          
           materiaElement.scrollIntoView({ 
             behavior: 'smooth', 
             block: 'center' 
