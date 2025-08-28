@@ -69,6 +69,7 @@ export const NewsSchedule = ({
             handleViewTeleprompter={hookProps.handleViewTeleprompter}
             handleSaveModel={hookProps.handleSaveModel}
             handleViewSavedModels={hookProps.handleViewSavedModels}
+            handleFocusInTeleprompter={hookProps.handleFocusInTeleprompter}
             isDualView={isDualView}
           />
 
