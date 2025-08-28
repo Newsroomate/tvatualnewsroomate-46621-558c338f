@@ -82,8 +82,28 @@ export const NewsItem = ({
     if (!canModify || !isEspelhoOpen) return;
 
     try {
-      // Map exactly to database fields as used in edit screen
-      await updateMateria(item.id, { [field]: value });
+      // Prepare the update object with proper field mapping
+      const updateData: Record<string, any> = {};
+      
+      // Ensure status field is never empty - default to 'draft'
+      if (field === 'status') {
+        updateData[field] = value && value.trim() !== '' ? value : 'draft';
+      } else if (field === 'reporter') {
+        // Allow null/empty for reporter field but handle it properly
+        updateData[field] = value && value.trim() !== '' ? value.trim() : null;
+      } else {
+        // For other fields, preserve the value as-is
+        updateData[field] = value;
+      }
+      
+      // Ensure retranca is always present since it's required
+      if (field !== 'retranca') {
+        updateData.retranca = item.retranca;
+      }
+
+      console.log(`Updating ${field} for materia ${item.id}:`, updateData);
+      
+      await updateMateria(item.id, updateData);
       toast({
         title: "Campo atualizado",
         description: `${field === 'retranca' ? 'Retranca' : field === 'status' ? 'Status' : field === 'reporter' ? 'Repórter' : field} atualizado com sucesso.`,
@@ -149,7 +169,7 @@ export const NewsItem = ({
       <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
       <td className="py-2 px-4" onClick={(e) => e.stopPropagation()}>
         <InlineEditCell
-          value={displayStatus}
+          value={item.status || 'draft'}
           onSave={(value) => handleInlineUpdate('status', value)}
           type="status"
           options={statusOptions}

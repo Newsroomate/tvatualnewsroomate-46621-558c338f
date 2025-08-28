@@ -25,12 +25,26 @@ export const InlineEditCell = ({
   const [editValue, setEditValue] = useState(value);
 
   useEffect(() => {
-    setEditValue(value);
-  }, [value]);
+    // Ensure status field always has a valid default value
+    if (type === "status" && (!value || value === null || value === undefined)) {
+      setEditValue("draft");
+    } else {
+      setEditValue(value || "");
+    }
+  }, [value, type]);
 
   const handleSave = () => {
-    if (editValue !== value) {
-      onSave(editValue);
+    // Normalize empty values for proper comparison and saving
+    const normalizedEditValue = editValue?.trim() === "" ? null : editValue?.trim();
+    const normalizedValue = value?.trim() === "" ? null : value?.trim();
+    
+    if (normalizedEditValue !== normalizedValue) {
+      // For status field, ensure we never save empty values - default to 'draft'
+      if (type === "status" && !normalizedEditValue) {
+        onSave("draft");
+      } else {
+        onSave(normalizedEditValue || "");
+      }
     }
     setIsEditing(false);
   };
@@ -52,13 +66,19 @@ export const InlineEditCell = ({
   // Para o campo status, sempre mostrar como dropdown fixo
   if (type === "status") {
     if (disabled) {
-      return <span className="text-gray-500">{options.find(opt => opt.value === value)?.label || value || "-"}</span>;
+      return <span className="text-gray-500">{options.find(opt => opt.value === value)?.label || "Rascunho"}</span>;
     }
+    
+    // Ensure status always has a valid value - default to 'draft' if empty/null
+    const statusValue = value && value !== "" ? value : "draft";
     
     return (
       <Select 
-        value={value} 
-        onValueChange={onSave}
+        value={statusValue} 
+        onValueChange={(newValue) => {
+          // Ensure we're saving exactly the same format as edit screen
+          onSave(newValue);
+        }}
         disabled={disabled}
       >
         <SelectTrigger className="h-8 text-xs bg-white border-gray-200">
