@@ -201,7 +201,7 @@ export const NewsScheduleHooks = ({
     handleModelApplied,
     handleViewSavedModels,
     handleMateriaSelect,
-    handleFocusInTeleprompter: focusOnMateria,
+    handleFocusInTeleprompter: (materia: Materia) => focusOnMateria(materia.id),
     
     // Clipboard functionality
     copyMateria,
