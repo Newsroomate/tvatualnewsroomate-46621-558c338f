@@ -63,29 +63,30 @@ export const NewsItem = ({
     }
   };
 
-  // Status options for inline editing
+  // Status options for inline editing - exactly matching the edit screen
   const statusOptions = [
     { value: "draft", label: "Rascunho" },
-    { value: "review", label: "Em Revisão" },
+    { value: "review", label: "Em revisão" },
     { value: "approved", label: "Aprovado" },
     { value: "published", label: "Publicado" }
   ];
 
-  // Helper function to get status label in Portuguese
+  // Helper function to get status label in Portuguese  
   const getStatusLabel = (status: string) => {
     const option = statusOptions.find(opt => opt.value === status);
     return option ? option.label : status;
   };
 
-  // Handle inline field updates
+  // Handle inline field updates - ensuring exact database field mapping
   const handleInlineUpdate = async (field: string, value: string) => {
     if (!canModify || !isEspelhoOpen) return;
 
     try {
+      // Map exactly to database fields as used in edit screen
       await updateMateria(item.id, { [field]: value });
       toast({
         title: "Campo atualizado",
-        description: `${field === 'retranca' ? 'Retranca' : field === 'status' ? 'Status' : 'Repórter'} atualizado com sucesso.`,
+        description: `${field === 'retranca' ? 'Retranca' : field === 'status' ? 'Status' : field === 'reporter' ? 'Repórter' : field} atualizado com sucesso.`,
       });
     } catch (error) {
       console.error('Erro ao atualizar campo:', error);
