@@ -9,6 +9,7 @@ interface BlockContentProps {
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
   onDuplicateItem: (item: Materia) => void;
+  onFocusInTeleprompter?: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModifyItems?: boolean;
   // Batch selection props
@@ -26,6 +27,7 @@ export const BlockContent = ({
   onEditItem, 
   onDeleteItem,
   onDuplicateItem,
+  onFocusInTeleprompter,
   isEspelhoOpen,
   canModifyItems = true,
   // Batch selection props
@@ -82,6 +84,7 @@ export const BlockContent = ({
                           onEdit={onEditItem}
                           onDelete={onDeleteItem}
                           onDuplicate={onDuplicateItem}
+                          onFocusInTeleprompter={onFocusInTeleprompter}
                           provided={provided}
                           snapshot={snapshot}
                           isEspelhoOpen={isEspelhoOpen}

@@ -40,6 +40,7 @@ interface NewsScheduleCoreProps {
   handleViewTeleprompter: () => void;
   handleSaveModel: () => void;
   handleViewSavedModels: () => void;
+  handleFocusInTeleprompter?: (item: Materia) => void;
   isDualView?: boolean;
 }
 
@@ -70,6 +71,7 @@ export const NewsScheduleCore = ({
   handleViewTeleprompter,
   handleSaveModel,
   handleViewSavedModels,
+  handleFocusInTeleprompter,
   isDualView = false
 }: NewsScheduleCoreProps) => {
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
@@ -125,6 +127,7 @@ export const NewsScheduleCore = ({
           onEditItem={onEditItem}
           onDeleteItem={handleDeleteMateria}
           onDuplicateItem={handleDuplicateItem}
+          onFocusInTeleprompter={handleFocusInTeleprompter}
           onRenameBlock={handleRenameBlock}
           onDeleteBlock={handleDeleteBlock}
           journalPrefix={journalPrefix}

@@ -1,4 +1,5 @@
 
+import { useEffect } from "react";
 import { TeleprompterContent } from "@/components/news-schedule/teleprompter/TeleprompterContent";
 import { TeleprompterWindowHeader } from "@/components/news-schedule/teleprompter/TeleprompterWindowHeader";
 import { TeleprompterWindowControls } from "@/components/news-schedule/teleprompter/TeleprompterWindowControls";
@@ -70,6 +71,29 @@ const TeleprompterWindow = () => {
     contentRef,
     scrollPosition
   });
+
+  // Focus on specific materia functionality
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data.type === 'TELEPROMPTER_FOCUS_MATERIA') {
+        const materiaId = event.data.materiaId;
+        console.log("Focusing on materia:", materiaId);
+        
+        if (contentRef.current) {
+          const materiaElement = contentRef.current.querySelector(`[data-materia-id="${materiaId}"]`);
+          if (materiaElement) {
+            materiaElement.scrollIntoView({ 
+              behavior: 'smooth', 
+              block: 'center' 
+            });
+          }
+        }
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, [contentRef]);
 
   // Show loading only for a brief moment initially
   if (isLoading) {

@@ -91,6 +91,21 @@ export const useTeleprompterWindow = () => {
     }
   };
 
+  const focusOnMateria = (materiaId: string) => {
+    if (windowRef.current && !windowRef.current.closed) {
+      console.log("Focusing on materia:", materiaId);
+      
+      try {
+        windowRef.current.postMessage({
+          type: 'TELEPROMPTER_FOCUS_MATERIA',
+          materiaId
+        }, '*');
+      } catch (error) {
+        console.error("Error focusing on materia in teleprompter:", error);
+      }
+    }
+  };
+
   const updateTeleprompterData = (blocks: (Bloco & { items: Materia[] })[]) => {
     if (windowRef.current && !windowRef.current.closed) {
       console.log("Updating teleprompter with blocks:", blocks);
@@ -167,6 +182,7 @@ export const useTeleprompterWindow = () => {
     isOpen,
     openTeleprompter,
     updateTeleprompterData,
+    focusOnMateria,
     closeTeleprompter
   };
 };

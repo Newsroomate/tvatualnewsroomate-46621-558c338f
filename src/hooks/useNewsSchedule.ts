@@ -132,6 +132,7 @@ export const useNewsSchedule = ({
   const { 
     openTeleprompter, 
     updateTeleprompterData, 
+    focusOnMateria,
     closeTeleprompter 
   } = useTeleprompterWindow();
 
@@ -166,6 +167,7 @@ export const useNewsSchedule = ({
     handleRenameBlock,
     handleDeleteBlock,
     handleDragEnd,
-    openTeleprompter
+    openTeleprompter,
+    focusOnMateria
   };
 };

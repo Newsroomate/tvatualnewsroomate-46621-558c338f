@@ -14,6 +14,7 @@ interface NewsBlockProps {
   onEditItem: (item: Materia) => void;
   onDeleteItem: (item: Materia) => void;
   onDuplicateItem: (item: Materia) => void;
+  onFocusInTeleprompter?: (item: Materia) => void;
   isEspelhoOpen: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
@@ -31,6 +32,7 @@ export const NewsBlock = ({
   onEditItem,
   onDeleteItem,
   onDuplicateItem,
+  onFocusInTeleprompter,
   isEspelhoOpen,
   onRenameBlock,
   onDeleteBlock,
@@ -136,6 +138,7 @@ export const NewsBlock = ({
         onEditItem={onEditItem}
         onDeleteItem={onDeleteItem}
         onDuplicateItem={onDuplicateItem}
+        onFocusInTeleprompter={onFocusInTeleprompter}
         isEspelhoOpen={isEspelhoOpen}
         canModifyItems={canModify}
         // Batch selection props

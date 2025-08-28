@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Copy } from "lucide-react";
+import { Trash2, Pencil, Copy, Target } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -14,6 +14,7 @@ interface NewsItemActionsProps {
   onEdit: (item: Materia) => void;
   onDelete: (item: Materia) => void;
   onDuplicate: (item: Materia) => void;
+  onFocusInTeleprompter?: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModify?: boolean;
 }
@@ -23,6 +24,7 @@ export const NewsItemActions = ({
   onEdit,
   onDelete,
   onDuplicate,
+  onFocusInTeleprompter,
   isEspelhoOpen,
   canModify = true
 }: NewsItemActionsProps) => {
@@ -77,6 +79,26 @@ export const NewsItemActions = ({
           )}
         </Tooltip>
       </TooltipProvider>
+
+      {onFocusInTeleprompter && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                onClick={() => onFocusInTeleprompter(item)}
+                className="text-blue-600 hover:text-blue-800"
+              >
+                <Target className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Centralizar no teleprompter
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
       
       <TooltipProvider>
         <Tooltip>

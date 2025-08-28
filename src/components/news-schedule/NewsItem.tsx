@@ -14,6 +14,7 @@ interface NewsItemProps {
   onEdit: (item: Materia) => void;
   onDelete: (item: Materia) => void;
   onDuplicate: (item: Materia) => void;
+  onFocusInTeleprompter?: (item: Materia) => void;
   provided: any;
   snapshot: any;
   isEspelhoOpen: boolean;
@@ -33,6 +34,7 @@ export const NewsItem = ({
   onEdit, 
   onDelete,
   onDuplicate,
+  onFocusInTeleprompter,
   provided, 
   snapshot,
   isEspelhoOpen,
@@ -190,6 +192,7 @@ export const NewsItem = ({
           onEdit={onEdit}
           onDelete={onDelete}
           onDuplicate={onDuplicate}
+          onFocusInTeleprompter={onFocusInTeleprompter}
           isEspelhoOpen={isEspelhoOpen}
           canModify={canModify}
         />

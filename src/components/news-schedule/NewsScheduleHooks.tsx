@@ -62,8 +62,9 @@ export const NewsScheduleHooks = ({
     handleRenameBlock,
     handleDeleteBlock,
     handleDragEnd,
-    openTeleprompter
-  } = useNewsSchedule({ 
+    openTeleprompter,
+    focusOnMateria
+  } = useNewsSchedule({
     selectedJournal, 
     currentTelejornal, 
     onEditItem,
@@ -200,6 +201,7 @@ export const NewsScheduleHooks = ({
     handleModelApplied,
     handleViewSavedModels,
     handleMateriaSelect,
+    handleFocusInTeleprompter: focusOnMateria,
     
     // Clipboard functionality
     copyMateria,
