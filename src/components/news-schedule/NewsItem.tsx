@@ -66,10 +66,16 @@ export const NewsItem = ({
   // Status options for inline editing
   const statusOptions = [
     { value: "draft", label: "Rascunho" },
-    { value: "review", label: "Em revisão" },
+    { value: "review", label: "Em Revisão" },
     { value: "approved", label: "Aprovado" },
     { value: "published", label: "Publicado" }
   ];
+
+  // Helper function to get status label in Portuguese
+  const getStatusLabel = (status: string) => {
+    const option = statusOptions.find(opt => opt.value === status);
+    return option ? option.label : status;
+  };
 
   // Handle inline field updates
   const handleInlineUpdate = async (field: string, value: string) => {
@@ -144,7 +150,7 @@ export const NewsItem = ({
         <InlineEditCell
           value={displayStatus}
           onSave={(value) => handleInlineUpdate('status', value)}
-          type="select"
+          type="status"
           options={statusOptions}
           disabled={!canModify || !isEspelhoOpen}
         />

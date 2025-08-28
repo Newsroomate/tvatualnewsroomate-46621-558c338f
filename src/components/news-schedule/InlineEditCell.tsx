@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 interface InlineEditCellProps {
   value: string;
   onSave: (newValue: string) => void;
-  type?: "text" | "select";
+  type?: "text" | "select" | "status";
   options?: { value: string; label: string }[];
   disabled?: boolean;
   placeholder?: string;
@@ -48,6 +48,32 @@ export const InlineEditCell = ({
       handleCancel();
     }
   };
+
+  // Para o campo status, sempre mostrar como dropdown fixo
+  if (type === "status") {
+    if (disabled) {
+      return <span className="text-gray-500">{options.find(opt => opt.value === value)?.label || value || "-"}</span>;
+    }
+    
+    return (
+      <Select 
+        value={value} 
+        onValueChange={onSave}
+        disabled={disabled}
+      >
+        <SelectTrigger className="h-8 text-xs bg-white border-gray-200">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="bg-white z-50 border shadow-md">
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value} className="cursor-pointer hover:bg-gray-50">
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    );
+  }
 
   if (disabled) {
     return <span className="text-gray-500">{value || "-"}</span>;
