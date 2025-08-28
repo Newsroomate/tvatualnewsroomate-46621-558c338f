@@ -21,10 +21,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
     const orderedMaterias: (Materia & { blockName?: string })[] = [];
     
     sortedBlocks.forEach(block => {
-      // Sort materias within each block by ordem and filter by 'approved' status
-      const sortedMaterias = [...block.items]
-        .filter(materia => materia.status === 'approved')
-        .sort((a, b) => a.ordem - b.ordem);
+      // Sort materias within each block by ordem
+      const sortedMaterias = [...block.items].sort((a, b) => a.ordem - b.ordem);
       
       // Add block name to each materia for context
       sortedMaterias.forEach(materia => {
