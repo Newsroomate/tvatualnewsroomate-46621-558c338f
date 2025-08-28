@@ -72,6 +72,22 @@ export const InlineEditCell = ({
     // Ensure status always has a valid value - default to 'draft' if empty/null
     const statusValue = value && value !== "" ? value : "draft";
     
+    // Define cores de fundo para cada status
+    const getStatusBgColor = (status: string) => {
+      switch (status) {
+        case "draft":
+          return "bg-gray-100 text-gray-700 border-gray-200";
+        case "review":
+          return "bg-orange-100 text-orange-700 border-orange-200";
+        case "approved":
+          return "bg-green-100 text-green-700 border-green-200";
+        case "published":
+          return "bg-blue-100 text-blue-700 border-blue-200";
+        default:
+          return "bg-gray-100 text-gray-700 border-gray-200";
+      }
+    };
+    
     return (
       <Select 
         value={statusValue} 
@@ -81,12 +97,16 @@ export const InlineEditCell = ({
         }}
         disabled={disabled}
       >
-        <SelectTrigger className="h-8 text-xs bg-white border-gray-200">
+        <SelectTrigger className={`h-8 text-xs ${getStatusBgColor(statusValue)}`}>
           <SelectValue />
         </SelectTrigger>
         <SelectContent className="bg-white z-50 border shadow-md">
           {options.map((option) => (
-            <SelectItem key={option.value} value={option.value} className="cursor-pointer hover:bg-gray-50">
+            <SelectItem 
+              key={option.value} 
+              value={option.value} 
+              className={`cursor-pointer hover:opacity-80 ${getStatusBgColor(option.value)}`}
+            >
               {option.label}
             </SelectItem>
           ))}
