@@ -84,23 +84,23 @@ const TeleprompterWindow = () => {
           return;
         }
 
-        console.log("Searching for element with data-materia-id:", materiaId);
-        const materiaElement = contentRef.current.querySelector(`[data-materia-id="${materiaId}"]`);
+        console.log("Searching for retranca with data-retranca-id:", materiaId);
+        const retrancaElement = contentRef.current.querySelector(`[data-retranca-id="${materiaId}"]`);
         
-        if (materiaElement) {
-          console.log("Found materia element, scrolling to it:", materiaElement);
+        if (retrancaElement) {
+          console.log("Found retranca element, scrolling to it:", retrancaElement);
           
-          materiaElement.scrollIntoView({ 
+          retrancaElement.scrollIntoView({ 
             behavior: 'smooth', 
             block: 'center' 
           });
           
-          console.log("Scrolled to materia successfully");
+          console.log("Scrolled to retranca successfully");
         } else {
-          console.error("Materia element not found with ID:", materiaId);
-          console.log("Available materia elements:", 
-            Array.from(contentRef.current.querySelectorAll('[data-materia-id]'))
-              .map(el => el.getAttribute('data-materia-id'))
+          console.error("Retranca element not found with ID:", materiaId);
+          console.log("Available retranca elements:", 
+            Array.from(contentRef.current.querySelectorAll('[data-retranca-id]'))
+              .map(el => el.getAttribute('data-retranca-id'))
           );
         }
       }

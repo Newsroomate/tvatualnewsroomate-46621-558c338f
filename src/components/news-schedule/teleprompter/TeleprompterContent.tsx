@@ -135,6 +135,7 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                 {/* Retranca com cor customizada */}
                 <div 
                   className="font-bold"
+                  data-retranca-id={materia.id}
                   style={{ 
                     fontSize: `${fontSize}px`,
                     color: retrancaColor,
