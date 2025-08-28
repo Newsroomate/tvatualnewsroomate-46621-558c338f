@@ -92,17 +92,30 @@ export const useTeleprompterWindow = () => {
   };
 
   const focusOnMateria = (materiaId: string) => {
-    if (windowRef.current && !windowRef.current.closed) {
-      console.log("Focusing on materia:", materiaId);
+    console.log("focusOnMateria called with ID:", materiaId);
+    console.log("Window ref current:", windowRef.current);
+    console.log("Window closed:", windowRef.current?.closed);
+    
+    if (!windowRef.current || windowRef.current.closed) {
+      console.warn("Teleprompter window is not open. Please open the teleprompter first.");
+      // You could add a toast notification here
+      return false;
+    }
+
+    console.log("Sending focus message to teleprompter window");
+    
+    try {
+      windowRef.current.postMessage({
+        type: 'TELEPROMPTER_FOCUS_MATERIA',
+        materiaId
+      }, '*');
       
-      try {
-        windowRef.current.postMessage({
-          type: 'TELEPROMPTER_FOCUS_MATERIA',
-          materiaId
-        }, '*');
-      } catch (error) {
-        console.error("Error focusing on materia in teleprompter:", error);
-      }
+      windowRef.current.focus(); // Also focus the window
+      console.log("Focus message sent successfully");
+      return true;
+    } catch (error) {
+      console.error("Error focusing on materia in teleprompter:", error);
+      return false;
     }
   };
 

@@ -77,16 +77,37 @@ const TeleprompterWindow = () => {
     const handleMessage = (event: MessageEvent) => {
       if (event.data.type === 'TELEPROMPTER_FOCUS_MATERIA') {
         const materiaId = event.data.materiaId;
-        console.log("Focusing on materia:", materiaId);
+        console.log("Teleprompter received focus message for materia:", materiaId);
         
-        if (contentRef.current) {
-          const materiaElement = contentRef.current.querySelector(`[data-materia-id="${materiaId}"]`);
-          if (materiaElement) {
-            materiaElement.scrollIntoView({ 
-              behavior: 'smooth', 
-              block: 'center' 
-            });
-          }
+        if (!contentRef.current) {
+          console.error("Content ref not available");
+          return;
+        }
+
+        console.log("Searching for element with data-materia-id:", materiaId);
+        const materiaElement = contentRef.current.querySelector(`[data-materia-id="${materiaId}"]`);
+        
+        if (materiaElement) {
+          console.log("Found materia element, scrolling to it:", materiaElement);
+          
+          // Add a visual highlight temporarily
+          materiaElement.classList.add('teleprompter-highlight');
+          setTimeout(() => {
+            materiaElement.classList.remove('teleprompter-highlight');
+          }, 2000);
+          
+          materiaElement.scrollIntoView({ 
+            behavior: 'smooth', 
+            block: 'center' 
+          });
+          
+          console.log("Scrolled to materia successfully");
+        } else {
+          console.error("Materia element not found with ID:", materiaId);
+          console.log("Available materia elements:", 
+            Array.from(contentRef.current.querySelectorAll('[data-materia-id]'))
+              .map(el => el.getAttribute('data-materia-id'))
+          );
         }
       }
     };
