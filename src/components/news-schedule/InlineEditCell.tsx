@@ -105,7 +105,7 @@ export const InlineEditCell = ({
             <SelectItem 
               key={option.value} 
               value={option.value} 
-              className={`cursor-pointer hover:opacity-80 ${getStatusBgColor(option.value)}`}
+              className="cursor-pointer hover:bg-gray-100"
             >
               {option.label}
             </SelectItem>
