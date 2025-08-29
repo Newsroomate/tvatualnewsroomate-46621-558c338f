@@ -216,15 +216,11 @@ export const generatePautaPDF = (pauta: Pauta) => {
   const createContentBlock = (title: string, content: string) => {
     checkNewPage(lineHeight * 8);
     
-    // Block header with dark background
-    doc.setFillColor(60, 60, 60); // Dark gray background
-    doc.rect(margin, yPosition - 3, pageWidth - margin * 2, lineHeight + 2, 'F');
-    
-    // Block title with white text
+    // Block title with bold text only (no background)
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
-    doc.setTextColor(255, 255, 255); // White text
-    doc.text(title, margin + 3, yPosition + 4);
+    doc.setTextColor(0, 0, 0); // Black text
+    doc.text(title, margin, yPosition + 4);
     yPosition += lineHeight + 2;
     
     // Reset text color to black
