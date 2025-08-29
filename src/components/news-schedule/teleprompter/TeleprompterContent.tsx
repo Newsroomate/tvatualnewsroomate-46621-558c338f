@@ -43,13 +43,13 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
         className="teleprompter-content flex-1 overflow-y-auto bg-black text-white"
         style={{ 
           lineHeight: '1.8',
-          scrollBehavior: 'smooth',
           height: '100%',
           padding: '20px',
           margin: 0,
           boxSizing: 'border-box',
           width: '100%',
-          maxWidth: '100vw'
+          maxWidth: '100vw',
+          willChange: 'scroll-position'
         }}
       >
         {orderedMaterias.length === 0 ? (

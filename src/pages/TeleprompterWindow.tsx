@@ -31,6 +31,8 @@ const TeleprompterWindow = () => {
     // Refs
     contentRef,
     intervalRef,
+    animationFrameRef,
+    lastTimeRef,
     hasReceivedDataRef,
     
     // Handlers
@@ -69,7 +71,9 @@ const TeleprompterWindow = () => {
     setScrollPosition,
     intervalRef,
     contentRef,
-    scrollPosition
+    scrollPosition,
+    animationFrameRef,
+    lastTimeRef
   });
 
   // Focus on specific materia functionality

@@ -27,6 +27,8 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const [tipoMaterialColor, setTipoMaterialColor] = useState("#f97316");
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number>(0);
 
   const handlePlayPause = () => {
     setIsPlaying(!isPlaying);
@@ -99,62 +101,78 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     };
   }, [isOpen]);
 
-  // Auto-scroll logic - improved to continue from current position
+  // Auto-scroll logic with smooth requestAnimationFrame
   useEffect(() => {
-    if (isPlaying && contentRef.current) {
-      const scrollSpeed = speed[0] / 10;
+    const animate = (currentTime: number) => {
+      const contentElement = contentRef.current;
+      if (!contentElement || !isPlaying) return;
+
+      const deltaTime = currentTime - lastTimeRef.current;
+      lastTimeRef.current = currentTime;
+
+      // Calculate smooth scroll speed based on time elapsed
+      const scrollSpeed = (speed[0] / 10) * (deltaTime / 16.67); // Normalize to 60fps
       
-      intervalRef.current = setInterval(() => {
-        const contentElement = contentRef.current;
-        if (!contentElement) return;
-        
-        // Get the current actual scroll position from the DOM element
-        const currentScrollTop = contentElement.scrollTop;
-        const maxScroll = contentElement.scrollHeight - contentElement.clientHeight;
-        
-        // Calculate next position based on current DOM position, not state
-        const nextPosition = currentScrollTop + scrollSpeed;
-        
-        if (nextPosition >= maxScroll) {
-          setIsPlaying(false);
-          return;
-        }
-        
-        // Update both the DOM and the state
-        contentElement.scrollTop = nextPosition;
-        setScrollPosition(nextPosition);
-      }, 100);
+      const currentScrollTop = contentElement.scrollTop;
+      const maxScroll = contentElement.scrollHeight - contentElement.clientHeight;
+      
+      const nextPosition = currentScrollTop + scrollSpeed;
+      
+      if (nextPosition >= maxScroll) {
+        setIsPlaying(false);
+        return;
+      }
+      
+      // Update DOM directly for smooth scrolling
+      contentElement.scrollTop = nextPosition;
+      
+      // Continue animation
+      if (isPlaying) {
+        animationFrameRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    if (isPlaying && contentRef.current) {
+      lastTimeRef.current = performance.now();
+      animationFrameRef.current = requestAnimationFrame(animate);
     } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
       }
     }
 
     return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
       }
     };
   }, [isPlaying, speed]);
 
-  // Sync scroll position state with DOM when manually scrolled
+  // Debounced scroll sync for manual scrolling
   useEffect(() => {
     const contentElement = contentRef.current;
     if (!contentElement) return;
 
+    let scrollTimeout: NodeJS.Timeout;
     const handleScroll = () => {
-      // Update the scroll position state to match the current DOM position
-      const currentScrollTop = contentElement.scrollTop;
-      setScrollPosition(currentScrollTop);
+      // Only update state if not auto-scrolling to avoid conflicts
+      if (!isPlaying) {
+        clearTimeout(scrollTimeout);
+        scrollTimeout = setTimeout(() => {
+          const currentScrollTop = contentElement.scrollTop;
+          setScrollPosition(currentScrollTop);
+        }, 50);
+      }
     };
 
-    contentElement.addEventListener('scroll', handleScroll);
+    contentElement.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
       contentElement.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
     };
-  }, []);
+  }, [isPlaying]);
 
   // Apply scroll position only when not playing (to avoid conflicts during auto-scroll)
   useEffect(() => {

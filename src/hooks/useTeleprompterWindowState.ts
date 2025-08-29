@@ -17,6 +17,8 @@ export const useTeleprompterWindowState = () => {
   
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const lastTimeRef = useRef<number>(0);
   const hasReceivedDataRef = useRef(false);
 
   const handlePlayPause = () => {
@@ -95,6 +97,8 @@ export const useTeleprompterWindowState = () => {
     // Refs
     contentRef,
     intervalRef,
+    animationFrameRef,
+    lastTimeRef,
     hasReceivedDataRef,
     
     // Handlers
