@@ -164,7 +164,7 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                       color: cabecaColor,
                       padding: 0,
                       margin: '0 0 8px 0',
-                      textAlign: 'left',
+                      textAlign: 'center',
                       wordBreak: 'keep-all',
                       overflowWrap: 'normal',
                       hyphens: 'none',
