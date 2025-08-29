@@ -47,8 +47,9 @@ export const useTeleprompterWindow = () => {
       return;
     }
 
-    // Open new tab
-    const newTab = window.open('/teleprompter', '_blank');
+    // Open new tab with telejornal name as URL parameter for fallback
+    const telejornalParam = telejornal?.nome ? `?jornal=${encodeURIComponent(telejornal.nome)}` : '';
+    const newTab = window.open(`/teleprompter${telejornalParam}`, '_blank');
 
     if (newTab) {
       windowRef.current = newTab;
@@ -73,17 +74,17 @@ export const useTeleprompterWindow = () => {
             console.log("Data sent to new teleprompter window");
             dataToSendRef.current = null; // Clear after sending
           } else {
-            // Window not ready yet, try again
-            setTimeout(sendDataWhenReady, 200);
+            // Window not ready yet, try again with shorter interval
+            setTimeout(sendDataWhenReady, 50);
           }
         } catch (error) {
-          // Cross-origin error means window is still loading, try again
-          setTimeout(sendDataWhenReady, 200);
+          // Cross-origin error means window is still loading, try again with shorter interval
+          setTimeout(sendDataWhenReady, 50);
         }
       };
 
-      // Start checking after a short delay
-      setTimeout(sendDataWhenReady, 500);
+      // Start checking with a minimal delay and retry more frequently
+      setTimeout(sendDataWhenReady, 100);
     } else {
       // Popup blocked - fallback to alert
       alert('O teleprompter não pôde ser aberto. Verifique se o bloqueador de pop-ups está ativo e permita pop-ups para este site.');

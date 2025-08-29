@@ -72,21 +72,23 @@ export const useTeleprompterWindowEffects = ({
       }
     };
 
-    // Notify immediately and also after a short delay to ensure parent is listening
+    // Notify immediately and retry multiple times to ensure connection
     notifyReady();
-    const readyTimeout = setTimeout(notifyReady, 100);
+    const readyTimeout1 = setTimeout(notifyReady, 50);
+    const readyTimeout2 = setTimeout(notifyReady, 150);
 
-    // Set a timeout to stop loading state even if no data is received
+    // Set a shorter timeout to stop loading state if no data is received
     const loadingTimeout = setTimeout(() => {
       if (!hasReceivedDataRef.current) {
         console.log("No data received within timeout, stopping loading state");
         setIsLoading(false);
       }
-    }, 3000);
+    }, 1000);
 
     return () => {
       window.removeEventListener('message', handleMessage);
-      clearTimeout(readyTimeout);
+      clearTimeout(readyTimeout1);
+      clearTimeout(readyTimeout2);
       clearTimeout(loadingTimeout);
     };
   }, [setBlocks, setTelejornal, setIsLoading, hasReceivedDataRef]);

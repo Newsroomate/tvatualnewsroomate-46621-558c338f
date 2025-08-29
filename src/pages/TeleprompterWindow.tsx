@@ -131,6 +131,7 @@ const TeleprompterWindow = () => {
       <TeleprompterWindowHeader 
         telejornalName={telejornal?.nome}
         isFullscreen={isFullscreen}
+        isLoading={isLoading}
       />
       
       <TeleprompterWindowControls
