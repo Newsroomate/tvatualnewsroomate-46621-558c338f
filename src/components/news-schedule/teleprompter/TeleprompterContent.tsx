@@ -21,8 +21,10 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
     const orderedMaterias: (Materia & { blockName?: string })[] = [];
     
     sortedBlocks.forEach(block => {
-      // Sort materias within each block by ordem
-      const sortedMaterias = [...block.items].sort((a, b) => a.ordem - b.ordem);
+      // Sort materias within each block by ordem and filter only published ones
+      const sortedMaterias = [...block.items]
+        .sort((a, b) => a.ordem - b.ordem)
+        .filter(materia => materia.status === 'published');
       
       // Add block name to each materia for context
       sortedMaterias.forEach(materia => {
@@ -33,7 +35,7 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
       });
     });
 
-    console.log("Ordered materias for teleprompter:", orderedMaterias);
+    console.log("Ordered materias for teleprompter (published only):", orderedMaterias);
 
     return (
       <div 
@@ -65,7 +67,7 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
               maxWidth: '100%'
             }}
           >
-            Nenhuma matéria encontrada para este telejornal
+            Nenhuma matéria publicada encontrada para este telejornal
           </div>
         ) : (
           <div style={{ 
