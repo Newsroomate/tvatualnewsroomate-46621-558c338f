@@ -28,23 +28,8 @@ export const exportPlayoutPDF = (blocks: (Bloco & { items: Materia[] })[], telej
     }
   };
 
-  // Document title
-  doc.setFontSize(20);
-  doc.setFont("helvetica", "bold");
-  doc.text(`PLAYOUT - ${telejornal.nome}`, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += lineHeight * 2;
-
-  // Date and time
-  doc.setFontSize(12);
-  doc.setFont("helvetica", "normal");
-  const currentDate = new Date().toLocaleString('pt-BR');
-  doc.text(`Gerado em: ${currentDate}`, pageWidth / 2, yPosition, { align: 'center' });
-  yPosition += lineHeight * 2;
-
-  // Separator line
-  doc.setLineWidth(0.5);
-  doc.line(margin, yPosition, pageWidth - margin, yPosition);
-  yPosition += lineHeight * 2;
+  // Start directly with content
+  yPosition = margin;
 
   // Check if there are any blocks with items  
   const hasAnyItems = sortedBlocks.some(block => block.items.length > 0);
