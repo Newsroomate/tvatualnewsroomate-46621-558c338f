@@ -112,14 +112,14 @@ export const generatePautaPDF = (pauta: Pauta) => {
   doc.setDrawColor(0, 0, 0);
   doc.setLineWidth(0.5);
   
-  // First row - headers with dark background
-  doc.setFillColor(60, 60, 60);
+  // First row - headers with border only
+  doc.setFillColor(255, 255, 255);
   doc.rect(margin, yPosition, tableWidth, baseRowHeight, 'FD');
   
-  // First row header text - white text on dark background
+  // First row header text - black bold text
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(0, 0, 0);
   
   doc.text("DATA", margin + 2, yPosition + 8);
   doc.text("RETRANCA", margin + unifiedWidths.col1 + 2, yPosition + 8);
@@ -162,14 +162,14 @@ export const generatePautaPDF = (pauta: Pauta) => {
   
   yPosition += firstRowHeight;
   
-  // Second row - headers with dark background
-  doc.setFillColor(60, 60, 60);
+  // Second row - headers with border only
+  doc.setFillColor(255, 255, 255);
   doc.rect(margin, yPosition, tableWidth, baseRowHeight, 'FD');
   
-  // Second row header text - white text on dark background
+  // Second row header text - black bold text
   doc.setFont("helvetica", "bold");
   doc.setFontSize(10);
-  doc.setTextColor(255, 255, 255);
+  doc.setTextColor(0, 0, 0);
   
   doc.text("PAUTEIROS", margin + 2, yPosition + 8);
   doc.text("REPÓRTER", margin + unifiedWidths.col1 + 2, yPosition + 8);
