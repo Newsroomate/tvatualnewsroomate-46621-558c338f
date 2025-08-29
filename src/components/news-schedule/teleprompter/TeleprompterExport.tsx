@@ -10,13 +10,24 @@ interface TeleprompterExportProps {
 }
 
 export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportProps) => {
+  // Get telejornal name from URL params as fallback
+  const getTelejornalName = () => {
+    if (telejornal?.nome) return telejornal.nome;
+    
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlTelejornalName = urlParams.get('jornal');
+    return urlTelejornalName || 'Telejornal';
+  };
+
   const exportToPDF = () => {
-    if (!telejornal || !blocks.length) {
-      console.log("Cannot export PDF: missing telejornal or blocks");
+    const telejornalName = getTelejornalName();
+    
+    if (!blocks.length) {
+      console.log("Cannot export PDF: no blocks available");
       return;
     }
 
-    console.log("Starting PDF export with:", { telejornal: telejornal.nome, blocksCount: blocks.length });
+    console.log("Starting PDF export with:", { telejornal: telejornalName, blocksCount: blocks.length });
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
@@ -61,7 +72,7 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
     yPosition += lineHeight;
     
     doc.setFontSize(16);
-    doc.text(`${telejornal.nome}`, pageWidth / 2, yPosition, { align: 'center' });
+    doc.text(`${telejornalName}`, pageWidth / 2, yPosition, { align: 'center' });
     yPosition += lineHeight * 2;
 
     // Date and time
@@ -167,18 +178,19 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
     }
 
     // Generate filename
-    const telejornalName = telejornal.nome.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+    const telejornalNameForFile = telejornalName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
     const dateFormatted = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
     const timeFormatted = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(/:/g, 'h');
-    const filename = `teleprompter_${telejornalName}_${dateFormatted}_${timeFormatted}.pdf`;
+    const filename = `teleprompter_${telejornalNameForFile}_${dateFormatted}_${timeFormatted}.pdf`;
 
     // Save the PDF
     doc.save(filename);
     console.log("PDF export completed:", filename);
   };
 
-  // Check if export is possible
-  const canExport = telejornal && blocks.length > 0;
+  // Check if export is possible - now using fallback telejornal name
+  const telejornalName = getTelejornalName();
+  const canExport = telejornalName && blocks.length > 0;
 
   return (
     <Button
