@@ -12,9 +12,9 @@ const tablesToEnable = [
   'profiles'
 ];
 
-console.log('Configurando realtime para todas as tabelas...');
-
-const enableAllTables = async () => {
+export const enableAllTables = async () => {
+  console.log('Configurando realtime para todas as tabelas...');
+  
   const results = await Promise.allSettled(
     tablesToEnable.map(tableName => enableRealtimeForTable(tableName))
   );
@@ -29,5 +29,3 @@ const enableAllTables = async () => {
     }
   });
 };
-
-enableAllTables();

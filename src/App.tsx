@@ -12,6 +12,8 @@ import { AuthProvider } from "./context/AuthContext";
 import { SecurityProvider } from "./components/auth/SecurityProvider";
 import { AppHeader } from "./components/AppHeader";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { enableAllTables } from "./services/realtime-setup";
+import { useEffect } from "react";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -27,6 +29,38 @@ const queryClient = new QueryClient({
   },
 });
 
+const AppContent = () => {
+  // Initialize realtime setup after component mount to avoid blocking initial page load
+  useEffect(() => {
+    // Defer realtime setup to not block critical rendering path
+    const timer = setTimeout(() => {
+      enableAllTables();
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <div className="flex flex-col h-screen">
+      <Routes>
+        <Route path="/teleprompter" element={<TeleprompterWindow />} />
+        <Route path="/auth" element={<Auth />} />
+        <Route path="/" element={
+          <>
+            <AppHeader />
+            <div className="flex-1 overflow-hidden">
+              <ProtectedRoute>
+                <Index />
+              </ProtectedRoute>
+            </div>
+          </>
+        } />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </div>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -35,23 +69,7 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <SecurityProvider>
-            <div className="flex flex-col h-screen">
-              <Routes>
-                <Route path="/teleprompter" element={<TeleprompterWindow />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route path="/" element={
-                  <>
-                    <AppHeader />
-                    <div className="flex-1 overflow-hidden">
-                      <ProtectedRoute>
-                        <Index />
-                      </ProtectedRoute>
-                    </div>
-                  </>
-                } />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </div>
+            <AppContent />
           </SecurityProvider>
         </AuthProvider>
       </BrowserRouter>
