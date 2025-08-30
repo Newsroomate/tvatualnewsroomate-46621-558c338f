@@ -226,37 +226,61 @@ export const generatePautaPDF = (pauta: Pauta) => {
     // Reset text color to black
     doc.setTextColor(0, 0, 0);
     
-    // Content area with border
-    const contentHeight = content && content.trim() ? 
-      Math.max(lineHeight * 3, doc.splitTextToSize(content, pageWidth - margin * 2 - 6).length * lineHeight + 6) : 
-      lineHeight * 3;
-    
-    doc.setDrawColor(60, 60, 60);
-    doc.setLineWidth(0.5);
-    doc.rect(margin, yPosition, pageWidth - margin * 2, contentHeight);
-    
-    // Content text
+    // Content text calculation first to determine actual required height
     if (content && content.trim()) {
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       const maxWidth = pageWidth - margin * 2 - 6;
       const lines = doc.splitTextToSize(content, maxWidth);
       
+      // Calculate actual required height based on content lines
+      const actualContentHeight = Math.max(lineHeight * 3, lines.length * lineHeight + 10);
+      
+      // Draw border with actual content height
+      doc.setDrawColor(60, 60, 60);
+      doc.setLineWidth(0.5);
+      doc.rect(margin, yPosition, pageWidth - margin * 2, actualContentHeight);
+      
+      // Draw all content lines without cutting
       let contentY = yPosition + lineHeight;
-      lines.forEach((line: string) => {
-        if (contentY + lineHeight > yPosition + contentHeight - 3) return; // Prevent overflow
+      lines.forEach((line: string, index: number) => {
+        // Check if we need a new page during content rendering
+        if (contentY + lineHeight > pageHeight - margin) {
+          doc.addPage();
+          contentY = margin + lineHeight;
+          
+          // Redraw border on new page if needed
+          const remainingLines = lines.length - index;
+          const remainingHeight = remainingLines * lineHeight + 10;
+          doc.setDrawColor(60, 60, 60);
+          doc.setLineWidth(0.5);
+          doc.rect(margin, margin, pageWidth - margin * 2, remainingHeight);
+        }
+        
         doc.text(line, margin + 3, contentY);
         contentY += lineHeight;
       });
+      
+      // Update yPosition to after the content block
+      yPosition = contentY + lineHeight;
     } else {
+      // Minimum height for empty content
+      const minHeight = lineHeight * 3;
+      
+      // Draw border
+      doc.setDrawColor(60, 60, 60);
+      doc.setLineWidth(0.5);
+      doc.rect(margin, yPosition, pageWidth - margin * 2, minHeight);
+      
+      // Placeholder text
       doc.setFont("helvetica", "normal");
       doc.setFontSize(10);
       doc.setTextColor(128, 128, 128);
       doc.text('*CONTEÚDO AQUI*', margin + 3, yPosition + lineHeight * 1.5);
       doc.setTextColor(0, 0, 0);
+      
+      yPosition += minHeight + lineHeight;
     }
-    
-    yPosition += contentHeight + lineHeight;
   };
 
   // Add all content blocks in the same order as the form (remove duplicate IMAGENS)
