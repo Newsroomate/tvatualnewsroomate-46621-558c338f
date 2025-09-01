@@ -81,12 +81,15 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
               <div 
                 key={`${materia.bloco_id}-${materia.id}`}
                 data-materia-id={materia.id}
+                data-retranca-id={materia.id}
+                className="teleprompter-materia"
                 style={{ 
                   padding: 0, 
                   margin: 0,
                   width: '100%',
                   maxWidth: '100%',
-                  boxSizing: 'border-box'
+                  boxSizing: 'border-box',
+                  scrollMarginTop: '25vh' // Better scroll positioning
                 }}
               >
                 {/* Block name indicator (optional, can be commented out) */}
@@ -136,9 +139,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                 
                 {/* Retranca com cor customizada */}
                 <div 
-                  className="font-bold"
-                  data-retranca-id={materia.id}
-                  style={{ 
+                  className="font-bold teleprompter-retranca"
+                  style={{
                     fontSize: `${fontSize}px`,
                     color: retrancaColor,
                     padding: 0,

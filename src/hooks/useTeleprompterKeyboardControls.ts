@@ -9,6 +9,8 @@ interface UseTeleprompterKeyboardControlsProps {
   onPlayPause: () => void;
   fontSize: number;
   setScrollPosition?: (position: number) => void;
+  pauseAutoScroll?: () => void;
+  resumeAutoScroll?: () => void;
 }
 
 export const useTeleprompterKeyboardControls = ({
@@ -17,9 +19,13 @@ export const useTeleprompterKeyboardControls = ({
   isPlaying,
   onPlayPause,
   fontSize,
-  setScrollPosition
+  setScrollPosition,
+  pauseAutoScroll,
+  resumeAutoScroll
 }: UseTeleprompterKeyboardControlsProps) => {
   const currentRetrancaIndex = useRef(0);
+  const isNavigating = useRef(false);
+  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get all retrancas in order
   const getAllRetrancas = useCallback(() => {
@@ -47,50 +53,110 @@ export const useTeleprompterKeyboardControls = ({
     return allRetrancas;
   }, [blocks]);
 
+  // Get current visible retranca index based on scroll position
+  const getCurrentVisibleRetrancaIndex = useCallback(() => {
+    if (!contentRef.current) return 0;
+    
+    const container = contentRef.current;
+    const containerTop = container.scrollTop;
+    const viewportMiddle = containerTop + (container.clientHeight / 4); // Use top quarter for better UX
+    
+    const retrancas = getAllRetrancas();
+    let closestIndex = 0;
+    let closestDistance = Infinity;
+    
+    retrancas.forEach((retranca, index) => {
+      if (retranca.element) {
+        const elementTop = (retranca.element as HTMLElement).offsetTop;
+        const distance = Math.abs(elementTop - viewportMiddle);
+        
+        if (distance < closestDistance) {
+          closestDistance = distance;
+          closestIndex = index;
+        }
+      }
+    });
+    
+    return closestIndex;
+  }, [getAllRetrancas, contentRef]);
+
   // Navigate to specific retranca
   const navigateToRetranca = useCallback((index: number) => {
     const retrancas = getAllRetrancas();
-    if (index < 0 || index >= retrancas.length || !contentRef.current) return;
-
-    const targetRetranca = retrancas[index];
-    if (!targetRetranca.element) return;
-
-    const container = contentRef.current;
-    const elementRect = targetRetranca.element.getBoundingClientRect();
-    const containerRect = container.getBoundingClientRect();
-    
-    // Calculate scroll position to center the retranca
-    const targetScrollTop = container.scrollTop + elementRect.top - containerRect.top - (container.clientHeight / 4);
-    const finalScrollTop = Math.max(0, targetScrollTop);
-    
-    container.scrollTo({
-      top: finalScrollTop,
-      behavior: 'smooth'
-    });
-
-    // Update scroll position state to sync with the new position
-    if (setScrollPosition) {
-      setTimeout(() => {
-        setScrollPosition(finalScrollTop);
-      }, 300); // Wait for smooth scroll to complete
+    if (index < 0 || index >= retrancas.length || !contentRef.current) {
+      console.log(`Navigation cancelled: index ${index} out of bounds (0-${retrancas.length - 1})`);
+      return;
     }
 
+    const targetRetranca = retrancas[index];
+    if (!targetRetranca.element) {
+      console.log(`Navigation cancelled: element not found for index ${index}`);
+      return;
+    }
+
+    // Pause auto-scroll during navigation
+    isNavigating.current = true;
+    if (pauseAutoScroll) {
+      pauseAutoScroll();
+    }
+
+    const container = contentRef.current;
+    const element = targetRetranca.element as HTMLElement;
+    
+    // Use scrollIntoView for smoother, more reliable scrolling
+    element.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start',
+      inline: 'nearest'
+    });
+
     currentRetrancaIndex.current = index;
-    console.log(`Navigated to retranca ${index + 1}/${retrancas.length}: ${targetRetranca.materia.retranca}`);
-  }, [getAllRetrancas, contentRef, setScrollPosition]);
+    
+    // Clear existing timeout
+    if (navigationTimeoutRef.current) {
+      clearTimeout(navigationTimeoutRef.current);
+    }
+    
+    // Update scroll position after animation completes and resume auto-scroll if needed
+    navigationTimeoutRef.current = setTimeout(() => {
+      if (setScrollPosition && container) {
+        setScrollPosition(container.scrollTop);
+      }
+      isNavigating.current = false;
+      
+      // Resume auto-scroll if it was playing
+      if (resumeAutoScroll && isPlaying) {
+        resumeAutoScroll();
+      }
+    }, 500);
+
+    console.log(`Navigated to retranca ${index + 1}/${retrancas.length}: "${targetRetranca.materia.retranca}"`);
+  }, [getAllRetrancas, contentRef, setScrollPosition, pauseAutoScroll, resumeAutoScroll, isPlaying]);
 
   // Navigate to previous retranca
   const goToPreviousRetranca = useCallback(() => {
+    // Update current index based on actual scroll position first
+    if (!isNavigating.current) {
+      currentRetrancaIndex.current = getCurrentVisibleRetrancaIndex();
+    }
+    
     const newIndex = Math.max(0, currentRetrancaIndex.current - 1);
+    console.log(`Going to previous retranca: ${currentRetrancaIndex.current} -> ${newIndex}`);
     navigateToRetranca(newIndex);
-  }, [navigateToRetranca]);
+  }, [navigateToRetranca, getCurrentVisibleRetrancaIndex]);
 
   // Navigate to next retranca
   const goToNextRetranca = useCallback(() => {
+    // Update current index based on actual scroll position first
+    if (!isNavigating.current) {
+      currentRetrancaIndex.current = getCurrentVisibleRetrancaIndex();
+    }
+    
     const retrancas = getAllRetrancas();
     const newIndex = Math.min(retrancas.length - 1, currentRetrancaIndex.current + 1);
+    console.log(`Going to next retranca: ${currentRetrancaIndex.current} -> ${newIndex}`);
     navigateToRetranca(newIndex);
-  }, [getAllRetrancas, navigateToRetranca]);
+  }, [getAllRetrancas, navigateToRetranca, getCurrentVisibleRetrancaIndex]);
 
   // Keyboard event handler
   useEffect(() => {
@@ -140,12 +206,28 @@ export const useTeleprompterKeyboardControls = ({
   // Reset current index when blocks change
   useEffect(() => {
     currentRetrancaIndex.current = 0;
+    isNavigating.current = false;
+    if (navigationTimeoutRef.current) {
+      clearTimeout(navigationTimeoutRef.current);
+      navigationTimeoutRef.current = null;
+    }
   }, [blocks]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     currentRetrancaIndex: currentRetrancaIndex.current,
     goToPreviousRetranca,
     goToNextRetranca,
-    navigateToRetranca
+    navigateToRetranca,
+    getCurrentVisibleRetrancaIndex,
+    isNavigating: isNavigating.current
   };
 };

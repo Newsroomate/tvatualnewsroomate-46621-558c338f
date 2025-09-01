@@ -54,7 +54,9 @@ const TeleprompterWindow = () => {
     isPlaying,
     onPlayPause: handlePlayPause,
     fontSize,
-    setScrollPosition
+    setScrollPosition,
+    pauseAutoScroll: () => setIsPlaying(false),
+    resumeAutoScroll: () => setIsPlaying(true)
   });
 
   // Setup all effects

@@ -34,14 +34,21 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     setIsPlaying(!isPlaying);
   };
 
-  // Setup keyboard controls with scroll position sync
-  useTeleprompterKeyboardControls({
+  const { 
+    currentRetrancaIndex,
+    goToPreviousRetranca, 
+    goToNextRetranca,
+    navigateToRetranca,
+    isNavigating
+  } = useTeleprompterKeyboardControls({
     blocks,
     contentRef,
     isPlaying,
     onPlayPause: handlePlayPause,
     fontSize,
-    setScrollPosition
+    setScrollPosition,
+    pauseAutoScroll: () => setIsPlaying(false),
+    resumeAutoScroll: () => setIsPlaying(true)
   });
 
   // Listen for fullscreen changes
@@ -101,89 +108,84 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     };
   }, [isOpen]);
 
-  // Auto-scroll logic with smooth requestAnimationFrame
+  // Auto-scroll effect - only when not manually navigating
   useEffect(() => {
-    const animate = (currentTime: number) => {
-      const contentElement = contentRef.current;
-      if (!contentElement || !isPlaying) return;
+    let animationFrameId: number | null = null;
+    let lastTime = 0;
 
-      const deltaTime = currentTime - lastTimeRef.current;
-      lastTimeRef.current = currentTime;
+    const autoScroll = (currentTime: number) => {
+      if (!isPlaying || !contentRef.current || isNavigating) return;
 
-      // Calculate smooth scroll speed based on time elapsed
-      const scrollSpeed = (speed[0] / 10) * (deltaTime / 16.67); // Normalize to 60fps
+      if (lastTime === 0) lastTime = currentTime;
       
-      const currentScrollTop = contentElement.scrollTop;
-      const maxScroll = contentElement.scrollHeight - contentElement.clientHeight;
+      const deltaTime = currentTime - lastTime;
+      const scrollSpeed = (speed[0] / 100) * 2; // Adjust base scroll speed
+      const scrollAmount = (deltaTime / 1000) * scrollSpeed * fontSize;
       
-      const nextPosition = currentScrollTop + scrollSpeed;
+      const container = contentRef.current;
+      const newScrollTop = container.scrollTop + scrollAmount;
       
-      if (nextPosition >= maxScroll) {
+      // Check if we've reached the end
+      if (newScrollTop >= container.scrollHeight - container.clientHeight) {
         setIsPlaying(false);
+        console.log("Reached end of content, stopping playback");
         return;
       }
       
-      // Update DOM directly for smooth scrolling
-      contentElement.scrollTop = nextPosition;
+      container.scrollTop = newScrollTop;
+      setScrollPosition(newScrollTop);
       
-      // Update scroll position state for persistence
-      setScrollPosition(nextPosition);
+      lastTime = currentTime;
       
-      // Continue animation
-      if (isPlaying) {
-        animationFrameRef.current = requestAnimationFrame(animate);
+      if (isPlaying && !isNavigating) {
+        animationFrameId = requestAnimationFrame(autoScroll);
       }
     };
 
-    if (isPlaying && contentRef.current) {
-      lastTimeRef.current = performance.now();
-      animationFrameRef.current = requestAnimationFrame(animate);
-    } else {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
-        animationFrameRef.current = null;
-      }
+    if (isPlaying && !isNavigating) {
+      lastTime = 0;
+      animationFrameId = requestAnimationFrame(autoScroll);
     }
 
     return () => {
-      if (animationFrameRef.current) {
-        cancelAnimationFrame(animationFrameRef.current);
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [isPlaying, speed]);
+  }, [isPlaying, speed, fontSize, setScrollPosition, isNavigating]);
 
-  // Debounced scroll sync for manual scrolling
+  // Debounced scroll synchronization - only when not auto-playing or navigating
   useEffect(() => {
-    const contentElement = contentRef.current;
-    if (!contentElement) return;
+    if (!contentRef.current) return;
+
+    const handleScroll = () => {
+      if (!isPlaying && !isNavigating && contentRef.current) {
+        const currentScrollTop = contentRef.current.scrollTop;
+        setScrollPosition(currentScrollTop);
+      }
+    };
 
     let scrollTimeout: NodeJS.Timeout;
-    const handleScroll = () => {
-      // Only update state if not auto-scrolling to avoid conflicts
-      if (!isPlaying) {
-        clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          const currentScrollTop = contentElement.scrollTop;
-          setScrollPosition(currentScrollTop);
-        }, 50);
-      }
+    const debouncedScrollHandler = () => {
+      clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(handleScroll, 100);
     };
-
-    contentElement.addEventListener('scroll', handleScroll, { passive: true });
-
+    
+    const container = contentRef.current;
+    container.addEventListener('scroll', debouncedScrollHandler);
+    
     return () => {
-      contentElement.removeEventListener('scroll', handleScroll);
+      container.removeEventListener('scroll', debouncedScrollHandler);
       clearTimeout(scrollTimeout);
     };
-  }, [isPlaying]);
+  }, [isPlaying, isNavigating, setScrollPosition]);
 
-  // Apply scroll position only when not playing (to avoid conflicts during auto-scroll)
+  // Apply scroll position when not playing and not navigating
   useEffect(() => {
-    if (!isPlaying && contentRef.current && scrollPosition > 0) {
-      console.log('Applying scroll position:', scrollPosition);
+    if (!isPlaying && !isNavigating && contentRef.current) {
       contentRef.current.scrollTop = scrollPosition;
     }
-  }, [scrollPosition, isPlaying]);
+  }, [scrollPosition, isPlaying, isNavigating]);
 
   const handleSpeedChange = (value: number[]) => {
     setSpeed(value);
