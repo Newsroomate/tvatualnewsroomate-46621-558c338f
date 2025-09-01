@@ -121,17 +121,18 @@ export const useTeleprompterState = () => {
       clearTimeout(navigationTimeoutRef.current);
     }
     setIsNavigating(true);
-    console.log("Auto-scroll paused for navigation");
+    console.log("Auto-scroll temporarily paused for navigation");
   };
 
   const resumeAutoScroll = () => {
     if (navigationTimeoutRef.current) {
       clearTimeout(navigationTimeoutRef.current);
     }
+    // Quick resume to minimize interruption
     navigationTimeoutRef.current = setTimeout(() => {
       setIsNavigating(false);
       console.log("Auto-scroll resumed after navigation");
-    }, 2000);
+    }, 100);
   };
 
   return {

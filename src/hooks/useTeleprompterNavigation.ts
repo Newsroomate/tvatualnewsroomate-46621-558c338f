@@ -17,6 +17,7 @@ export const useTeleprompterNavigation = ({
 }: UseTeleprompterNavigationProps) => {
   const currentRetrancaIndexRef = useRef<number>(0);
   const isNavigatingRef = useRef(false);
+  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Get all approved retrancas for navigation
   const getAllRetrancas = useCallback(() => {
@@ -62,22 +63,28 @@ export const useTeleprompterNavigation = ({
 
     console.log(`Navigating to retranca ${index + 1}/${retrancas.length}: ${retrancas[index].retranca}`);
     
+    // Clear any existing navigation timeout
+    if (navigationTimeoutRef.current) {
+      clearTimeout(navigationTimeoutRef.current);
+    }
+    
+    // Set temporary navigation flag for minimal interruption
     isNavigatingRef.current = true;
     pauseAutoScroll();
 
-    // Smooth scroll to element
+    // Use instant scroll to minimize interruption
     retrancas[index].element.scrollIntoView({
-      behavior: 'smooth',
+      behavior: 'instant',
       block: 'center'
     });
 
     currentRetrancaIndexRef.current = index;
 
-    // Resume auto-scroll after navigation
-    setTimeout(() => {
+    // Resume auto-scroll quickly after navigation
+    navigationTimeoutRef.current = setTimeout(() => {
       isNavigatingRef.current = false;
       resumeAutoScroll();
-    }, 1000);
+    }, 100);
   }, [getAllRetrancas, contentRef, pauseAutoScroll, resumeAutoScroll]);
 
   // Navigate to previous retranca
@@ -153,7 +160,20 @@ export const useTeleprompterNavigation = ({
   useEffect(() => {
     currentRetrancaIndexRef.current = 0;
     isNavigatingRef.current = false;
+    if (navigationTimeoutRef.current) {
+      clearTimeout(navigationTimeoutRef.current);
+      navigationTimeoutRef.current = null;
+    }
   }, [blocks]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (navigationTimeoutRef.current) {
+        clearTimeout(navigationTimeoutRef.current);
+      }
+    };
+  }, []);
 
   return {
     navigateToRetranca,

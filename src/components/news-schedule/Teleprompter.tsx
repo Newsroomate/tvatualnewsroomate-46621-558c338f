@@ -47,8 +47,14 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     onPlayPause: handlePlayPause,
     fontSize,
     setScrollPosition,
-    pauseAutoScroll: () => setIsPlaying(false),
-    resumeAutoScroll: () => setIsPlaying(true)
+    pauseAutoScroll: () => {
+      // Don't change isPlaying state, just add temporary navigation flag
+      console.log("Navigation started - temporarily pausing auto-scroll");
+    },
+    resumeAutoScroll: () => {
+      // Resume happens automatically after short timeout
+      console.log("Navigation ended - auto-scroll can resume");
+    }
   });
 
   // Listen for fullscreen changes

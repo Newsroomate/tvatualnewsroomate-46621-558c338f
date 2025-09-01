@@ -94,7 +94,7 @@ export const useTeleprompterKeyboardControls = ({
       return;
     }
 
-    // Pause auto-scroll during navigation
+    // Set temporary navigation flag for minimal interruption
     isNavigating.current = true;
     if (pauseAutoScroll) {
       pauseAutoScroll();
@@ -103,9 +103,9 @@ export const useTeleprompterKeyboardControls = ({
     const container = contentRef.current;
     const element = targetRetranca.element as HTMLElement;
     
-    // Use scrollIntoView for smoother, more reliable scrolling
+    // Use instant scroll to minimize interruption during auto-scroll
     element.scrollIntoView({
-      behavior: 'smooth',
+      behavior: 'instant',
       block: 'start',
       inline: 'nearest'
     });
@@ -117,7 +117,7 @@ export const useTeleprompterKeyboardControls = ({
       clearTimeout(navigationTimeoutRef.current);
     }
     
-    // Update scroll position after animation completes and resume auto-scroll if needed
+    // Update scroll position and resume auto-scroll quickly
     navigationTimeoutRef.current = setTimeout(() => {
       if (setScrollPosition && container) {
         setScrollPosition(container.scrollTop);
@@ -128,7 +128,7 @@ export const useTeleprompterKeyboardControls = ({
       if (resumeAutoScroll && isPlaying) {
         resumeAutoScroll();
       }
-    }, 500);
+    }, 100);
 
     console.log(`Navigated to retranca ${index + 1}/${retrancas.length}: "${targetRetranca.materia.retranca}"`);
   }, [getAllRetrancas, contentRef, setScrollPosition, pauseAutoScroll, resumeAutoScroll, isPlaying]);
