@@ -26,14 +26,27 @@ export const useTeleprompterKeyboardControls = ({
     const sortedBlocks = [...blocks].sort((a, b) => a.ordem - b.ordem);
     const allRetrancas: Array<{ materia: Materia; element: Element | null }> = [];
     
-    sortedBlocks.forEach(block => {
-      const sortedMaterias = [...block.items].sort((a, b) => a.ordem - b.ordem);
-      sortedMaterias.forEach(materia => {
+    console.log(`Processing ${sortedBlocks.length} blocks for navigation`);
+    
+    sortedBlocks.forEach((block, blockIndex) => {
+      const sortedMaterias = [...block.items]
+        .sort((a, b) => a.ordem - b.ordem)
+        .filter(materia => {
+          // Same filter as TeleprompterContent - allow multiple statuses
+          const allowedStatuses = ['approved', 'published', 'ready', 'draft'];
+          return allowedStatuses.includes(materia.status || 'draft');
+        });
+      
+      console.log(`Block ${blockIndex + 1} "${block.nome}" has ${sortedMaterias.length} filtered materias`);
+      
+      sortedMaterias.forEach((materia, materiaIndex) => {
         const element = document.querySelector(`[data-retranca-id="${materia.id}"]`);
+        console.log(`Materia ${materiaIndex + 1} (ID: ${materia.id}, Retranca: ${materia.retranca}): ${element ? 'Found' : 'NOT FOUND'}`);
         allRetrancas.push({ materia, element });
       });
     });
     
+    console.log(`Total retrancas for navigation: ${allRetrancas.length}`);
     return allRetrancas;
   };
 
@@ -70,7 +83,7 @@ export const useTeleprompterKeyboardControls = ({
     }
 
     currentRetrancaIndex.current = index;
-    console.log(`Navigated to retranca ${index + 1}/${retrancas.length}: ${targetRetranca.materia.retranca}`);
+    console.log(`✅ Successfully navigated to retranca ${index + 1}/${retrancas.length}: "${targetRetranca.materia.retranca}"`);
   };
 
   // Navigate to previous retranca

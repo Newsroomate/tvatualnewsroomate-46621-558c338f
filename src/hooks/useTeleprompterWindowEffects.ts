@@ -177,6 +177,8 @@ export const useTeleprompterWindowEffects = ({
         // Update scroll position state to keep it in sync during auto-scroll
         setScrollPosition(nextPosition);
         
+        console.log(`Auto-scroll: ${nextPosition.toFixed(1)}px (speed: ${speed[0]})`);
+        
         // Continue animation
         if (isPlaying && animationFrameRef?.current !== undefined) {
           animationFrameRef.current = requestAnimationFrame(animate);
@@ -214,6 +216,7 @@ export const useTeleprompterWindowEffects = ({
         scrollTimeout = setTimeout(() => {
           const currentScrollTop = contentElement.scrollTop;
           setScrollPosition(currentScrollTop);
+          console.log(`Manual scroll detected: ${currentScrollTop.toFixed(1)}px`);
         }, 50);
       }
     };
@@ -234,6 +237,7 @@ export const useTeleprompterWindowEffects = ({
       const diff = Math.abs(currentScroll - scrollPosition);
       if (diff > 5) { // Small tolerance to avoid unnecessary updates
         contentRef.current.scrollTop = scrollPosition;
+        console.log(`Applied scroll position: ${scrollPosition.toFixed(1)}px (was: ${currentScroll.toFixed(1)}px)`);
       }
     }
   }, [scrollPosition, isPlaying]);

@@ -21,10 +21,16 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
     const orderedMaterias: (Materia & { blockName?: string })[] = [];
     
     sortedBlocks.forEach(block => {
-      // Sort materias within each block by ordem and filter only published ones
+      // Sort materias within each block by ordem and filter by status
       const sortedMaterias = [...block.items]
         .sort((a, b) => a.ordem - b.ordem)
-        .filter(materia => materia.status === 'approved');
+        .filter(materia => {
+          // Allow approved and other relevant statuses (not just approved)
+          const allowedStatuses = ['approved', 'published', 'ready', 'draft'];
+          return allowedStatuses.includes(materia.status || 'draft');
+        });
+      
+      console.log(`Block "${block.nome}" has ${sortedMaterias.length} materias (filtered from ${block.items.length})`);
       
       // Add block name to each materia for context
       sortedMaterias.forEach(materia => {
@@ -35,7 +41,7 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
       });
     });
 
-    console.log("Ordered materias for teleprompter (approved only):", orderedMaterias);
+    console.log(`Total materias for teleprompter: ${orderedMaterias.length} (from ${blocks.length} blocks)`);
 
     return (
       <div 
@@ -67,7 +73,7 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
               maxWidth: '100%'
             }}
           >
-            Nenhuma matéria aprovada encontrada para este telejornal
+            Nenhuma matéria encontrada para este telejornal
           </div>
         ) : (
           <div style={{ 
@@ -80,7 +86,7 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
             {orderedMaterias.map((materia, index) => (
               <div 
                 key={`${materia.bloco_id}-${materia.id}`}
-                data-materia-id={materia.id}
+                data-retranca-id={materia.id}
                 style={{ 
                   padding: 0, 
                   margin: 0,
@@ -137,7 +143,6 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                 {/* Retranca com cor customizada */}
                 <div 
                   className="font-bold"
-                  data-retranca-id={materia.id}
                   style={{ 
                     fontSize: `${fontSize}px`,
                     color: retrancaColor,
