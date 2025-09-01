@@ -29,7 +29,7 @@ export const useTeleprompterKeyboardControls = ({
     sortedBlocks.forEach(block => {
       const sortedMaterias = [...block.items].sort((a, b) => a.ordem - b.ordem);
       sortedMaterias.forEach(materia => {
-        const element = document.querySelector(`[data-materia-id="${materia.id}"]`);
+        const element = document.querySelector(`[data-retranca-id="${materia.id}"]`);
         allRetrancas.push({ materia, element });
       });
     });

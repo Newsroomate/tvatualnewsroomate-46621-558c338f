@@ -174,6 +174,9 @@ export const useTeleprompterWindowEffects = ({
         // Update DOM directly for smooth scrolling
         contentElement.scrollTop = nextPosition;
         
+        // Update scroll position state to keep it in sync during auto-scroll
+        setScrollPosition(nextPosition);
+        
         // Continue animation
         if (isPlaying && animationFrameRef?.current !== undefined) {
           animationFrameRef.current = requestAnimationFrame(animate);
@@ -223,10 +226,15 @@ export const useTeleprompterWindowEffects = ({
     };
   }, [isPlaying, setScrollPosition]);
 
-  // Apply scroll position only when not playing (to avoid conflicts during auto-scroll)
+  // Apply scroll position only for manual changes when not playing
   useEffect(() => {
     if (!isPlaying && contentRef.current) {
-      contentRef.current.scrollTop = scrollPosition;
+      // Only apply if the current scroll position differs significantly from state
+      const currentScroll = contentRef.current.scrollTop;
+      const diff = Math.abs(currentScroll - scrollPosition);
+      if (diff > 5) { // Small tolerance to avoid unnecessary updates
+        contentRef.current.scrollTop = scrollPosition;
+      }
     }
   }, [scrollPosition, isPlaying]);
 };
