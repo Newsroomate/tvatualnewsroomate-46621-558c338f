@@ -55,29 +55,30 @@ export const useTeleprompterNavigation = ({
     return closestIndex;
   }, [getAllRetrancas, contentRef]);
 
-  // Navigate to specific retranca
+  // Navigate to specific retranca - without interrupting auto-scroll
   const navigateToRetranca = useCallback((index: number) => {
     const retrancas = getAllRetrancas();
     if (index < 0 || index >= retrancas.length || !contentRef.current) return;
 
     console.log(`Navigating to retranca ${index + 1}/${retrancas.length}: ${retrancas[index].retranca}`);
     
+    // Brief pause for navigation, then continue scrolling
     isNavigatingRef.current = true;
     pauseAutoScroll();
 
-    // Smooth scroll to element
+    // Instant scroll to element to avoid conflicts with auto-scroll
     retrancas[index].element.scrollIntoView({
-      behavior: 'smooth',
+      behavior: 'instant',
       block: 'center'
     });
 
     currentRetrancaIndexRef.current = index;
 
-    // Resume auto-scroll after navigation
+    // Quick resume of auto-scroll without long pause
     setTimeout(() => {
       isNavigatingRef.current = false;
       resumeAutoScroll();
-    }, 1000);
+    }, 200);
   }, [getAllRetrancas, contentRef, pauseAutoScroll, resumeAutoScroll]);
 
   // Navigate to previous retranca
