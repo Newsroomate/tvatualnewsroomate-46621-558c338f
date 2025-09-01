@@ -26,41 +26,24 @@ export const useTeleprompterKeyboardControls = ({
     const sortedBlocks = [...blocks].sort((a, b) => a.ordem - b.ordem);
     const allRetrancas: Array<{ materia: Materia; element: Element | null }> = [];
     
-    console.log(`Processing ${sortedBlocks.length} blocks for navigation`);
-    
-    sortedBlocks.forEach((block, blockIndex) => {
-      const sortedMaterias = [...block.items]
-        .sort((a, b) => a.ordem - b.ordem)
-        .filter(materia => {
-          // Same filter as TeleprompterContent - allow multiple statuses
-          const allowedStatuses = ['approved', 'published', 'ready', 'draft'];
-          return allowedStatuses.includes(materia.status || 'draft');
-        });
-      
-      console.log(`Block ${blockIndex + 1} "${block.nome}" has ${sortedMaterias.length} filtered materias`);
-      
-      sortedMaterias.forEach((materia, materiaIndex) => {
-        const element = document.querySelector(`[data-retranca-id="${materia.id}"]`);
-        console.log(`Materia ${materiaIndex + 1} (ID: ${materia.id}, Retranca: ${materia.retranca}): ${element ? 'Found' : 'NOT FOUND'}`);
+    sortedBlocks.forEach(block => {
+      const sortedMaterias = [...block.items].sort((a, b) => a.ordem - b.ordem);
+      sortedMaterias.forEach(materia => {
+        const element = document.querySelector(`[data-materia-id="${materia.id}"]`);
         allRetrancas.push({ materia, element });
       });
     });
     
-    console.log(`Total retrancas for navigation: ${allRetrancas.length}`);
     return allRetrancas;
   };
 
   // Navigate to specific retranca
   const navigateToRetranca = (index: number) => {
     const retrancas = getAllRetrancas();
-    console.log(`Total retrancas found: ${retrancas.length}`);
     if (index < 0 || index >= retrancas.length || !contentRef.current) return;
 
     const targetRetranca = retrancas[index];
-    if (!targetRetranca.element) {
-      console.log(`No element found for retranca ${index}`);
-      return;
-    }
+    if (!targetRetranca.element) return;
 
     const container = contentRef.current;
     const elementRect = targetRetranca.element.getBoundingClientRect();
@@ -83,7 +66,7 @@ export const useTeleprompterKeyboardControls = ({
     }
 
     currentRetrancaIndex.current = index;
-    console.log(`✅ Successfully navigated to retranca ${index + 1}/${retrancas.length}: "${targetRetranca.materia.retranca}"`);
+    console.log(`Navigated to retranca ${index + 1}/${retrancas.length}: ${targetRetranca.materia.retranca}`);
   };
 
   // Navigate to previous retranca
@@ -102,8 +85,6 @@ export const useTeleprompterKeyboardControls = ({
   // Keyboard event handler
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      console.log(`Key pressed: ${event.key}`);
-      
       // Prevent handling if user is typing in an input field
       const activeElement = document.activeElement as HTMLElement;
       if (activeElement && (
@@ -111,23 +92,19 @@ export const useTeleprompterKeyboardControls = ({
         activeElement.tagName === 'TEXTAREA' ||
         activeElement.contentEditable === 'true'
       )) {
-        console.log('Ignoring key press - user is typing in input field');
         return;
       }
 
       switch (event.key) {
         case 'ArrowLeft':
-          console.log('Arrow Left pressed - going to previous retranca');
           event.preventDefault();
           goToPreviousRetranca();
           break;
         case 'ArrowRight':
-          console.log('Arrow Right pressed - going to next retranca');
           event.preventDefault();
           goToNextRetranca();
           break;
         case ' ':
-          console.log('Space pressed - toggling play/pause');
           event.preventDefault();
           onPlayPause();
           break;
