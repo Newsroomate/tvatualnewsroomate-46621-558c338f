@@ -98,7 +98,7 @@ const TeleprompterWindow = () => {
           
           retrancaElement.scrollIntoView({ 
             behavior: 'smooth', 
-            block: 'center' 
+            block: 'start' 
           });
           
           console.log("Scrolled to retranca successfully");
