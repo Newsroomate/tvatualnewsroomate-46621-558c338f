@@ -12,7 +12,7 @@ interface UseTeleprompterWindowEffectsProps {
   isPlaying: boolean;
   setIsPlaying: (playing: boolean) => void;
   speed: number[];
-  setScrollPosition: (position: number | ((prev: number) => number)) => void;
+  setScrollPosition: (position: number) => void;
   intervalRef: React.MutableRefObject<NodeJS.Timeout | null>;
   animationFrameRef?: React.MutableRefObject<number | null>;
   lastTimeRef?: React.MutableRefObject<number>;
@@ -174,6 +174,11 @@ export const useTeleprompterWindowEffects = ({
         // Update DOM directly for smooth scrolling
         contentElement.scrollTop = nextPosition;
         
+        // Update scroll position state for persistence
+        if (setScrollPosition) {
+          setScrollPosition(nextPosition);
+        }
+        
         // Continue animation
         if (isPlaying && animationFrameRef?.current !== undefined) {
           animationFrameRef.current = requestAnimationFrame(animate);
@@ -196,7 +201,7 @@ export const useTeleprompterWindowEffects = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isPlaying, speed, setIsPlaying, animationFrameRef, contentRef, lastTimeRef]);
+  }, [isPlaying, speed, setIsPlaying, setScrollPosition, animationFrameRef, contentRef, lastTimeRef]);
 
   // Debounced scroll sync for manual scrolling
   useEffect(() => {
@@ -225,7 +230,8 @@ export const useTeleprompterWindowEffects = ({
 
   // Apply scroll position only when not playing (to avoid conflicts during auto-scroll)
   useEffect(() => {
-    if (!isPlaying && contentRef.current) {
+    if (!isPlaying && contentRef.current && scrollPosition > 0) {
+      console.log('Applying scroll position:', scrollPosition);
       contentRef.current.scrollTop = scrollPosition;
     }
   }, [scrollPosition, isPlaying]);

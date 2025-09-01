@@ -126,6 +126,9 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
       // Update DOM directly for smooth scrolling
       contentElement.scrollTop = nextPosition;
       
+      // Update scroll position state for persistence
+      setScrollPosition(nextPosition);
+      
       // Continue animation
       if (isPlaying) {
         animationFrameRef.current = requestAnimationFrame(animate);
@@ -176,7 +179,8 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
 
   // Apply scroll position only when not playing (to avoid conflicts during auto-scroll)
   useEffect(() => {
-    if (!isPlaying && contentRef.current) {
+    if (!isPlaying && contentRef.current && scrollPosition > 0) {
+      console.log('Applying scroll position:', scrollPosition);
       contentRef.current.scrollTop = scrollPosition;
     }
   }, [scrollPosition, isPlaying]);
