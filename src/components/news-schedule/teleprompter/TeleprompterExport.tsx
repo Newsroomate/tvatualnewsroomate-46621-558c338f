@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { Materia, Telejornal, Bloco } from "@/types";
 import jsPDF from 'jspdf';
+import { getOrderedApprovedMaterias, getTelejornalName, createSafeFilename, hasApprovedContent } from "@/utils/teleprompter-utils";
 
 interface TeleprompterExportProps {
   blocks: (Bloco & { items: Materia[] })[];
@@ -10,20 +11,11 @@ interface TeleprompterExportProps {
 }
 
 export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportProps) => {
-  // Get telejornal name from URL params as fallback
-  const getTelejornalName = () => {
-    if (telejornal?.nome) return telejornal.nome;
-    
-    const urlParams = new URLSearchParams(window.location.search);
-    const urlTelejornalName = urlParams.get('jornal');
-    return urlTelejornalName || 'Telejornal';
-  };
-
   const exportToPDF = () => {
-    const telejornalName = getTelejornalName();
+    const telejornalName = getTelejornalName(telejornal);
     
-    if (!blocks.length) {
-      console.log("Cannot export PDF: no blocks available");
+    if (!hasApprovedContent(blocks)) {
+      console.log("Cannot export PDF: no approved content available");
       return;
     }
 
@@ -36,26 +28,10 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
     let yPosition = 30;
     const lineHeight = 8;
 
-    // Sort blocks by ordem and then get all materias in the correct order (same logic as TeleprompterContent)
-    const sortedBlocks = [...blocks].sort((a, b) => a.ordem - b.ordem);
+    // Get ordered approved materias (same logic as TeleprompterContent)
+    const orderedMaterias = getOrderedApprovedMaterias(blocks);
     
-    // Create a flat list of materias in the correct order
-    const orderedMaterias: (Materia & { blockName?: string })[] = [];
-    
-    sortedBlocks.forEach(block => {
-      // Sort materias within each block by ordem
-      const sortedMaterias = [...block.items].sort((a, b) => a.ordem - b.ordem);
-      
-      // Add block name to each materia for context
-      sortedMaterias.forEach(materia => {
-        orderedMaterias.push({
-          ...materia,
-          blockName: block.nome
-        });
-      });
-    });
-
-    console.log("Ordered materias for PDF:", orderedMaterias.length);
+    console.log("Approved materias for PDF:", orderedMaterias.length);
 
     // Function to check if we need a new page
     const checkNewPage = (requiredSpace: number = lineHeight * 4) => {
@@ -178,19 +154,16 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
     }
 
     // Generate filename
-    const telejornalNameForFile = telejornalName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const dateFormatted = new Date().toLocaleDateString('pt-BR').replace(/\//g, '-');
-    const timeFormatted = new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }).replace(/:/g, 'h');
-    const filename = `teleprompter_${telejornalNameForFile}_${dateFormatted}_${timeFormatted}.pdf`;
+    const filename = `${createSafeFilename(telejornalName)}.pdf`;
 
     // Save the PDF
     doc.save(filename);
     console.log("PDF export completed:", filename);
   };
 
-  // Check if export is possible - now using fallback telejornal name
-  const telejornalName = getTelejornalName();
-  const canExport = telejornalName && blocks.length > 0;
+  // Check if export is possible - using approved content check
+  const telejornalName = getTelejornalName(telejornal);
+  const canExport = telejornalName && hasApprovedContent(blocks);
 
   return (
     <Button
