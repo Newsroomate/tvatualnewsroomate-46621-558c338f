@@ -123,8 +123,8 @@ export const PautaModal = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="pauteiros">PAUTEIROS</Label>
-              <Input id="pauteiros" value={pauteiros} onChange={e => setPauteiros(e.target.value)} placeholder="Nome dos pauteiros" />
+              <Label htmlFor="pauteiros">PRODUTOR</Label>
+              <Input id="pauteiros" value={pauteiros} onChange={e => setPauteiros(e.target.value)} placeholder="Nome do produtor" />
             </div>
             
             <div className="space-y-1">

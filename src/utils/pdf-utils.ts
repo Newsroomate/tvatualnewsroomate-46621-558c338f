@@ -171,7 +171,7 @@ export const generatePautaPDF = (pauta: Pauta) => {
   doc.setFontSize(10);
   doc.setTextColor(0, 0, 0);
   
-  doc.text("PAUTEIROS", margin + 2, yPosition + 8);
+  doc.text("PRODUTOR", margin + 2, yPosition + 8);
   doc.text("REPÓRTER", margin + unifiedWidths.col1 + 2, yPosition + 8);
   doc.text("IMAGENS", margin + unifiedWidths.col1 + unifiedWidths.col2 + 2, yPosition + 8);
   
