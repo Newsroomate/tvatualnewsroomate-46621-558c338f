@@ -60,11 +60,13 @@ export const ScheduleHeader = ({
           </p>
         </div>
         
-        {/* Tempo Total */}
-        <div className="text-left sm:text-right flex-shrink-0">
-          <p className="text-sm font-medium text-muted-foreground">Tempo Total:</p>
-          <p className="text-3xl font-bold text-foreground">{formatTime(totalJournalTime)}</p>
-        </div>
+        {/* Tempo Total - Apenas Desktop */}
+        {!isMobile && (
+          <div className="text-left sm:text-right flex-shrink-0">
+            <p className="text-sm font-medium text-muted-foreground">Tempo Total:</p>
+            <p className="text-3xl font-bold text-foreground">{formatTime(totalJournalTime)}</p>
+          </div>
+        )}
       </div>
       
       {/* Actions Section - Conditional Layout */}

@@ -2,6 +2,7 @@
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Materia } from "@/types";
 import { NewsItem } from "./NewsItem";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BlockContentProps {
   blockId: string;
@@ -38,6 +39,8 @@ export const BlockContent = ({
   selectedItemId,
   onItemClick
 }: BlockContentProps) => {
+  const isMobile = useIsMobile();
+  
   return (
     <div className="overflow-x-auto">
       <Droppable droppableId={blockId}>
@@ -76,7 +79,7 @@ export const BlockContent = ({
                       key={item.id}
                       draggableId={item.id}
                       index={index}
-                      isDragDisabled={!isEspelhoOpen || isBatchMode}
+                      isDragDisabled={!isEspelhoOpen || isBatchMode || isMobile}
                     >
                       {(provided, snapshot) => (
                         <NewsItem
@@ -95,6 +98,7 @@ export const BlockContent = ({
                           onToggleSelection={onToggleSelection}
                           isVisuallySelected={selectedItemId === item.id}
                           onItemClick={onItemClick}
+                          isMobile={isMobile}
                         />
                       )}
                     </Draggable>

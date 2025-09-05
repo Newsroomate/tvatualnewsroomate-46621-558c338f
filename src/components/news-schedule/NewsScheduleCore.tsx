@@ -6,6 +6,7 @@ import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -75,6 +76,7 @@ export const NewsScheduleCore = ({
   isDualView = false
 }: NewsScheduleCoreProps) => {
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
+  const isMobile = useIsMobile();
 
   const {
     handleAddBlockWithScroll,
@@ -142,11 +144,11 @@ export const NewsScheduleCore = ({
 
   return (
     <div className="flex flex-col h-full">
-      {isDualView ? (
-        // In dual view, don't wrap with DragDropContext as it's handled by DualViewLayout
+      {isDualView || isMobile ? (
+        // In dual view or mobile, don't wrap with DragDropContext
         scheduleContent
       ) : (
-        // In single view, wrap with DragDropContext for internal drag and drop
+        // In desktop single view, wrap with DragDropContext for internal drag and drop
         <DragDropContext onDragEnd={handleDragEnd}>
           {scheduleContent}
         </DragDropContext>

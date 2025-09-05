@@ -27,6 +27,8 @@ interface NewsItemProps {
   // Visual selection props
   isVisuallySelected?: boolean;
   onItemClick?: (materia: Materia) => void;
+  // Mobile support
+  isMobile?: boolean;
 }
 
 export const NewsItem = ({ 
@@ -46,7 +48,9 @@ export const NewsItem = ({
   onToggleSelection,
   // Visual selection props
   isVisuallySelected = false,
-  onItemClick
+  onItemClick,
+  // Mobile support
+  isMobile = false
 }: NewsItemProps) => {
   // Ensure we have valid data for display
   const displayRetranca = item.retranca || "Sem título";
@@ -139,7 +143,7 @@ export const NewsItem = ({
     <tr 
       ref={provided.innerRef}
       {...provided.draggableProps}
-      {...provided.dragHandleProps}
+      {...(!isMobile ? provided.dragHandleProps : {})}
       className={getRowStyling()}
       onDoubleClick={() => onDoubleClick(item)}
       onClick={handleRowClick}
