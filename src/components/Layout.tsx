@@ -376,7 +376,7 @@ const Layout = () => {
         />
 
         {/* Main Content Area */}
-        <div className={`flex-1 flex flex-col overflow-hidden ${isEditPanelOpen ? 'mr-[400px]' : ''} ${isMobile ? 'pt-16' : ''}`}>
+        <div className={`flex-1 flex flex-col overflow-hidden ${isEditPanelOpen && !isMobile ? 'mr-[400px]' : ''} ${isMobile ? 'pt-16' : ''}`}>
           {/* Rundown Status Bar */}
           {selectedJournal && (
             <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
