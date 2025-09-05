@@ -144,11 +144,11 @@ export const NewsScheduleCore = ({
 
   return (
     <div className="flex flex-col h-full">
-      {isDualView || isMobile ? (
-        // In dual view or mobile, don't wrap with DragDropContext
+      {isDualView ? (
+        // In dual view, don't wrap with DragDropContext as it's handled by DualViewLayout
         scheduleContent
       ) : (
-        // In desktop single view, wrap with DragDropContext for internal drag and drop
+        // Always wrap with DragDropContext, but disable drag functionality on mobile via isDragDisabled
         <DragDropContext onDragEnd={handleDragEnd}>
           {scheduleContent}
         </DragDropContext>
