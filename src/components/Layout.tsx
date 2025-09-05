@@ -219,6 +219,16 @@ const Layout = () => {
       return;
     }
     
+    // Bloquear fechamento de espelho em mobile/tablet
+    if (isMobile && currentTelejornal.espelho_aberto) {
+      toast({
+        title: "Ação não disponível",
+        description: "Fechar espelho só é possível no desktop.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Se o espelho está aberto e o usuário deseja fechá-lo, mostrar diálogo de confirmação
     if (currentTelejornal.espelho_aberto) {
       setIsCloseRundownDialogOpen(true);
@@ -403,7 +413,7 @@ const Layout = () => {
                 )}
               </div>
               
-              {canCreateEspelhos(profile) && !isDualViewActive && (
+              {canCreateEspelhos(profile) && !isDualViewActive && !isMobile && (
                 <button 
                   onClick={handleToggleRundown}
                   className={`px-4 py-1 rounded-md text-xs font-medium ${
