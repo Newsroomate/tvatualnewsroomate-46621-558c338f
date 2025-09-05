@@ -21,6 +21,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { formatTime } from "./utils";
 import { BatchActions } from "./BatchActions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface BlockHeaderProps {
   blockName: string;
@@ -68,6 +69,7 @@ export const BlockHeader = ({
   const [isEditing, setIsEditing] = useState(false);
   const [editingName, setEditingName] = useState(blockName);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const isMobile = useIsMobile();
 
   const handleStartEdit = () => {
     if (!isEspelhoOpen || !canAddItem) return;
@@ -181,31 +183,33 @@ export const BlockHeader = ({
                   </Tooltip>
                 </TooltipProvider>
                 
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={handleDeleteClick}
-                        disabled={!isEspelhoOpen || !canAddItem}
-                        className="h-8 w-8 p-0 text-red-600 hover:text-red-800"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </TooltipTrigger>
-                    {!isEspelhoOpen && (
-                      <TooltipContent>
-                        Abra o espelho para excluir
-                      </TooltipContent>
-                    )}
-                    {!canAddItem && isEspelhoOpen && (
-                      <TooltipContent>
-                        Sem permissão para excluir
-                      </TooltipContent>
-                    )}
-                  </Tooltip>
-                </TooltipProvider>
+                {!isMobile && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={handleDeleteClick}
+                          disabled={!isEspelhoOpen || !canAddItem}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-800"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TooltipTrigger>
+                      {!isEspelhoOpen && (
+                        <TooltipContent>
+                          Abra o espelho para excluir
+                        </TooltipContent>
+                      )}
+                      {!canAddItem && isEspelhoOpen && (
+                        <TooltipContent>
+                          Sem permissão para excluir
+                        </TooltipContent>
+                      )}
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </div>
             )}
           </div>
@@ -214,8 +218,8 @@ export const BlockHeader = ({
               Tempo: {formatTime(totalTime)}
             </span>
             
-            {/* Batch Actions Toggle Button */}
-            {onToggleBatchMode && (
+            {/* Batch Actions Toggle Button - Hidden on Mobile */}
+            {!isMobile && onToggleBatchMode && (
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
@@ -11,159 +10,102 @@ import { TelejornalModal } from "@/components/TelejornalModal";
 import { supabase } from "@/integrations/supabase/client";
 import { TelejornalSection } from "./TelejornalSection";
 import { PautaSection } from "./PautaSection";
+import { HistoricoEspelhosSection } from "./HistoricoEspelhosSection";
 import { MainMenu } from "./MainMenu";
 
 interface LeftSidebarProps {
   selectedJournal: string | null;
   onSelectJournal: (journalId: string) => void;
-  onToggleDualView?: (enabled: boolean, secondJournal?: string) => void;
+  onToggleDualView?: (enabled: boolean, secondJournalId?: string) => void;
+  isMobile?: boolean;
+  isSidebarOpen?: boolean;
+  onCloseSidebar?: () => void;
 }
 
-export const LeftSidebar = ({
-  selectedJournal,
+export const LeftSidebar = ({ 
+  selectedJournal, 
   onSelectJournal,
-  onToggleDualView
+  onToggleDualView,
+  isMobile = false,
+  isSidebarOpen = true,
+  onCloseSidebar
 }: LeftSidebarProps) => {
   const [isGeneralScheduleOpen, setIsGeneralScheduleOpen] = useState(false);
   const [isPautaModalOpen, setIsPautaModalOpen] = useState(false);
   const [isTelejornalModalOpen, setIsTelejornalModalOpen] = useState(false);
   const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
+
+  // Data states
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   const [pautas, setPautas] = useState<Pauta[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasInitialized, setHasInitialized] = useState(false);
 
+  // Initialize data when component mounts
   useEffect(() => {
     initializeData();
+  }, []);
 
-    // Configurando a inscrição para ouvir atualizações em tempo real da tabela telejornais
-    const telejornaisChannel = supabase
-      .channel('sidebar-telejornais-changes')
-      .on(
-        'postgres_changes',
-        { 
-          event: 'UPDATE', 
-          schema: 'public', 
-          table: 'telejornais' 
-        },
-        (payload) => {
-          console.log('Telejornal atualizado na sidebar:', payload);
-          // Atualizar apenas o telejornal específico que mudou
-          const updatedTelejornal = payload.new as Telejornal;
-          setTelejornais(prev => 
-            prev.map(tj => 
-              tj.id === updatedTelejornal.id ? updatedTelejornal : tj
-            )
-          );
-        }
-      )
-      .on(
-        'postgres_changes',
-        { 
-          event: 'INSERT', 
-          schema: 'public', 
-          table: 'telejornais' 
-        },
-        (payload) => {
-          console.log('Telejornal inserido na sidebar:', payload);
-          loadDataWithoutSelection();
-        }
-      )
-      .on(
-        'postgres_changes',
-        { 
-          event: 'DELETE', 
-          schema: 'public', 
-          table: 'telejornais' 
-        },
-        (payload) => {
-          console.log('Telejornal deletado na sidebar:', payload);
-          loadDataWithoutSelection();
-        }
-      )
+  // Realtime subscriptions
+  useEffect(() => {
+    const telejornaisSubscription = supabase
+      .channel('telejornais_changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'telejornais' 
+      }, (payload) => {
+        console.log('Realtime change in telejornais:', payload);
+        loadDataWithoutSelection();
+      })
       .subscribe();
 
-    // Configurando a inscrição para ouvir atualizações em tempo real da tabela pautas
-    const pautasChannel = supabase
-      .channel('pautas-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'pautas'
-        },
-        (payload) => {
-          console.log('Pauta adicionada:', payload);
-          loadDataWithoutSelection();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'pautas'
-        },
-        (payload) => {
-          console.log('Pauta atualizada:', payload);
-          loadDataWithoutSelection();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'DELETE',
-          schema: 'public',
-          table: 'pautas'
-        },
-        (payload) => {
-          console.log('Pauta excluída:', payload);
-          loadDataWithoutSelection();
-        }
-      )
+    const pautasSubscription = supabase
+      .channel('pautas_changes')
+      .on('postgres_changes', { 
+        event: '*', 
+        schema: 'public', 
+        table: 'pautas' 
+      }, (payload) => {
+        console.log('Realtime change in pautas:', payload);
+        loadDataWithoutSelection();
+      })
       .subscribe();
 
     return () => {
-      supabase.removeChannel(telejornaisChannel);
-      supabase.removeChannel(pautasChannel);
+      supabase.removeChannel(telejornaisSubscription);
+      supabase.removeChannel(pautasSubscription);
     };
   }, []);
 
   const initializeData = async () => {
-    setIsLoading(true);
     try {
-      const [jornaisData, pautasData] = await Promise.all([fetchTelejornais(), fetchPautas()]);
-      setTelejornais(jornaisData);
-      setPautas(pautasData);
-
-      // Apenas selecionar o primeiro jornal se não houver seleção E for a primeira inicialização
-      if (!selectedJournal && !hasInitialized && jornaisData.length > 0) {
-        onSelectJournal(jornaisData[0].id);
-      }
+      const [telejornaisData, pautasData] = await Promise.all([
+        fetchTelejornais(),
+        fetchPautas()
+      ]);
       
-      setHasInitialized(true);
+      setTelejornais(telejornaisData);
+      setPautas(pautasData);
+      
+      console.log('LeftSidebar: Dados carregados - Telejornais:', telejornaisData.length, 'Pautas:', pautasData.length);
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
-    } finally {
-      setIsLoading(false);
+      console.error('Erro ao carregar dados do sidebar:', error);
     }
   };
 
   const loadDataWithoutSelection = async () => {
     try {
-      const [jornaisData, pautasData] = await Promise.all([fetchTelejornais(), fetchPautas()]);
-      setTelejornais(jornaisData);
-      setPautas(pautasData);
+      const [telejornaisData, pautasData] = await Promise.all([
+        fetchTelejornais(),
+        fetchPautas()
+      ]);
       
-      // NÃO alterar a seleção do jornal durante atualizações em tempo real
-      console.log('Dados atualizados sem alterar seleção do jornal');
+      setTelejornais(telejornaisData);
+      setPautas(pautasData);
     } catch (error) {
-      console.error("Erro ao carregar dados:", error);
+      console.error('Erro ao recarregar dados do sidebar:', error);
     }
   };
 
-  // Função pública para recarregar dados (mantendo compatibilidade)
   const loadData = async () => {
     await loadDataWithoutSelection();
   };
@@ -184,9 +126,9 @@ export const LeftSidebar = ({
     setIsMainMenuOpen(!isMainMenuOpen);
   };
 
-  const handleActivateDualView = (secondJournalId: string) => {
+  const handleActivateDualView = (secondaryJournalId: string) => {
     if (onToggleDualView) {
-      onToggleDualView(true, secondJournalId);
+      onToggleDualView(true, secondaryJournalId);
     }
   };
 
@@ -196,44 +138,75 @@ export const LeftSidebar = ({
     }
   };
 
-  return (
-    <div className="w-64 bg-gray-100 h-full border-r border-gray-200 flex flex-col">
-      <div className="p-4 bg-primary text-primary-foreground">
-        <h2 className="text-lg font-semibold">Newsroomate</h2>
-      </div>
-      
-      {/* Menu Button */}
-      <div className="p-4 border-b border-gray-200">
-        <Button variant="outline" className="w-full" onClick={handleToggleMainMenu}>
-          <Menu className="h-4 w-4 mr-2" />
-          Menu
-        </Button>
+  // Mobile sidebar content
+  const sidebarContent = (
+    <div className="bg-muted border-r flex flex-col h-full">
+      {/* Header with toggle button */}
+      <div className="p-4 border-b bg-background">
+        <div className="flex items-center justify-between">
+          <h1 className="text-xl font-bold">Newsroom</h1>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleToggleMainMenu}
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
+      {/* Scrollable Content */}
       <div className="flex-1 overflow-y-auto">
-        {/* Telejornais Section */}
         <TelejornalSection 
-          telejornais={telejornais} 
-          selectedJournal={selectedJournal} 
+          telejornais={telejornais}
+          selectedJournal={selectedJournal}
           onSelectJournal={onSelectJournal}
           onAddTelejornal={handleOpenTelejornalModal}
-          isLoading={isLoading}
+          isLoading={false}
           onDataChange={loadData}
         />
-
-        {/* Pautas Section */}
+        
         <PautaSection 
-          pautas={pautas} 
+          pautas={pautas}
           onAddPauta={handleOpenPautaModal}
-          isLoading={isLoading}
+          isLoading={false}
           onDataChange={loadData}
         />
       </div>
+    </div>
+  );
+
+  return (
+    <>
+      {isMobile ? (
+        // Mobile: Sliding sidebar
+        <div className={`fixed top-16 left-0 bottom-0 w-80 z-50 transform transition-transform duration-300 ease-in-out ${
+          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}>
+          {sidebarContent}
+        </div>
+      ) : (
+        // Desktop: Always visible sidebar
+        <div className="w-80">
+          {sidebarContent}
+        </div>
+      )}
 
       {/* Modals */}
-      <GeneralScheduleModal isOpen={isGeneralScheduleOpen} onClose={() => setIsGeneralScheduleOpen(false)} />
-      <PautaModal isOpen={isPautaModalOpen} onClose={() => setIsPautaModalOpen(false)} onPautaCreated={loadData} />
-      <TelejornalModal isOpen={isTelejornalModalOpen} onClose={() => setIsTelejornalModalOpen(false)} onTelejornalCreated={loadData} />
+      <GeneralScheduleModal 
+        isOpen={isGeneralScheduleOpen} 
+        onClose={() => setIsGeneralScheduleOpen(false)} 
+      />
+      <PautaModal 
+        isOpen={isPautaModalOpen} 
+        onClose={() => setIsPautaModalOpen(false)} 
+        onPautaCreated={loadData} 
+      />
+      <TelejornalModal 
+        isOpen={isTelejornalModalOpen} 
+        onClose={() => setIsTelejornalModalOpen(false)} 
+        onTelejornalCreated={loadData} 
+      />
       
       {/* Main Menu */}
       <MainMenu
@@ -245,6 +218,6 @@ export const LeftSidebar = ({
         onDeactivateDualView={handleDeactivateDualView}
         onOpenGeneralSchedule={handleOpenGeneralSchedule}
       />
-    </div>
+    </>
   );
 };

@@ -120,3 +120,32 @@
 .highlight-new {
   animation: highlightNew 2s ease-out;
 }
+
+/* Mobile sidebar styles */
+.mobile-sidebar-transition {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced mobile touch targets */
+@media (max-width: 768px) {
+  .mobile-touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Mobile-friendly spacing */
+  .mobile-content-padding {
+    padding: 1rem;
+  }
+  
+  /* Hide elements on mobile */
+  .desktop-only {
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-only {
+    display: none;
+  }
+}

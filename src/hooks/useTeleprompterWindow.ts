@@ -35,6 +35,19 @@ export const useTeleprompterWindow = () => {
     teleprompterService.updateData(blocks);
   };
 
+  const openSingleMateria = async (materia: Materia, telejornal: Telejornal | null) => {
+    logTeleprompterOperation("Opening single materia teleprompter", { materiaId: materia.id, retranca: materia.retranca });
+    
+    try {
+      await teleprompterService.openSingleMateria(materia, telejornal);
+      setIsOpen(true);
+      logTeleprompterOperation("Single materia teleprompter opened successfully");
+    } catch (error) {
+      logTeleprompterOperation("Failed to open single materia teleprompter", error);
+      alert('O teleprompter não pôde ser aberto. Verifique se o bloqueador de pop-ups está ativo e permita pop-ups para este site.');
+    }
+  };
+
   const closeTeleprompter = () => {
     logTeleprompterOperation("Closing teleprompter");
     teleprompterService.closeWindow();
@@ -64,6 +77,7 @@ export const useTeleprompterWindow = () => {
   return {
     isOpen: isOpen && teleprompterService.isOpen(),
     openTeleprompter,
+    openSingleMateria,
     updateTeleprompterData,
     focusOnMateria,
     closeTeleprompter

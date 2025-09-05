@@ -16,6 +16,9 @@ import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
 import { useRealtimeTelejornais } from "@/hooks/useRealtimeTelejornais";
 import { useRealtimeInvalidation } from "@/hooks/useRealtimeInvalidation";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from "@/components/ui/button";
+import { Menu, X } from "lucide-react";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -44,6 +47,10 @@ const Layout = () => {
   const [secondaryJournal, setSecondaryJournal] = useState<string | null>(null);
   const [secondaryTelejornal, setSecondaryTelejornal] = useState<Telejornal | null>(null);
 
+  // Mobile sidebar state
+  const isMobile = useIsMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   // Setup realtime subscription for telejornais
   useRealtimeTelejornais({
     onTelejornalUpdate: (updatedTelejornal: Telejornal) => {
@@ -70,6 +77,10 @@ const Layout = () => {
     setSelectedJournal(journalId);
     // Fechar o painel de edição ao trocar de jornal
     setIsEditPanelOpen(false);
+    // Fechar sidebar no mobile
+    if (isMobile) {
+      setIsSidebarOpen(false);
+    }
     
     // Fetch telejornal details - mantendo o estado do espelho
     if (journalId) {
@@ -319,15 +330,43 @@ const Layout = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <div className="flex h-screen overflow-hidden">
+        {/* Mobile Header with Hamburger */}
+        {isMobile && (
+          <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b px-4 py-3 flex items-center">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="mr-2"
+            >
+              {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </Button>
+            <h1 className="text-lg font-semibold">
+              {currentTelejornal?.nome || 'Newsroom'}
+            </h1>
+          </div>
+        )}
+
+        {/* Mobile Backdrop */}
+        {isMobile && isSidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40"
+            onClick={() => setIsSidebarOpen(false)}
+          />
+        )}
+
         {/* Left Sidebar */}
         <LeftSidebar 
           selectedJournal={selectedJournal}
           onSelectJournal={handleSelectJournal}
           onToggleDualView={handleToggleDualView}
+          isMobile={isMobile}
+          isSidebarOpen={isSidebarOpen}
+          onCloseSidebar={() => setIsSidebarOpen(false)}
         />
 
         {/* Main Content Area */}
-        <div className={`flex-1 flex flex-col overflow-hidden ${isEditPanelOpen ? 'mr-[400px]' : ''}`}>
+        <div className={`flex-1 flex flex-col overflow-hidden ${isEditPanelOpen ? 'mr-[400px]' : ''} ${isMobile ? 'pt-16' : ''}`}>
           {/* Rundown Status Bar */}
           {selectedJournal && (
             <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
