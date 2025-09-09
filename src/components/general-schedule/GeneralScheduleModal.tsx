@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { fetchTelejornais } from "@/services/api";
-import { fetchClosedRundownSnapshots, fetchOrphanedTelejornais, ClosedRundownSnapshot } from "@/services/snapshots-api";
+import { fetchClosedRundownSnapshots, ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { Telejornal } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -43,23 +43,8 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
 
   const loadTelejornais = async () => {
     try {
-      // Carregar telejornais ativos
-      const activeData = await fetchTelejornais();
-      
-      // Carregar telejornais órfãos (de espelhos salvos)
-      const orphanedData = await fetchOrphanedTelejornais();
-      
-      // Combinar listas, marcando os órfãos
-      const orphanedWithMarker = orphanedData.map(orphan => ({
-        ...orphan,
-        nome: `${orphan.nome} (ID: ${orphan.id.substring(0, 8)})`,
-        espelho_aberto: false,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }));
-      
-      const combinedData = [...activeData, ...orphanedWithMarker];
-      setTelejornais(combinedData);
+      const data = await fetchTelejornais();
+      setTelejornais(data);
     } catch (error) {
       console.error("Erro ao carregar telejornais:", error);
       toast({
