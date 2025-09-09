@@ -63,7 +63,7 @@ export const fetchClosedRundownSnapshots = async (
     endTime
   });
 
-  // Por enquanto, vamos buscar os espelhos salvos e transformá-los no formato esperado
+  // Usar LEFT JOIN para incluir espelhos órfãos (de telejornais deletados)
   let query = supabase
     .from("espelhos_salvos")
     .select(`
@@ -109,12 +109,12 @@ export const fetchClosedRundownSnapshots = async (
       telejornal_id: item.telejornal_id,
       data_fechamento: item.created_at,
       data_referencia: item.data_referencia,
-      nome_telejornal: telejornal?.nome || "Telejornal",
+      nome_telejornal: telejornal?.nome || "Telejornal Removido",
       horario: telejornal?.horario || "",
       estrutura_completa: {
         telejornal: {
           id: telejornal?.id || item.telejornal_id,
-          nome: telejornal?.nome || "Telejornal",
+          nome: telejornal?.nome || "Telejornal Removido",
           horario: telejornal?.horario || ""
         },
         blocos: item.estrutura?.blocos || [],
@@ -145,4 +145,44 @@ export const fetchClosedRundownSnapshots = async (
   }
 
   return filteredSnapshots;
+};
+
+// Função para buscar telejornais órfãos (que aparecem nos espelhos mas foram deletados)
+export const fetchOrphanedTelejornais = async (): Promise<Array<{id: string, nome: string, horario: string}>> => {
+  const { data, error } = await supabase
+    .from("espelhos_salvos")
+    .select(`
+      telejornal_id,
+      estrutura
+    `);
+
+  if (error) {
+    console.error("Error fetching orphaned telejornais:", error);
+    return [];
+  }
+
+  // Buscar telejornais existentes para comparar
+  const { data: existingTelejornais } = await supabase
+    .from("telejornais")
+    .select("id");
+
+  const existingIds = new Set(existingTelejornais?.map(t => t.id) || []);
+  
+  // Encontrar telejornais únicos que não existem mais
+  const orphanedMap = new Map();
+  
+  data?.forEach(item => {
+    if (!existingIds.has(item.telejornal_id) && !orphanedMap.has(item.telejornal_id)) {
+      // Tentar obter nome e horário da estrutura salva
+      const estrutura = item.estrutura as any;
+      const telejornalInfo = estrutura?.telejornal;
+      orphanedMap.set(item.telejornal_id, {
+        id: item.telejornal_id,
+        nome: telejornalInfo?.nome || `Telejornal Removido`,
+        horario: telejornalInfo?.horario || ""
+      });
+    }
+  });
+  
+  return Array.from(orphanedMap.values());
 };

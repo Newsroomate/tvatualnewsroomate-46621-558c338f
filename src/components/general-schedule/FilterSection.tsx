@@ -86,7 +86,9 @@ export const FilterSection = ({
               <SelectItem value="all">Todos os telejornais</SelectItem>
               {telejornais.map((jornal) => (
                 <SelectItem key={jornal.id} value={jornal.id}>
-                  {jornal.nome}
+                  <span className={jornal.nome.includes("(ID:") ? "text-muted-foreground italic" : ""}>
+                    {jornal.nome}
+                  </span>
                 </SelectItem>
               ))}
             </SelectContent>
