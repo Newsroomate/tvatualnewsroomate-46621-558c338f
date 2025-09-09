@@ -92,13 +92,7 @@ export const fetchAllSavedRundowns = async (
   
   let query = supabase
     .from('espelhos_salvos')
-    .select(`
-      *,
-      telejornais!inner(
-        id,
-        nome
-      )
-    `);
+    .select('*');
 
   if (telejornalId && telejornalId !== "all") {
     query = query.eq('telejornal_id', telejornalId);

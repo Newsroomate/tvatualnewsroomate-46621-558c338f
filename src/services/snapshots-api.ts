@@ -66,14 +66,7 @@ export const fetchClosedRundownSnapshots = async (
   // Por enquanto, vamos buscar os espelhos salvos e transformá-los no formato esperado
   let query = supabase
     .from("espelhos_salvos")
-    .select(`
-      *,
-      telejornais:telejornal_id (
-        id,
-        nome,
-        horario
-      )
-    `)
+    .select('*')
     .order("created_at", { ascending: false });
 
   if (telejornalId && telejornalId !== "all") {
@@ -100,21 +93,38 @@ export const fetchClosedRundownSnapshots = async (
 
   console.log("Found snapshots:", data?.length || 0);
 
+  // Get unique telejornal IDs to fetch telejornal data
+  const telejornalIds = [...new Set(data?.map(r => r.telejornal_id).filter(Boolean))];
+  
+  // Fetch telejornal data separately
+  const telejornaisData: Record<string, { id: string; nome: string; horario: string }> = {};
+  
+  if (telejornalIds.length > 0) {
+    const { data: telejornais } = await supabase
+      .from("telejornais")
+      .select("id, nome, horario")
+      .in("id", telejornalIds);
+    
+    telejornais?.forEach(tj => {
+      telejornaisData[tj.id] = { id: tj.id, nome: tj.nome, horario: tj.horario };
+    });
+  }
+
   // Transformar os dados para o formato esperado
   const snapshots: ClosedRundownSnapshot[] = (data || []).map((item: any) => {
-    const telejornal = item.telejornais;
+    const telejornal = telejornaisData[item.telejornal_id];
     
     return {
       id: item.id,
       telejornal_id: item.telejornal_id,
       data_fechamento: item.created_at,
       data_referencia: item.data_referencia,
-      nome_telejornal: telejornal?.nome || "Telejornal",
+      nome_telejornal: telejornal?.nome || "Telejornal Deletado",
       horario: telejornal?.horario || "",
       estrutura_completa: {
         telejornal: {
           id: telejornal?.id || item.telejornal_id,
-          nome: telejornal?.nome || "Telejornal",
+          nome: telejornal?.nome || "Telejornal Deletado",
           horario: telejornal?.horario || ""
         },
         blocos: item.estrutura?.blocos || [],

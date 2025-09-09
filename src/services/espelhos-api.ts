@@ -58,8 +58,7 @@ export async function fetchClosedRundowns(
       nome,
       estrutura,
       created_at,
-      user_id,
-      telejornais!inner(nome, horario)
+      user_id
     `);
 
   if (telejornalId && telejornalId !== "all") {
@@ -86,18 +85,37 @@ export async function fetchClosedRundowns(
 
   console.log("Found rundowns:", data?.length || 0);
 
+  // Get unique telejornal IDs to fetch telejornal data
+  const telejornalIds = [...new Set(data?.map(r => r.telejornal_id).filter(Boolean))];
+  
+  // Fetch telejornal data separately
+  const telejornaisData: Record<string, { nome: string; horario: string }> = {};
+  
+  if (telejornalIds.length > 0) {
+    const { data: telejornais } = await supabase
+      .from("telejornais")
+      .select("id, nome, horario")
+      .in("id", telejornalIds);
+    
+    telejornais?.forEach(tj => {
+      telejornaisData[tj.id] = { nome: tj.nome, horario: tj.horario };
+    });
+  }
+
   // Map the data to the ClosedRundown format
   return data.map(rundown => {
     const createdDate = new Date(rundown.created_at || "");
+    const telejornalInfo = telejornaisData[rundown.telejornal_id];
+    
     return {
       id: rundown.id,
       telejornal_id: rundown.telejornal_id,
       data_referencia: rundown.data_referencia,
       nome: rundown.nome,
-      jornal: rundown.telejornais?.nome || "",
+      jornal: telejornalInfo?.nome || "Telejornal Deletado",
       data: createdDate,
       dataFormatted: format(createdDate, "dd/MM/yyyy"),
-      hora: rundown.telejornais?.horario || "",
+      hora: telejornalInfo?.horario || "",
       status: "Fechado",
       user_id: rundown.user_id,
       estrutura: rundown.estrutura as ClosedRundown['estrutura']
@@ -133,8 +151,7 @@ export async function saveRundown(
       nome,
       estrutura,
       created_at,
-      user_id,
-      telejornais!inner(nome, horario)
+      user_id
     `)
     .single();
 
@@ -143,16 +160,23 @@ export async function saveRundown(
     throw error;
   }
 
+  // Fetch telejornal data separately
+  const { data: telejornalData } = await supabase
+    .from("telejornais")
+    .select("nome, horario")
+    .eq("id", telejornalId)
+    .maybeSingle();
+
   const createdDate = new Date(data.created_at);
   return {
     id: data.id,
     telejornal_id: data.telejornal_id,
     data_referencia: data.data_referencia,
     nome: data.nome,
-    jornal: data.telejornais?.nome || "",
+    jornal: telejornalData?.nome || "Telejornal Deletado",
     data: createdDate,
     dataFormatted: format(createdDate, "dd/MM/yyyy"),
-    hora: data.telejornais?.horario || "",
+    hora: telejornalData?.horario || "",
     status: "Fechado",
     user_id: data.user_id,
     estrutura: data.estrutura as ClosedRundown['estrutura']

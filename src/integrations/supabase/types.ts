@@ -83,15 +83,7 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "espelhos_salvos_telejornal_id_fkey"
-            columns: ["telejornal_id"]
-            isOneToOne: false
-            referencedRelation: "telejornais"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       materias: {
         Row: {
