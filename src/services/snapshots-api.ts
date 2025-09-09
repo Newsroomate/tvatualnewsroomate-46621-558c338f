@@ -68,7 +68,7 @@ export const fetchClosedRundownSnapshots = async (
     .from("espelhos_salvos")
     .select(`
       *,
-      telejornais:telejornal_id (
+      telejornais(
         id,
         nome,
         horario
@@ -109,13 +109,13 @@ export const fetchClosedRundownSnapshots = async (
       telejornal_id: item.telejornal_id,
       data_fechamento: item.created_at,
       data_referencia: item.data_referencia,
-      nome_telejornal: telejornal?.nome || "Telejornal",
-      horario: telejornal?.horario || "",
+      nome_telejornal: telejornal?.nome || "Telejornal Removido",
+      horario: telejornal?.horario || "N/A",
       estrutura_completa: {
         telejornal: {
           id: telejornal?.id || item.telejornal_id,
-          nome: telejornal?.nome || "Telejornal",
-          horario: telejornal?.horario || ""
+          nome: telejornal?.nome || "Telejornal Removido",
+          horario: telejornal?.horario || "N/A"
         },
         blocos: item.estrutura?.blocos || [],
         metadata: {
