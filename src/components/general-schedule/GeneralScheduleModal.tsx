@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { fetchTelejornais } from "@/services/api";
-import { fetchClosedRundownSnapshots, ClosedRundownSnapshot, fetchOrphanedTelejornais } from "@/services/snapshots-api";
+import { fetchClosedRundownSnapshots, ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { Telejornal } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 
@@ -15,7 +15,7 @@ interface GeneralScheduleModalProps {
 }
 
 export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalProps) => {
-  const [telejornais, setTelejornais] = useState<(Telejornal & { isOrphaned?: boolean })[]>([]);
+  const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   const [selectedJornal, setSelectedJornal] = useState<string>("all");
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [selectedTime, setSelectedTime] = useState<string>("");
@@ -43,24 +43,8 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
 
   const loadTelejornais = async () => {
     try {
-      const activeTelejornais = await fetchTelejornais();
-      const orphanedTelejornais = await fetchOrphanedTelejornais();
-      
-      // Combinar telejornais ativos com os órfãos (removidos)
-      const allTelejornais = [
-        ...activeTelejornais,
-        ...orphanedTelejornais.map(orphaned => ({
-          id: orphaned.telejornal_id,
-          nome: `Telejornal Removido (ID: ${orphaned.telejornal_id.slice(0, 8)})`,
-          horario: orphaned.horario || "N/A",
-          espelho_aberto: false,
-          created_at: orphaned.created_at,
-          updated_at: orphaned.updated_at,
-          isOrphaned: true // Flag para identificar telejornais órfãos
-        }))
-      ];
-      
-      setTelejornais(allTelejornais);
+      const data = await fetchTelejornais();
+      setTelejornais(data);
     } catch (error) {
       console.error("Erro ao carregar telejornais:", error);
       toast({

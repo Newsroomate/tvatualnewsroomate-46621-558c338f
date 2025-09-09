@@ -12,7 +12,7 @@ import { cn } from "@/lib/utils";
 import { Telejornal } from "@/types";
 
 interface FilterSectionProps {
-  telejornais: (Telejornal & { isOrphaned?: boolean })[];
+  telejornais: Telejornal[];
   selectedJornal: string;
   setSelectedJornal: (value: string) => void;
   selectedDate: Date | undefined;
@@ -86,9 +86,7 @@ export const FilterSection = ({
               <SelectItem value="all">Todos os telejornais</SelectItem>
               {telejornais.map((jornal) => (
                 <SelectItem key={jornal.id} value={jornal.id}>
-                  <span className={jornal.isOrphaned ? "text-muted-foreground italic" : ""}>
-                    {jornal.nome}
-                  </span>
+                  {jornal.nome}
                 </SelectItem>
               ))}
             </SelectContent>

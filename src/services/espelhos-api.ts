@@ -59,7 +59,7 @@ export async function fetchClosedRundowns(
       estrutura,
       created_at,
       user_id,
-      telejornais(nome, horario)
+      telejornais!inner(nome, horario)
     `);
 
   if (telejornalId && telejornalId !== "all") {
@@ -94,10 +94,10 @@ export async function fetchClosedRundowns(
       telejornal_id: rundown.telejornal_id,
       data_referencia: rundown.data_referencia,
       nome: rundown.nome,
-      jornal: rundown.telejornais?.nome || "Telejornal Removido",
+      jornal: rundown.telejornais?.nome || "",
       data: createdDate,
       dataFormatted: format(createdDate, "dd/MM/yyyy"),
-      hora: rundown.telejornais?.horario || "N/A",
+      hora: rundown.telejornais?.horario || "",
       status: "Fechado",
       user_id: rundown.user_id,
       estrutura: rundown.estrutura as ClosedRundown['estrutura']
@@ -134,7 +134,7 @@ export async function saveRundown(
       estrutura,
       created_at,
       user_id,
-      telejornais(nome, horario)
+      telejornais!inner(nome, horario)
     `)
     .single();
 
@@ -149,10 +149,10 @@ export async function saveRundown(
     telejornal_id: data.telejornal_id,
     data_referencia: data.data_referencia,
     nome: data.nome,
-    jornal: data.telejornais?.nome || "Telejornal Removido",
+    jornal: data.telejornais?.nome || "",
     data: createdDate,
     dataFormatted: format(createdDate, "dd/MM/yyyy"),
-    hora: data.telejornais?.horario || "N/A",
+    hora: data.telejornais?.horario || "",
     status: "Fechado",
     user_id: data.user_id,
     estrutura: data.estrutura as ClosedRundown['estrutura']
