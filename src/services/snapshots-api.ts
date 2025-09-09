@@ -146,3 +146,39 @@ export const fetchClosedRundownSnapshots = async (
 
   return filteredSnapshots;
 };
+
+// Função para buscar telejornais órfãos (que aparecem em espelhos salvos mas não existem mais)
+export const fetchOrphanedTelejornais = async () => {
+  console.log("Fetching orphaned telejornais...");
+  
+  const { data, error } = await supabase
+    .from("espelhos_salvos")
+    .select(`
+      telejornal_id,
+      created_at,
+      updated_at,
+      telejornais(id)
+    `)
+    .is("telejornais.id", null); // Buscar apenas registros onde telejornais.id é null (órfãos)
+
+  if (error) {
+    console.error("Error fetching orphaned telejornais:", error);
+    throw error;
+  }
+
+  // Remover duplicatas e formatar
+  const uniqueOrphaned = (data || []).reduce((acc: any[], item: any) => {
+    if (!acc.some(existing => existing.telejornal_id === item.telejornal_id)) {
+      acc.push({
+        telejornal_id: item.telejornal_id,
+        created_at: item.created_at,
+        updated_at: item.updated_at,
+        horario: null // Será preenchido se necessário
+      });
+    }
+    return acc;
+  }, []);
+
+  console.log("Found orphaned telejornais:", uniqueOrphaned.length);
+  return uniqueOrphaned;
+};
