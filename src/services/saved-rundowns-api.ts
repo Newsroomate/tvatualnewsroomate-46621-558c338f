@@ -10,6 +10,23 @@ export const saveRundownSnapshot = async (rundownData: SavedRundownCreateInput):
   if (!currentUser.user) {
     throw new Error("Usuário não autenticado");
   }
+
+  // Fetch telejornal data to preserve in structure
+  const { data: telejornalData } = await supabase
+    .from("telejornais")
+    .select("nome, horario")
+    .eq("id", rundownData.telejornal_id)
+    .maybeSingle();
+
+  // Enhance structure with preserved telejornal info
+  const enhancedEstrutura = {
+    ...rundownData.estrutura,
+    telejornal_original: {
+      id: rundownData.telejornal_id,
+      nome: telejornalData?.nome || "Telejornal",
+      horario: telejornalData?.horario || ""
+    }
+  };
   
   const { data, error } = await supabase
     .from('espelhos_salvos')
@@ -17,7 +34,7 @@ export const saveRundownSnapshot = async (rundownData: SavedRundownCreateInput):
       telejornal_id: rundownData.telejornal_id,
       data_referencia: rundownData.data_referencia,
       nome: rundownData.nome,
-      estrutura: rundownData.estrutura,
+      estrutura: enhancedEstrutura,
       user_id: currentUser.user.id
     })
     .select()
@@ -114,16 +131,49 @@ export const fetchAllSavedRundowns = async (
 
   console.log("Found all saved rundowns:", data?.length || 0);
 
-  // Convert the raw data to SavedRundown format, ensuring proper type conversion
-  return data?.map(item => ({
-    id: item.id,
-    telejornal_id: item.telejornal_id,
-    data_salvamento: item.data_salvamento,
-    data_referencia: item.data_referencia,
-    nome: item.nome,
-    estrutura: item.estrutura as SavedRundown['estrutura'],
-    created_at: item.created_at,
-    updated_at: item.updated_at,
-    user_id: item.user_id
-  })) as SavedRundown[] || [];
+  // Get telejornal data for display purposes
+  const telejornalIds = [...new Set(data?.map(r => r.telejornal_id).filter(Boolean))];
+  const telejornaisData: Record<string, { nome: string; horario: string }> = {};
+  
+  if (telejornalIds.length > 0) {
+    const { data: telejornais } = await supabase
+      .from("telejornais")
+      .select("id, nome, horario")
+      .in("id", telejornalIds);
+    
+    telejornais?.forEach(tj => {
+      telejornaisData[tj.id] = { nome: tj.nome, horario: tj.horario };
+    });
+  }
+
+  // Convert the raw data to SavedRundown format with enhanced display info
+  return data?.map(item => {
+    const telejornalInfo = telejornaisData[item.telejornal_id];
+    const estrutura = item.estrutura as any;
+    const originalName = estrutura?.telejornal_original?.nome;
+    const originalHorario = estrutura?.telejornal_original?.horario;
+    
+    // Determine if telejornal was deleted and get appropriate display name
+    const isDeleted = !telejornalInfo && originalName;
+    const displayName = telejornalInfo?.nome || originalName || "Telejornal Deletado";
+    const finalDisplayName = isDeleted ? `${displayName} (Deletado)` : displayName;
+    
+    return {
+      id: item.id,
+      telejornal_id: item.telejornal_id,
+      data_salvamento: item.data_salvamento,
+      data_referencia: item.data_referencia,
+      nome: item.nome,
+      estrutura: {
+        ...(item.estrutura as any),
+        telejornal_info: {
+          nome: finalDisplayName,
+          horario: telejornalInfo?.horario || originalHorario || ""
+        }
+      } as SavedRundown['estrutura'],
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      user_id: item.user_id
+    };
+  }) as SavedRundown[] || [];
 };

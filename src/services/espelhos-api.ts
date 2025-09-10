@@ -106,16 +106,24 @@ export async function fetchClosedRundowns(
   return data.map(rundown => {
     const createdDate = new Date(rundown.created_at || "");
     const telejornalInfo = telejornaisData[rundown.telejornal_id];
+    const estrutura = rundown.estrutura as any;
+    const originalName = estrutura?.telejornal_original?.nome;
+    const originalHorario = estrutura?.telejornal_original?.horario;
+    
+    // Determine if telejornal was deleted and get appropriate display name
+    const isDeleted = !telejornalInfo && originalName;
+    const displayName = telejornalInfo?.nome || originalName || "Telejornal Deletado";
+    const finalDisplayName = isDeleted ? `${displayName} (Deletado)` : displayName;
     
     return {
       id: rundown.id,
       telejornal_id: rundown.telejornal_id,
       data_referencia: rundown.data_referencia,
       nome: rundown.nome,
-      jornal: telejornalInfo?.nome || "Telejornal Deletado",
+      jornal: finalDisplayName,
       data: createdDate,
       dataFormatted: format(createdDate, "dd/MM/yyyy"),
-      hora: telejornalInfo?.horario || "",
+      hora: telejornalInfo?.horario || originalHorario || "",
       status: "Fechado",
       user_id: rundown.user_id,
       estrutura: rundown.estrutura as ClosedRundown['estrutura']
@@ -135,13 +143,30 @@ export async function saveRundown(
     throw new Error("Usuário não autenticado");
   }
 
+  // Fetch telejornal data to preserve in structure
+  const { data: telejornalData } = await supabase
+    .from("telejornais")
+    .select("nome, horario")
+    .eq("id", telejornalId)
+    .maybeSingle();
+
+  // Enhance structure with preserved telejornal info
+  const enhancedEstrutura = {
+    ...estrutura,
+    telejornal_original: {
+      id: telejornalId,
+      nome: telejornalData?.nome || "Telejornal",
+      horario: telejornalData?.horario || ""
+    }
+  };
+
   const { data, error } = await supabase
     .from("espelhos_salvos")
     .insert({
       telejornal_id: telejornalId,
       nome,
       data_referencia: dataReferencia,
-      estrutura,
+      estrutura: enhancedEstrutura,
       user_id: currentUser.user.id
     })
     .select(`
@@ -160,23 +185,17 @@ export async function saveRundown(
     throw error;
   }
 
-  // Fetch telejornal data separately
-  const { data: telejornalData } = await supabase
-    .from("telejornais")
-    .select("nome, horario")
-    .eq("id", telejornalId)
-    .maybeSingle();
-
   const createdDate = new Date(data.created_at);
+  const savedEstrutura = data.estrutura as any;
   return {
     id: data.id,
     telejornal_id: data.telejornal_id,
     data_referencia: data.data_referencia,
     nome: data.nome,
-    jornal: telejornalData?.nome || "Telejornal Deletado",
+    jornal: telejornalData?.nome || savedEstrutura?.telejornal_original?.nome || "Telejornal Deletado",
     data: createdDate,
     dataFormatted: format(createdDate, "dd/MM/yyyy"),
-    hora: telejornalData?.horario || "",
+    hora: telejornalData?.horario || savedEstrutura?.telejornal_original?.horario || "",
     status: "Fechado",
     user_id: data.user_id,
     estrutura: data.estrutura as ClosedRundown['estrutura']

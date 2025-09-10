@@ -113,19 +113,27 @@ export const fetchClosedRundownSnapshots = async (
   // Transformar os dados para o formato esperado
   const snapshots: ClosedRundownSnapshot[] = (data || []).map((item: any) => {
     const telejornal = telejornaisData[item.telejornal_id];
+    const estrutura = item.estrutura as any;
+    const originalName = estrutura?.telejornal_original?.nome;
+    const originalHorario = estrutura?.telejornal_original?.horario;
+    
+    // Determine if telejornal was deleted and get appropriate display name
+    const isDeleted = !telejornal && originalName;
+    const displayName = telejornal?.nome || originalName || "Telejornal Deletado";
+    const finalDisplayName = isDeleted ? `${displayName} (Deletado)` : displayName;
     
     return {
       id: item.id,
       telejornal_id: item.telejornal_id,
       data_fechamento: item.created_at,
       data_referencia: item.data_referencia,
-      nome_telejornal: telejornal?.nome || "Telejornal Deletado",
-      horario: telejornal?.horario || "",
+      nome_telejornal: finalDisplayName,
+      horario: telejornal?.horario || originalHorario || "",
       estrutura_completa: {
         telejornal: {
           id: telejornal?.id || item.telejornal_id,
-          nome: telejornal?.nome || "Telejornal Deletado",
-          horario: telejornal?.horario || ""
+          nome: finalDisplayName,
+          horario: telejornal?.horario || originalHorario || ""
         },
         blocos: item.estrutura?.blocos || [],
         metadata: {
