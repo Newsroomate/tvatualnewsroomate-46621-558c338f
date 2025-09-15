@@ -170,7 +170,16 @@ const Layout = () => {
               tags: materia.tags,
               equipamento: materia.equipamento,
               horario_exibicao: materia.horario_exibicao,
-              ordem: materia.ordem
+              ordem: materia.ordem,
+              // Preservar campos adicionais que podem estar presentes
+              titulo: materia.titulo || materia.retranca,
+              descricao: materia.descricao,
+              tempo_estimado: materia.tempo_estimado,
+              apresentador: materia.apresentador,
+              link_vt: materia.link_vt,
+              is_from_snapshot: materia.is_from_snapshot,
+              created_at: materia.created_at,
+              updated_at: materia.updated_at
             }))
           };
         })

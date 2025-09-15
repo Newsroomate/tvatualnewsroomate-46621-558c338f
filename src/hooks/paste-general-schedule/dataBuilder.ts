@@ -4,18 +4,26 @@ export interface GeneralSchedulePasteData {
   bloco_id: string;
   ordem: number;
   retranca: string;
-  texto: string;
+  texto?: string;
   duracao: number;
-  cabeca: string;
-  gc: string;
-  clip: string;
-  tempo_clip: string;
-  reporter: string;
-  status: string;
-  tipo_material: string;
-  local_gravacao: string;
-  equipamento: string;
-  pagina: string;
+  cabeca?: string;
+  gc?: string;
+  clip?: string;
+  tempo_clip?: string;
+  reporter?: string;
+  status?: string;
+  tipo_material?: string;
+  local_gravacao?: string;
+  equipamento?: string;
+  pagina?: string;
+  tags?: string[];
+  horario_exibicao?: string;
+  // Campos de compatibilidade
+  titulo?: string;
+  descricao?: string;
+  tempo_estimado?: number;
+  apresentador?: string;
+  link_vt?: string;
 }
 
 export const buildGeneralSchedulePasteData = (
@@ -24,12 +32,13 @@ export const buildGeneralSchedulePasteData = (
   insertPosition: number,
   nextPageNumber: string
 ): GeneralSchedulePasteData => {
-  console.log('Construindo dados para cola do Espelho Geral:', {
+  console.log('Construindo dados completos para cola do Espelho Geral:', {
     originalRetranca: copiedMateria.retranca,
     targetBlockId,
     insertPosition,
     nextPageNumber,
-    campos: Object.keys(copiedMateria).length
+    campos: Object.keys(copiedMateria).length,
+    camposOriginais: copiedMateria
   });
 
   return {
@@ -55,6 +64,17 @@ export const buildGeneralSchedulePasteData = (
     // Preservar campos de produção
     local_gravacao: copiedMateria.local_gravacao || '',
     equipamento: copiedMateria.equipamento || '',
+    
+    // Preservar campos adicionais
+    tags: copiedMateria.tags || [],
+    horario_exibicao: copiedMateria.horario_exibicao || '',
+    
+    // Preservar campos de compatibilidade
+    titulo: copiedMateria.titulo || copiedMateria.retranca,
+    descricao: copiedMateria.descricao || '',
+    tempo_estimado: copiedMateria.tempo_estimado || 0,
+    apresentador: copiedMateria.apresentador || '',
+    link_vt: copiedMateria.link_vt || '',
     
     // Nova página no espelho aberto
     pagina: nextPageNumber

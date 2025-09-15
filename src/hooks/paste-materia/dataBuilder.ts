@@ -8,6 +8,12 @@ export const buildPasteMateriaData = (
   insertPosition: number,
   nextPageNumber: string
 ): PasteMateriaData => {
+  console.log('Construindo dados completos para cola de matéria:', {
+    originalRetranca: copiedMateria.retranca,
+    campos: Object.keys(copiedMateria).length,
+    camposOriginais: copiedMateria
+  });
+
   return {
     bloco_id: targetBlockId,
     ordem: insertPosition,
@@ -31,6 +37,17 @@ export const buildPasteMateriaData = (
     // Preservar campos de produção
     local_gravacao: copiedMateria.local_gravacao || '',
     equipamento: copiedMateria.equipamento || '',
+    
+    // Preservar campos adicionais
+    tags: copiedMateria.tags || [],
+    horario_exibicao: copiedMateria.horario_exibicao || '',
+    
+    // Preservar campos de compatibilidade
+    titulo: copiedMateria.titulo || copiedMateria.retranca,
+    descricao: copiedMateria.descricao || '',
+    tempo_estimado: copiedMateria.tempo_estimado || 0,
+    apresentador: copiedMateria.apresentador || '',
+    link_vt: copiedMateria.link_vt || '',
     
     // Página será a próxima disponível no bloco
     pagina: nextPageNumber
