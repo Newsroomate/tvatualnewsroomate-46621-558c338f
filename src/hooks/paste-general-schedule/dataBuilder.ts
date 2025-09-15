@@ -17,7 +17,7 @@ export interface GeneralSchedulePasteData {
   equipamento?: string;
   pagina?: string;
   tags?: string[];
-  horario_exibicao?: string;
+  horario_exibicao?: string | null;
 }
 
 export const buildGeneralSchedulePasteData = (
@@ -61,7 +61,7 @@ export const buildGeneralSchedulePasteData = (
     
     // Preservar campos adicionais
     tags: copiedMateria.tags || [],
-    horario_exibicao: copiedMateria.horario_exibicao || '',
+    horario_exibicao: copiedMateria.horario_exibicao || null,
     
     // Nova página no espelho aberto
     pagina: nextPageNumber

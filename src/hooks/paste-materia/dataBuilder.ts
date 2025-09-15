@@ -40,7 +40,7 @@ export const buildPasteMateriaData = (
     
     // Preservar campos adicionais
     tags: copiedMateria.tags || [],
-    horario_exibicao: copiedMateria.horario_exibicao || '',
+    horario_exibicao: copiedMateria.horario_exibicao || null,
     
     // Página será a próxima disponível no bloco
     pagina: nextPageNumber

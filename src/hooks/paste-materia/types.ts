@@ -27,5 +27,5 @@ export interface PasteMateriaData {
   equipamento?: string;
   pagina?: string;
   tags?: string[];
-  horario_exibicao?: string;
+  horario_exibicao?: string | null;
 }

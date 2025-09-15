@@ -66,6 +66,10 @@ export interface MateriaCreateInput {
   cabeca?: string;
   gc?: string;  // New GC field
   tipo_material?: string;  // New field for material type dropdown
+  local_gravacao?: string;
+  equipamento?: string;
+  tags?: string[];
+  horario_exibicao?: string | null;
 }
 
 export interface Pauta {
