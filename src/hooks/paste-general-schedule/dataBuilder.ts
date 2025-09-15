@@ -18,12 +18,6 @@ export interface GeneralSchedulePasteData {
   pagina?: string;
   tags?: string[];
   horario_exibicao?: string;
-  // Campos de compatibilidade
-  titulo?: string;
-  descricao?: string;
-  tempo_estimado?: number;
-  apresentador?: string;
-  link_vt?: string;
 }
 
 export const buildGeneralSchedulePasteData = (
@@ -68,13 +62,6 @@ export const buildGeneralSchedulePasteData = (
     // Preservar campos adicionais
     tags: copiedMateria.tags || [],
     horario_exibicao: copiedMateria.horario_exibicao || '',
-    
-    // Preservar campos de compatibilidade
-    titulo: copiedMateria.titulo || copiedMateria.retranca,
-    descricao: copiedMateria.descricao || '',
-    tempo_estimado: copiedMateria.tempo_estimado || 0,
-    apresentador: copiedMateria.apresentador || '',
-    link_vt: copiedMateria.link_vt || '',
     
     // Nova página no espelho aberto
     pagina: nextPageNumber

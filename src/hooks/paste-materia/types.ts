@@ -28,10 +28,4 @@ export interface PasteMateriaData {
   pagina?: string;
   tags?: string[];
   horario_exibicao?: string;
-  // Campos de compatibilidade
-  titulo?: string;
-  descricao?: string;
-  tempo_estimado?: number;
-  apresentador?: string;
-  link_vt?: string;
 }

@@ -42,13 +42,6 @@ export const buildPasteMateriaData = (
     tags: copiedMateria.tags || [],
     horario_exibicao: copiedMateria.horario_exibicao || '',
     
-    // Preservar campos de compatibilidade
-    titulo: copiedMateria.titulo || copiedMateria.retranca,
-    descricao: copiedMateria.descricao || '',
-    tempo_estimado: copiedMateria.tempo_estimado || 0,
-    apresentador: copiedMateria.apresentador || '',
-    link_vt: copiedMateria.link_vt || '',
-    
     // Página será a próxima disponível no bloco
     pagina: nextPageNumber
   };
