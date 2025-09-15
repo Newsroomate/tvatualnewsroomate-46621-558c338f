@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ChevronDown, ChevronRight, Clock, Eye } from "lucide-react";
+import { ChevronDown, ChevronRight, Clock, Eye, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { formatTime } from "../news-schedule/utils";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
@@ -61,6 +61,12 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDe
   // Garantir que a data seja exibida corretamente baseada na data_referencia
   const displayDate = new Date(snapshot.data_referencia + 'T00:00:00');
 
+  // Verificar se o telejornal foi deletado e extrair nome original
+  const isTelejornalDeleted = snapshot.nome_telejornal.includes('(Deletado)');
+  const originalTelejornalName = isTelejornalDeleted 
+    ? snapshot.nome_telejornal.replace(' (Deletado)', '') 
+    : snapshot.nome_telejornal;
+
   return (
     <Card className="w-full">
       <CardHeader className="pb-3">
@@ -74,9 +80,17 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDe
             >
               {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </Button>
-            <CardTitle className="text-base">
-              {snapshot.nome_telejornal}
-            </CardTitle>
+            <div className="flex items-center space-x-2">
+              <CardTitle className="text-base">
+                {originalTelejornalName}
+              </CardTitle>
+              {isTelejornalDeleted && (
+                <Badge variant="destructive" className="text-xs flex items-center space-x-1">
+                  <AlertTriangle className="h-3 w-3" />
+                  <span>Deletado</span>
+                </Badge>
+              )}
+            </div>
             <Badge variant="outline" className="text-xs">
               {format(displayDate, "dd/MM/yyyy")}
             </Badge>
