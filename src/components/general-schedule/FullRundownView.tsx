@@ -1,9 +1,10 @@
 
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useClipboard } from "@/hooks/useClipboard";
-import { usePasteBlock } from "@/hooks/paste-block";
+import { useUnifiedClipboard } from "@/hooks/useUnifiedClipboard";
+import { usePasteToGeneralSchedule } from "@/hooks/paste-general-schedule";
 import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "@/hooks/use-toast";
 import { FullRundownHeader } from "./full-rundown/FullRundownHeader";
 import { BlocoCard } from "./full-rundown/BlocoCard";
 import { InstructionSection } from "./full-rundown/InstructionSection";
@@ -36,38 +37,63 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     handleUpdateEditData
   } = useMateriaOperations(snapshot);
 
-  const { copyMateria, copiedBlock, clearClipboard } = useClipboard();
+  const { copiedMateria, copiedBlock, copyMateria, clearClipboard, getSourceInfo } = useUnifiedClipboard();
 
-  // Hook para colar blocos - simulando um espelho aberto temporário para permitir paste
-  const { pasteBlock } = usePasteBlock({
-    selectedJournal: null, // No histórico não há journal selecionado
-    currentTelejornal: { espelho_aberto: false }, // Espelho fechado no histórico
+  // Hook para colar do Espelho Geral para espelhos abertos
+  const { pasteMateria: pasteToActiveSchedule, pasteBlock: pasteBlockToActiveSchedule } = usePasteToGeneralSchedule({
+    selectedJournal: null, // Será configurado dinamicamente quando necessário
+    currentTelejornal: null, // Será configurado dinamicamente quando necessário
+    copiedMateria,
     copiedBlock,
     clearClipboard,
     refreshBlocks: () => {
-      // Não faz nada no histórico, apenas para compatibilidade
-      console.log('Refresh blocks chamado no histórico (sem efeito)');
+      console.log('Refresh blocks após paste do Espelho Geral');
+      queryClient.invalidateQueries({ queryKey: ['blocos'] });
     }
   });
 
-  // Atalhos de teclado para copiar - com funcionalidade aprimorada
+  // Atalhos de teclado aprimorados para o Espelho Geral
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: () => {
       if (selectedMateria) {
-        console.log('Copiando via Ctrl+C no histórico:', selectedMateria);
-        copyMateria(selectedMateria);
+        console.log('Copiando via Ctrl+C no Espelho Geral:', selectedMateria);
+        // Copiar com contexto do Espelho Geral
+        copyMateria(
+          selectedMateria, 
+          'general_schedule',
+          snapshot.nome_telejornal || 'Telejornal',
+          'Espelho Geral'
+        );
       }
     },
     onPaste: () => {
-      console.log('Tentativa de colar no histórico (não permitido)');
-      // Não permitir colar no histórico, apenas copiar
+      const sourceInfo = getSourceInfo();
+      if (sourceInfo?.context === 'news_schedule') {
+        console.log('Colando do espelho aberto para Espelho Geral (não permitido)');
+        toast({
+          title: "Operação não permitida",
+          description: "Não é possível colar no Espelho Geral. Use esta matéria em um espelho aberto.",
+          variant: "destructive"
+        });
+      } else {
+        console.log('Tentativa de colar dentro do próprio Espelho Geral (não permitido)');
+      }
     },
-    isEspelhoOpen: true, // Permitir copy no histórico
+    isEspelhoOpen: true, // Permitir copy no Espelho Geral
     copiedBlock,
     onPasteBlock: () => {
-      console.log('Tentativa de colar bloco no histórico (não permitido)');
-      // Não permitir colar blocos no histórico
+      const sourceInfo = getSourceInfo();
+      if (sourceInfo?.context === 'news_schedule') {
+        console.log('Colando bloco do espelho aberto para Espelho Geral (não permitido)');
+        toast({
+          title: "Operação não permitida", 
+          description: "Não é possível colar blocos no Espelho Geral. Use este bloco em um espelho aberto.",
+          variant: "destructive"
+        });
+      } else {
+        console.log('Tentativa de colar bloco dentro do próprio Espelho Geral (não permitido)');
+      }
     }
   });
 
