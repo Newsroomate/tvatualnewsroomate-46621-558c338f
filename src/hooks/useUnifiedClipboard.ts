@@ -27,62 +27,61 @@ export const useUnifiedClipboard = () => {
   useEffect(() => {
     const loadStorageData = () => {
       try {
-        // Load materia
+        // Verificar timestamps para carregar apenas o item mais recente
         const storedMateria = sessionStorage.getItem('copiedMateria');
         const storedMateriaTime = sessionStorage.getItem('copiedMateriaTime');
+        const storedBlock = sessionStorage.getItem('copiedBlock');
+        const storedBlockTime = sessionStorage.getItem('copiedBlockTime');
         
-        console.log('Unified clipboard: Loading data from storage:', {
+        const materiaTimestamp = storedMateriaTime ? parseInt(storedMateriaTime) : 0;
+        const blockTimestamp = storedBlockTime ? parseInt(storedBlockTime) : 0;
+        
+        console.log('Unified clipboard: Loading data with timestamp validation:', {
           hasMateria: !!storedMateria,
-          hasTime: !!storedMateriaTime,
-          timestamp: storedMateriaTime
+          hasBlock: !!storedBlock,
+          materiaTimestamp,
+          blockTimestamp,
+          mostRecent: materiaTimestamp > blockTimestamp ? 'materia' : 'block'
         });
         
-        if (storedMateria && storedMateriaTime) {
-          const timestamp = parseInt(storedMateriaTime);
-          const timeElapsed = Date.now() - timestamp;
-          
-          console.log('Unified clipboard: Time check:', {
-            timeElapsed,
-            expiry: CLIPBOARD_EXPIRY,
-            isValid: timeElapsed < CLIPBOARD_EXPIRY
-          });
-          
+        // Se matéria for mais recente, carregar apenas ela
+        if (materiaTimestamp > blockTimestamp && storedMateria && storedMateriaTime) {
+          const timeElapsed = Date.now() - materiaTimestamp;
           if (timeElapsed < CLIPBOARD_EXPIRY) {
             const materiaData = JSON.parse(storedMateria);
             setCopiedMateria(materiaData);
-            console.log('Unified clipboard: Matéria loaded from storage:', {
-              retranca: materiaData.retranca,
-              context: materiaData.source_context,
-              allData: materiaData
-            });
+            setCopiedBlock(null); // Garantir que bloco seja null
+            console.log('Unified clipboard: Matéria loaded (mais recente):', materiaData.retranca);
           } else {
-            console.log('Unified clipboard: Data expired, removing from storage');
             sessionStorage.removeItem('copiedMateria');
             sessionStorage.removeItem('copiedMateriaTime');
             setCopiedMateria(null);
           }
-        } else {
-          console.log('Unified clipboard: No materia data in storage');
-          setCopiedMateria(null);
         }
-
-        // Load block
-        const storedBlock = sessionStorage.getItem('copiedBlock');
-        const storedBlockTime = sessionStorage.getItem('copiedBlockTime');
-        
-        if (storedBlock && storedBlockTime) {
-          const timestamp = parseInt(storedBlockTime);
-          if (Date.now() - timestamp < CLIPBOARD_EXPIRY) {
+        // Se bloco for mais recente, carregar apenas ele
+        else if (blockTimestamp > materiaTimestamp && storedBlock && storedBlockTime) {
+          const timeElapsed = Date.now() - blockTimestamp;
+          if (timeElapsed < CLIPBOARD_EXPIRY) {
             const blockData = JSON.parse(storedBlock);
             setCopiedBlock(blockData);
-            console.log('Unified clipboard: Bloco loaded from storage:', blockData.nome);
+            setCopiedMateria(null); // Garantir que matéria seja null
+            console.log('Unified clipboard: Bloco loaded (mais recente):', blockData.nome);
           } else {
             sessionStorage.removeItem('copiedBlock');
             sessionStorage.removeItem('copiedBlockTime');
+            setCopiedBlock(null);
           }
+        }
+        // Se nenhum timestamp válido, limpar tudo
+        else {
+          console.log('Unified clipboard: No valid timestamps, clearing all');
+          setCopiedMateria(null);
+          setCopiedBlock(null);
         }
       } catch (error) {
         console.error('Erro ao carregar dados do clipboard:', error);
+        setCopiedMateria(null);
+        setCopiedBlock(null);
       }
     };
 
@@ -99,12 +98,12 @@ export const useUnifiedClipboard = () => {
     telejornalNome?: string,
     blocoNome?: string
   ) => {
-    console.log('Unified clipboard: Copiando matéria:', {
+    console.log('Unified clipboard: Copiando matéria (limpando bloco anterior):', {
       retranca: materia.retranca,
       context,
       telejornal: telejornalNome,
       bloco: blocoNome,
-      allFields: Object.keys(materia)
+      blocoAnterior: copiedBlock?.nome || 'nenhum'
     });
 
     const materiaWithContext: CopiedMateriaExtended = {
@@ -114,20 +113,25 @@ export const useUnifiedClipboard = () => {
       source_bloco_nome: blocoNome
     };
 
+    // CRÍTICO: Limpar o bloco ANTES de setar a matéria
+    setCopiedBlock(null);
     setCopiedMateria(materiaWithContext);
-    setCopiedBlock(null); // Clear any copied block
 
-    // Save to sessionStorage
+    // Save to sessionStorage - GARANTIR limpeza total do bloco
     try {
-      const materiaString = JSON.stringify(materiaWithContext);
-      sessionStorage.setItem('copiedMateria', materiaString);
-      sessionStorage.setItem('copiedMateriaTime', Date.now().toString());
+      // Remover dados de bloco PRIMEIRO
       sessionStorage.removeItem('copiedBlock');
       sessionStorage.removeItem('copiedBlockTime');
       
-      console.log('Unified clipboard: Matéria salva no sessionStorage:', {
-        size: materiaString.length + ' chars',
-        timestamp: Date.now()
+      // Depois salvar dados da matéria
+      const materiaString = JSON.stringify(materiaWithContext);
+      sessionStorage.setItem('copiedMateria', materiaString);
+      sessionStorage.setItem('copiedMateriaTime', Date.now().toString());
+      
+      console.log('Unified clipboard: Matéria salva e bloco anterior removido:', {
+        materiaSize: materiaString.length + ' chars',
+        timestamp: Date.now(),
+        blocoRemovido: true
       });
     } catch (error) {
       console.error('Erro ao salvar matéria no sessionStorage:', error);
@@ -153,11 +157,11 @@ export const useUnifiedClipboard = () => {
     materias: Materia[],
     context: 'general_schedule' | 'news_schedule' = 'news_schedule'
   ) => {
-    console.log('Unified clipboard: Copiando bloco:', {
+    console.log('Unified clipboard: Copiando bloco (limpando matéria anterior):', {
       nome: block.nome,
       materiasCount: materias.length,
       context,
-      totalMateriaFields: materias.reduce((sum, m) => sum + Object.keys(m).length, 0)
+      materiaAnterior: copiedMateria?.retranca || 'nenhuma'
     });
 
     const blockWithContext: CopiedBlock = {
@@ -169,20 +173,25 @@ export const useUnifiedClipboard = () => {
       source_context: context
     };
 
+    // CRÍTICO: Limpar a matéria ANTES de setar o bloco
+    setCopiedMateria(null);
     setCopiedBlock(blockWithContext);
-    setCopiedMateria(null); // Clear any copied materia
 
-    // Save to sessionStorage
+    // Save to sessionStorage - GARANTIR limpeza total da matéria
     try {
-      const blockString = JSON.stringify(blockWithContext);
-      sessionStorage.setItem('copiedBlock', blockString);
-      sessionStorage.setItem('copiedBlockTime', Date.now().toString());
+      // Remover dados de matéria PRIMEIRO
       sessionStorage.removeItem('copiedMateria');
       sessionStorage.removeItem('copiedMateriaTime');
       
-      console.log('Unified clipboard: Bloco salvo no sessionStorage:', {
-        size: blockString.length + ' chars',
-        timestamp: Date.now()
+      // Depois salvar dados do bloco
+      const blockString = JSON.stringify(blockWithContext);
+      sessionStorage.setItem('copiedBlock', blockString);
+      sessionStorage.setItem('copiedBlockTime', Date.now().toString());
+      
+      console.log('Unified clipboard: Bloco salvo e matéria anterior removida:', {
+        blockSize: blockString.length + ' chars',
+        timestamp: Date.now(),
+        materiaRemovida: true
       });
     } catch (error) {
       console.error('Erro ao salvar bloco no sessionStorage:', error);

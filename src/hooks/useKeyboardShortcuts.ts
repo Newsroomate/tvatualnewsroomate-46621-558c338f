@@ -54,24 +54,35 @@ export const useKeyboardShortcuts = ({
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         event.preventDefault();
         
-        console.log('Ctrl+V pressionado - Estado do clipboard:', {
+        // Verificar timestamps para determinar qual foi copiado mais recentemente
+        const materiaTime = sessionStorage.getItem('copiedMateriaTime');
+        const blockTime = sessionStorage.getItem('copiedBlockTime');
+        
+        console.log('Ctrl+V pressionado - Análise do clipboard:', {
           copiedBlock: copiedBlock ? {
             nome: copiedBlock.nome,
             materiasCount: copiedBlock.materias.length
           } : null,
           hasPasteBlock: !!onPasteBlock,
-          sessionStorageMateria: sessionStorage.getItem('copiedMateria') ? 'exists' : 'empty',
-          sessionStorageBlock: sessionStorage.getItem('copiedBlock') ? 'exists' : 'empty'
+          sessionStorageMateria: materiaTime ? 'exists' : 'empty',
+          sessionStorageBlock: blockTime ? 'exists' : 'empty',
+          materiaTimestamp: materiaTime,
+          blockTimestamp: blockTime
         });
         
-        // Se há um bloco copiado, priorizar colar o bloco
-        if (copiedBlock && onPasteBlock) {
-          console.log('Colando bloco via Ctrl+V:', copiedBlock.nome);
+        // Determinar qual foi copiado mais recentemente baseado nos timestamps
+        const materiaTimestamp = materiaTime ? parseInt(materiaTime) : 0;
+        const blockTimestamp = blockTime ? parseInt(blockTime) : 0;
+        
+        if (blockTimestamp > materiaTimestamp && copiedBlock && onPasteBlock) {
+          console.log('Colando bloco via Ctrl+V (mais recente):', copiedBlock.nome);
           onPasteBlock();
-        } else {
-          // Caso contrário, colar matéria individual
-          console.log('Colando matéria via Ctrl+V');
+        } else if (materiaTimestamp > 0) {
+          console.log('Colando matéria via Ctrl+V (mais recente)');
           onPaste();
+        } else {
+          console.log('Nenhum item válido para colar');
+          onPaste(); // Fallback para mostrar mensagem apropriada
         }
       }
     };
