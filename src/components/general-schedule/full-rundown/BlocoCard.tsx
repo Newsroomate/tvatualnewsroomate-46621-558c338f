@@ -7,7 +7,7 @@ import { formatTime } from "../../news-schedule/utils";
 import { MateriaViewCard } from "./MateriaViewCard";
 import { EditableMateriaForm } from "./EditableMateriaForm";
 import { EditableMateria } from "../types";
-import { useClipboard } from "@/hooks/useClipboard";
+import { useUnifiedClipboard } from "@/hooks/useUnifiedClipboard";
 
 interface BlocoCardProps {
   bloco: any;
@@ -51,12 +51,12 @@ export const BlocoCard = ({
   const materias = getMateriasList(bloco);
   const totalDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
   const editedCount = materias.filter((item: any) => item.isEdited).length;
-  const { copyBlock } = useClipboard();
+  const { copyBlock } = useUnifiedClipboard();
 
   const handleCopyBlock = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log('Copiando bloco completo:', bloco.nome);
-    copyBlock(bloco, materias);
+    copyBlock(bloco, materias, 'general_schedule'); // Contexto do Espelho Geral
   };
 
   return (

@@ -31,16 +31,39 @@ export const useUnifiedClipboard = () => {
         const storedMateria = sessionStorage.getItem('copiedMateria');
         const storedMateriaTime = sessionStorage.getItem('copiedMateriaTime');
         
+        console.log('Unified clipboard: Loading data from storage:', {
+          hasMateria: !!storedMateria,
+          hasTime: !!storedMateriaTime,
+          timestamp: storedMateriaTime
+        });
+        
         if (storedMateria && storedMateriaTime) {
           const timestamp = parseInt(storedMateriaTime);
-          if (Date.now() - timestamp < CLIPBOARD_EXPIRY) {
+          const timeElapsed = Date.now() - timestamp;
+          
+          console.log('Unified clipboard: Time check:', {
+            timeElapsed,
+            expiry: CLIPBOARD_EXPIRY,
+            isValid: timeElapsed < CLIPBOARD_EXPIRY
+          });
+          
+          if (timeElapsed < CLIPBOARD_EXPIRY) {
             const materiaData = JSON.parse(storedMateria);
             setCopiedMateria(materiaData);
-            console.log('Unified clipboard: Matéria loaded from storage:', materiaData.retranca);
+            console.log('Unified clipboard: Matéria loaded from storage:', {
+              retranca: materiaData.retranca,
+              context: materiaData.source_context,
+              allData: materiaData
+            });
           } else {
+            console.log('Unified clipboard: Data expired, removing from storage');
             sessionStorage.removeItem('copiedMateria');
             sessionStorage.removeItem('copiedMateriaTime');
+            setCopiedMateria(null);
           }
+        } else {
+          console.log('Unified clipboard: No materia data in storage');
+          setCopiedMateria(null);
         }
 
         // Load block
@@ -76,6 +99,14 @@ export const useUnifiedClipboard = () => {
     telejornalNome?: string,
     blocoNome?: string
   ) => {
+    console.log('Unified clipboard: Copiando matéria:', {
+      retranca: materia.retranca,
+      context,
+      telejornal: telejornalNome,
+      bloco: blocoNome,
+      allFields: Object.keys(materia)
+    });
+
     const materiaWithContext: CopiedMateriaExtended = {
       ...materia,
       source_context: context,
@@ -87,10 +118,20 @@ export const useUnifiedClipboard = () => {
     setCopiedBlock(null); // Clear any copied block
 
     // Save to sessionStorage
-    sessionStorage.setItem('copiedMateria', JSON.stringify(materiaWithContext));
-    sessionStorage.setItem('copiedMateriaTime', Date.now().toString());
-    sessionStorage.removeItem('copiedBlock');
-    sessionStorage.removeItem('copiedBlockTime');
+    try {
+      const materiaString = JSON.stringify(materiaWithContext);
+      sessionStorage.setItem('copiedMateria', materiaString);
+      sessionStorage.setItem('copiedMateriaTime', Date.now().toString());
+      sessionStorage.removeItem('copiedBlock');
+      sessionStorage.removeItem('copiedBlockTime');
+      
+      console.log('Unified clipboard: Matéria salva no sessionStorage:', {
+        size: materiaString.length + ' chars',
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      console.error('Erro ao salvar matéria no sessionStorage:', error);
+    }
 
     const contextLabel = context === 'general_schedule' ? 'Espelho Geral' : 'espelho aberto';
     
@@ -99,7 +140,7 @@ export const useUnifiedClipboard = () => {
       description: `"${materia.retranca}" foi copiada do ${contextLabel}. Use Ctrl+V para colar.`,
     });
 
-    console.log('Unified clipboard: Matéria copiada:', {
+    console.log('Unified clipboard: Matéria copiada com sucesso:', {
       retranca: materia.retranca,
       context,
       telejornal: telejornalNome,
@@ -112,6 +153,13 @@ export const useUnifiedClipboard = () => {
     materias: Materia[],
     context: 'general_schedule' | 'news_schedule' = 'news_schedule'
   ) => {
+    console.log('Unified clipboard: Copiando bloco:', {
+      nome: block.nome,
+      materiasCount: materias.length,
+      context,
+      totalMateriaFields: materias.reduce((sum, m) => sum + Object.keys(m).length, 0)
+    });
+
     const blockWithContext: CopiedBlock = {
       id: block.id,
       nome: block.nome,
@@ -125,10 +173,20 @@ export const useUnifiedClipboard = () => {
     setCopiedMateria(null); // Clear any copied materia
 
     // Save to sessionStorage
-    sessionStorage.setItem('copiedBlock', JSON.stringify(blockWithContext));
-    sessionStorage.setItem('copiedBlockTime', Date.now().toString());
-    sessionStorage.removeItem('copiedMateria');
-    sessionStorage.removeItem('copiedMateriaTime');
+    try {
+      const blockString = JSON.stringify(blockWithContext);
+      sessionStorage.setItem('copiedBlock', blockString);
+      sessionStorage.setItem('copiedBlockTime', Date.now().toString());
+      sessionStorage.removeItem('copiedMateria');
+      sessionStorage.removeItem('copiedMateriaTime');
+      
+      console.log('Unified clipboard: Bloco salvo no sessionStorage:', {
+        size: blockString.length + ' chars',
+        timestamp: Date.now()
+      });
+    } catch (error) {
+      console.error('Erro ao salvar bloco no sessionStorage:', error);
+    }
 
     const contextLabel = context === 'general_schedule' ? 'Espelho Geral' : 'espelho aberto';
     const duracaoTotal = materias.reduce((sum, m) => sum + (m.duracao || 0), 0);
@@ -140,7 +198,7 @@ export const useUnifiedClipboard = () => {
       description: `Bloco "${block.nome}" foi copiado do ${contextLabel} com ${materias.length} matérias (${minutos}:${segundos.toString().padStart(2, '0')}).`,
     });
 
-    console.log('Unified clipboard: Bloco copiado:', {
+    console.log('Unified clipboard: Bloco copiado com sucesso:', {
       nome: block.nome,
       materias: materias.length,
       context

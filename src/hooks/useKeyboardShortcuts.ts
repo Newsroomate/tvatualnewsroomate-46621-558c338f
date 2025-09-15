@@ -54,12 +54,23 @@ export const useKeyboardShortcuts = ({
       if (event.ctrlKey && event.key === 'v' && !isEditingText) {
         event.preventDefault();
         
+        console.log('Ctrl+V pressionado - Estado do clipboard:', {
+          copiedBlock: copiedBlock ? {
+            nome: copiedBlock.nome,
+            materiasCount: copiedBlock.materias.length
+          } : null,
+          hasPasteBlock: !!onPasteBlock,
+          sessionStorageMateria: sessionStorage.getItem('copiedMateria') ? 'exists' : 'empty',
+          sessionStorageBlock: sessionStorage.getItem('copiedBlock') ? 'exists' : 'empty'
+        });
+        
         // Se há um bloco copiado, priorizar colar o bloco
         if (copiedBlock && onPasteBlock) {
           console.log('Colando bloco via Ctrl+V:', copiedBlock.nome);
           onPasteBlock();
         } else {
           // Caso contrário, colar matéria individual
+          console.log('Colando matéria via Ctrl+V');
           onPaste();
         }
       }

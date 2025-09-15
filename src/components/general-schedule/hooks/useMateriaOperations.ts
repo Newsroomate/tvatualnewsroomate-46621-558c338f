@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useHybridMateriaUpdate } from "@/hooks/useHybridMateriaUpdate";
 import { useHybridSnapshotData } from "@/hooks/useHybridSnapshotData";
-import { useClipboard } from "@/hooks/useClipboard";
+import { useUnifiedClipboard } from "@/hooks/useUnifiedClipboard";
 import { useItemSelection } from "@/hooks/useItemSelection";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { Materia } from "@/types";
@@ -23,7 +23,7 @@ export const useMateriaOperations = (snapshot: ClosedRundownSnapshot) => {
   } = useHybridSnapshotData({ snapshot });
 
   const { selectedMateria, selectItem, clearSelection, isSelected } = useItemSelection();
-  const { copyMateria } = useClipboard();
+  const { copyMateria } = useUnifiedClipboard();
 
   // Função melhorada para converter matéria híbrida em formato Materia padrão com TODOS os campos preservados
   const convertToStandardMateria = (materia: any, blocoId: string, blocoNome: string): Materia => {
@@ -126,7 +126,12 @@ export const useMateriaOperations = (snapshot: ClosedRundownSnapshot) => {
       preservacaoCompleta: camposImportantes.length === camposPreservados.length
     });
     
-    copyMateria(standardMateria);
+    copyMateria(
+      standardMateria,
+      'general_schedule', // Contexto do Espelho Geral
+      snapshot.nome_telejornal || 'Histórico',
+      blocoNome
+    );
     selectItem(standardMateria);
 
     // Toast melhorado com informações sobre campos preservados

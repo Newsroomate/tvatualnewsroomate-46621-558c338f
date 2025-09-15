@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight, Copy } from "lucide-react";
 import { formatTime } from "../news-schedule/utils";
 import { MaterialCard } from "./MaterialCard";
-import { useClipboard } from "@/hooks/useClipboard";
+import { useUnifiedClipboard } from "@/hooks/useUnifiedClipboard";
 
 interface BlockCardProps {
   bloco: any;
@@ -38,7 +38,7 @@ export const BlockCard = ({
 }: BlockCardProps) => {
   const materias = getMateriasList(bloco);
   const blocoDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
-  const { copyBlock } = useClipboard();
+  const { copyBlock } = useUnifiedClipboard();
 
   console.log(`Bloco ${bloco.nome}:`, {
     materias: materias.length,
@@ -49,7 +49,7 @@ export const BlockCard = ({
   const handleCopyBlock = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log('Copiando bloco completo:', bloco.nome);
-    copyBlock(bloco, materias);
+    copyBlock(bloco, materias, 'general_schedule'); // Contexto do Espelho Geral
   };
 
   return (
