@@ -74,45 +74,6 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       
-      // Mock login for testing
-      if (email === 'editorchefe@gmail.com' && password === 'editorchefe') {
-        const mockUser = {
-          id: 'mock-user-id',
-          email: 'editorchefe@gmail.com',
-          aud: 'authenticated',
-          role: 'authenticated',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        } as User;
-
-        const mockSession = {
-          access_token: 'mock-access-token',
-          refresh_token: 'mock-refresh-token',
-          expires_in: 3600,
-          token_type: 'bearer',
-          user: mockUser,
-        } as Session;
-
-        const mockProfile: UserProfile = {
-          id: 'mock-user-id',
-          full_name: 'Editor Chefe (Teste)',
-          role: 'editor_chefe',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        };
-
-        setSession(mockSession);
-        setUser(mockUser);
-        setProfile(mockProfile);
-
-        toast({
-          title: 'Login bem-sucedido (MODO TESTE)',
-          description: 'Você entrou com dados mockados para visualizar as telas.',
-        });
-        navigate('/');
-        return;
-      }
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
