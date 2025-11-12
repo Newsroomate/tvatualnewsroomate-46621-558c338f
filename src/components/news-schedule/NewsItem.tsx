@@ -112,7 +112,7 @@ export const NewsItem = ({
       await updateMateria(item.id, updateData);
       toast({
         title: "Campo atualizado",
-        description: `${field === 'retranca' ? 'Retranca' : field === 'status' ? 'Status' : field === 'reporter' ? 'Repórter' : field} atualizado com sucesso.`,
+        description: `${field === 'retranca' ? 'Retranca' : field === 'status' ? 'Status' : field === 'reporter' ? 'Repórter' : field === 'editor' ? 'Editor' : field} atualizado com sucesso.`,
       });
     } catch (error) {
       console.error('Erro ao atualizar campo:', error);
@@ -173,7 +173,14 @@ export const NewsItem = ({
           placeholder="Sem título"
         />
       </td>
-      <td className={`py-1 px-2 font-mono ${isMobile ? 'text-[10px]' : 'text-xs'}`}>{item.clip || ''}</td>
+      <td className={`py-1 px-2 ${isMobile ? 'text-xs' : ''}`} onClick={(e) => e.stopPropagation()}>
+        <InlineEditCell
+          value={item.editor || ''}
+          onSave={(value) => handleInlineUpdate('editor', value)}
+          disabled={!canModify || !isEspelhoOpen}
+          placeholder="Sem editor"
+        />
+      </td>
       <td className={`py-1 px-2 ${isMobile ? 'text-xs' : ''}`}>{formatTime(displayDuracao)}</td>
       <td className={`py-1 px-2 ${isMobile ? 'text-xs' : ''}`} onClick={(e) => e.stopPropagation()}>
         <InlineEditCell

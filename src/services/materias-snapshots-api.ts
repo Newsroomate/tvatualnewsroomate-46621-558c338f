@@ -15,6 +15,7 @@ export interface MateriaSnapshot {
   tempo_clip?: string;
   pagina?: string;
   reporter?: string;
+  editor?: string;
   status?: string;
   texto?: string;
   cabeca?: string;
@@ -41,6 +42,7 @@ export interface MateriaSnapshotCreateInput {
   tempo_clip?: string;
   pagina?: string;
   reporter?: string;
+  editor?: string;
   status?: string;
   texto?: string;
   cabeca?: string;
@@ -74,6 +76,7 @@ export const createMateriaSnapshot = async (materia: MateriaSnapshotCreateInput)
       tempo_clip: materia.tempo_clip,
       pagina: materia.pagina,
       reporter: materia.reporter,
+      editor: materia.editor,
       status: materia.status,
       texto: materia.texto,
       cabeca: materia.cabeca,
@@ -139,6 +142,7 @@ export const updateMateriaSnapshot = async (id: string, updates: Partial<Materia
         tempo_clip: updates.tempo_clip,
         pagina: updates.pagina,
         reporter: updates.reporter,
+        editor: updates.editor,
         status: updates.status,
         texto: updates.texto,
         cabeca: updates.cabeca,

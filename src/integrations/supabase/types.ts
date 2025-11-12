@@ -92,6 +92,7 @@ export type Database = {
           clip: string | null
           created_at: string | null
           duracao: number | null
+          editor: string | null
           equipamento: string | null
           gc: string | null
           horario_exibicao: string | null
@@ -115,6 +116,7 @@ export type Database = {
           clip?: string | null
           created_at?: string | null
           duracao?: number | null
+          editor?: string | null
           equipamento?: string | null
           gc?: string | null
           horario_exibicao?: string | null
@@ -138,6 +140,7 @@ export type Database = {
           clip?: string | null
           created_at?: string | null
           duracao?: number | null
+          editor?: string | null
           equipamento?: string | null
           gc?: string | null
           horario_exibicao?: string | null

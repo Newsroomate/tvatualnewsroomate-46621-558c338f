@@ -35,6 +35,7 @@ export interface Materia {
   status?: string;
   pagina?: string;
   reporter?: string;
+  editor?: string;
   // Note: 'observacoes', 'lauda', and 'teleprompter' fields removed - don't exist in materias table (only in materias_snapshots)
   gc?: string;  // Database field for GC (graphics/text overlay)
   // Frontend form fields that map directly to database columns
@@ -63,6 +64,7 @@ export interface MateriaCreateInput {
   duracao: number;
   pagina?: string;
   reporter?: string;
+  editor?: string;
   status?: string;
   // Note: 'observacoes', 'lauda', and 'teleprompter' fields removed - don't exist in materias table (only in materias_snapshots)
   gc?: string;  // Database field for GC (graphics/text overlay)
@@ -132,6 +134,7 @@ export interface MateriaSnapshot {
   tempo_clip?: string;
   pagina?: string;
   reporter?: string;
+  editor?: string;
   status?: string;
   texto?: string;
   cabeca?: string;

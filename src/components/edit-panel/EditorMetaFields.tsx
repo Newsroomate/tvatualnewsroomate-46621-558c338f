@@ -67,6 +67,19 @@ export const EditorMetaFields = ({
         </div>
         
         <div className="space-y-1.5">
+          <Label htmlFor="editor">Editor</Label>
+          <Input 
+            id="editor" 
+            value={formData.editor || ''} 
+            onChange={onInputChange}
+            disabled={disabled}
+            placeholder="Nome do editor"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-1.5">
           <Label htmlFor="status">Status</Label>
           <Select value={formData.status || 'draft'} onValueChange={handleStatusChange} disabled={disabled}>
             <SelectTrigger>
@@ -79,18 +92,6 @@ export const EditorMetaFields = ({
               <SelectItem value="published">Publicado</SelectItem>
             </SelectContent>
           </Select>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="local_gravacao">Local de Gravação</Label>
-          <Input 
-            id="local_gravacao" 
-            value={formData.local_gravacao || ''} 
-            onChange={onInputChange}
-            disabled={disabled}
-          />
         </div>
         
         <div className="space-y-1.5">
@@ -106,10 +107,10 @@ export const EditorMetaFields = ({
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-1.5">
-          <Label htmlFor="clip">Clip</Label>
+          <Label htmlFor="local_gravacao">Local de Gravação</Label>
           <Input 
-            id="clip" 
-            value={formData.clip || ''} 
+            id="local_gravacao" 
+            value={formData.local_gravacao || ''} 
             onChange={onInputChange}
             disabled={disabled}
           />
@@ -125,6 +126,16 @@ export const EditorMetaFields = ({
             placeholder="Ex: 2:30"
           />
         </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <Label htmlFor="clip">Clip</Label>
+        <Input 
+          id="clip" 
+          value={formData.clip || ''} 
+          onChange={onInputChange}
+          disabled={disabled}
+        />
       </div>
 
       <div className="grid grid-cols-2 gap-4">
