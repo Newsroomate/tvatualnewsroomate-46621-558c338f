@@ -91,7 +91,6 @@ export interface Pauta {
   user_id?: string;
   data_cobertura?: string;
   status?: string;
-  telejornal_id?: string;
 }
 
 export interface PautaCreateInput {
@@ -109,7 +108,6 @@ export interface PautaCreateInput {
   programa?: string;
   reporter?: string;
   user_id?: string;
-  telejornal_id?: string;
 }
 
 export interface CloseRundownDialogProps {

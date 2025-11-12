@@ -4,9 +4,7 @@ import { Button } from "@/components/ui/button";
 import { PlusCircle, Edit2, Trash2, FileText } from "lucide-react";
 import { Pauta } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { EditPautaDialog } from "@/components/EditPautaDialog";
 import { deletePauta } from "@/services/pautas-api";
-import { deletePautaTelejornal } from "@/services/pautas-telejornal-api";
 import { useToast } from "@/hooks/use-toast";
 import { generatePautaPDF } from "@/utils/pdf-utils";
 
@@ -23,14 +21,8 @@ export const PautaSection = ({
   isLoading,
   onDataChange
 }: PautaSectionProps) => {
-  const [editingPauta, setEditingPauta] = useState<Pauta | null>(null);
   const [deletingPauta, setDeletingPauta] = useState<Pauta | null>(null);
   const { toast } = useToast();
-
-  const handleEditPauta = (pauta: Pauta, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setEditingPauta(pauta);
-  };
 
   const handleDeletePauta = (pauta: Pauta, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -54,12 +46,7 @@ export const PautaSection = ({
   const confirmDeletePauta = async () => {
     if (!deletingPauta) return;
     try {
-      // Se a pauta tem telejornal_id, deleta da tabela pautas_telejornal, senão deleta da pautas
-      if (deletingPauta.telejornal_id) {
-        await deletePautaTelejornal(deletingPauta.id);
-      } else {
-        await deletePauta(deletingPauta.id);
-      }
+      await deletePauta(deletingPauta.id);
       onDataChange();
     } catch (error) {
       console.error("Erro ao excluir pauta:", error);
@@ -97,10 +84,6 @@ export const PautaSection = ({
                   <FileText className="h-4 w-4" />
                   <span className="sr-only">Imprimir PDF</span>
                 </Button>
-                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => handleEditPauta(pauta, e)}>
-                  <Edit2 className="h-4 w-4" />
-                  <span className="sr-only">Editar</span>
-                </Button>
                 <Button 
                   variant="ghost" 
                   size="icon" 
@@ -115,16 +98,6 @@ export const PautaSection = ({
           ))}
           {pautas.length === 0 && <p className="text-sm text-gray-500 italic">Nenhuma pauta disponível</p>}
         </ul>
-      )}
-
-      {/* Edit Pauta Dialog */}
-      {editingPauta && (
-        <EditPautaDialog 
-          isOpen={!!editingPauta} 
-          onClose={() => setEditingPauta(null)} 
-          pauta={editingPauta} 
-          onPautaUpdated={onDataChange}
-        />
       )}
       
       {/* Delete Pauta Confirmation */}

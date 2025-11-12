@@ -1,6 +1,5 @@
 
 import { useState, useEffect } from "react";
-import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { fetchTelejornais } from "@/services/api";
@@ -13,9 +12,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { TelejornalSection } from "./TelejornalSection";
 import { PautaSection } from "./PautaSection";
 import { MainMenu } from "./MainMenu";
-import { ReportagensModal } from "./ReportagensModal";
-import { EntrevistasModal } from "./EntrevistasModal";
-import { PautasTelejornalModal } from "./PautasTelejornalModal";
 
 interface LeftSidebarProps {
   selectedJournal: string | null;
@@ -30,15 +26,10 @@ export const LeftSidebar = ({
   onToggleDualView,
   isMobile = false
 }: LeftSidebarProps) => {
-  const queryClient = useQueryClient();
   const [isGeneralScheduleOpen, setIsGeneralScheduleOpen] = useState(false);
   const [isPautaIndependenteModalOpen, setIsPautaIndependenteModalOpen] = useState(false);
-  const [isPautasTelejornalModalOpen, setIsPautasTelejornalModalOpen] = useState(false);
   const [isTelejornalModalOpen, setIsTelejornalModalOpen] = useState(false);
   const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
-  const [isReportagensModalOpen, setIsReportagensModalOpen] = useState(false);
-  const [isEntrevistasModalOpen, setIsEntrevistasModalOpen] = useState(false);
-  const [selectedTelejornalForModal, setSelectedTelejornalForModal] = useState<Telejornal | null>(null);
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
   const [pautas, setPautas] = useState<Pauta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -139,27 +130,9 @@ export const LeftSidebar = ({
       )
       .subscribe();
 
-    // Configurando a inscrição para ouvir atualizações em tempo real da tabela pautas_telejornal
-    const pautasTelejornalChannel = supabase
-      .channel('pautas-telejornal-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'pautas_telejornal'
-        },
-        (payload) => {
-          console.log('Pauta de telejornal atualizada:', payload);
-          queryClient.invalidateQueries({ queryKey: ['pautas_telejornal'] });
-        }
-      )
-      .subscribe();
-
     return () => {
       supabase.removeChannel(telejornaisChannel);
       supabase.removeChannel(pautasChannel);
-      supabase.removeChannel(pautasTelejornalChannel);
     };
   }, []);
 
@@ -242,30 +215,6 @@ export const LeftSidebar = ({
     }
   };
 
-  const handleOpenPautas = (telejornalId: string) => {
-    const telejornal = telejornais.find(t => t.id === telejornalId);
-    if (telejornal) {
-      setSelectedTelejornalForModal(telejornal);
-      setIsPautasTelejornalModalOpen(true);
-    }
-  };
-
-  const handleOpenReportagens = (telejornalId: string) => {
-    const telejornal = telejornais.find(t => t.id === telejornalId);
-    if (telejornal) {
-      setSelectedTelejornalForModal(telejornal);
-      setIsReportagensModalOpen(true);
-    }
-  };
-
-  const handleOpenEntrevistas = (telejornalId: string) => {
-    const telejornal = telejornais.find(t => t.id === telejornalId);
-    if (telejornal) {
-      setSelectedTelejornalForModal(telejornal);
-      setIsEntrevistasModalOpen(true);
-    }
-  };
-
   return (
     <div className={`${isMobile ? 'w-full' : 'w-64'} bg-gray-100 h-full ${!isMobile ? 'border-r border-gray-200' : ''} flex flex-col`}>
       {!isMobile && (
@@ -291,9 +240,6 @@ export const LeftSidebar = ({
           onAddTelejornal={handleOpenTelejornalModal}
           isLoading={isLoading}
           onDataChange={loadData}
-          onOpenPautas={handleOpenPautas}
-          onOpenReportagens={handleOpenReportagens}
-          onOpenEntrevistas={handleOpenEntrevistas}
         />
 
         {/* Pautas Section */}
@@ -313,38 +259,8 @@ export const LeftSidebar = ({
         onClose={() => setIsPautaIndependenteModalOpen(false)} 
         onPautaCreated={loadData}
       />
-
-      <PautasTelejornalModal
-        open={isPautasTelejornalModalOpen}
-        onOpenChange={(open) => {
-          setIsPautasTelejornalModalOpen(open);
-          if (!open) setSelectedTelejornalForModal(null);
-        }}
-        telejornalId={selectedTelejornalForModal?.id || ''}
-        telejornalNome={selectedTelejornalForModal?.nome || ''}
-      />
       
       <TelejornalModal isOpen={isTelejornalModalOpen} onClose={() => setIsTelejornalModalOpen(false)} onTelejornalCreated={loadData} />
-      
-      <ReportagensModal
-        open={isReportagensModalOpen}
-        onOpenChange={(open) => {
-          setIsReportagensModalOpen(open);
-          if (!open) setSelectedTelejornalForModal(null);
-        }}
-        telejornalId={selectedTelejornalForModal?.id || ''}
-        telejornalNome={selectedTelejornalForModal?.nome || ''}
-      />
-      
-      <EntrevistasModal
-        open={isEntrevistasModalOpen}
-        onOpenChange={(open) => {
-          setIsEntrevistasModalOpen(open);
-          if (!open) setSelectedTelejornalForModal(null);
-        }}
-        telejornalId={selectedTelejornalForModal?.id || ''}
-        telejornalNome={selectedTelejornalForModal?.nome || ''}
-      />
       
       {/* Main Menu */}
       <MainMenu

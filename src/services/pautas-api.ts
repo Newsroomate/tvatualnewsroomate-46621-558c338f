@@ -6,7 +6,6 @@ export const fetchPautas = async () => {
   const { data, error } = await supabase
     .from('pautas')
     .select('*')
-    .is('telejornal_id', null)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -27,7 +26,6 @@ export const fetchPautas = async () => {
     status: row.status,
     created_at: row.created_at,
     updated_at: row.updated_at,
-    telejornal_id: row.telejornal_id,
     proposta: row.proposta,
     encaminhamento: row.encaminhamento,
     informacoes: row.informacoes,
@@ -72,7 +70,6 @@ export const createPauta = async (pauta: PautaCreateInput, userId: string) => {
     entrevistado: pauta.entrevistado || null,
     produtor: pauta.produtor || null,
     status: pauta.status || 'pendente',
-    telejornal_id: null, // Pautas independentes não devem ter telejornal_id
     user_id: userId,
     proposta: pauta.proposta || null,
     encaminhamento: pauta.encaminhamento || null,
@@ -112,7 +109,6 @@ export const createPauta = async (pauta: PautaCreateInput, userId: string) => {
     status: data.status,
     created_at: data.created_at,
     updated_at: data.updated_at,
-    telejornal_id: data.telejornal_id,
     proposta: data.proposta,
     encaminhamento: data.encaminhamento,
     informacoes: data.informacoes,
@@ -179,7 +175,6 @@ export const updatePauta = async (id: string, updates: {
     status: data.status,
     created_at: data.created_at,
     updated_at: data.updated_at,
-    telejornal_id: data.telejornal_id,
     proposta: data.proposta,
     encaminhamento: data.encaminhamento,
     informacoes: data.informacoes,
