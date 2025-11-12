@@ -6,8 +6,10 @@ import { TeleprompterWindowControls } from "@/components/news-schedule/telepromp
 import { useTeleprompterWindowState } from "@/hooks/useTeleprompterWindowState";
 import { useTeleprompterWindowEffects } from "@/hooks/useTeleprompterWindowEffects";
 import { useTeleprompterKeyboardControls } from "@/hooks/useTeleprompterKeyboardControls";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const TeleprompterWindow = () => {
+  const isMobile = useIsMobile();
   const {
     // State
     blocks,
@@ -156,6 +158,7 @@ const TeleprompterWindow = () => {
         onRetrancaColorChange={handleRetrancaColorChange}
         onTipoMaterialColorChange={handleTipoMaterialColorChange}
         onClose={() => window.close()}
+        isMobile={isMobile}
       />
 
       {/* Teleprompter Content */}
@@ -167,11 +170,20 @@ const TeleprompterWindow = () => {
           cabecaColor={cabecaColor}
           retrancaColor={retrancaColor}
           tipoMaterialColor={tipoMaterialColor}
+          isMobile={isMobile}
         />
       </div>
       
-      {/* Keyboard controls info overlay - only visible when not fullscreen */}
-      {!isFullscreen && (
+      {/* Mobile touch controls overlay */}
+      {isMobile && !isFullscreen && (
+        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-10 text-center">
+          <div>Toque na tela: Play/Pause</div>
+          <div>Deslize: Navegar</div>
+        </div>
+      )}
+
+      {/* Desktop keyboard controls info overlay */}
+      {!isMobile && !isFullscreen && (
         <div className="absolute bottom-4 right-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs">
           <div>← → Navegar retrancas</div>
           <div>Espaço: Play/Pause</div>

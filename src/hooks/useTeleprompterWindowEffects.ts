@@ -56,6 +56,11 @@ export const useTeleprompterWindowEffects = ({
         setBlocks(event.data.blocks || []);
         console.log("Updated teleprompter blocks:", event.data.blocks);
       }
+      if (event.data.type === 'TELEPROMPTER_TOGGLE_PLAY') {
+        // Toggle the current playing state
+        const currentPlayState = typeof isPlaying === 'function' ? !isPlaying : !isPlaying;
+        setIsPlaying(currentPlayState);
+      }
     };
 
     window.addEventListener('message', handleMessage);

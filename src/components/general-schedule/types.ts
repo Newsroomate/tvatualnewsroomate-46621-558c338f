@@ -13,7 +13,6 @@ export interface EditableMateria {
   ordem: number;
   tags?: string[];
   local_gravacao?: string;
-  equipamento?: string;
   bloco_id?: string;
   bloco_nome?: string;
   bloco_ordem?: number;

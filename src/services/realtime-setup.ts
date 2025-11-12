@@ -6,6 +6,7 @@ const tablesToEnable = [
   'blocos', 
   'telejornais',
   'pautas',
+  'pautas_telejornal',
   'espelhos_salvos',
   'modelos_salvos',
   'materias_snapshots',

@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Copy, Target, Monitor } from "lucide-react";
+import { Trash2, Pencil, Copy, Target } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -8,9 +8,6 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { Materia } from "@/types";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { hasSufficientContent } from "@/utils/teleprompter-utils";
-import { useToast } from "@/hooks/use-toast";
 
 interface NewsItemActionsProps {
   item: Materia;
@@ -18,9 +15,9 @@ interface NewsItemActionsProps {
   onDelete: (item: Materia) => void;
   onDuplicate: (item: Materia) => void;
   onFocusInTeleprompter?: (item: Materia) => void;
-  onOpenSingleTeleprompter?: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModify?: boolean;
+  isMobile?: boolean;
 }
 
 export const NewsItemActions = ({
@@ -29,43 +26,23 @@ export const NewsItemActions = ({
   onDelete,
   onDuplicate,
   onFocusInTeleprompter,
-  onOpenSingleTeleprompter,
   isEspelhoOpen,
-  canModify = true
+  canModify = true,
+  isMobile = false
 }: NewsItemActionsProps) => {
-  const isMobile = useIsMobile();
-  const { toast } = useToast();
-
-  const handleSingleTeleprompter = () => {
-    if (!hasSufficientContent(item)) {
-      toast({
-        title: "Conteúdo insuficiente",
-        description: "Esta matéria não possui texto, cabeça ou GC suficiente para o teleprompter.",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (onOpenSingleTeleprompter) {
-      onOpenSingleTeleprompter(item);
-      toast({
-        title: "Teleprompter aberto",
-        description: `Teleprompter aberto para: ${item.retranca}`,
-      });
-    }
-  };
   return (
-    <div className="flex gap-1" onClick={(e) => e.stopPropagation()}>
+    <div className={`flex ${isMobile ? 'gap-0.5' : 'gap-1'}`} onClick={(e) => e.stopPropagation()}>
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button 
-              size="sm" 
+              size={isMobile ? "sm" : "sm"}
               variant="ghost" 
               onClick={() => onEdit(item)}
               disabled={!isEspelhoOpen || !canModify}
+              className={isMobile ? "h-7 w-7 p-0" : ""}
             >
-              <Pencil className="h-4 w-4" />
+              <Pencil className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
             </Button>
           </TooltipTrigger>
           {!isEspelhoOpen && (
@@ -85,12 +62,13 @@ export const NewsItemActions = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <Button 
-              size="sm" 
+              size={isMobile ? "sm" : "sm"}
               variant="ghost" 
               onClick={() => onDuplicate(item)}
               disabled={!isEspelhoOpen || !canModify}
+              className={isMobile ? "h-7 w-7 p-0" : ""}
             >
-              <Copy className="h-4 w-4" />
+              <Copy className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
             </Button>
           </TooltipTrigger>
           {!isEspelhoOpen && (
@@ -106,38 +84,17 @@ export const NewsItemActions = ({
         </Tooltip>
       </TooltipProvider>
 
-      {/* Mobile-only Single Teleprompter Button */}
-      {isMobile && onOpenSingleTeleprompter && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                onClick={handleSingleTeleprompter}
-                className="text-purple-600 hover:text-purple-800"
-              >
-                <Monitor className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              Abrir no teleprompter
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
-
       {onFocusInTeleprompter && (
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
               <Button 
-                size="sm" 
+                size={isMobile ? "sm" : "sm"}
                 variant="ghost" 
                 onClick={() => onFocusInTeleprompter(item)}
-                className="text-blue-600 hover:text-blue-800"
+                className={`text-blue-600 hover:text-blue-800 ${isMobile ? "h-7 w-7 p-0" : ""}`}
               >
-                <Target className="h-4 w-4" />
+                <Target className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
               </Button>
             </TooltipTrigger>
             <TooltipContent>
@@ -147,33 +104,31 @@ export const NewsItemActions = ({
         </TooltipProvider>
       )}
       
-      {!isMobile && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button 
-                size="sm" 
-                variant="ghost" 
-                className="text-red-600 hover:text-red-800"
-                onClick={() => onDelete(item)}
-                disabled={!isEspelhoOpen || !canModify}
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </TooltipTrigger>
-            {!isEspelhoOpen && (
-              <TooltipContent>
-                Abra o espelho para excluir
-              </TooltipContent>
-            )}
-            {!canModify && isEspelhoOpen && (
-              <TooltipContent>
-                Sem permissão para excluir
-              </TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
-      )}
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              size={isMobile ? "sm" : "sm"}
+              variant="ghost" 
+              className={`text-red-600 hover:text-red-800 ${isMobile ? "h-7 w-7 p-0" : ""}`}
+              onClick={() => onDelete(item)}
+              disabled={!isEspelhoOpen || !canModify}
+            >
+              <Trash2 className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+            </Button>
+          </TooltipTrigger>
+          {!isEspelhoOpen && (
+            <TooltipContent>
+              Abra o espelho para excluir
+            </TooltipContent>
+          )}
+          {!canModify && isEspelhoOpen && (
+            <TooltipContent>
+              Sem permissão para excluir
+            </TooltipContent>
+          )}
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 };

@@ -32,7 +32,6 @@ export interface ClosedRundownSnapshot {
         ordem: number;
         tags?: string[];
         local_gravacao?: string;
-        equipamento?: string;
         created_at: string;
         updated_at: string;
       }>;
@@ -63,25 +62,21 @@ export const fetchClosedRundownSnapshots = async (
     endTime
   });
 
-  // Por enquanto, vamos buscar os espelhos salvos e transformá-los no formato esperado
+  // Buscar espelhos salvos
   let query = supabase
     .from("espelhos_salvos")
     .select('*')
     .order("created_at", { ascending: false });
 
-  if (telejornalId && telejornalId !== "all") {
-    query = query.eq("telejornal_id", telejornalId);
-  }
-
+  // Filtro por data - usar a coluna 'data_referencia'
   if (selectedDate) {
-    // Garantir que a data seja formatada corretamente para UTC sem conversão de timezone
     const year = selectedDate.getFullYear();
     const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
     const day = String(selectedDate.getDate()).padStart(2, '0');
-    const dateString = `${year}-${month}-${day}`;
+    const dateStr = `${year}-${month}-${day}`;
     
-    console.log("Filtering snapshots by date:", dateString, "from selected date:", selectedDate);
-    query = query.eq("data_referencia", dateString);
+    console.log("Filtering snapshots by date:", dateStr);
+    query = query.eq('data_referencia', dateStr);
   }
 
   const { data, error } = await query;
@@ -93,52 +88,39 @@ export const fetchClosedRundownSnapshots = async (
 
   console.log("Found snapshots:", data?.length || 0);
 
-  // Get unique telejornal IDs to fetch telejornal data
-  const telejornalIds = [...new Set(data?.map(r => r.telejornal_id).filter(Boolean))];
-  
-  // Fetch telejornal data separately
-  const telejornaisData: Record<string, { id: string; nome: string; horario: string }> = {};
-  
-  if (telejornalIds.length > 0) {
-    const { data: telejornais } = await supabase
-      .from("telejornais")
-      .select("id, nome, horario")
-      .in("id", telejornalIds);
-    
-    telejornais?.forEach(tj => {
-      telejornaisData[tj.id] = { id: tj.id, nome: tj.nome, horario: tj.horario };
-    });
-  }
-
   // Transformar os dados para o formato esperado
   const snapshots: ClosedRundownSnapshot[] = (data || []).map((item: any) => {
-    const telejornal = telejornaisData[item.telejornal_id];
-    const estrutura = item.estrutura as any;
-    const originalName = estrutura?.telejornal_original?.nome;
-    const originalHorario = estrutura?.telejornal_original?.horario;
+    // Usar 'estrutura' em vez de 'espelho_data'
+    const payload = item.estrutura || {};
+    const telejornalData = payload.telejornal || {};
     
-    // Determine if telejornal was deleted and get appropriate display name
-    const isDeleted = !telejornal && originalName;
-    const displayName = telejornal?.nome || originalName || "Telejornal Deletado";
-    const finalDisplayName = isDeleted ? `${displayName} (Deletado)` : displayName;
+    // Extrair telejornal_id do item ou da estrutura
+    const telejornalId = item.telejornal_id || payload.telejornal_id || telejornalData.id || '';
+    
+    console.log('Processing snapshot:', {
+      id: item.id,
+      telejornal_id: telejornalId,
+      payload_keys: Object.keys(payload),
+      telejornal_data: telejornalData
+    });
     
     return {
       id: item.id,
-      telejornal_id: item.telejornal_id,
+      telejornal_id: telejornalId,
       data_fechamento: item.created_at,
-      data_referencia: item.data_referencia,
-      nome_telejornal: finalDisplayName,
-      horario: telejornal?.horario || originalHorario || "",
+      data_referencia: item.data_referencia || payload.data_referencia || '',
+      nome_telejornal: telejornalData.nome || payload.nome_telejornal || "Telejornal",
+      horario: telejornalData.horario || payload.horario || "",
       estrutura_completa: {
         telejornal: {
-          id: telejornal?.id || item.telejornal_id,
-          nome: finalDisplayName,
-          horario: telejornal?.horario || originalHorario || ""
+          id: telejornalId,
+          nome: telejornalData.nome || payload.nome_telejornal || "Telejornal",
+          horario: telejornalData.horario || payload.horario || ""
         },
-        blocos: item.estrutura?.blocos || [],
+        blocos: payload.blocos || [],
         metadata: {
           data_fechamento: item.created_at,
-          total_blocos: item.estrutura?.blocos?.length || 0
+          total_blocos: (payload.blocos || []).length
         }
       },
       created_at: item.created_at,
@@ -146,21 +128,32 @@ export const fetchClosedRundownSnapshots = async (
     };
   });
 
-  // Aplicar filtros de horário se especificados
+  // Aplicar filtros após carregar os dados
   let filteredSnapshots = snapshots;
 
-  if (selectedTime && !startTime && !endTime) {
-    filteredSnapshots = snapshots.filter(snapshot => 
-      snapshot.horario === selectedTime
+  // Filtro por telejornal
+  if (telejornalId && telejornalId !== "all") {
+    filteredSnapshots = filteredSnapshots.filter(snapshot => 
+      snapshot.telejornal_id === telejornalId
     );
   }
 
-  if (startTime && endTime) {
-    filteredSnapshots = snapshots.filter(snapshot => {
-      if (!snapshot.horario) return false;
-      return snapshot.horario >= startTime && snapshot.horario <= endTime;
+  // Aplicar filtros de horário se especificados
+  if (selectedTime && !startTime && !endTime) {
+    filteredSnapshots = filteredSnapshots.filter(snapshot => {
+      const horario = snapshot.horario || snapshot.estrutura_completa.telejornal.horario;
+      return horario === selectedTime;
     });
   }
 
+  if (startTime && endTime) {
+    filteredSnapshots = filteredSnapshots.filter(snapshot => {
+      const horario = snapshot.horario || snapshot.estrutura_completa.telejornal.horario;
+      if (!horario) return false;
+      return horario >= startTime && horario <= endTime;
+    });
+  }
+
+  console.log(`Filtered snapshots: ${filteredSnapshots.length} of ${snapshots.length} total`);
   return filteredSnapshots;
 };

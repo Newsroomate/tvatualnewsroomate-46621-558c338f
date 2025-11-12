@@ -7,39 +7,43 @@ import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { createPauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
-interface PautaModalProps {
+
+interface PautaIndependenteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPautaCreated: () => void;
 }
-export const PautaModal = ({
+
+export const PautaIndependenteModal = ({
   isOpen,
   onClose,
   onPautaCreated
-}: PautaModalProps) => {
+}: PautaIndependenteModalProps) => {
   const [data, setData] = useState("");
   const [retranca, setRetranca] = useState("");
   const [programa, setPrograma] = useState("");
-  const [pauteiros, setPauteiros] = useState("");
+  const [produtor, setProdutor] = useState("");
   const [reporter, setReporter] = useState("");
   const [imagens, setImagens] = useState("");
-  
   const [roteiro1, setRoteiro1] = useState("");
   const [entrevistados, setEntrevistados] = useState("");
   const [proposta, setProposta] = useState("");
   const [encaminhamento, setEncaminhamento] = useState("");
   const [informacoes, setInformacoes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const {
-    toast
-  } = useToast();
-  const {
-    user
-  } = useAuth();
+  
+  const { toast } = useToast();
+  const { user } = useAuth();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!retranca.trim()) return;
-    if (!user) {
+    
+    console.log('[PautaIndependenteModal] user:', user);
+    console.log('[PautaIndependenteModal] user.id:', user?.id);
+    
+    if (!user || !user.id) {
+      console.error('[PautaIndependenteModal] Usuário não autenticado ou sem ID');
       toast({
         title: "Erro de autenticação",
         description: "Você precisa estar logado para criar uma pauta.",
@@ -47,15 +51,16 @@ export const PautaModal = ({
       });
       return;
     }
+    
     setIsSubmitting(true);
     try {
-      await createPauta({
+      const pautaData = {
         titulo: retranca,
         descricao: roteiro1,
         local: imagens,
         horario: data,
         entrevistado: entrevistados,
-        produtor: pauteiros,
+        produtor,
         proposta,
         encaminhamento,
         informacoes,
@@ -63,28 +68,37 @@ export const PautaModal = ({
         data_cobertura: data,
         programa,
         reporter
+      };
+
+      console.log('[PautaIndependenteModal] Criando pauta independente:', pautaData);
+      await createPauta(pautaData, user.id);
+      
+      toast({
+        title: "Sucesso!",
+        description: "Pauta criada com sucesso.",
       });
+      
       onPautaCreated();
       handleClose();
-    } catch (error) {
-      console.error("Erro ao criar pauta:", error);
+    } catch (error: any) {
+      console.error("[PautaIndependenteModal] Erro ao criar pauta:", error);
       toast({
         title: "Erro ao criar pauta",
-        description: "Ocorreu um erro ao criar a pauta. Tente novamente.",
+        description: error?.message || "Ocorreu um erro ao criar a pauta. Tente novamente.",
         variant: "destructive"
       });
     } finally {
       setIsSubmitting(false);
     }
   };
+
   const handleClose = () => {
     setData("");
     setRetranca("");
     setPrograma("");
-    setPauteiros("");
+    setProdutor("");
     setReporter("");
     setImagens("");
-    
     setRoteiro1("");
     setEntrevistados("");
     setProposta("");
@@ -92,10 +106,12 @@ export const PautaModal = ({
     setInformacoes("");
     onClose();
   };
-  return <Dialog open={isOpen} onOpenChange={handleClose}>
+
+  return (
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nova Pauta</DialogTitle>
+          <DialogTitle>Nova Pauta Independente</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -123,8 +139,8 @@ export const PautaModal = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div className="space-y-1">
-              <Label htmlFor="pauteiros">PRODUTOR</Label>
-              <Input id="pauteiros" value={pauteiros} onChange={e => setPauteiros(e.target.value)} placeholder="Nome do produtor" />
+              <Label htmlFor="produtor">PRODUTOR</Label>
+              <Input id="produtor" value={produtor} onChange={e => setProdutor(e.target.value)} placeholder="Nome do produtor" />
             </div>
             
             <div className="space-y-1">
@@ -132,8 +148,6 @@ export const PautaModal = ({
               <Input id="reporter" value={reporter} onChange={e => setReporter(e.target.value)} placeholder="Nome do repórter" />
             </div>
           </div>
-
-          
 
           <div className="space-y-1">
             <Label htmlFor="roteiro1">ROTEIRO 1</Label>
@@ -170,5 +184,6 @@ export const PautaModal = ({
           </DialogFooter>
         </form>
       </DialogContent>
-    </Dialog>;
+    </Dialog>
+  );
 };

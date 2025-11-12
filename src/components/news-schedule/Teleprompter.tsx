@@ -8,6 +8,7 @@ import { TeleprompterColorControls } from "./teleprompter/TeleprompterColorContr
 import { TeleprompterExport } from "./teleprompter/TeleprompterExport";
 import { TeleprompterContent } from "./teleprompter/TeleprompterContent";
 import { useTeleprompterKeyboardControls } from "@/hooks/useTeleprompterKeyboardControls";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface TeleprompterProps {
   isOpen: boolean;
@@ -17,10 +18,11 @@ interface TeleprompterProps {
 }
 
 export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: TeleprompterProps) => {
+  const isMobile = useIsMobile();
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState([50]);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [fontSize, setFontSize] = useState(24);
+  const [fontSize, setFontSize] = useState(isMobile ? 18 : 24);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [cabecaColor, setCabecaColor] = useState("#ffffff");
   const [retrancaColor, setRetrancaColor] = useState("#facc15");
@@ -229,11 +231,18 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl h-[80vh] flex flex-col relative" style={{ width: '90vw', maxWidth: '90vw' }}>
+      <DialogContent 
+        className={`${
+          isMobile 
+            ? 'w-full h-full max-w-none max-h-none m-0 p-0 border-0 rounded-none' 
+            : 'max-w-4xl h-[80vh]'
+        } flex flex-col relative`} 
+        style={isMobile ? { width: '100vw', height: '100vh' } : { width: '90vw', maxWidth: '90vw' }}
+      >
         {/* Header - Hidden in fullscreen */}
         {!isFullscreen && (
-          <DialogHeader>
-            <DialogTitle>
+          <DialogHeader className={isMobile ? "p-2" : ""}>
+            <DialogTitle className={isMobile ? "text-sm" : ""}>
               Teleprompter - {telejornal?.nome || "Telejornal"}
             </DialogTitle>
           </DialogHeader>
@@ -241,35 +250,47 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
         
         {/* Controls - Hidden in fullscreen */}
         {!isFullscreen && (
-          <div className="flex items-center gap-4 p-4 border-b bg-gray-50 flex-wrap">
-            <TeleprompterControls
-              isPlaying={isPlaying}
-              speed={speed}
-              onPlayPause={handlePlayPause}
-              onSpeedChange={handleSpeedChange}
-              onReset={resetPosition}
-            />
+          <div className={`flex items-center gap-2 p-2 border-b bg-gray-50 ${
+            isMobile ? 'flex-col space-y-2' : 'flex-wrap gap-4 p-4'
+          }`}>
+            <div className={`flex items-center gap-2 ${isMobile ? 'w-full justify-center' : ''}`}>
+              <TeleprompterControls
+                isPlaying={isPlaying}
+                speed={speed}
+                onPlayPause={handlePlayPause}
+                onSpeedChange={handleSpeedChange}
+                onReset={resetPosition}
+                isMobile={isMobile}
+              />
+            </div>
 
-            <TeleprompterViewControls
-              fontSize={fontSize}
-              onIncreaseFontSize={increaseFontSize}
-              onDecreaseFontSize={decreaseFontSize}
-              onFontSizeChange={handleFontSizeChange}
-            />
+            <div className={`flex items-center gap-2 ${isMobile ? 'w-full justify-center' : ''}`}>
+              <TeleprompterViewControls
+                fontSize={fontSize}
+                onIncreaseFontSize={increaseFontSize}
+                onDecreaseFontSize={decreaseFontSize}
+                onFontSizeChange={handleFontSizeChange}
+                isMobile={isMobile}
+              />
+            </div>
 
-            <TeleprompterColorControls
-              cabecaColor={cabecaColor}
-              retrancaColor={retrancaColor}
-              tipoMaterialColor={tipoMaterialColor}
-              onCabecaColorChange={handleCabecaColorChange}
-              onRetrancaColorChange={handleRetrancaColorChange}
-              onTipoMaterialColorChange={handleTipoMaterialColorChange}
-            />
+            {!isMobile && (
+              <>
+                <TeleprompterColorControls
+                  cabecaColor={cabecaColor}
+                  retrancaColor={retrancaColor}
+                  tipoMaterialColor={tipoMaterialColor}
+                  onCabecaColorChange={handleCabecaColorChange}
+                  onRetrancaColorChange={handleRetrancaColorChange}
+                  onTipoMaterialColorChange={handleTipoMaterialColorChange}
+                />
 
-            <TeleprompterExport
-              blocks={blocks}
-              telejornal={telejornal}
-            />
+                <TeleprompterExport
+                  blocks={blocks}
+                  telejornal={telejornal}
+                />
+              </>
+            )}
           </div>
         )}
 
@@ -282,11 +303,20 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
             cabecaColor={cabecaColor}
             retrancaColor={retrancaColor}
             tipoMaterialColor={tipoMaterialColor}
+            isMobile={isMobile}
           />
         </div>
 
-        {/* Keyboard controls info overlay - only visible when not fullscreen */}
-        {!isFullscreen && (
+        {/* Mobile touch controls overlay */}
+        {isMobile && !isFullscreen && (
+          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-10 text-center">
+            <div>Toque na tela: Play/Pause</div>
+            <div>Deslize: Navegar</div>
+          </div>
+        )}
+
+        {/* Desktop keyboard controls info overlay */}
+        {!isMobile && !isFullscreen && (
           <div className="absolute bottom-4 right-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-10">
             <div>← → Navegar retrancas</div>
             <div>Espaço: Play/Pause</div>

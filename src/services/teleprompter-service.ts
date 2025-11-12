@@ -123,26 +123,6 @@ class TeleprompterService {
     return !!(this.windowRef && !this.windowRef.closed && this.isWindowReady);
   }
 
-  public openSingleMateria(materia: Materia, telejornal: Telejornal | null): Promise<boolean> {
-    console.log("TeleprompterService: Opening single materia", { materiaId: materia.id, retranca: materia.retranca });
-    
-    // Create a single block with only this materia
-    const singleBlock: Bloco & { items: Materia[] } = {
-      id: `single-${materia.id}`,
-      nome: materia.retranca || 'Matéria Individual',
-      ordem: 1,
-      telejornal_id: telejornal?.id || '',
-      items: [materia]
-    };
-
-    const data: TeleprompterData = {
-      blocks: [singleBlock],
-      telejornal
-    };
-
-    return this.openWindow(data);
-  }
-
   public setupMessageListener(onReady?: () => void): () => void {
     const handleMessage = (event: MessageEvent<TeleprompterMessage>) => {
       if (event.data.type === 'TELEPROMPTER_READY') {

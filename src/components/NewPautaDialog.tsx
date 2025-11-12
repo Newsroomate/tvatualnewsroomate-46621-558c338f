@@ -7,6 +7,7 @@ import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { createPauta } from "@/services/pautas-api";
 import { PautaCreateInput } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/context/AuthContext";
 
 interface NewPautaDialogProps {
   isOpen: boolean;
@@ -29,15 +30,37 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
   const [informacoes, setInformacoes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!retranca.trim()) return;
+    
+    console.log('NewPautaDialog - user:', user);
+    console.log('NewPautaDialog - user.id:', user?.id);
+    
+    if (!retranca.trim()) {
+      toast({
+        title: "Erro",
+        description: "A retranca é obrigatória",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!user || !user.id) {
+      console.error('NewPautaDialog - Usuário não autenticado ou sem ID');
+      toast({
+        title: "Erro de autenticação",
+        description: "Você precisa estar logado para criar uma pauta.",
+        variant: "destructive",
+      });
+      return;
+    }
     
     setIsSubmitting(true);
     try {
       const newPauta: PautaCreateInput = {
-        titulo: retranca, // Use retranca as titulo for compatibility
+        titulo: retranca,
         descricao: roteiro1,
         local: imagens,
         horario: data,
@@ -46,10 +69,20 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
         proposta,
         encaminhamento,
         informacoes,
-        data_cobertura: data // Map DATA field to data_cobertura
+        data_cobertura: data,
+        programa,
+        reporter
       };
 
-      await createPauta(newPauta);
+      console.log('NewPautaDialog - Dados da pauta:', newPauta);
+      console.log('NewPautaDialog - Chamando createPauta com userId:', user.id);
+
+      await createPauta(newPauta, user.id);
+
+      toast({
+        title: "Sucesso",
+        description: "Pauta criada com sucesso",
+      });
       
       // Reset form
       setData("");
@@ -67,11 +100,13 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
       
       onPautaCreated();
       onClose();
-    } catch (error) {
-      console.error("Erro ao criar pauta:", error);
+    } catch (error: any) {
+      console.error("NewPautaDialog - Erro completo ao criar pauta:", error);
+      console.error("NewPautaDialog - Mensagem do erro:", error?.message);
+      console.error("NewPautaDialog - Detalhes do erro:", error?.details);
       toast({
         title: "Erro ao criar pauta",
-        description: "Ocorreu um erro ao criar a pauta. Tente novamente.",
+        description: error?.message || "Ocorreu um erro ao criar a pauta. Tente novamente.",
         variant: "destructive",
       });
     } finally {

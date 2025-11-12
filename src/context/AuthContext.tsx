@@ -74,22 +74,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     try {
       setIsLoading(true);
       
-      // Clean up existing state before signing in
-      cleanupAuthState();
-      
-      // Attempt global sign out to clear any existing session
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
-      }
-      
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
+        console.error('Sign in error:', error);
         toast({
           title: 'Erro ao entrar',
           description: error.message,
@@ -98,9 +89,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         return;
       }
 
-      if (data.user) {
+      if (data.session && data.user) {
+        console.log('Sign in successful, session established:', {
+          userId: data.user.id,
+          sessionExists: !!data.session
+        });
+        
         setSession(data.session);
         setUser(data.user);
+        
         toast({
           title: 'Login bem-sucedido',
           description: 'Você entrou com sucesso.',
@@ -108,6 +105,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         navigate('/');
       }
     } catch (error: any) {
+      console.error('Sign in exception:', error);
       toast({
         title: 'Erro',
         description: error.message || 'Ocorreu um erro ao tentar entrar',

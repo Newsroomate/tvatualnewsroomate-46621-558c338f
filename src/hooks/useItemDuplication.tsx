@@ -48,8 +48,14 @@ export const useItemDuplication = ({
         status: materia.status || "draft" as const,
         reporter: materia.reporter || "",
         ordem: newOrdem,
+        gc: materia.gc || "",
         texto: materia.texto || "",
-        cabeca: materia.cabeca || ""
+        cabeca: materia.cabeca || "",
+        tempo_clip: materia.tempo_clip || "",
+        tipo_material: materia.tipo_material || "",
+        local_gravacao: materia.local_gravacao || "",
+        tags: materia.tags || []
+        // Note: 'teleprompter', 'observacoes', and 'lauda' fields removed - don't exist in materias table
       };
       
       // Create the duplicated materia

@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Materia } from "@/types";
 import { AllCapsGCButton } from "./AllCapsGCButton";
+import { AIExportButton } from "./AIExportButton";
 import { useRef } from "react";
 
 interface EditorFormFieldsProps {
@@ -75,7 +76,16 @@ export const EditorFormFields = ({
       </div>
       
       <div className="space-y-1.5">
-        <Label htmlFor="texto">Corpo da Matéria</Label>
+        <div className="flex justify-between items-center">
+          <Label htmlFor="texto">Corpo da Matéria</Label>
+          <AIExportButton
+            retranca={formData.retranca}
+            cabeca={formData.cabeca}
+            texto={formData.texto}
+            reporter={formData.reporter}
+            disabled={disabled}
+          />
+        </div>
         <Textarea 
           id="texto" 
           rows={10} 

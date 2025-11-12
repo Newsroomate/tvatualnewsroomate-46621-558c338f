@@ -10,32 +10,20 @@ export const saveRundownSnapshot = async (rundownData: SavedRundownCreateInput):
   if (!currentUser.user) {
     throw new Error("Usuário não autenticado");
   }
-
-  // Fetch telejornal data to preserve in structure
-  const { data: telejornalData } = await supabase
-    .from("telejornais")
-    .select("nome, horario")
-    .eq("id", rundownData.telejornal_id)
-    .maybeSingle();
-
-  // Enhance structure with preserved telejornal info
-  const enhancedEstrutura = {
-    ...rundownData.estrutura,
-    telejornal_original: {
-      id: rundownData.telejornal_id,
-      nome: telejornalData?.nome || "Telejornal",
-      horario: telejornalData?.horario || ""
-    }
-  };
+  
+  const payload = {
+    telejornal_id: rundownData.telejornal_id,
+    data_referencia: rundownData.data_referencia,
+    estrutura: rundownData.estrutura
+  } as any;
   
   const { data, error } = await supabase
     .from('espelhos_salvos')
     .insert({
+      nome: rundownData.nome,
       telejornal_id: rundownData.telejornal_id,
       data_referencia: rundownData.data_referencia,
-      nome: rundownData.nome,
-      estrutura: enhancedEstrutura,
-      user_id: currentUser.user.id
+      estrutura: rundownData.estrutura
     })
     .select()
     .single();
@@ -46,8 +34,14 @@ export const saveRundownSnapshot = async (rundownData: SavedRundownCreateInput):
   }
 
   return {
-    ...data,
-    estrutura: data.estrutura as SavedRundown['estrutura']
+    id: data.id,
+    telejornal_id: data.telejornal_id,
+    data_salvamento: data.data_salvamento,
+    data_referencia: data.data_referencia,
+    nome: data.nome,
+    estrutura: data.estrutura,
+    created_at: data.created_at,
+    updated_at: data.updated_at
   } as SavedRundown;
 };
 
@@ -58,7 +52,7 @@ export const fetchLastSavedRundown = async (telejornalId: string): Promise<Saved
     .from('espelhos_salvos')
     .select('*')
     .eq('telejornal_id', telejornalId)
-    .order('data_salvamento', { ascending: false })
+    .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
@@ -72,8 +66,14 @@ export const fetchLastSavedRundown = async (telejornalId: string): Promise<Saved
   }
 
   return {
-    ...data,
-    estrutura: data.estrutura as SavedRundown['estrutura']
+    id: data.id,
+    telejornal_id: data.telejornal_id,
+    data_salvamento: data.data_salvamento,
+    data_referencia: data.data_referencia,
+    nome: data.nome,
+    estrutura: data.estrutura,
+    created_at: data.created_at,
+    updated_at: data.updated_at
   } as SavedRundown;
 };
 
@@ -83,22 +83,36 @@ export const fetchSavedRundownsByDate = async (
 ): Promise<SavedRundown[]> => {
   console.log("Buscando espelhos salvos por data:", { telejornalId, targetDate });
   
-  const { data, error } = await supabase
+  let query = supabase
     .from('espelhos_salvos')
     .select('*')
-    .eq('telejornal_id', telejornalId)
     .eq('data_referencia', targetDate)
-    .order('data_salvamento', { ascending: false });
+    .order('created_at', { ascending: false });
+
+  // Filter by telejornal if provided
+  if (telejornalId && telejornalId !== "all") {
+    query = query.eq('telejornal_id', telejornalId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("Erro ao buscar espelhos por data:", error);
     throw error;
   }
 
-  return data?.map(item => ({
-    ...item,
-    estrutura: item.estrutura as SavedRundown['estrutura']
-  } as SavedRundown)) || [];
+  return (data || []).map((item: any) => {
+    return {
+      id: item.id,
+      telejornal_id: item.telejornal_id,
+      data_salvamento: item.data_salvamento,
+      data_referencia: item.data_referencia,
+      nome: item.nome,
+      estrutura: item.estrutura,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    } as SavedRundown;
+  });
 };
 
 export const fetchAllSavedRundowns = async (
@@ -120,7 +134,7 @@ export const fetchAllSavedRundowns = async (
     query = query.eq('data_referencia', targetDate);
   }
 
-  query = query.order('data_salvamento', { ascending: false });
+  query = query.order('created_at', { ascending: false });
 
   const { data, error } = await query;
 
@@ -131,49 +145,17 @@ export const fetchAllSavedRundowns = async (
 
   console.log("Found all saved rundowns:", data?.length || 0);
 
-  // Get telejornal data for display purposes
-  const telejornalIds = [...new Set(data?.map(r => r.telejornal_id).filter(Boolean))];
-  const telejornaisData: Record<string, { nome: string; horario: string }> = {};
-  
-  if (telejornalIds.length > 0) {
-    const { data: telejornais } = await supabase
-      .from("telejornais")
-      .select("id, nome, horario")
-      .in("id", telejornalIds);
-    
-    telejornais?.forEach(tj => {
-      telejornaisData[tj.id] = { nome: tj.nome, horario: tj.horario };
-    });
-  }
-
-  // Convert the raw data to SavedRundown format with enhanced display info
-  return data?.map(item => {
-    const telejornalInfo = telejornaisData[item.telejornal_id];
-    const estrutura = item.estrutura as any;
-    const originalName = estrutura?.telejornal_original?.nome;
-    const originalHorario = estrutura?.telejornal_original?.horario;
-    
-    // Determine if telejornal was deleted and get appropriate display name
-    const isDeleted = !telejornalInfo && originalName;
-    const displayName = telejornalInfo?.nome || originalName || "Telejornal Deletado";
-    const finalDisplayName = isDeleted ? `${displayName} (Deletado)` : displayName;
-    
+  // Convert the raw data to SavedRundown format, ensuring proper type conversion
+  return (data || []).map((item: any) => {
     return {
       id: item.id,
       telejornal_id: item.telejornal_id,
       data_salvamento: item.data_salvamento,
       data_referencia: item.data_referencia,
       nome: item.nome,
-      estrutura: {
-        ...(item.estrutura as any),
-        telejornal_info: {
-          nome: finalDisplayName,
-          horario: telejornalInfo?.horario || originalHorario || ""
-        }
-      } as SavedRundown['estrutura'],
+      estrutura: item.estrutura,
       created_at: item.created_at,
-      updated_at: item.updated_at,
-      user_id: item.user_id
-    };
-  }) as SavedRundown[] || [];
+      updated_at: item.updated_at
+    } as SavedRundown;
+  });
 };

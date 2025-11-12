@@ -74,13 +74,16 @@ export const FilterSection = ({
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Selecione o Jornal</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Selecione o Jornal</label>
           <Select
             value={selectedJornal}
-            onValueChange={setSelectedJornal}
+            onValueChange={(value) => {
+              console.log("Jornal selecionado:", value);
+              setSelectedJornal(value);
+            }}
           >
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Selecione um telejornal" />
+              <SelectValue placeholder="Todos os telejornais" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os telejornais</SelectItem>
@@ -94,12 +97,15 @@ export const FilterSection = ({
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Data</label>
+          <label className="block text-sm font-medium text-foreground mb-1">Data</label>
           <Popover>
             <PopoverTrigger asChild>
               <Button
                 variant="outline"
-                className="w-full justify-start text-left font-normal h-10"
+                className={cn(
+                  "w-full justify-start text-left font-normal h-10",
+                  !selectedDate && "text-muted-foreground"
+                )}
               >
                 {selectedDate ? (
                   formatSelectedDate()
@@ -113,7 +119,10 @@ export const FilterSection = ({
               <Calendar
                 mode="single"
                 selected={selectedDate}
-                onSelect={handleDateSelect}
+                onSelect={(date) => {
+                  console.log("Data selecionada:", date);
+                  handleDateSelect(date);
+                }}
                 initialFocus
                 className="pointer-events-auto"
                 locale={ptBR}
@@ -123,11 +132,21 @@ export const FilterSection = ({
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-foreground mb-1">
             Horário
             <button 
-              onClick={() => setShowTimeRange(!showTimeRange)} 
-              className="ml-2 text-xs text-blue-600 hover:underline"
+              onClick={() => {
+                console.log("Alternando modo de horário:", !showTimeRange);
+                setShowTimeRange(!showTimeRange);
+                // Limpar valores quando alternar modo
+                if (!showTimeRange) {
+                  setSelectedTime("");
+                } else {
+                  setStartTime("");
+                  setEndTime("");
+                }
+              }} 
+              className="ml-2 text-xs text-primary hover:underline"
             >
               {showTimeRange ? "Usar horário único" : "Usar faixa de horário"}
             </button>
@@ -138,14 +157,22 @@ export const FilterSection = ({
               <Input
                 type="time"
                 value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
+                onChange={(e) => {
+                  console.log("Horário inicial:", e.target.value);
+                  setStartTime(e.target.value);
+                }}
+                placeholder="Início"
                 className="w-full"
               />
-              <span className="flex items-center">até</span>
+              <span className="flex items-center text-muted-foreground">até</span>
               <Input
                 type="time"
                 value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
+                onChange={(e) => {
+                  console.log("Horário final:", e.target.value);
+                  setEndTime(e.target.value);
+                }}
+                placeholder="Fim"
                 className="w-full"
               />
             </div>
@@ -153,12 +180,37 @@ export const FilterSection = ({
             <Input
               type="time"
               value={selectedTime}
-              onChange={(e) => setSelectedTime(e.target.value)}
+              onChange={(e) => {
+                console.log("Horário único:", e.target.value);
+                setSelectedTime(e.target.value);
+              }}
+              placeholder="00:00"
               className="w-full"
             />
           )}
         </div>
       </div>
+      
+      {/* Botão para limpar filtros */}
+      {(selectedJornal !== "all" || selectedDate || selectedTime || startTime || endTime) && (
+        <div className="mb-4 text-center">
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              console.log("Limpando todos os filtros");
+              setSelectedJornal("all");
+              setSelectedDate(undefined);
+              setSelectedTime("");
+              setStartTime("");
+              setEndTime("");
+              setShowTimeRange(false);
+            }}
+          >
+            Limpar Filtros
+          </Button>
+        </div>
+      )}
     </>
   );
 };

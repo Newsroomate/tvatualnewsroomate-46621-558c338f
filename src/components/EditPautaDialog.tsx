@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { updatePauta } from "@/services/pautas-api";
+import { updatePautaTelejornal } from "@/services/pautas-telejornal-api";
 import { Pauta } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 interface EditPautaDialogProps {
@@ -19,8 +20,8 @@ export const EditPautaDialog = ({
   pauta,
   onPautaUpdated
 }: EditPautaDialogProps) => {
-  const [data, setData] = useState(pauta.data_cobertura || pauta.horario || "");
-  const [retranca, setRetranca] = useState(pauta.titulo);
+  const [data, setData] = useState(pauta.data_cobertura || "");
+  const [retranca, setRetranca] = useState(pauta.titulo || "");
   const [programa, setPrograma] = useState(pauta.programa || "");
   const [pauteiros, setPauteiros] = useState(pauta.produtor || "");
   const [reporter, setReporter] = useState(pauta.reporter || "");
@@ -39,20 +40,29 @@ export const EditPautaDialog = ({
     if (!retranca.trim()) return;
     setIsSubmitting(true);
     try {
-      await updatePauta(pauta.id, {
+      const updateData = {
         titulo: retranca,
         descricao: roteiro1,
         local: imagens,
         horario: data,
         entrevistado: entrevistados,
         produtor: pauteiros,
+        data_cobertura: data,
+        status: pauta.status || 'pendente',
         proposta,
         encaminhamento,
         informacoes,
-        data_cobertura: data,
         programa,
         reporter
-      });
+      };
+
+      // Se a pauta tem telejornal_id, usa a tabela pautas_telejornal, senão usa pautas
+      if (pauta.telejornal_id) {
+        await updatePautaTelejornal(pauta.id, updateData);
+      } else {
+        await updatePauta(pauta.id, updateData);
+      }
+      
       onPautaUpdated();
       onClose();
     } catch (error) {

@@ -168,7 +168,11 @@ export const DeepSearchFilters = ({
 
         {/* Botões de ação */}
         <div className="flex space-x-2">
-          <Button onClick={onSearch} disabled={isSearching} className="flex-1">
+          <Button 
+            onClick={onSearch} 
+            disabled={isSearching || !query.trim()} 
+            className="flex-1"
+          >
             {isSearching ? (
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
             ) : (
@@ -176,7 +180,13 @@ export const DeepSearchFilters = ({
             )}
             Buscar
           </Button>
-          <Button variant="outline" onClick={onClear}>
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              console.log("Limpando filtros de busca profunda");
+              onClear();
+            }}
+          >
             Limpar
           </Button>
         </div>

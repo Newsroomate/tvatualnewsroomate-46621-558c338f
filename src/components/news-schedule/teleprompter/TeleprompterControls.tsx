@@ -9,6 +9,7 @@ interface TeleprompterControlsProps {
   onPlayPause: () => void;
   onSpeedChange: (value: number[]) => void;
   onReset: () => void;
+  isMobile?: boolean;
 }
 
 export const TeleprompterControls = ({
@@ -16,25 +17,29 @@ export const TeleprompterControls = ({
   speed,
   onPlayPause,
   onSpeedChange,
-  onReset
+  onReset,
+  isMobile = false
 }: TeleprompterControlsProps) => {
   return (
     <>
       <Button
         variant="outline"
-        size="sm"
+        size={isMobile ? "default" : "sm"}
         onClick={onPlayPause}
+        className={isMobile ? "h-10 w-16" : ""}
       >
         {isPlaying ? (
-          <Pause className="h-4 w-4" />
+          <Pause className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
         ) : (
-          <Play className="h-4 w-4" />
+          <Play className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
         )}
       </Button>
       
-      <div className="flex items-center gap-2 flex-1">
-        <span className="text-sm text-gray-600">Velocidade:</span>
-        <div className="w-32">
+      <div className={`flex items-center gap-2 ${isMobile ? 'flex-1' : 'flex-1'}`}>
+        <span className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+          {isMobile ? 'Vel:' : 'Velocidade:'}
+        </span>
+        <div className={isMobile ? "w-20" : "w-32"}>
           <Slider
             value={speed}
             onValueChange={onSpeedChange}
@@ -43,15 +48,18 @@ export const TeleprompterControls = ({
             step={1}
           />
         </div>
-        <span className="text-sm text-gray-600">{speed[0]}%</span>
+        <span className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+          {speed[0]}%
+        </span>
       </div>
 
       <Button
         variant="outline"
-        size="sm"
+        size={isMobile ? "default" : "sm"}
         onClick={onReset}
+        className={isMobile ? "h-10 px-3" : ""}
       >
-        Reiniciar
+        {isMobile ? 'Reset' : 'Reiniciar'}
       </Button>
     </>
   );

@@ -22,7 +22,6 @@ export interface MateriaSnapshot {
   tipo_material?: string;
   local_gravacao?: string;
   tags?: string[];
-  equipamento?: string;
   horario_exibicao?: string;
   is_snapshot: boolean;
   created_by?: string;
@@ -49,7 +48,6 @@ export interface MateriaSnapshotCreateInput {
   tipo_material?: string;
   local_gravacao?: string;
   tags?: string[];
-  equipamento?: string;
 }
 
 export const createMateriaSnapshot = async (materia: MateriaSnapshotCreateInput): Promise<MateriaSnapshot> => {
@@ -59,11 +57,30 @@ export const createMateriaSnapshot = async (materia: MateriaSnapshotCreateInput)
     throw new Error("Usuário não autenticado");
   }
 
+  if (!materia.materia_original_id) {
+    throw new Error("materia_original_id é obrigatório para criar snapshot");
+  }
+
   const { data, error } = await supabase
     .from('materias_snapshots')
     .insert({
-      ...materia,
-      created_by: currentUser.user.id
+      materia_original_id: materia.materia_original_id,
+      retranca: materia.retranca,
+      bloco_nome: materia.bloco_nome,
+      bloco_ordem: materia.bloco_ordem,
+      ordem: materia.ordem,
+      duracao: materia.duracao,
+      clip: materia.clip,
+      tempo_clip: materia.tempo_clip,
+      pagina: materia.pagina,
+      reporter: materia.reporter,
+      status: materia.status,
+      texto: materia.texto,
+      cabeca: materia.cabeca,
+      gc: materia.gc,
+      tipo_material: materia.tipo_material,
+      local_gravacao: materia.local_gravacao,
+      tags: materia.tags
     })
     .select()
     .single();
@@ -74,35 +91,25 @@ export const createMateriaSnapshot = async (materia: MateriaSnapshotCreateInput)
     throw error;
   }
 
-  return data as MateriaSnapshot;
+  return { ...data, is_snapshot: true } as MateriaSnapshot;
 };
 
 export const updateMateriaSnapshot = async (id: string, updates: Partial<MateriaSnapshot>): Promise<MateriaSnapshot> => {
-  // Validate that ID exists
   if (!id) {
     const error = new Error('ID da matéria snapshot é obrigatório para atualização');
     console.error('updateMateriaSnapshot: Missing ID', { id, updates });
     throw error;
   }
 
-  // Create a copy of the updates object to avoid modifying the original
-  const updatesToSend = { ...updates };
-  
-  // Remove created_by from updates to prevent unauthorized ownership changes
-  delete updatesToSend.created_by;
-  
-  // Ensure retranca is included since it's a required field
-  if (updatesToSend.retranca === undefined || updatesToSend.retranca === null || updatesToSend.retranca.trim() === '') {
-    console.error('updateMateriaSnapshot: Missing or empty retranca field', { id, updates });
+  // Garantir que retranca exista no payload final
+  if (!updates.retranca || updates.retranca.trim() === '') {
     throw new Error('Retranca é obrigatória para atualizar uma matéria snapshot');
   }
-  
-  console.log('updateMateriaSnapshot: Sending updates to database:', { id, updates: updatesToSend });
 
-  // First, check if the materia snapshot exists and user has permission
-  const { data: existingMateria, error: checkError } = await supabase
+  // Verificar se snapshot já existe
+  const { data: existing, error: checkError } = await supabase
     .from('materias_snapshots')
-    .select('id, retranca, snapshot_id, created_by')
+    .select('*')
     .eq('id', id)
     .maybeSingle();
 
@@ -111,43 +118,34 @@ export const updateMateriaSnapshot = async (id: string, updates: Partial<Materia
     throw new Error(`Erro ao verificar se a matéria snapshot existe: ${checkError.message}`);
   }
 
-  // If materia snapshot doesn't exist, create it with proper ownership
-  if (!existingMateria) {
-    console.log('updateMateriaSnapshot: Materia snapshot not found, creating new one:', { id });
-    
-    const { data: currentUser } = await supabase.auth.getUser();
-    
-    if (!currentUser.user) {
-      throw new Error("Usuário não autenticado");
-    }
+  const { data: currentUser } = await supabase.auth.getUser();
+  if (!currentUser.user) {
+    throw new Error("Usuário não autenticado");
+  }
 
-    const createData: MateriaSnapshotCreateInput = {
-      materia_original_id: id,
-      retranca: updatesToSend.retranca,
-      bloco_nome: updatesToSend.bloco_nome || 'Bloco',
-      bloco_ordem: updatesToSend.bloco_ordem || 1,
-      ordem: updatesToSend.ordem || 1,
-      duracao: updatesToSend.duracao || 0,
-      clip: updatesToSend.clip,
-      tempo_clip: updatesToSend.tempo_clip,
-      pagina: updatesToSend.pagina,
-      reporter: updatesToSend.reporter,
-      status: updatesToSend.status || 'draft',
-      texto: updatesToSend.texto,
-      cabeca: updatesToSend.cabeca,
-      gc: updatesToSend.gc,
-      tipo_material: updatesToSend.tipo_material,
-      local_gravacao: updatesToSend.local_gravacao,
-      tags: updatesToSend.tags,
-      equipamento: updatesToSend.equipamento
-    };
-
-    const { data: createdMateria, error: createError } = await supabase
+  if (!existing) {
+    // Criar novo snapshot com os dados fornecidos
+    const { data: created, error: createError } = await supabase
       .from('materias_snapshots')
       .insert({
-        ...createData,
         id,
-        created_by: currentUser.user.id
+        materia_original_id: updates.materia_original_id || id,
+        retranca: updates.retranca!,
+        bloco_nome: updates.bloco_nome,
+        bloco_ordem: updates.bloco_ordem,
+        ordem: updates.ordem || 1,
+        duracao: updates.duracao || 0,
+        clip: updates.clip,
+        tempo_clip: updates.tempo_clip,
+        pagina: updates.pagina,
+        reporter: updates.reporter,
+        status: updates.status,
+        texto: updates.texto,
+        cabeca: updates.cabeca,
+        gc: updates.gc,
+        tipo_material: updates.tipo_material,
+        local_gravacao: updates.local_gravacao,
+        tags: updates.tags
       })
       .select()
       .single();
@@ -157,14 +155,20 @@ export const updateMateriaSnapshot = async (id: string, updates: Partial<Materia
       throw new Error(`Erro ao criar matéria snapshot: ${createError.message}`);
     }
 
-    console.log('updateMateriaSnapshot: Successfully created materia snapshot:', createdMateria);
-    return createdMateria as MateriaSnapshot;
+    return { ...created, is_snapshot: true } as MateriaSnapshot;
   }
 
-  // Perform the update
+  // Atualizar com os novos dados
+  const updateData: any = {};
+  Object.keys(updates).forEach(key => {
+    if (updates[key as keyof MateriaSnapshot] !== undefined) {
+      updateData[key] = updates[key as keyof MateriaSnapshot];
+    }
+  });
+
   const { data, error } = await supabase
     .from('materias_snapshots')
-    .update(updatesToSend)
+    .update(updateData)
     .eq('id', id)
     .select()
     .maybeSingle();
@@ -172,13 +176,7 @@ export const updateMateriaSnapshot = async (id: string, updates: Partial<Materia
   if (error) {
     console.error('updateMateriaSnapshot: Database error during update:', error);
     const errorMessage = error.message || 'Erro desconhecido ao atualizar matéria snapshot';
-    
-    // Check if it's a permission error
-    if (error.code === 'PGRST116' || error.message.includes('permission')) {
-      toastService.error("Acesso negado", "Você não tem permissão para editar esta matéria snapshot");
-    } else {
-      toastService.error("Erro ao atualizar matéria snapshot", errorMessage);
-    }
+    toastService.error("Erro ao atualizar matéria snapshot", errorMessage);
     throw new Error(`Erro ao atualizar matéria snapshot: ${errorMessage}`);
   }
 
@@ -187,23 +185,22 @@ export const updateMateriaSnapshot = async (id: string, updates: Partial<Materia
     throw new Error('Nenhum dado retornado após a atualização da matéria snapshot');
   }
 
-  console.log('updateMateriaSnapshot: Successfully updated materia snapshot:', data);
-  return data as MateriaSnapshot;
+  return { ...data, is_snapshot: true } as MateriaSnapshot;
 };
 
 export const fetchMateriaSnapshotsBySnapshot = async (snapshotId: string): Promise<MateriaSnapshot[]> => {
   const { data, error } = await supabase
     .from('materias_snapshots')
     .select('*')
-    .eq('snapshot_id', snapshotId)
-    .order('ordem');
+    .eq('materia_original_id', snapshotId)
+    .order('created_at', { ascending: false });
 
   if (error) {
     console.error('Erro ao buscar matérias snapshots:', error);
     throw error;
   }
 
-  return data as MateriaSnapshot[];
+  return (data || []).map((row: any) => ({ ...row, is_snapshot: true })) as MateriaSnapshot[];
 };
 
 export const deleteMateriaSnapshot = async (id: string): Promise<boolean> => {

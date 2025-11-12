@@ -32,6 +32,14 @@ export {
   deletePauta 
 } from "./pautas-api";
 
+// Export the pautas-telejornal-api functions
+export {
+  fetchPautasByTelejornal,
+  createPautaTelejornal,
+  updatePautaTelejornal,
+  deletePautaTelejornal
+} from "./pautas-telejornal-api";
+
 // Export the espelhos-api functions
 export { fetchClosedRundowns } from "./espelhos-api";
 

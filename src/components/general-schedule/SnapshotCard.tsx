@@ -7,6 +7,7 @@ import { ChevronDown, ChevronRight, Clock, Eye, AlertTriangle } from "lucide-rea
 import { format } from "date-fns";
 import { formatTime } from "../news-schedule/utils";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
+import { Telejornal } from "@/types";
 import { BlockCard } from "./BlockCard";
 
 interface SnapshotCardProps {
@@ -14,6 +15,7 @@ interface SnapshotCardProps {
   isExpanded: boolean;
   onToggleExpansion: () => void;
   onViewDetails: (snapshot: ClosedRundownSnapshot) => void;
+  telejornais: Telejornal[];
 }
 
 const getMateriasList = (bloco: any) => {
@@ -26,7 +28,7 @@ const getMateriasList = (bloco: any) => {
   return [];
 };
 
-export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDetails }: SnapshotCardProps) => {
+export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDetails, telejornais }: SnapshotCardProps) => {
   const [expandedBlocks, setExpandedBlocks] = useState<Set<string>>(new Set());
   
   const toggleBlockExpansion = (blockId: string) => {
@@ -58,14 +60,43 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDe
     estrutura: snapshot.estrutura_completa
   });
 
+  // Buscar o telejornal atual na lista de telejornais ativos
+  const currentTelejornal = telejornais.find(tj => tj.id === snapshot.telejornal_id);
+  const telejornalExists = !!currentTelejornal;
+  
+  // Usar o nome do telejornal atual se existir, senão usar o nome salvo no snapshot
+  const displayTelejornalName = currentTelejornal?.nome || snapshot.nome_telejornal;
+  
+  console.log('SnapshotCard telejornal info:', {
+    snapshot_id: snapshot.id,
+    telejornal_id: snapshot.telejornal_id,
+    found_telejornal: !!currentTelejornal,
+    display_name: displayTelejornalName,
+    available_telejornais: telejornais.map(tj => ({ id: tj.id, nome: tj.nome }))
+  });
+  
   // Garantir que a data seja exibida corretamente baseada na data_referencia
-  const displayDate = new Date(snapshot.data_referencia + 'T00:00:00');
-
-  // Verificar se o telejornal foi deletado e extrair nome original
-  const isTelejornalDeleted = snapshot.nome_telejornal.includes('(Deletado)');
-  const originalTelejornalName = isTelejornalDeleted 
-    ? snapshot.nome_telejornal.replace(' (Deletado)', '') 
-    : snapshot.nome_telejornal;
+  const getValidDate = (dateRef: string) => {
+    if (!dateRef) return new Date();
+    
+    try {
+      // Tentar construir a data com formato ISO
+      const date = new Date(dateRef + 'T00:00:00');
+      
+      // Verificar se a data é válida
+      if (isNaN(date.getTime())) {
+        console.warn('Invalid date_referencia:', dateRef);
+        return new Date();
+      }
+      
+      return date;
+    } catch (error) {
+      console.warn('Error parsing date_referencia:', dateRef, error);
+      return new Date();
+    }
+  };
+  
+  const displayDate = getValidDate(snapshot.data_referencia);
 
   return (
     <Card className="w-full">
@@ -80,17 +111,15 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDe
             >
               {isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
             </Button>
-            <div className="flex items-center space-x-2">
-              <CardTitle className="text-base">
-                {originalTelejornalName}
-              </CardTitle>
-              {isTelejornalDeleted && (
-                <Badge variant="destructive" className="text-xs flex items-center space-x-1">
+            <CardTitle className="text-base flex items-center gap-2">
+              {displayTelejornalName}
+              {!telejornalExists && (
+                <Badge variant="destructive" className="text-xs flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
-                  <span>Deletado</span>
+                  Telejornal Excluído
                 </Badge>
               )}
-            </div>
+            </CardTitle>
             <Badge variant="outline" className="text-xs">
               {format(displayDate, "dd/MM/yyyy")}
             </Badge>

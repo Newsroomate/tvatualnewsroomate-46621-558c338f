@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { SecurityProvider } from "./components/auth/SecurityProvider";
-import { AppHeader } from "./components/AppHeader";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { enableAllTables } from "./services/realtime-setup";
 import { useEffect, Suspense, lazy } from "react";
@@ -51,14 +50,11 @@ const AppContent = () => {
           <Route path="/teleprompter" element={<TeleprompterWindow />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={
-            <>
-              <AppHeader />
-              <div className="flex-1 overflow-hidden">
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              </div>
-            </>
+            <div className="flex-1 overflow-hidden">
+              <ProtectedRoute>
+                <Index />
+              </ProtectedRoute>
+            </div>
           } />
           <Route path="*" element={<NotFound />} />
         </Routes>

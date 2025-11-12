@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { useNewsSchedule } from "@/hooks/useNewsSchedule";
-import { useUnifiedClipboard } from "@/hooks/useUnifiedClipboard";
+import { useClipboard } from "@/hooks/useClipboard";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 import { usePasteMateria } from "@/hooks/paste-materia";
 import { usePasteBlock } from "@/hooks/paste-block";
@@ -110,8 +110,8 @@ export const NewsScheduleHooks = ({
     isSelected
   } = useItemSelection();
 
-  // Clipboard functionality unificado
-  const { copiedMateria, copiedBlock, copyMateria, copyBlock, clearClipboard, hasCopiedMateria, hasCopiedBlock } = useUnifiedClipboard();
+  // Clipboard functionality
+  const { copiedMateria, copiedBlock, copyMateria, copyBlock, clearClipboard, hasCopiedMateria, hasCopiedBlock } = useClipboard();
   
   // Enhanced paste functionality with optimistic updates
   const { pasteMateria } = usePasteMateria({
@@ -157,14 +157,7 @@ export const NewsScheduleHooks = ({
   // Enhanced keyboard shortcuts - support for both materia and block pasting
   useKeyboardShortcuts({
     selectedMateria,
-    onCopy: selectedMateria ? () => {
-      copyMateria(
-        selectedMateria,
-        'news_schedule', 
-        currentTelejornal?.nome || 'Telejornal Ativo',
-        'Espelho Aberto'
-      );
-    } : () => {},
+    onCopy: copyMateria,
     onPaste: pasteMateria,
     isEspelhoOpen: !!currentTelejornal?.espelho_aberto,
     copiedBlock,

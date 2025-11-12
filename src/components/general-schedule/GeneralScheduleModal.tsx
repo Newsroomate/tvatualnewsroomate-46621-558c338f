@@ -30,14 +30,26 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
   useEffect(() => {
     if (isOpen) {
       loadTelejornais();
-      // Carregar espelhos sem filtro de data inicialmente para mostrar histórico
+      // Resetar filtros quando abrir o modal
+      setSelectedJornal("all");
+      setSelectedDate(undefined);
+      setSelectedTime("");
+      setStartTime("");
+      setEndTime("");
+      setShowTimeRange(false);
+      // Carregar espelhos sem filtro inicialmente
       loadClosedSnapshots();
     }
   }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
-      loadClosedSnapshots();
+      // Debounce para evitar múltiplas chamadas
+      const timeoutId = setTimeout(() => {
+        loadClosedSnapshots();
+      }, 300);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [selectedJornal, selectedDate, selectedTime, startTime, endTime, showTimeRange, isOpen]);
 
@@ -58,6 +70,15 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
   const loadClosedSnapshots = async () => {
     setIsLoading(true);
     try {
+      console.log("Carregando espelhos com filtros:", {
+        selectedJornal,
+        selectedDate,
+        selectedTime,
+        startTime,
+        endTime,
+        showTimeRange
+      });
+
       // Processar a data selecionada corretamente para evitar problemas de timezone
       let processedDate: Date | undefined = undefined;
       if (selectedDate) {
@@ -71,20 +92,25 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
         console.log("Processed date for query:", processedDate);
       }
 
+      // Usar valores corretos baseados no modo de horário
+      const timeFilter = selectedTime || undefined;
+      const startTimeFilter = showTimeRange ? startTime || undefined : undefined;
+      const endTimeFilter = showTimeRange ? endTime || undefined : undefined;
+
       const data = await fetchClosedRundownSnapshots(
         selectedJornal === "all" ? undefined : selectedJornal, 
         processedDate, 
-        selectedTime,
-        showTimeRange ? startTime : undefined,
-        showTimeRange ? endTime : undefined
+        timeFilter,
+        startTimeFilter,
+        endTimeFilter
       );
       
       setClosedSnapshots(data);
       
-      if (data.length === 0) {
-        console.log("Nenhum espelho fechado encontrado com os filtros selecionados");
-      } else {
-        console.log(`Encontrados ${data.length} espelhos fechados`);
+      console.log(`Encontrados ${data.length} espelhos fechados com os filtros aplicados`);
+      
+      if (data.length === 0 && (selectedJornal !== "all" || selectedDate || selectedTime || startTime || endTime)) {
+        console.log("Nenhum resultado encontrado com os filtros selecionados");
       }
     } catch (error) {
       console.error("Erro ao carregar espelhos fechados:", error);
@@ -128,6 +154,7 @@ export const GeneralScheduleModal = ({ isOpen, onClose }: GeneralScheduleModalPr
           <ClosedRundownContent 
             snapshots={closedSnapshots}
             isLoading={isLoading}
+            telejornais={telejornais}
           />
         </div>
       </DialogContent>

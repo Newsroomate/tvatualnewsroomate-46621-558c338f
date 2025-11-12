@@ -1,16 +1,17 @@
 
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
-import { useUnifiedClipboard } from "@/hooks/useUnifiedClipboard";
-import { usePasteToGeneralSchedule } from "@/hooks/paste-general-schedule";
+import { useClipboard } from "@/hooks/useClipboard";
+import { usePasteBlock } from "@/hooks/paste-block";
 import { useQueryClient } from "@tanstack/react-query";
-import { toast } from "@/hooks/use-toast";
 import { FullRundownHeader } from "./full-rundown/FullRundownHeader";
 import { BlocoCard } from "./full-rundown/BlocoCard";
 import { InstructionSection } from "./full-rundown/InstructionSection";
 import { EmptyBlocosState } from "./full-rundown/EmptyBlocosState";
 import { LoadingState } from "./full-rundown/LoadingState";
 import { useMateriaOperations } from "./hooks/useMateriaOperations";
+import { deleteBloco } from "@/services/blocos-api";
+import { useToast } from "@/hooks/use-toast";
 
 interface FullRundownViewProps {
   snapshot: ClosedRundownSnapshot;
@@ -18,6 +19,7 @@ interface FullRundownViewProps {
 }
 
 export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
+  const { toast } = useToast();
   const queryClient = useQueryClient();
   const {
     blocos,
@@ -37,65 +39,60 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
     handleUpdateEditData
   } = useMateriaOperations(snapshot);
 
-  const { copiedMateria, copiedBlock, copyMateria, clearClipboard, getSourceInfo } = useUnifiedClipboard();
+  const { copyMateria, copiedBlock, clearClipboard } = useClipboard();
 
-  // Hook para colar do Espelho Geral para espelhos abertos
-  const { pasteMateria: pasteToActiveSchedule, pasteBlock: pasteBlockToActiveSchedule } = usePasteToGeneralSchedule({
-    selectedJournal: null, // Será configurado dinamicamente quando necessário
-    currentTelejornal: null, // Será configurado dinamicamente quando necessário
-    copiedMateria,
+  // Hook para colar blocos - simulando um espelho aberto temporário para permitir paste
+  const { pasteBlock } = usePasteBlock({
+    selectedJournal: null, // No histórico não há journal selecionado
+    currentTelejornal: { espelho_aberto: false }, // Espelho fechado no histórico
     copiedBlock,
     clearClipboard,
     refreshBlocks: () => {
-      console.log('Refresh blocks após paste do Espelho Geral');
-      queryClient.invalidateQueries({ queryKey: ['blocos'] });
+      // Não faz nada no histórico, apenas para compatibilidade
+      console.log('Refresh blocks chamado no histórico (sem efeito)');
     }
   });
 
-  // Atalhos de teclado aprimorados para o Espelho Geral
+  // Atalhos de teclado para copiar - com funcionalidade aprimorada
   useKeyboardShortcuts({
     selectedMateria,
     onCopy: () => {
       if (selectedMateria) {
-        console.log('Copiando via Ctrl+C no Espelho Geral:', selectedMateria);
-        // Copiar com contexto do Espelho Geral
-        copyMateria(
-          selectedMateria, 
-          'general_schedule',
-          snapshot.nome_telejornal || 'Telejornal',
-          'Espelho Geral'
-        );
+        console.log('Copiando via Ctrl+C no histórico:', selectedMateria);
+        copyMateria(selectedMateria);
       }
     },
     onPaste: () => {
-      const sourceInfo = getSourceInfo();
-      if (sourceInfo?.context === 'news_schedule') {
-        console.log('Colando do espelho aberto para Espelho Geral (não permitido)');
-        toast({
-          title: "Operação não permitida",
-          description: "Não é possível colar no Espelho Geral. Use esta matéria em um espelho aberto.",
-          variant: "destructive"
-        });
-      } else {
-        console.log('Tentativa de colar dentro do próprio Espelho Geral (não permitido)');
-      }
+      console.log('Tentativa de colar no histórico (não permitido)');
+      // Não permitir colar no histórico, apenas copiar
     },
-    isEspelhoOpen: true, // Permitir copy no Espelho Geral
+    isEspelhoOpen: true, // Permitir copy no histórico
     copiedBlock,
     onPasteBlock: () => {
-      const sourceInfo = getSourceInfo();
-      if (sourceInfo?.context === 'news_schedule') {
-        console.log('Colando bloco do espelho aberto para Espelho Geral (não permitido)');
-        toast({
-          title: "Operação não permitida", 
-          description: "Não é possível colar blocos no Espelho Geral. Use este bloco em um espelho aberto.",
-          variant: "destructive"
-        });
-      } else {
-        console.log('Tentativa de colar bloco dentro do próprio Espelho Geral (não permitido)');
-      }
+      console.log('Tentativa de colar bloco no histórico (não permitido)');
+      // Não permitir colar blocos no histórico
     }
   });
+
+  const handleDeleteBlock = async (blocoId: string, blocoNome: string) => {
+    try {
+      await deleteBloco(blocoId);
+      toast({
+        title: "Bloco excluído",
+        description: `Bloco "${blocoNome}" foi excluído com sucesso`,
+        variant: "default"
+      });
+      // Refresh data
+      refreshData();
+    } catch (error) {
+      console.error("Erro ao excluir bloco:", error);
+      toast({
+        title: "Erro",
+        description: "Não foi possível excluir o bloco",
+        variant: "destructive"
+      });
+    }
+  };
 
   if (isLoadingHybrid) {
     return <LoadingState />;
@@ -128,6 +125,7 @@ export const FullRundownView = ({ snapshot, onBack }: FullRundownViewProps) => {
             onUpdateEditData={handleUpdateEditData}
             onSelectMateria={handleSelectMateria}
             onCopyMateria={handleCopyMateria}
+            onDeleteBlock={handleDeleteBlock}
             isSelected={isSelected}
           />
         ))}

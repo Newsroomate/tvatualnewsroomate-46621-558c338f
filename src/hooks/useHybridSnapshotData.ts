@@ -17,7 +17,6 @@ interface HybridMateriaData {
   ordem: number;
   tags?: string[];
   local_gravacao?: string;
-  equipamento?: string;
   bloco_id?: string;
   bloco_nome?: string;
   bloco_ordem?: number;
@@ -81,7 +80,6 @@ export const useHybridSnapshotData = ({ snapshot }: UseHybridSnapshotDataProps) 
               reporter: editedVersion.reporter,
               tags: editedVersion.tags,
               local_gravacao: editedVersion.local_gravacao,
-              equipamento: editedVersion.equipamento,
               tipo_material: editedVersion.tipo_material,
               tempo_clip: editedVersion.tempo_clip,
               isEdited: true

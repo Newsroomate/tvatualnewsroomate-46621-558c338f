@@ -28,13 +28,15 @@ export const useRealtimeInvalidation = () => {
         table: 'blocos'
       }, (payload) => {
         console.log('Bloco modificado - invalidando queries:', payload);
-        // Invalidar queries de blocos para o telejornal específico
-        if (payload.new && 'telejornal_id' in payload.new) {
-          queryClient.invalidateQueries({ queryKey: ['blocos', payload.new.telejornal_id] });
-        }
-        if (payload.old && 'telejornal_id' in payload.old) {
-          queryClient.invalidateQueries({ queryKey: ['blocos', payload.old.telejornal_id] });
-        }
+        // Debounce invalidations
+        setTimeout(() => {
+          if (payload.new && 'telejornal_id' in payload.new) {
+            queryClient.invalidateQueries({ queryKey: ['blocos', payload.new.telejornal_id] });
+          }
+          if (payload.old && 'telejornal_id' in payload.old) {
+            queryClient.invalidateQueries({ queryKey: ['blocos', payload.old.telejornal_id] });
+          }
+        }, 100);
       })
       .on('postgres_changes', {
         event: '*',
@@ -42,14 +44,15 @@ export const useRealtimeInvalidation = () => {
         table: 'materias'
       }, (payload) => {
         console.log('Matéria modificada - invalidando queries:', payload);
-        // Invalidar queries de blocos que podem conter essas matérias
-        if (payload.new && 'bloco_id' in payload.new) {
-          // Buscar o telejornal_id a partir do bloco
-          queryClient.invalidateQueries({ queryKey: ['blocos'] });
-        }
-        if (payload.old && 'bloco_id' in payload.old) {
-          queryClient.invalidateQueries({ queryKey: ['blocos'] });
-        }
+        // Debounce invalidations
+        setTimeout(() => {
+          if (payload.new && 'bloco_id' in payload.new) {
+            queryClient.invalidateQueries({ queryKey: ['blocos'] });
+          }
+          if (payload.old && 'bloco_id' in payload.old) {
+            queryClient.invalidateQueries({ queryKey: ['blocos'] });
+          }
+        }, 100);
       })
       .on('postgres_changes', {
         event: '*',
@@ -67,5 +70,5 @@ export const useRealtimeInvalidation = () => {
       console.log('Limpando subscription de invalidação global');
       supabase.removeChannel(channel);
     };
-  }, [queryClient]);
+  }, []);
 };

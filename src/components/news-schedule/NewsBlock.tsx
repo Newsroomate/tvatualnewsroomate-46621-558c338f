@@ -109,7 +109,7 @@ export const NewsBlock = ({
     <div 
       key={block.id} 
       data-block-id={block.id}
-      className="border border-gray-200 rounded-lg shadow-sm"
+      className="border border-gray-200 rounded-lg shadow-sm mb-4"
     >
       <BlockHeader
         blockName={block.nome}

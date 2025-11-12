@@ -8,7 +8,6 @@ import { EditPanelTabs } from "./EditPanelTabs";
 import { useDurationCalculator } from "./DurationCalculator";
 import { useMateriaLock } from "@/hooks/useMateriaLock";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 interface EditPanelProviderProps {
   item: Materia;
@@ -21,7 +20,6 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const { calculateCabecaDuration } = useDurationCalculator();
-  const isMobile = useIsMobile();
   
   // Hook para gerenciar o lock da matéria (agora sem loading state)
   const { canEdit } = useMateriaLock({
@@ -147,36 +145,6 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
     return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, []);
 
-  // Mobile layout - full screen
-  if (isMobile) {
-    return (
-      <div className="fixed inset-0 z-50 bg-background">
-        <div className="w-full h-full bg-white shadow-lg overflow-y-auto edit-panel-content">
-          <EditPanelHeader 
-            item={item} 
-            onClose={onClose}
-            onSave={canEdit ? handleSave : undefined}
-            isSaving={isSaving}
-          />
-          
-          {canEdit && (
-            <EditPanelTabs
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              formData={formData}
-              onInputChange={handleInputChange}
-              onTagsChange={handleTagsChange}
-              onSave={handleSave}
-              onClose={onClose}
-              isSaving={isSaving}
-            />
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  // Desktop layout - resizable panel on the right
   return (
     <div className="fixed top-0 left-0 w-full h-full z-20 pointer-events-none">
       <ResizablePanelGroup direction="horizontal" className="w-full h-full pointer-events-auto">

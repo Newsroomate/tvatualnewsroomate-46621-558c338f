@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useHybridMateriaUpdate } from "@/hooks/useHybridMateriaUpdate";
 import { useHybridSnapshotData } from "@/hooks/useHybridSnapshotData";
-import { useUnifiedClipboard } from "@/hooks/useUnifiedClipboard";
+import { useClipboard } from "@/hooks/useClipboard";
 import { useItemSelection } from "@/hooks/useItemSelection";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { Materia } from "@/types";
@@ -23,7 +23,7 @@ export const useMateriaOperations = (snapshot: ClosedRundownSnapshot) => {
   } = useHybridSnapshotData({ snapshot });
 
   const { selectedMateria, selectItem, clearSelection, isSelected } = useItemSelection();
-  const { copyMateria } = useUnifiedClipboard();
+  const { copyMateria } = useClipboard();
 
   // Função melhorada para converter matéria híbrida em formato Materia padrão com TODOS os campos preservados
   const convertToStandardMateria = (materia: any, blocoId: string, blocoNome: string): Materia => {
@@ -69,7 +69,6 @@ export const useMateriaOperations = (snapshot: ClosedRundownSnapshot) => {
       
       // Campos de produção
       local_gravacao: materia.local_gravacao || '',
-      equipamento: materia.equipamento || '',
       tags: Array.isArray(materia.tags) ? materia.tags : (materia.tags ? [materia.tags] : []),
       
       // Timestamps
@@ -126,12 +125,7 @@ export const useMateriaOperations = (snapshot: ClosedRundownSnapshot) => {
       preservacaoCompleta: camposImportantes.length === camposPreservados.length
     });
     
-    copyMateria(
-      standardMateria,
-      'general_schedule', // Contexto do Espelho Geral
-      snapshot.nome_telejornal || 'Histórico',
-      blocoNome
-    );
+    copyMateria(standardMateria);
     selectItem(standardMateria);
 
     // Toast melhorado com informações sobre campos preservados
@@ -172,7 +166,6 @@ export const useMateriaOperations = (snapshot: ClosedRundownSnapshot) => {
       ordem: materia.ordem || 0,
       tags: materia.tags || [],
       local_gravacao: materia.local_gravacao || '',
-      equipamento: materia.equipamento || '',
       bloco_id: blocoId,
       bloco_nome: blocoNome,
       bloco_ordem: blocoOrdem,

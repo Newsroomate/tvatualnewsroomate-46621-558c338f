@@ -2,12 +2,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Copy } from "lucide-react";
+import { Copy, Trash2 } from "lucide-react";
 import { formatTime } from "../../news-schedule/utils";
 import { MateriaViewCard } from "./MateriaViewCard";
 import { EditableMateriaForm } from "./EditableMateriaForm";
 import { EditableMateria } from "../types";
-import { useUnifiedClipboard } from "@/hooks/useUnifiedClipboard";
+import { useClipboard } from "@/hooks/useClipboard";
 
 interface BlocoCardProps {
   bloco: any;
@@ -21,6 +21,7 @@ interface BlocoCardProps {
   onUpdateEditData: (updates: Partial<EditableMateria>) => void;
   onSelectMateria: (materia: any, blocoId: string, blocoNome: string) => void;
   onCopyMateria: (materia: any, blocoId: string, blocoNome: string) => void;
+  onDeleteBlock?: (blocoId: string, blocoNome: string) => void;
   isSelected: (id: string) => boolean;
 }
 
@@ -46,17 +47,25 @@ export const BlocoCard = ({
   onUpdateEditData,
   onSelectMateria,
   onCopyMateria,
+  onDeleteBlock,
   isSelected
 }: BlocoCardProps) => {
   const materias = getMateriasList(bloco);
   const totalDuracao = materias.reduce((sum: number, item: any) => sum + (item.duracao || 0), 0);
   const editedCount = materias.filter((item: any) => item.isEdited).length;
-  const { copyBlock } = useUnifiedClipboard();
+  const { copyBlock } = useClipboard();
 
   const handleCopyBlock = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log('Copiando bloco completo:', bloco.nome);
-    copyBlock(bloco, materias, 'general_schedule'); // Contexto do Espelho Geral
+    copyBlock(bloco, materias);
+  };
+
+  const handleDeleteBlock = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDeleteBlock && confirm(`Tem certeza que deseja excluir o bloco "${bloco.nome}"? Esta ação não pode ser desfeita.`)) {
+      onDeleteBlock(bloco.id, bloco.nome);
+    }
   };
 
   return (
@@ -86,6 +95,17 @@ export const BlocoCard = ({
             >
               <Copy className="h-4 w-4" />
             </Button>
+            {onDeleteBlock && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDeleteBlock}
+                className="hidden md:flex p-1 h-7 w-7 hover:bg-red-100"
+                title="Excluir bloco"
+              >
+                <Trash2 className="h-4 w-4 text-red-600" />
+              </Button>
+            )}
           </div>
         </div>
       </CardHeader>

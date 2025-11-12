@@ -53,27 +53,24 @@ export async function fetchClosedRundowns(
     .from("espelhos_salvos")
     .select(`
       id,
-      telejornal_id,
-      data_referencia,
       nome,
       estrutura,
+      data_referencia,
       created_at,
-      user_id
+      telejornal_id
     `);
 
   if (telejornalId && telejornalId !== "all") {
-    query = query.eq("telejornal_id", telejornalId);
+    query = query.eq('telejornal_id', telejornalId);
   }
 
   if (selectedDate) {
-    // Garantir que a data seja formatada corretamente para UTC sem conversão de timezone
     const year = selectedDate.getFullYear();
     const month = String(selectedDate.getMonth() + 1).padStart(2, '0');
     const day = String(selectedDate.getDate()).padStart(2, '0');
-    const dateString = `${year}-${month}-${day}`;
-    
-    console.log("Filtering by date:", dateString, "from selected date:", selectedDate);
-    query = query.eq("data_referencia", dateString);
+    const dateStr = `${year}-${month}-${day}`;
+    console.log("Filtering by date:", dateStr);
+    query = query.eq('data_referencia', dateStr);
   }
 
   const { data, error } = await query;
@@ -85,48 +82,29 @@ export async function fetchClosedRundowns(
 
   console.log("Found rundowns:", data?.length || 0);
 
-  // Get unique telejornal IDs to fetch telejornal data
-  const telejornalIds = [...new Set(data?.map(r => r.telejornal_id).filter(Boolean))];
-  
-  // Fetch telejornal data separately
-  const telejornaisData: Record<string, { nome: string; horario: string }> = {};
-  
-  if (telejornalIds.length > 0) {
-    const { data: telejornais } = await supabase
-      .from("telejornais")
-      .select("id, nome, horario")
-      .in("id", telejornalIds);
-    
-    telejornais?.forEach(tj => {
-      telejornaisData[tj.id] = { nome: tj.nome, horario: tj.horario };
-    });
-  }
-
-  // Map the data to the ClosedRundown format
   return data.map(rundown => {
-    const createdDate = new Date(rundown.created_at || "");
-    const telejornalInfo = telejornaisData[rundown.telejornal_id];
-    const estrutura = rundown.estrutura as any;
-    const originalName = estrutura?.telejornal_original?.nome;
-    const originalHorario = estrutura?.telejornal_original?.horario;
+    const createdDate = new Date(rundown.created_at);
+    const payload = (rundown as any).estrutura || {};
+    const tj = (payload as any).telejornal || {};
     
-    // Determine if telejornal was deleted and get appropriate display name
-    const isDeleted = !telejornalInfo && originalName;
-    const displayName = telejornalInfo?.nome || originalName || "Telejornal Deletado";
-    const finalDisplayName = isDeleted ? `${displayName} (Deletado)` : displayName;
+    console.log('Processing rundown:', {
+      id: rundown.id,
+      telejornal_id: rundown.telejornal_id,
+      payload_keys: Object.keys(payload),
+      telejornal_data: tj
+    });
     
     return {
       id: rundown.id,
-      telejornal_id: rundown.telejornal_id,
-      data_referencia: rundown.data_referencia,
+      telejornal_id: rundown.telejornal_id || "",
+      data_referencia: rundown.data_referencia || "",
       nome: rundown.nome,
-      jornal: finalDisplayName,
+      jornal: tj.nome || payload.nome_telejornal || "",
       data: createdDate,
       dataFormatted: format(createdDate, "dd/MM/yyyy"),
-      hora: telejornalInfo?.horario || originalHorario || "",
+      hora: tj.horario || payload.horario || "",
       status: "Fechado",
-      user_id: rundown.user_id,
-      estrutura: rundown.estrutura as ClosedRundown['estrutura']
+      estrutura: payload as ClosedRundown['estrutura']
     };
   });
 }
@@ -143,40 +121,38 @@ export async function saveRundown(
     throw new Error("Usuário não autenticado");
   }
 
-  // Fetch telejornal data to preserve in structure
+  // Buscar informações do telejornal para incluir na estrutura
   const { data: telejornalData } = await supabase
     .from("telejornais")
-    .select("nome, horario")
+    .select("id, nome, horario")
     .eq("id", telejornalId)
-    .maybeSingle();
+    .single();
 
-  // Enhance structure with preserved telejornal info
-  const enhancedEstrutura = {
+  // Garantir que as informações do telejornal estejam incluídas na estrutura
+  const estruturaComTelejornal = {
     ...estrutura,
-    telejornal_original: {
-      id: telejornalId,
-      nome: telejornalData?.nome || "Telejornal",
-      horario: telejornalData?.horario || ""
-    }
+    telejornal: telejornalData || { id: telejornalId, nome: "Telejornal", horario: "" },
+    telejornal_id: telejornalId,
+    data_referencia: dataReferencia,
+    nome_telejornal: telejornalData?.nome || "Telejornal",
+    horario: telejornalData?.horario || ""
   };
 
   const { data, error } = await supabase
     .from("espelhos_salvos")
     .insert({
-      telejornal_id: telejornalId,
       nome,
-      data_referencia: dataReferencia,
-      estrutura: enhancedEstrutura,
-      user_id: currentUser.user.id
+      telejornal_id: telejornalId,
+      estrutura: estruturaComTelejornal,
+      data_referencia: dataReferencia
     })
     .select(`
       id,
-      telejornal_id,
-      data_referencia,
       nome,
       estrutura,
+      data_referencia,
       created_at,
-      user_id
+      telejornal_id
     `)
     .single();
 
@@ -186,18 +162,18 @@ export async function saveRundown(
   }
 
   const createdDate = new Date(data.created_at);
-  const savedEstrutura = data.estrutura as any;
+  const payload = (data as any).estrutura || {};
+  const tj = (payload as any).telejornal || {};
   return {
     id: data.id,
-    telejornal_id: data.telejornal_id,
-    data_referencia: data.data_referencia,
+    telejornal_id: data.telejornal_id || "",
+    data_referencia: data.data_referencia || "",
     nome: data.nome,
-    jornal: telejornalData?.nome || savedEstrutura?.telejornal_original?.nome || "Telejornal Deletado",
+    jornal: tj?.nome || payload.nome_telejornal || "",
     data: createdDate,
     dataFormatted: format(createdDate, "dd/MM/yyyy"),
-    hora: telejornalData?.horario || savedEstrutura?.telejornal_original?.horario || "",
+    hora: tj?.horario || payload.horario || "",
     status: "Fechado",
-    user_id: data.user_id,
-    estrutura: data.estrutura as ClosedRundown['estrutura']
+    estrutura: payload as ClosedRundown['estrutura']
   };
 }

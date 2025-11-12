@@ -8,12 +8,6 @@ export const buildPasteMateriaData = (
   insertPosition: number,
   nextPageNumber: string
 ): PasteMateriaData => {
-  console.log('Construindo dados completos para cola de matéria:', {
-    originalRetranca: copiedMateria.retranca,
-    campos: Object.keys(copiedMateria).length,
-    camposOriginais: copiedMateria
-  });
-
   return {
     bloco_id: targetBlockId,
     ordem: insertPosition,
@@ -23,7 +17,9 @@ export const buildPasteMateriaData = (
     texto: copiedMateria.texto || '',
     duracao: copiedMateria.duracao || 0,
     cabeca: copiedMateria.cabeca || '',
-    gc: copiedMateria.gc || '',
+    gc: copiedMateria.gc || '', // Using gc instead of lauda (database field)
+    // Note: 'teleprompter' and 'observacoes' fields removed - don't exist in materias table (only in materias_snapshots)
+    // Note: 'lauda' field also removed - use 'gc' instead (actual database field)
     
     // Preservar campos de mídia
     clip: copiedMateria.clip || '',
@@ -36,11 +32,7 @@ export const buildPasteMateriaData = (
     
     // Preservar campos de produção
     local_gravacao: copiedMateria.local_gravacao || '',
-    equipamento: copiedMateria.equipamento || '',
-    
-    // Preservar campos adicionais
     tags: copiedMateria.tags || [],
-    horario_exibicao: copiedMateria.horario_exibicao || null,
     
     // Página será a próxima disponível no bloco
     pagina: nextPageNumber

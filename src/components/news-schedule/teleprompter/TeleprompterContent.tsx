@@ -1,5 +1,5 @@
 
-import { forwardRef } from "react";
+import { forwardRef, useRef } from "react";
 import { Materia, Bloco } from "@/types";
 
 interface TeleprompterContentProps {
@@ -8,11 +8,41 @@ interface TeleprompterContentProps {
   cabecaColor?: string;
   retrancaColor?: string;
   tipoMaterialColor?: string;
+  isMobile?: boolean;
 }
 
 export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterContentProps>(
-  ({ blocks, fontSize, cabecaColor = "#ffffff", retrancaColor = "#facc15", tipoMaterialColor = "#f97316" }, ref) => {
+  ({ blocks, fontSize, cabecaColor = "#ffffff", retrancaColor = "#facc15", tipoMaterialColor = "#f97316", isMobile = false }, ref) => {
     console.log("TeleprompterContent received blocks:", blocks);
+    
+    const touchStartRef = useRef<number>(0);
+    const isScrollingRef = useRef(false);
+
+    // Handle touch interactions for mobile
+    const handleTouchStart = (e: React.TouchEvent) => {
+      if (!isMobile) return;
+      touchStartRef.current = Date.now();
+      isScrollingRef.current = false;
+    };
+
+    const handleTouchMove = () => {
+      if (!isMobile) return;
+      isScrollingRef.current = true;
+    };
+
+    const handleTouchEnd = (e: React.TouchEvent) => {
+      if (!isMobile || isScrollingRef.current) return;
+      
+      const touchDuration = Date.now() - touchStartRef.current;
+      
+      // If it's a quick tap (not a scroll), trigger play/pause
+      if (touchDuration < 300) {
+        // Send message to parent window to toggle play/pause
+        window.parent?.postMessage({ 
+          type: 'TELEPROMPTER_TOGGLE_PLAY',
+        }, '*');
+      }
+    };
 
     // Sort blocks by ordem and then get all materias in the correct order
     const sortedBlocks = [...blocks].sort((a, b) => a.ordem - b.ordem);
@@ -42,15 +72,18 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
         ref={ref}
         className="teleprompter-content flex-1 overflow-y-auto bg-black text-white"
         style={{ 
-          lineHeight: '1.8',
+          lineHeight: isMobile ? '1.6' : '1.8',
           height: '100%',
-          padding: '20px',
+          padding: isMobile ? '10px' : '20px',
           margin: 0,
           boxSizing: 'border-box',
           width: '100%',
           maxWidth: '100vw',
           willChange: 'scroll-position'
         }}
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
       >
         {orderedMaterias.length === 0 ? (
           <div 
@@ -60,8 +93,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
               padding: 0,
               margin: 0,
               textAlign: 'center',
-              wordBreak: 'keep-all',
-              overflowWrap: 'normal',
+              wordBreak: 'break-word',
+              overflowWrap: 'break-word',
               hyphens: 'none',
               whiteSpace: 'pre-wrap',
               maxWidth: '100%'
@@ -99,8 +132,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                       padding: 0,
                       margin: '0 0 16px 0',
                       textAlign: 'center',
-                      wordBreak: 'keep-all',
-                      overflowWrap: 'normal',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
                       hyphens: 'none',
                       whiteSpace: 'pre-wrap',
                       maxWidth: '100%',
@@ -121,8 +154,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                       padding: 0,
                       margin: '0 0 12px 0',
                       textAlign: 'center',
-                      wordBreak: 'keep-all',
-                      overflowWrap: 'normal',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
                       hyphens: 'none',
                       whiteSpace: 'pre-wrap',
                       maxWidth: '100%',
@@ -145,8 +178,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                     padding: 0,
                     margin: '0 0 8px 0',
                     textAlign: 'center',
-                    wordBreak: 'keep-all',
-                    overflowWrap: 'normal',
+                    wordBreak: 'break-word',
+                    overflowWrap: 'break-word',
                     hyphens: 'none',
                     whiteSpace: 'pre-wrap',
                     maxWidth: '100%',
@@ -167,8 +200,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
                       padding: 0,
                       margin: '0 0 8px 0',
                       textAlign: 'center',
-                      wordBreak: 'keep-all',
-                      overflowWrap: 'normal',
+                      wordBreak: 'break-word',
+                      overflowWrap: 'break-word',
                       hyphens: 'none',
                       whiteSpace: 'pre-wrap',
                       maxWidth: '100%',

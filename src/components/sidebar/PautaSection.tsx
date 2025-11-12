@@ -6,6 +6,7 @@ import { Pauta } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { EditPautaDialog } from "@/components/EditPautaDialog";
 import { deletePauta } from "@/services/pautas-api";
+import { deletePautaTelejornal } from "@/services/pautas-telejornal-api";
 import { useToast } from "@/hooks/use-toast";
 import { generatePautaPDF } from "@/utils/pdf-utils";
 
@@ -53,7 +54,12 @@ export const PautaSection = ({
   const confirmDeletePauta = async () => {
     if (!deletingPauta) return;
     try {
-      await deletePauta(deletingPauta.id);
+      // Se a pauta tem telejornal_id, deleta da tabela pautas_telejornal, senão deleta da pautas
+      if (deletingPauta.telejornal_id) {
+        await deletePautaTelejornal(deletingPauta.id);
+      } else {
+        await deletePauta(deletingPauta.id);
+      }
       onDataChange();
     } catch (error) {
       console.error("Erro ao excluir pauta:", error);

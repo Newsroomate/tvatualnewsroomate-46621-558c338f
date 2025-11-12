@@ -71,7 +71,9 @@ export const useMateriaLock = ({ materiaId, isOpen, onClose }: UseMateriaLockPro
         .from('materias_locks')
         .insert({
           materia_id: materiaIdToLock,
-          user_id: user.user.id
+          user_id: user.user.id,
+          // Define lock por 30 minutos
+          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString()
         });
 
       if (error) {

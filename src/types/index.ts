@@ -23,25 +23,27 @@ export interface BlocoCreateInput {
 export interface Materia {
   id: string;
   created_at?: string;
+  updated_at?: string;
   // Update Materia interface to match the actual database schema
   bloco_id: string;
+  pauta_id?: string;
   ordem: number;
   // Add fields used in the application
   retranca: string;  // This is required
   clip?: string;
-  tempo_clip?: string;  // New field for clip duration
   duracao: number;
-  texto?: string;
-  cabeca?: string;
-  gc?: string;  // New GC field
   status?: string;
   pagina?: string;
   reporter?: string;
+  // Note: 'observacoes', 'lauda', and 'teleprompter' fields removed - don't exist in materias table (only in materias_snapshots)
+  gc?: string;  // Database field for GC (graphics/text overlay)
+  // Frontend form fields that map directly to database columns
+  texto?: string;  // Maps to 'texto' column in database
+  cabeca?: string; // Maps to 'cabeca' column in database
+  tempo_clip?: string;  // New field for clip duration
   local_gravacao?: string;
   tags?: string[];
-  equipamento?: string;
   horario_exibicao?: string;
-  updated_at?: string;
   tipo_material?: string;  // New field for material type dropdown
   is_from_snapshot?: boolean;  // Add this field to support snapshot origin tracking
   // Keep the old fields for backwards compatibility
@@ -54,22 +56,22 @@ export interface Materia {
 
 export interface MateriaCreateInput {
   bloco_id: string;
+  pauta_id?: string;
   ordem: number;
   retranca: string;  // This is required
   clip?: string;
-  tempo_clip?: string;  // New field for clip duration
   duracao: number;
   pagina?: string;
   reporter?: string;
   status?: string;
-  texto?: string;
-  cabeca?: string;
-  gc?: string;  // New GC field
-  tipo_material?: string;  // New field for material type dropdown
+  // Note: 'observacoes', 'lauda', and 'teleprompter' fields removed - don't exist in materias table (only in materias_snapshots)
+  gc?: string;  // Database field for GC (graphics/text overlay)
+  texto?: string;  // Database field
+  cabeca?: string;  // Database field
+  tempo_clip?: string;
   local_gravacao?: string;
-  equipamento?: string;
-  tags?: string[];
-  horario_exibicao?: string | null;
+  tipo_material?: string;
+  tags?: any;
 }
 
 export interface Pauta {
@@ -89,6 +91,7 @@ export interface Pauta {
   user_id?: string;
   data_cobertura?: string;
   status?: string;
+  telejornal_id?: string;
 }
 
 export interface PautaCreateInput {
@@ -106,6 +109,7 @@ export interface PautaCreateInput {
   programa?: string;
   reporter?: string;
   user_id?: string;
+  telejornal_id?: string;
 }
 
 export interface CloseRundownDialogProps {
@@ -137,7 +141,6 @@ export interface MateriaSnapshot {
   tipo_material?: string;
   local_gravacao?: string;
   tags?: string[];
-  equipamento?: string;
   horario_exibicao?: string;
   is_snapshot: boolean;
   created_at?: string;

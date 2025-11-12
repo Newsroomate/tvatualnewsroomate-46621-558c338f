@@ -35,7 +35,7 @@ export const useRealtimeMaterias = ({
     }
     
     console.log('Setting up enhanced realtime subscription for materias table');
-    
+
     const handleMateriaUpdate = (updatedMateria: Materia, isInsert = false) => {
       console.log('Processing realtime materia update:', updatedMateria, { isInsert });
       
@@ -94,7 +94,7 @@ export const useRealtimeMaterias = ({
         });
       });
     };
-    
+
     // Subscribe to all materias changes related to the current telejornal's blocks
     const channel = supabase
       .channel(`enhanced-materias-changes-${selectedJournal}`)

@@ -9,13 +9,15 @@ interface TeleprompterViewControlsProps {
   onIncreaseFontSize: () => void;
   onDecreaseFontSize: () => void;
   onFontSizeChange: (size: number) => void;
+  isMobile?: boolean;
 }
 
 export const TeleprompterViewControls = ({
   fontSize,
   onIncreaseFontSize,
   onDecreaseFontSize,
-  onFontSizeChange
+  onFontSizeChange,
+  isMobile = false
 }: TeleprompterViewControlsProps) => {
   const [isEditing, setIsEditing] = useState(false);
   const [inputValue, setInputValue] = useState(fontSize.toString());
@@ -51,14 +53,17 @@ export const TeleprompterViewControls = ({
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-sm text-gray-600">Fonte:</span>
+      <span className={`text-gray-600 ${isMobile ? 'text-xs' : 'text-sm'}`}>
+        Fonte:
+      </span>
       <Button
         variant="outline"
-        size="sm"
+        size={isMobile ? "default" : "sm"}
         onClick={onDecreaseFontSize}
         disabled={fontSize <= 12}
+        className={isMobile ? "h-10 w-10 p-0" : ""}
       >
-        <Minus className="h-4 w-4" />
+        <Minus className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
       </Button>
       
       {isEditing ? (
@@ -68,7 +73,9 @@ export const TeleprompterViewControls = ({
           onChange={handleInputChange}
           onBlur={handleInputBlur}
           onKeyDown={handleInputKeyDown}
-          className="w-16 h-8 text-center text-sm"
+          className={`text-center ${
+            isMobile ? 'w-12 h-10 text-xs' : 'w-16 h-8 text-sm'
+          }`}
           min="12"
           max="200"
           autoFocus
@@ -76,7 +83,9 @@ export const TeleprompterViewControls = ({
       ) : (
         <button
           onClick={handleClick}
-          className="text-sm text-gray-600 min-w-[50px] text-center hover:bg-gray-100 px-2 py-1 rounded border border-transparent hover:border-gray-300 transition-colors"
+          className={`text-gray-600 text-center hover:bg-gray-100 px-2 py-1 rounded border border-transparent hover:border-gray-300 transition-colors ${
+            isMobile ? 'text-xs min-w-[40px]' : 'text-sm min-w-[50px]'
+          }`}
         >
           {fontSize}px
         </button>
@@ -84,11 +93,12 @@ export const TeleprompterViewControls = ({
       
       <Button
         variant="outline"
-        size="sm"
+        size={isMobile ? "default" : "sm"}
         onClick={onIncreaseFontSize}
         disabled={fontSize >= 200}
+        className={isMobile ? "h-10 w-10 p-0" : ""}
       >
-        <Plus className="h-4 w-4" />
+        <Plus className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
       </Button>
     </div>
   );

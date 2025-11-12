@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
-import { LeftSidebar } from "./LeftSidebar";
+import { LeftSidebar } from "./sidebar/LeftSidebar";
 import { NewsSchedule } from "./news-schedule/NewsSchedule";
 import { DualViewLayout } from "./DualViewLayout";
 import { EditPanel } from "./EditPanel";
+import { AppHeader } from "./AppHeader";
 import { Materia, Telejornal } from "@/types/index";
 import { updateTelejornal, fetchTelejornal } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
@@ -17,8 +18,8 @@ import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "
 import { useRealtimeTelejornais } from "@/hooks/useRealtimeTelejornais";
 import { useRealtimeInvalidation } from "@/hooks/useRealtimeInvalidation";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
-import { Menu, X } from "lucide-react";
+import { MobileDrawer } from "./MobileDrawer";
+import { MobileEditPanel } from "./MobileEditPanel";
 
 // Cria um cliente de query para o React Query
 const queryClient = new QueryClient({
@@ -42,14 +43,14 @@ const Layout = () => {
   const [isSavedRundownsModalOpen, setIsSavedRundownsModalOpen] = useState(false);
   const [selectedViewDate, setSelectedViewDate] = useState<Date>(new Date());
   
+  // Mobile state
+  const isMobile = useIsMobile();
+  const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
+  
   // Dual view state
   const [isDualViewActive, setIsDualViewActive] = useState(false);
   const [secondaryJournal, setSecondaryJournal] = useState<string | null>(null);
   const [secondaryTelejornal, setSecondaryTelejornal] = useState<Telejornal | null>(null);
-
-  // Mobile sidebar state
-  const isMobile = useIsMobile();
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Setup realtime subscription for telejornais
   useRealtimeTelejornais({
@@ -77,10 +78,6 @@ const Layout = () => {
     setSelectedJournal(journalId);
     // Fechar o painel de edição ao trocar de jornal
     setIsEditPanelOpen(false);
-    // Fechar sidebar no mobile
-    if (isMobile) {
-      setIsSidebarOpen(false);
-    }
     
     // Fetch telejornal details - mantendo o estado do espelho
     if (journalId) {
@@ -168,18 +165,8 @@ const Layout = () => {
               tipo_material: materia.tipo_material,
               local_gravacao: materia.local_gravacao,
               tags: materia.tags,
-              equipamento: materia.equipamento,
               horario_exibicao: materia.horario_exibicao,
-              ordem: materia.ordem,
-              // Preservar campos adicionais que podem estar presentes
-              titulo: materia.titulo || materia.retranca,
-              descricao: materia.descricao,
-              tempo_estimado: materia.tempo_estimado,
-              apresentador: materia.apresentador,
-              link_vt: materia.link_vt,
-              is_from_snapshot: materia.is_from_snapshot,
-              created_at: materia.created_at,
-              updated_at: materia.updated_at
+              ordem: materia.ordem
             }))
           };
         })
@@ -228,16 +215,6 @@ const Layout = () => {
       return;
     }
     
-    // Bloquear fechamento de espelho em mobile/tablet
-    if (isMobile && currentTelejornal.espelho_aberto) {
-      toast({
-        title: "Ação não disponível",
-        description: "Fechar espelho só é possível no desktop.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
     // Se o espelho está aberto e o usuário deseja fechá-lo, mostrar diálogo de confirmação
     if (currentTelejornal.espelho_aberto) {
       setIsCloseRundownDialogOpen(true);
@@ -254,38 +231,38 @@ const Layout = () => {
   const handleConfirmCloseRundown = async () => {
     if (!selectedJournal || !currentTelejornal) return;
     
+    // Optimistic update - immediately show closed status
+    const optimisticTelejornal = {
+      ...currentTelejornal,
+      espelho_aberto: false
+    };
+    setCurrentTelejornal(optimisticTelejornal);
+    setIsCloseRundownDialogOpen(false);
+    // Broadcast local event so sidebar updates instantly
+    window.dispatchEvent(new CustomEvent('telejornal:status-changed', { detail: { id: selectedJournal, espelho_aberto: false } }));
+    
     try {
-      // Save snapshot before closing
-      await saveCurrentRundownSnapshot();
+      // Save snapshot and update telejornal in parallel for speed
+      const [, result] = await Promise.all([
+        saveCurrentRundownSnapshot(),
+        updateTelejornal(selectedJournal, {
+          ...currentTelejornal,
+          espelho_aberto: false
+        })
+      ]);
       
-      // Fechar o espelho do telejornal
-      console.log('Fechando espelho do telejornal:', selectedJournal, currentTelejornal);
-      await updateTelejornal(selectedJournal, {
-        ...currentTelejornal,
-        espelho_aberto: false
-      });
-      
-      // Atualizar o estado local
-      const updatedTelejornal = {
-        ...currentTelejornal,
-        espelho_aberto: false
-      };
-      console.log('Atualizando estado local para espelho fechado:', updatedTelejornal);
-      setCurrentTelejornal(updatedTelejornal);
-      
-      toast({
-        title: "Espelho fechado",
-        description: `Espelho de ${currentTelejornal.nome} fechado e salvo`,
-        variant: "default"
-      });
-      
-      // Fechar o diálogo
-      setIsCloseRundownDialogOpen(false);
-      
-      // Refresh data
-      queryClient.invalidateQueries({ queryKey: ['telejornais'] });
+      if (result) {
+        console.log('Telejornal fechado com sucesso:', result);
+        toast({
+          title: "Espelho fechado",
+          description: `Espelho de ${result.nome} fechado e salvo`,
+          variant: "default"
+        });
+      }
     } catch (error) {
       console.error("Erro ao fechar espelho:", error);
+      // Revert optimistic update on error
+      setCurrentTelejornal(currentTelejornal);
       toast({
         title: "Erro",
         description: "Não foi possível fechar o espelho",
@@ -297,26 +274,31 @@ const Layout = () => {
   const handleCreateNewRundown = async () => {
     if (!selectedJournal || !currentTelejornal) return;
 
+    // Optimistic update - immediately show opened status
+    const optimisticTelejornal = {
+      ...currentTelejornal,
+      espelho_aberto: true
+    };
+    setCurrentTelejornal(optimisticTelejornal);
+    setIsPostCloseModalOpen(false);
+    // Broadcast local event so sidebar updates instantly
+    window.dispatchEvent(new CustomEvent('telejornal:status-changed', { detail: { id: selectedJournal, espelho_aberto: true } }));
+
     try {
       console.log("Criando novo espelho...");
       
-      // Delete all current blocks and materias
-      await deleteAllBlocos(selectedJournal);
+      // Delete blocks and open telejornal in parallel for speed
+      const [, result] = await Promise.all([
+        deleteAllBlocos(selectedJournal),
+        updateTelejornal(selectedJournal, {
+          ...currentTelejornal,
+          espelho_aberto: true
+        })
+      ]);
       
-      // Open the rundown
-      console.log('Abrindo espelho do telejornal:', selectedJournal, currentTelejornal);
-      await updateTelejornal(selectedJournal, {
-        ...currentTelejornal,
-        espelho_aberto: true
-      });
-      
-      // Update local state
-      const updatedTelejornal = {
-        ...currentTelejornal,
-        espelho_aberto: true
-      };
-      console.log('Atualizando estado local para espelho aberto:', updatedTelejornal);
-      setCurrentTelejornal(updatedTelejornal);
+      if (result) {
+        console.log('Telejornal aberto com sucesso:', result);
+      }
       
       // O primeiro bloco será criado automaticamente pelo componente NewsSchedule
       // quando detectar espelho aberto sem blocos (bloco vazio sem dados anteriores)
@@ -333,6 +315,8 @@ const Layout = () => {
       
     } catch (error) {
       console.error("Erro ao criar novo espelho:", error);
+      // Revert optimistic update on error
+      setCurrentTelejornal(currentTelejornal);
       toast({
         title: "Erro",
         description: "Não foi possível criar um novo espelho",
@@ -346,46 +330,56 @@ const Layout = () => {
     setIsSavedRundownsModalOpen(true);
   };
 
+  const handleMobileMenuToggle = () => {
+    setIsMobileDrawerOpen(!isMobileDrawerOpen);
+  };
+
+  const handleMobileDrawerClose = () => {
+    setIsMobileDrawerOpen(false);
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex h-screen overflow-hidden">
-        {/* Mobile Header with Hamburger */}
-        {isMobile && (
-          <div className="fixed top-0 left-0 right-0 z-50 bg-background border-b px-4 py-3 flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="mr-2"
-            >
-              {isSidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
-            <h1 className="text-lg font-semibold">
-              {currentTelejornal?.nome || 'Newsroom'}
-            </h1>
-          </div>
-        )}
-
-        {/* Mobile Backdrop */}
-        {isMobile && isSidebarOpen && (
-          <div 
-            className="fixed inset-0 bg-black/50 z-40"
-            onClick={() => setIsSidebarOpen(false)}
+      <div className="flex flex-col h-screen overflow-hidden">
+        {/* App Header */}
+        <AppHeader 
+          showMenuButton={isMobile}
+          onMenuToggle={handleMobileMenuToggle}
+        />
+        
+        <div className="flex flex-1 overflow-hidden">
+        {/* Desktop Left Sidebar */}
+        {!isMobile && (
+          <LeftSidebar 
+            selectedJournal={selectedJournal}
+            onSelectJournal={handleSelectJournal}
+            onToggleDualView={handleToggleDualView}
           />
         )}
 
-        {/* Left Sidebar */}
-        <LeftSidebar 
-          selectedJournal={selectedJournal}
-          onSelectJournal={handleSelectJournal}
-          onToggleDualView={handleToggleDualView}
-          isMobile={isMobile}
-          isSidebarOpen={isSidebarOpen}
-          onCloseSidebar={() => setIsSidebarOpen(false)}
-        />
+        {/* Mobile Drawer */}
+        {isMobile && (
+          <MobileDrawer
+            isOpen={isMobileDrawerOpen}
+            onClose={handleMobileDrawerClose}
+            title="Newsroomate"
+          >
+            <LeftSidebar 
+              selectedJournal={selectedJournal}
+              onSelectJournal={(journalId) => {
+                handleSelectJournal(journalId);
+                setIsMobileDrawerOpen(false);
+              }}
+              onToggleDualView={handleToggleDualView}
+              isMobile={true}
+            />
+          </MobileDrawer>
+        )}
 
         {/* Main Content Area */}
-        <div className={`flex-1 flex flex-col overflow-hidden ${isEditPanelOpen && !isMobile ? 'mr-[400px]' : ''} ${isMobile ? 'pt-16' : ''}`}>
+        <div className={`flex-1 flex flex-col overflow-hidden ${
+          !isMobile && isEditPanelOpen ? 'mr-[400px]' : ''
+        }`}>
           {/* Rundown Status Bar */}
           {selectedJournal && (
             <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
@@ -425,13 +419,16 @@ const Layout = () => {
               {canCreateEspelhos(profile) && !isDualViewActive && !isMobile && (
                 <button 
                   onClick={handleToggleRundown}
-                  className={`px-4 py-1 rounded-md text-xs font-medium ${
+                  className={`px-3 py-1 rounded-md text-xs font-medium ${
                     currentTelejornal?.espelho_aberto 
                       ? "bg-red-100 text-red-700 hover:bg-red-200"
                       : "bg-green-100 text-green-700 hover:bg-green-200"
                   }`}
                 >
-                  {currentTelejornal?.espelho_aberto ? "Fechar Espelho" : "Abrir Espelho Agora"}
+                  {currentTelejornal?.espelho_aberto 
+                    ? "Fechar Espelho" 
+                    : "Abrir Espelho Agora"
+                  }
                 </button>
               )}
             </div>
@@ -465,12 +462,24 @@ const Layout = () => {
           )}
         </div>
 
-        {/* Right Edit Panel (Slide in/out) */}
-        <EditPanel 
-          isOpen={isEditPanelOpen}
-          onClose={handleCloseEditPanel}
-          item={selectedItem}
-        />
+        {/* Desktop Edit Panel (Slide in/out) */}
+        {!isMobile && (
+          <EditPanel 
+            isOpen={isEditPanelOpen}
+            onClose={handleCloseEditPanel}
+            item={selectedItem}
+          />
+        )}
+
+        {/* Mobile Edit Panel */}
+        {isMobile && (
+          <MobileEditPanel
+            isOpen={isEditPanelOpen}
+            onClose={handleCloseEditPanel}
+            item={selectedItem}
+            title="Editar Matéria"
+          />
+        )}
         
         {/* Diálogo de confirmação para fechar o espelho */}
         <CloseRundownDialog 
@@ -496,6 +505,7 @@ const Layout = () => {
           telejornalId={selectedJournal || ""}
           targetDate={selectedViewDate}
         />
+        </div>
       </div>
     </QueryClientProvider>
   );

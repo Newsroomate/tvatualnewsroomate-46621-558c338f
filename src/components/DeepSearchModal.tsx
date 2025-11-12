@@ -5,7 +5,7 @@ import { Search } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { fetchTelejornais } from "@/services/api";
 import { performDeepSearch, DeepSearchFilters, DeepSearchResult } from "@/services/deep-search-api";
-import { useUnifiedClipboard } from "@/hooks/useUnifiedClipboard";
+import { useClipboard } from "@/hooks/useClipboard";
 import { Telejornal } from "@/types";
 import { DeepSearchFilters as FiltersComponent } from "./deep-search/DeepSearchFilters";
 import { DeepSearchResults } from "./deep-search/DeepSearchResults";
@@ -27,7 +27,7 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
   const [searchResults, setSearchResults] = useState<DeepSearchResult[]>([]);
   const [hasSearched, setHasSearched] = useState(false);
   const { toast } = useToast();
-  const { copyMateria } = useUnifiedClipboard();
+  const { copyMateria } = useClipboard();
 
   useEffect(() => {
     if (isOpen) {
@@ -119,12 +119,7 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
     });
 
     const standardMateria = convertSearchResultToMateria(result);
-    copyMateria(
-      standardMateria,
-      'general_schedule', // Contexto da busca profunda como Espelho Geral
-      result.telejornal_nome || 'Busca Profunda',
-      'Busca Profunda'
-    );
+    copyMateria(standardMateria);
 
     toast({
       title: "Matéria copiada da busca",

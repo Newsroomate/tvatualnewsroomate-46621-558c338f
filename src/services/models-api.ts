@@ -22,8 +22,15 @@ export interface SavedModel {
         reporter?: string;
         status?: string;
         texto?: string;
+        // observacoes field removed - doesn't exist in materias table (only in materias_snapshots)
         cabeca?: string;
+        lauda?: string;
         gc?: string;
+        teleprompter?: string;
+        tipo_material?: string;
+        tempo_clip?: string;
+        local_gravacao?: string;
+        tags?: any;
         ordem: number;
       }>;
     }>;
@@ -49,8 +56,15 @@ export interface SavedModelCreateInput {
         reporter?: string;
         status?: string;
         texto?: string;
+        // observacoes field removed - doesn't exist in materias table (only in materias_snapshots)
         cabeca?: string;
+        lauda?: string;
         gc?: string;
+        teleprompter?: string;
+        tipo_material?: string;
+        tempo_clip?: string;
+        local_gravacao?: string;
+        tags?: any;
         ordem: number;
       }>;
     }>;
@@ -84,6 +98,11 @@ export const saveCurrentStructureAsModel = async (
           texto: materia.texto,
           cabeca: materia.cabeca,
           gc: materia.gc,
+          // Note: 'observacoes', 'lauda', and 'teleprompter' fields removed - don't exist in materias table
+          tipo_material: materia.tipo_material,
+          tempo_clip: materia.tempo_clip,
+          local_gravacao: materia.local_gravacao,
+          tags: materia.tags,
           ordem: materia.ordem
         }))
       };
@@ -97,12 +116,17 @@ export const saveCurrentStructureAsModel = async (
     }
   };
 
+  const { data: currentUser } = await supabase.auth.getUser();
+  if (!currentUser.user) {
+    throw new Error('Usuário não autenticado');
+  }
+
   const { data, error } = await supabase
     .from('modelos_salvos')
     .insert({
       nome: estruturaCompleta.nome,
       descricao: estruturaCompleta.descricao,
-      estrutura: estruturaCompleta.estrutura
+      estrutura: estruturaCompleta.estrutura as any
     })
     .select()
     .single();
@@ -112,7 +136,14 @@ export const saveCurrentStructureAsModel = async (
     throw error;
   }
 
-  return data as SavedModel;
+  return {
+    id: data.id,
+    nome: data.nome,
+    descricao: data.descricao,
+    estrutura: data.estrutura,
+    created_at: data.created_at,
+    updated_at: data.updated_at
+  } as SavedModel;
 };
 
 export const fetchAllSavedModels = async (): Promise<SavedModel[]> => {
@@ -128,7 +159,16 @@ export const fetchAllSavedModels = async (): Promise<SavedModel[]> => {
     throw error;
   }
 
-  return data as SavedModel[] || [];
+  return (data || []).map((item: any) => {
+    return {
+      id: item.id,
+      nome: item.nome,
+      descricao: item.descricao,
+      estrutura: item.estrutura,
+      created_at: item.created_at,
+      updated_at: item.updated_at
+    } as SavedModel;
+  });
 };
 
 export const deleteSavedModel = async (modelId: string, profile: any = null): Promise<void> => {
@@ -179,6 +219,11 @@ export const applyModelToTelejornal = async (
           texto: item.texto,
           cabeca: item.cabeca,
           gc: item.gc,
+          // Note: 'observacoes', 'lauda', and 'teleprompter' fields removed - don't exist in materias table
+          tipo_material: item.tipo_material,
+          tempo_clip: item.tempo_clip,
+          local_gravacao: item.local_gravacao,
+          tags: item.tags,
           ordem: item.ordem,
           bloco_id: newBloco.id
         });

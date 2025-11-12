@@ -104,17 +104,6 @@ export function validateBlocksData(blocks: any): blocks is (Bloco & { items: Mat
 }
 
 /**
- * Checks if a materia has sufficient content for teleprompter
- */
-export function hasSufficientContent(materia: Materia): boolean {
-  const hasText = materia.texto && materia.texto.trim().length > 0;
-  const hasCabeca = materia.cabeca && materia.cabeca.trim().length > 0;
-  const hasGC = materia.gc && materia.gc.trim().length > 0;
-  
-  return hasText || hasCabeca || hasGC;
-}
-
-/**
  * Logs teleprompter operations for debugging
  */
 export function logTeleprompterOperation(operation: string, data?: any): void {

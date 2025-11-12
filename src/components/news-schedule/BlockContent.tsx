@@ -1,4 +1,3 @@
-
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Materia } from "@/types";
 import { NewsItem } from "./NewsItem";
@@ -40,7 +39,7 @@ export const BlockContent = ({
   onItemClick
 }: BlockContentProps) => {
   const isMobile = useIsMobile();
-  
+
   return (
     <div className="overflow-x-auto">
       <Droppable droppableId={blockId}>
@@ -49,21 +48,22 @@ export const BlockContent = ({
             ref={provided.innerRef}
             {...provided.droppableProps}
           >
-            <table className="w-full">
-              <thead className="bg-gray-50 text-xs uppercase">
+            {/* Unified table layout for both mobile and desktop */}
+            <table className="w-full min-w-[800px]">
+              <thead className={`bg-gray-50 text-xs uppercase ${isMobile ? 'text-[10px]' : ''}`}>
                 <tr>
                   {/* Checkbox column header */}
                   {isBatchMode && (
-                    <th className="py-3 px-4 text-left w-12">Sel.</th>
+                    <th className={`py-2 px-2 text-left ${isMobile ? 'w-8' : 'w-12'}`}>Sel.</th>
                   )}
-                  <th className="py-3 px-4 text-left">Página</th>
-                  <th className="py-3 px-4 text-left">Notas</th>
-                  <th className="py-3 px-4 text-left">Retranca</th>
-                  <th className="py-3 px-4 text-left">Clipe</th>
-                  <th className="py-3 px-4 text-left">Duração</th>
-                  <th className="py-3 px-4 text-left">Status</th>
-                  <th className="py-3 px-4 text-left">Repórter</th>
-                  <th className="py-3 px-4 text-left">Ações</th>
+                  <th className={`py-2 px-2 text-left ${isMobile ? 'w-12' : 'w-16'}`}>Página</th>
+                  <th className={`py-2 px-2 text-left ${isMobile ? 'w-16' : 'w-20'}`}>Notas</th>
+                  <th className={`py-2 px-2 text-left ${isMobile ? 'w-32' : 'w-48'}`}>Retranca</th>
+                  <th className={`py-2 px-2 text-left ${isMobile ? 'w-16' : 'w-20'}`}>Clipe</th>
+                  <th className={`py-2 px-2 text-left ${isMobile ? 'w-16' : 'w-20'}`}>Duração</th>
+                  <th className={`py-2 px-2 text-left ${isMobile ? 'w-20' : 'w-24'}`}>Status</th>
+                  <th className={`py-2 px-2 text-left ${isMobile ? 'w-20' : 'w-24'}`}>Repórter</th>
+                  <th className={`py-2 px-2 text-left ${isMobile ? 'w-16' : 'w-20'}`}>Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
@@ -79,7 +79,7 @@ export const BlockContent = ({
                       key={item.id}
                       draggableId={item.id}
                       index={index}
-                      isDragDisabled={!isEspelhoOpen || isBatchMode || isMobile}
+                      isDragDisabled={!isEspelhoOpen || isBatchMode}
                     >
                       {(provided, snapshot) => (
                         <NewsItem

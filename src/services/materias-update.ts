@@ -1,4 +1,3 @@
-
 import { supabase } from "@/integrations/supabase/client";
 import { Materia, MateriaCreateInput } from "@/types";
 import { toastService } from "@/utils/toast-utils";
@@ -14,9 +13,12 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
   // Create a copy of the updates object to avoid modifying the original
   const updatesToSend = { ...updates };
   
-  // Remove any 'titulo' field from updates as it doesn't exist in the database
-  // @ts-ignore - Remove titulo property if it exists
-  delete updatesToSend.titulo;
+  // Remove fields that don't exist in the database
+  const nonDbFields = ['titulo', 'equipamento', 'horario_exibicao'];
+  nonDbFields.forEach(field => {
+    // @ts-ignore - Remove non-database fields
+    delete updatesToSend[field];
+  });
   
   // Ensure retranca is included since it's a required field in the database
   if (updatesToSend.retranca === undefined || updatesToSend.retranca === null || updatesToSend.retranca.trim() === '') {
@@ -42,22 +44,25 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
   if (!existingMateria) {
     console.log('updateMateria: Materia not found, creating new one from snapshot data:', { id });
     
-    // Prepare data for creation
-    const createData: MateriaCreateInput = {
-      retranca: updatesToSend.retranca,
-      bloco_id: updatesToSend.bloco_id || '',
-      ordem: updatesToSend.ordem || 1,
-      duracao: updatesToSend.duracao || 0,
-      clip: updatesToSend.clip,
-      tempo_clip: updatesToSend.tempo_clip,
-      pagina: updatesToSend.pagina,
-      reporter: updatesToSend.reporter,
-      status: updatesToSend.status || 'draft',
-      texto: updatesToSend.texto,
-      cabeca: updatesToSend.cabeca,
-      gc: updatesToSend.gc,
-      tipo_material: updatesToSend.tipo_material
-    };
+     // Prepare data for creation
+      const createData: any = {
+       retranca: updatesToSend.retranca,
+       bloco_id: updatesToSend.bloco_id || '',
+       ordem: updatesToSend.ordem || 1,
+       duracao: updatesToSend.duracao || 0,
+       clip: updatesToSend.clip,
+       pagina: updatesToSend.pagina,
+       reporter: updatesToSend.reporter,
+        status: updatesToSend.status || 'draft',
+        // Note: 'observacoes', 'lauda', and 'teleprompter' fields removed - don't exist in materias table (only in materias_snapshots)
+         gc: updatesToSend.gc,
+        local_gravacao: updatesToSend.local_gravacao,
+       tempo_clip: updatesToSend.tempo_clip,
+       tipo_material: updatesToSend.tipo_material,
+       tags: updatesToSend.tags,
+       cabeca: updatesToSend.cabeca,  // Save cabeca directly
+       texto: updatesToSend.texto     // Save texto directly
+     };
 
     // Create the materia with the specific ID
     const { data: createdMateria, error: createError } = await supabase

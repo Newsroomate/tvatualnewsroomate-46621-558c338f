@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MonitorSpeaker, ArrowLeft, BarChart, Search } from "lucide-react";
 import { Telejornal } from "@/types";
 import { DeepSearchModal } from "@/components/DeepSearchModal";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useToast } from "@/hooks/use-toast";
 
 interface MainMenuProps {
   isOpen: boolean;
@@ -31,6 +33,8 @@ export const MainMenu = ({
   const [currentSection, setCurrentSection] = useState<MenuSection>('main');
   const [selectedSecondJournal, setSelectedSecondJournal] = useState<string>("");
   const [isDeepSearchOpen, setIsDeepSearchOpen] = useState(false);
+  const isMobile = useIsMobile();
+  const { toast } = useToast();
 
   const handleClose = () => {
     setCurrentSection('main');
@@ -39,6 +43,18 @@ export const MainMenu = ({
 
   const handleBackToMain = () => {
     setCurrentSection('main');
+  };
+
+  const handleDualViewClick = () => {
+    if (isMobile) {
+      toast({
+        title: "Função não disponível",
+        description: "A visualização dual não está disponível em dispositivos móveis.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setCurrentSection('dual-view');
   };
 
   const handleActivateDualView = () => {
@@ -103,7 +119,7 @@ export const MainMenu = ({
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => setCurrentSection('dual-view')}
+                  onClick={handleDualViewClick}
                 >
                   <MonitorSpeaker className="h-4 w-4 mr-3" />
                   Visualização Dual

@@ -1,10 +1,10 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save, FolderOpen, Menu } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save, FolderOpen, Menu, BookOpen } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal, Materia, Bloco } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { generateGCTextFile } from "@/utils/gc-txt-utils";
 import { exportPlayoutPDF } from "@/utils/playout-export-utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -19,6 +19,7 @@ interface ScheduleHeaderProps {
   onExportClipRetranca?: () => void;
   onSaveModel?: () => void;
   onViewSavedModels?: () => void;
+  onViewLaudas?: () => void;
   materias?: Materia[];
   blocks?: (Bloco & { items: Materia[] })[];
 }
@@ -33,6 +34,7 @@ export const ScheduleHeader = ({
   onExportClipRetranca,
   onSaveModel,
   onViewSavedModels,
+  onViewLaudas,
   materias = [],
   blocks = []
 }: ScheduleHeaderProps) => {
@@ -60,93 +62,105 @@ export const ScheduleHeader = ({
           </p>
         </div>
         
-        {/* Tempo Total - Apenas Desktop */}
-        {!isMobile && (
-          <div className="text-left sm:text-right flex-shrink-0">
-            <p className="text-sm font-medium text-muted-foreground">Tempo Total:</p>
-            <p className="text-3xl font-bold text-foreground">{formatTime(totalJournalTime)}</p>
-          </div>
-        )}
+        {/* Desktop: Tempo Total | Mobile: Menu Espelho */}
+        <div className="flex-shrink-0">
+          {!isMobile ? (
+            /* Tempo Total - Desktop */
+            <div className="text-left sm:text-right">
+              <p className="text-sm font-medium text-muted-foreground">Tempo Total:</p>
+              <p className="text-3xl font-bold text-foreground">{formatTime(totalJournalTime)}</p>
+            </div>
+          ) : (
+            /* Menu Espelho - Mobile */
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Menu className="h-4 w-4 mr-2" />
+                  Menu Espelho
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 bg-white z-50">
+                <DropdownMenuLabel>Ações do Espelho</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem 
+                  onClick={onAddBlock}
+                  disabled={!currentTelejornal?.espelho_aberto}
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Adicionar Novo Bloco
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  onClick={onRenumberItems}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <ArrowDownUp className="h-4 w-4 mr-2" />
+                  Reordenar Numeração
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem 
+                  onClick={onSaveModel}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Salvar Modelo
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  onClick={onViewSavedModels}
+                  disabled={!currentTelejornal?.espelho_aberto}
+                >
+                  <FolderOpen className="h-4 w-4 mr-2" />
+                  Modelos Salvos
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem 
+                  onClick={handleExportGC}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Exportar GC
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  onClick={handleExportPlayout}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Exportar PLAYOUT
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem 
+                  onClick={onViewTeleprompter}
+                  disabled={!currentTelejornal?.espelho_aberto}
+                >
+                  <Eye className="h-4 w-4 mr-2" />
+                  Visualizar Teleprompter
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  onClick={onViewLaudas}
+                  disabled={!currentTelejornal?.espelho_aberto}
+                >
+                  <BookOpen className="h-4 w-4 mr-2" />
+                  Visualizar Laudas
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
       </div>
       
-      {/* Actions Section - Conditional Layout */}
-      <div className="px-4 pb-4">
-        {isMobile ? (
-          /* Mobile: Menu Espelho Dropdown */
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Menu className="h-4 w-4 mr-2" />
-                Menu Espelho
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-56">
-              <DropdownMenuLabel>Gerenciar Espelho</DropdownMenuLabel>
-              <DropdownMenuItem 
-                onClick={onAddBlock}
-                disabled={!currentTelejornal?.espelho_aberto}
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Adicionar Novo Bloco
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={onRenumberItems}
-                disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
-              >
-                <ArrowDownUp className="h-4 w-4 mr-2" />
-                Reordenar Numeração
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuLabel>Modelos</DropdownMenuLabel>
-              <DropdownMenuItem 
-                onClick={onSaveModel}
-                disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Salvar Modelo
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={onViewSavedModels}
-                disabled={!currentTelejornal?.espelho_aberto}
-              >
-                <FolderOpen className="h-4 w-4 mr-2" />
-                Modelos Salvos
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuLabel>Exportações</DropdownMenuLabel>
-              <DropdownMenuItem 
-                onClick={handleExportGC}
-                disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Exportar GC
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={handleExportPlayout}
-                disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Exportar PLAYOUT
-              </DropdownMenuItem>
-              
-              <DropdownMenuSeparator />
-              
-              <DropdownMenuLabel>Visualização</DropdownMenuLabel>
-              <DropdownMenuItem 
-                onClick={onViewTeleprompter}
-                disabled={!currentTelejornal?.espelho_aberto}
-              >
-                <Eye className="h-4 w-4 mr-2" />
-                Visualizar Teleprompter
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        ) : (
-          /* Desktop: Original Button Layout */
+      {/* Seção de Botões - Apenas Desktop */}
+      {!isMobile && (
+        <div className="px-4 pb-4">
           <div className="flex flex-wrap gap-2">
             {/* Ações Principais */}
             <div className="flex flex-wrap gap-2">
@@ -248,10 +262,21 @@ export const ScheduleHeader = ({
                 <Eye className="h-4 w-4 mr-2" />
                 Visualizar Teleprompter
               </Button>
+              
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onViewLaudas}
+                disabled={!currentTelejornal?.espelho_aberto}
+                className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
+              >
+                <BookOpen className="h-4 w-4 mr-2" />
+                Visualizar Laudas
+              </Button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };

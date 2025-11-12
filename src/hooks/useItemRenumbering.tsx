@@ -68,7 +68,6 @@ export const useItemRenumbering = ({
           if (item.reporter !== undefined) updateData.reporter = item.reporter;
           if (item.local_gravacao !== undefined) updateData.local_gravacao = item.local_gravacao;
           if (item.tags !== undefined) updateData.tags = item.tags;
-          if (item.equipamento !== undefined) updateData.equipamento = item.equipamento;
           if (item.horario_exibicao !== undefined) updateData.horario_exibicao = item.horario_exibicao;
           
           // Update in database

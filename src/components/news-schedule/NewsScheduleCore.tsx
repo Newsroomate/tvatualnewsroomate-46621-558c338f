@@ -1,12 +1,12 @@
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { DragDropContext } from "@hello-pangea/dnd";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
+import { LaudasVisualizationModal } from "./LaudasVisualizationModal";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -75,8 +75,13 @@ export const NewsScheduleCore = ({
   handleFocusInTeleprompter,
   isDualView = false
 }: NewsScheduleCoreProps) => {
+  const [isLaudasModalOpen, setIsLaudasModalOpen] = useState(false);
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
-  const isMobile = useIsMobile();
+  
+  // Flatten all materias from all blocks
+  const allMaterias = useMemo(() => {
+    return blocks.flatMap(block => block.items).sort((a, b) => a.ordem - b.ordem);
+  }, [blocks]);
 
   const {
     handleAddBlockWithScroll,
@@ -103,7 +108,14 @@ export const NewsScheduleCore = ({
         onViewTeleprompter={handleViewTeleprompter}
         onSaveModel={handleSaveModel}
         onViewSavedModels={handleViewSavedModels}
+        onViewLaudas={() => setIsLaudasModalOpen(true)}
         blocks={blocks}
+      />
+      
+      <LaudasVisualizationModal
+        isOpen={isLaudasModalOpen}
+        onClose={() => setIsLaudasModalOpen(false)}
+        materias={allMaterias}
       />
 
       {/* Main area with blocks - enhanced scrolling and real-time updates */}
@@ -148,7 +160,7 @@ export const NewsScheduleCore = ({
         // In dual view, don't wrap with DragDropContext as it's handled by DualViewLayout
         scheduleContent
       ) : (
-        // Always wrap with DragDropContext, but disable drag functionality on mobile via isDragDisabled
+        // In single view, wrap with DragDropContext for internal drag and drop
         <DragDropContext onDragEnd={handleDragEnd}>
           {scheduleContent}
         </DragDropContext>

@@ -53,7 +53,6 @@ export const MaterialCard = ({
     materia.gc,
     materia.tipo_material,
     materia.local_gravacao,
-    materia.equipamento,
     materia.tempo_clip
   ].filter(campo => campo && campo.toString().trim() !== '').length;
 
@@ -152,14 +151,11 @@ export const MaterialCard = ({
       )}
 
       {/* Indicadores adicionais para campos preenchidos */}
-      {(materia.local_gravacao || materia.equipamento || materia.tempo_clip) && (
+      {(materia.local_gravacao || materia.tempo_clip) && (
         <div className="mt-2 pt-2 border-t border-gray-100">
           <div className="flex flex-wrap gap-1 text-xs text-muted-foreground">
             {materia.local_gravacao && (
               <Badge variant="outline" className="text-xs">Local: {materia.local_gravacao}</Badge>
-            )}
-            {materia.equipamento && (
-              <Badge variant="outline" className="text-xs">Equip: {materia.equipamento}</Badge>
             )}
             {materia.tempo_clip && (
               <Badge variant="outline" className="text-xs">Tempo: {materia.tempo_clip}</Badge>

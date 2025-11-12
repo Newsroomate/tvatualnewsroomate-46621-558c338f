@@ -27,7 +27,7 @@ interface NewsItemProps {
   // Visual selection props
   isVisuallySelected?: boolean;
   onItemClick?: (materia: Materia) => void;
-  // Mobile support
+  // Layout props
   isMobile?: boolean;
 }
 
@@ -49,9 +49,9 @@ export const NewsItem = ({
   // Visual selection props
   isVisuallySelected = false,
   onItemClick,
-  // Mobile support
+  // Layout props
   isMobile = false
-}: NewsItemProps) => {
+  }: NewsItemProps) => {
   // Ensure we have valid data for display
   const displayRetranca = item.retranca || "Sem título";
   const displayStatus = item.status || "draft";
@@ -139,31 +139,33 @@ export const NewsItem = ({
     return classes;
   };
   
+  // Unified table row layout for both mobile and desktop
   return (
     <tr 
       ref={provided.innerRef}
       {...provided.draggableProps}
-      {...(!isMobile ? provided.dragHandleProps : {})}
+      {...provided.dragHandleProps}
       className={getRowStyling()}
       onDoubleClick={() => onDoubleClick(item)}
       onClick={handleRowClick}
     >
       {/* Checkbox column for batch selection */}
       {isBatchMode && (
-        <td className="py-2 px-4 w-12" onClick={(e) => e.stopPropagation()}>
+        <td className={`py-1 px-2 ${isMobile ? 'w-8' : 'w-12'}`} onClick={(e) => e.stopPropagation()}>
           <Checkbox
             checked={isSelected}
             onCheckedChange={handleCheckboxChange}
             disabled={!canModify}
+            className={isMobile ? 'h-3 w-3' : ''}
           />
         </td>
       )}
       
-      <td className="py-2 px-4">{item.pagina}</td>
-      <td className="py-2 px-4">
+      <td className={`py-1 px-2 ${isMobile ? 'text-xs' : ''}`}>{item.pagina}</td>
+      <td className="py-1 px-2">
         <MaterialTypeBadge tipoMaterial={item.tipo_material} />
       </td>
-      <td className="py-2 px-4 font-medium" onClick={(e) => e.stopPropagation()}>
+      <td className={`py-1 px-2 font-medium ${isMobile ? 'text-xs' : ''}`} onClick={(e) => e.stopPropagation()}>
         <InlineEditCell
           value={displayRetranca}
           onSave={(value) => handleInlineUpdate('retranca', value)}
@@ -171,9 +173,9 @@ export const NewsItem = ({
           placeholder="Sem título"
         />
       </td>
-      <td className="py-2 px-4 font-mono text-xs">{item.clip || ''}</td>
-      <td className="py-2 px-4">{formatTime(displayDuracao)}</td>
-      <td className="py-2 px-4" onClick={(e) => e.stopPropagation()}>
+      <td className={`py-1 px-2 font-mono ${isMobile ? 'text-[10px]' : 'text-xs'}`}>{item.clip || ''}</td>
+      <td className={`py-1 px-2 ${isMobile ? 'text-xs' : ''}`}>{formatTime(displayDuracao)}</td>
+      <td className={`py-1 px-2 ${isMobile ? 'text-xs' : ''}`} onClick={(e) => e.stopPropagation()}>
         <InlineEditCell
           value={item.status || 'draft'}
           onSave={(value) => handleInlineUpdate('status', value)}
@@ -182,7 +184,7 @@ export const NewsItem = ({
           disabled={!canModify || !isEspelhoOpen}
         />
       </td>
-      <td className="py-2 px-4" onClick={(e) => e.stopPropagation()}>
+      <td className={`py-1 px-2 ${isMobile ? 'text-xs' : ''}`} onClick={(e) => e.stopPropagation()}>
         <InlineEditCell
           value={item.reporter || ''}
           onSave={(value) => handleInlineUpdate('reporter', value)}
@@ -190,7 +192,7 @@ export const NewsItem = ({
           placeholder="Sem repórter"
         />
       </td>
-      <td className="py-2 px-4">
+      <td className="py-1 px-2">
         <NewsItemActions
           item={item}
           onEdit={onEdit}
@@ -199,6 +201,7 @@ export const NewsItem = ({
           onFocusInTeleprompter={onFocusInTeleprompter}
           isEspelhoOpen={isEspelhoOpen}
           canModify={canModify}
+          isMobile={isMobile}
         />
       </td>
     </tr>

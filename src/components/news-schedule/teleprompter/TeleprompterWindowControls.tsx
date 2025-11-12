@@ -25,6 +25,7 @@ interface TeleprompterWindowControlsProps {
   onRetrancaColorChange: (color: string) => void;
   onTipoMaterialColorChange: (color: string) => void;
   onClose: () => void;
+  isMobile?: boolean;
 }
 
 export const TeleprompterWindowControls = ({
@@ -46,44 +47,59 @@ export const TeleprompterWindowControls = ({
   onCabecaColorChange,
   onRetrancaColorChange,
   onTipoMaterialColorChange,
-  onClose
+  onClose,
+  isMobile = false
 }: TeleprompterWindowControlsProps) => {
   if (isFullscreen) return null;
 
   return (
-    <div className="flex items-center gap-4 p-4 border-b bg-gray-50 flex-wrap">
-      <TeleprompterControls
-        isPlaying={isPlaying}
-        speed={speed}
-        onPlayPause={onPlayPause}
-        onSpeedChange={onSpeedChange}
-        onReset={onReset}
-      />
+    <div className={`flex items-center gap-2 p-2 border-b bg-gray-50 ${
+      isMobile ? 'flex-col space-y-2' : 'flex-wrap gap-4 p-4'
+    }`}>
+      <div className={`flex items-center gap-2 ${isMobile ? 'w-full justify-center' : ''}`}>
+        <TeleprompterControls
+          isPlaying={isPlaying}
+          speed={speed}
+          onPlayPause={onPlayPause}
+          onSpeedChange={onSpeedChange}
+          onReset={onReset}
+          isMobile={isMobile}
+        />
+      </div>
 
-      <TeleprompterViewControls
-        fontSize={fontSize}
-        onIncreaseFontSize={onIncreaseFontSize}
-        onDecreaseFontSize={onDecreaseFontSize}
-        onFontSizeChange={onFontSizeChange}
-      />
+      <div className={`flex items-center gap-2 ${isMobile ? 'w-full justify-center' : ''}`}>
+        <TeleprompterViewControls
+          fontSize={fontSize}
+          onIncreaseFontSize={onIncreaseFontSize}
+          onDecreaseFontSize={onDecreaseFontSize}
+          onFontSizeChange={onFontSizeChange}
+          isMobile={isMobile}
+        />
+      </div>
 
-      <TeleprompterColorControls
-        cabecaColor={cabecaColor}
-        retrancaColor={retrancaColor}
-        tipoMaterialColor={tipoMaterialColor}
-        onCabecaColorChange={onCabecaColorChange}
-        onRetrancaColorChange={onRetrancaColorChange}
-        onTipoMaterialColorChange={onTipoMaterialColorChange}
-      />
+      {!isMobile && (
+        <>
+          <TeleprompterColorControls
+            cabecaColor={cabecaColor}
+            retrancaColor={retrancaColor}
+            tipoMaterialColor={tipoMaterialColor}
+            onCabecaColorChange={onCabecaColorChange}
+            onRetrancaColorChange={onRetrancaColorChange}
+            onTipoMaterialColorChange={onTipoMaterialColorChange}
+          />
 
-      <TeleprompterExport
-        blocks={blocks}
-        telejornal={telejornal}
-      />
+          <TeleprompterExport
+            blocks={blocks}
+            telejornal={telejornal}
+          />
+        </>
+      )}
 
       <button
         onClick={onClose}
-        className="ml-auto px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        className={`${
+          isMobile ? 'w-full' : 'ml-auto'
+        } px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700`}
       >
         Fechar
       </button>

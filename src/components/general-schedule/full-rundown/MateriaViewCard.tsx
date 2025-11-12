@@ -135,12 +135,6 @@ export const MateriaViewCard = ({
             <span>{materia.local_gravacao}</span>
           </div>
         )}
-        {materia.equipamento && (
-          <div>
-            <span className="font-medium">Equipamento: </span>
-            <span>{materia.equipamento}</span>
-          </div>
-        )}
       </div>
 
       {materia.cabeca && (
