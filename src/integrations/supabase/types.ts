@@ -417,6 +417,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          assigned_at: string | null
+          assigned_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string | null
+          assigned_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -425,6 +449,13 @@ export type Database = {
       cleanup_expired_locks: { Args: never; Returns: undefined }
       enable_realtime: { Args: { table_name: string }; Returns: boolean }
       get_current_user_role: { Args: never; Returns: string }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["user_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       user_role: "reporter" | "editor" | "editor_chefe" | "produtor"
