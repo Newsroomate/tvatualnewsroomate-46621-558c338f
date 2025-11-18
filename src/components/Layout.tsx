@@ -139,13 +139,19 @@ const Layout = () => {
     if (!selectedJournal || !currentTelejornal) return;
 
     try {
-      console.log("Salvando snapshot do espelho atual para fechamento manual...");
+      console.log("=== INICIANDO SALVAMENTO DE SNAPSHOT ===");
+      console.log("Telejornal ID:", selectedJournal);
+      console.log("Telejornal nome:", currentTelejornal.nome);
       
       // Fetch current blocks and materias
       const blocks = await fetchBlocosByTelejornal(selectedJournal);
+      console.log("Blocos encontrados:", blocks.length);
+      
       const blocksWithItems = await Promise.all(
         blocks.map(async (block) => {
           const materias = await fetchMateriasByBloco(block.id);
+          console.log(`Bloco "${block.nome}" (ordem ${block.ordem}): ${materias.length} matérias`);
+          
           return {
             id: block.id,
             nome: block.nome,
@@ -158,6 +164,8 @@ const Layout = () => {
               duracao: materia.duracao || 0,
               pagina: materia.pagina,
               reporter: materia.reporter,
+              editor: materia.editor,
+              equipamento: materia.equipamento,
               status: materia.status,
               texto: materia.texto,
               cabeca: materia.cabeca,
@@ -171,6 +179,10 @@ const Layout = () => {
           };
         })
       );
+
+      const totalMaterias = blocksWithItems.reduce((sum, block) => sum + block.items.length, 0);
+      console.log("Total de matérias no snapshot:", totalMaterias);
+      console.log("Estrutura completa:", JSON.stringify({ blocos: blocksWithItems }, null, 2));
 
       // Para fechamento manual, usar a data atual do dispositivo
       const today = new Date();
@@ -215,8 +227,33 @@ const Layout = () => {
       return;
     }
     
-    // Se o espelho está aberto e o usuário deseja fechá-lo, mostrar diálogo de confirmação
+    // Se o espelho está aberto e o usuário deseja fechá-lo, validar se há matérias
     if (currentTelejornal.espelho_aberto) {
+      try {
+        const blocks = await fetchBlocosByTelejornal(selectedJournal);
+        let hasItems = false;
+        
+        for (const block of blocks) {
+          const materias = await fetchMateriasByBloco(block.id);
+          if (materias.length > 0) {
+            hasItems = true;
+            break;
+          }
+        }
+        
+        if (!hasItems) {
+          console.warn("Tentativa de fechar espelho vazio");
+          toast({
+            title: "Espelho vazio",
+            description: "Este espelho não possui nenhuma matéria. Adicione matérias antes de fechar.",
+            variant: "destructive"
+          });
+          return;
+        }
+      } catch (error) {
+        console.error("Erro ao verificar matérias:", error);
+      }
+      
       setIsCloseRundownDialogOpen(true);
       return;
     }
@@ -231,38 +268,45 @@ const Layout = () => {
   const handleConfirmCloseRundown = async () => {
     if (!selectedJournal || !currentTelejornal) return;
     
-    // Optimistic update - immediately show closed status
-    const optimisticTelejornal = {
-      ...currentTelejornal,
-      espelho_aberto: false
-    };
-    setCurrentTelejornal(optimisticTelejornal);
     setIsCloseRundownDialogOpen(false);
-    // Broadcast local event so sidebar updates instantly
-    window.dispatchEvent(new CustomEvent('telejornal:status-changed', { detail: { id: selectedJournal, espelho_aberto: false } }));
     
     try {
-      // Save snapshot and update telejornal in parallel for speed
-      const [, result] = await Promise.all([
-        saveCurrentRundownSnapshot(),
-        updateTelejornal(selectedJournal, {
-          ...currentTelejornal,
-          espelho_aberto: false
-        })
-      ]);
+      console.log("=== INICIANDO PROCESSO DE FECHAMENTO ===");
+      
+      // PASSO 1: Salvar snapshot ANTES de atualizar o status
+      console.log("Passo 1: Salvando snapshot com espelho ainda aberto...");
+      await saveCurrentRundownSnapshot();
+      console.log("Snapshot salvo com sucesso!");
+      
+      // PASSO 2: Atualizar status do telejornal para fechado
+      console.log("Passo 2: Atualizando status do telejornal para fechado...");
+      const result = await updateTelejornal(selectedJournal, {
+        ...currentTelejornal,
+        espelho_aberto: false
+      });
       
       if (result) {
         console.log('Telejornal fechado com sucesso:', result);
+        
+        // PASSO 3: Atualizar UI
+        setCurrentTelejornal({
+          ...currentTelejornal,
+          espelho_aberto: false
+        });
+        
+        // Broadcast local event so sidebar updates instantly
+        window.dispatchEvent(new CustomEvent('telejornal:status-changed', { 
+          detail: { id: selectedJournal, espelho_aberto: false } 
+        }));
+        
         toast({
           title: "Espelho fechado",
-          description: `Espelho de ${result.nome} fechado e salvo`,
+          description: `Espelho de ${result.nome} fechado e salvo com sucesso`,
           variant: "default"
         });
       }
     } catch (error) {
-      console.error("Erro ao fechar espelho:", error);
-      // Revert optimistic update on error
-      setCurrentTelejornal(currentTelejornal);
+      console.error("=== ERRO AO FECHAR ESPELHO ===", error);
       toast({
         title: "Erro",
         description: "Não foi possível fechar o espelho",
