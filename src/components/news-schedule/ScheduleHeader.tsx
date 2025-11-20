@@ -57,9 +57,47 @@ export const ScheduleHeader = ({
           <h1 className="text-2xl font-bold text-foreground">
             {currentTelejornal ? currentTelejornal.nome : "Selecione um Telejornal"}
           </h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            {new Date().toLocaleDateString('pt-BR')}
-          </p>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <p className="text-sm text-muted-foreground mt-1 cursor-help">
+                  {currentTelejornal?.created_at 
+                    ? new Date(currentTelejornal.created_at).toLocaleDateString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                      })
+                    : new Date().toLocaleDateString('pt-BR')
+                  }
+                  {currentTelejornal?.created_at && (
+                    <span className="ml-2 text-xs">
+                      (Criado às {new Date(currentTelejornal.created_at).toLocaleTimeString('pt-BR', {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })})
+                    </span>
+                  )}
+                </p>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-xs">
+                  {currentTelejornal?.created_at && (
+                    <>
+                      <p><strong>Espelho criado em:</strong></p>
+                      <p>{new Date(currentTelejornal.created_at).toLocaleString('pt-BR', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                      })}</p>
+                    </>
+                  )}
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         
         {/* Desktop: Tempo Total | Mobile: Menu Espelho */}

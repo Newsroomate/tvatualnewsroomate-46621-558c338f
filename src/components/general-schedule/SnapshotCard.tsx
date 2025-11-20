@@ -129,6 +129,12 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDe
                 {snapshot.horario}
               </Badge>
             )}
+            <div className="flex items-center gap-2 ml-2">
+              <Clock className="h-3 w-3 text-muted-foreground" />
+              <span className="text-xs text-muted-foreground">
+                Fechado: {format(new Date(snapshot.created_at), "dd/MM/yyyy HH:mm")}
+              </span>
+            </div>
           </div>
           <div className="flex items-center space-x-2">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">

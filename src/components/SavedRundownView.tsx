@@ -34,6 +34,24 @@ export const SavedRundownView = ({ savedRundown, onClose }: SavedRundownViewProp
           Voltar
         </Button>
       </div>
+
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+        <h3 className="text-sm font-semibold text-blue-900 mb-2">Informações do Espelho</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-blue-800">
+          <div>
+            <span className="font-medium">Data de Referência:</span>
+            <span className="ml-2">{format(new Date(savedRundown.data_referencia), "dd/MM/yyyy")}</span>
+          </div>
+          <div>
+            <span className="font-medium">Salvo em:</span>
+            <span className="ml-2">{format(new Date(savedRundown.data_salvamento), "dd/MM/yyyy 'às' HH:mm")}</span>
+          </div>
+          <div>
+            <span className="font-medium">Telejornal:</span>
+            <span className="ml-2">{savedRundown.nome}</span>
+          </div>
+        </div>
+      </div>
       
       <div className="overflow-auto flex-grow">
         {savedRundown.estrutura?.blocos?.length > 0 ? (
