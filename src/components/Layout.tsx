@@ -473,8 +473,12 @@ const Layout = () => {
                           <span className="text-red-600">FECHADO</span>
                         )}:
                       </span> {' '}
-                      {currentTelejornal.nome} {currentTelejornal.espelho_aberto && (
-                        <>- ({new Date().toLocaleDateString('pt-BR')})</>
+                      {currentTelejornal.nome} {currentTelejornal.espelho_aberto && currentTelejornal.created_at && (
+                        <>- ({new Date(currentTelejornal.created_at).toLocaleDateString('pt-BR', {
+                          day: '2-digit',
+                          month: '2-digit',
+                          year: 'numeric'
+                        })})</>
                       )}
                     </div>
                   )
