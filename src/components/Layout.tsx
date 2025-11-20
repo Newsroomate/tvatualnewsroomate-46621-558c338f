@@ -14,6 +14,7 @@ import { canCreateEspelhos } from "@/utils/permission";
 import { PostCloseRundownModal } from "./PostCloseRundownModal";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
+import { supabase } from "@/integrations/supabase/client";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
 import { useRealtimeTelejornais } from "@/hooks/useRealtimeTelejornais";
 import { useRealtimeInvalidation } from "@/hooks/useRealtimeInvalidation";
@@ -204,13 +205,21 @@ const Layout = () => {
       });
 
       console.log("Snapshot salvo com sucesso para fechamento manual!");
-    } catch (error) {
-      console.error("Erro ao salvar snapshot:", error);
+    } catch (error: any) {
+      console.error("❌ ERRO AO SALVAR SNAPSHOT:", error);
+      
+      // Mensagem detalhada de erro
+      const errorMessage = error?.message || "Não foi possível salvar o snapshot do espelho";
+      const errorCode = error?.code ? ` (Código: ${error.code})` : "";
+      
       toast({
-        title: "Erro ao salvar",
-        description: "Não foi possível salvar o snapshot do espelho",
+        title: "Erro ao salvar snapshot",
+        description: `${errorMessage}${errorCode}`,
         variant: "destructive"
       });
+      
+      // Re-throw para que handleConfirmCloseRundown possa capturar
+      throw error;
     }
   };
 
@@ -268,10 +277,22 @@ const Layout = () => {
   const handleConfirmCloseRundown = async () => {
     if (!selectedJournal || !currentTelejornal) return;
     
+    // ✅ VALIDAÇÃO PREVENTIVA: Verificar autenticação ANTES de fechar
+    const { data: currentUser } = await supabase.auth.getUser();
+    if (!currentUser.user) {
+      toast({
+        title: "Erro de autenticação",
+        description: "Usuário não autenticado. Faça login novamente.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsCloseRundownDialogOpen(false);
     
     try {
       console.log("=== INICIANDO PROCESSO DE FECHAMENTO ===");
+      console.log("Usuário autenticado:", currentUser.user.id);
       
       // PASSO 1: Salvar snapshot ANTES de atualizar o status
       console.log("Passo 1: Salvando snapshot com espelho ainda aberto...");
@@ -305,11 +326,16 @@ const Layout = () => {
           variant: "default"
         });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("=== ERRO AO FECHAR ESPELHO ===", error);
+      
+      // Mensagem detalhada de erro
+      const errorMessage = error?.message || "Não foi possível fechar o espelho";
+      const errorDetails = error?.code ? ` (Código: ${error.code})` : "";
+      
       toast({
-        title: "Erro",
-        description: "Não foi possível fechar o espelho",
+        title: "Erro ao fechar espelho",
+        description: `${errorMessage}${errorDetails}`,
         variant: "destructive"
       });
     }

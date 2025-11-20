@@ -8,14 +8,11 @@ export const saveRundownSnapshot = async (rundownData: SavedRundownCreateInput):
   const { data: currentUser } = await supabase.auth.getUser();
   
   if (!currentUser.user) {
+    console.error("❌ ERRO CRÍTICO: Usuário não autenticado ao tentar salvar snapshot");
     throw new Error("Usuário não autenticado");
   }
-  
-  const payload = {
-    telejornal_id: rundownData.telejornal_id,
-    data_referencia: rundownData.data_referencia,
-    estrutura: rundownData.estrutura
-  } as any;
+
+  console.log("✅ Usuário autenticado:", currentUser.user.id);
   
   const { data, error } = await supabase
     .from('espelhos_salvos')
@@ -23,15 +20,24 @@ export const saveRundownSnapshot = async (rundownData: SavedRundownCreateInput):
       nome: rundownData.nome,
       telejornal_id: rundownData.telejornal_id,
       data_referencia: rundownData.data_referencia,
-      estrutura: rundownData.estrutura
+      estrutura: rundownData.estrutura,
+      user_id: currentUser.user.id  // ✅ CAMPO OBRIGATÓRIO PARA RLS
     })
     .select()
     .single();
 
   if (error) {
-    console.error("Erro ao salvar snapshot:", error);
+    console.error("❌ ERRO CRÍTICO ao salvar snapshot:", {
+      error,
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint
+    });
     throw error;
   }
+
+  console.log("✅ Snapshot salvo com sucesso:", data.id);
 
   return {
     id: data.id,
@@ -41,7 +47,8 @@ export const saveRundownSnapshot = async (rundownData: SavedRundownCreateInput):
     nome: data.nome,
     estrutura: data.estrutura,
     created_at: data.created_at,
-    updated_at: data.updated_at
+    updated_at: data.updated_at,
+    user_id: data.user_id
   } as SavedRundown;
 };
 
