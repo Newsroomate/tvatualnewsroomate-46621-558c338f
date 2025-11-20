@@ -8,6 +8,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { generateGCTextFile } from "@/utils/gc-txt-utils";
 import { exportPlayoutPDF } from "@/utils/playout-export-utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { formatDate, DATE_FORMATS } from "@/utils/date-utils";
 
 interface ScheduleHeaderProps {
   currentTelejornal: Telejornal | null;
@@ -62,19 +63,12 @@ export const ScheduleHeader = ({
               <TooltipTrigger asChild>
                 <p className="text-sm text-muted-foreground mt-1 cursor-help">
                   {currentTelejornal?.created_at 
-                    ? new Date(currentTelejornal.created_at).toLocaleDateString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric'
-                      })
+                    ? formatDate(currentTelejornal.created_at, DATE_FORMATS.DATE_ONLY)
                     : new Date().toLocaleDateString('pt-BR')
                   }
                   {currentTelejornal?.created_at && (
                     <span className="ml-2 text-xs">
-                      (Criado às {new Date(currentTelejornal.created_at).toLocaleTimeString('pt-BR', {
-                        hour: '2-digit',
-                        minute: '2-digit'
-                      })})
+                      (Criado às {formatDate(currentTelejornal.created_at, DATE_FORMATS.TIME_ONLY)})
                     </span>
                   )}
                 </p>
@@ -84,14 +78,7 @@ export const ScheduleHeader = ({
                   {currentTelejornal?.created_at && (
                     <>
                       <p><strong>Espelho criado em:</strong></p>
-                      <p>{new Date(currentTelejornal.created_at).toLocaleString('pt-BR', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                      })}</p>
+                      <p>{formatDate(currentTelejornal.created_at, DATE_FORMATS.DATE_TIME_SECONDS)}</p>
                     </>
                   )}
                 </div>
