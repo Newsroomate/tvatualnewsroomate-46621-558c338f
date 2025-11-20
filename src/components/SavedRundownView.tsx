@@ -4,6 +4,7 @@ import { SavedRundown } from "@/types/saved-rundowns";
 import { formatTime } from "@/components/news-schedule/utils";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { formatDate, DATE_FORMATS } from "@/utils/date-utils";
 
 interface SavedRundownViewProps {
   savedRundown: SavedRundown;
@@ -40,11 +41,11 @@ export const SavedRundownView = ({ savedRundown, onClose }: SavedRundownViewProp
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs text-blue-800">
           <div>
             <span className="font-medium">Data de Referência:</span>
-            <span className="ml-2">{format(new Date(savedRundown.data_referencia), "dd/MM/yyyy")}</span>
+            <span className="ml-2">{formatDate(savedRundown.data_referencia, DATE_FORMATS.DATE_ONLY)}</span>
           </div>
           <div>
             <span className="font-medium">Salvo em:</span>
-            <span className="ml-2">{format(new Date(savedRundown.data_salvamento), "dd/MM/yyyy 'às' HH:mm")}</span>
+            <span className="ml-2">{formatDate(savedRundown.data_salvamento, DATE_FORMATS.DATE_TIME)}</span>
           </div>
           <div>
             <span className="font-medium">Telejornal:</span>

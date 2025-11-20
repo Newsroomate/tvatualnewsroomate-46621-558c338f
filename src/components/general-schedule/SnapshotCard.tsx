@@ -4,11 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ChevronDown, ChevronRight, Clock, Eye, AlertTriangle } from "lucide-react";
-import { format } from "date-fns";
 import { formatTime } from "../news-schedule/utils";
 import { ClosedRundownSnapshot } from "@/services/snapshots-api";
 import { Telejornal } from "@/types";
 import { BlockCard } from "./BlockCard";
+import { formatDate, DATE_FORMATS } from "@/utils/date-utils";
 
 interface SnapshotCardProps {
   snapshot: ClosedRundownSnapshot;
@@ -121,7 +121,7 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDe
               )}
             </CardTitle>
             <Badge variant="outline" className="text-xs">
-              {format(displayDate, "dd/MM/yyyy")}
+              {formatDate(snapshot.data_referencia, DATE_FORMATS.DATE_ONLY)}
             </Badge>
             {snapshot.horario && (
               <Badge variant="secondary" className="text-xs">
@@ -132,7 +132,7 @@ export const SnapshotCard = ({ snapshot, isExpanded, onToggleExpansion, onViewDe
             <div className="flex items-center gap-2 ml-2">
               <Clock className="h-3 w-3 text-muted-foreground" />
               <span className="text-xs text-muted-foreground">
-                Fechado: {format(new Date(snapshot.created_at), "dd/MM/yyyy HH:mm")}
+                Fechado: {formatDate(snapshot.created_at, DATE_FORMATS.DATE_TIME)}
               </span>
             </div>
           </div>
