@@ -169,7 +169,7 @@ export const PautaSection = ({
       </div>
 
       {/* Content */}
-      <ScrollArea className="h-[calc(100vh-32rem)] px-3 pb-3">
+      <ScrollArea className="h-full px-3 pb-3">
         {isLoading ? (
           <div className="text-xs text-muted-foreground py-4 text-center">
             Carregando pautas...
