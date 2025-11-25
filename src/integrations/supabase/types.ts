@@ -478,6 +478,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_access_telejornal: {
+        Args: { _telejornal_id: string; _user_id: string }
+        Returns: boolean
+      }
       cleanup_expired_locks: { Args: never; Returns: undefined }
       enable_realtime: { Args: { table_name: string }; Returns: boolean }
       get_current_user_role: { Args: never; Returns: string }
