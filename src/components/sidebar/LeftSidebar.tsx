@@ -231,24 +231,28 @@ export const LeftSidebar = ({
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {/* Telejornais Section */}
-        <TelejornalSection 
-          telejornais={telejornais} 
-          selectedJournal={selectedJournal} 
-          onSelectJournal={onSelectJournal}
-          onAddTelejornal={handleOpenTelejornalModal}
-          isLoading={isLoading}
-          onDataChange={loadData}
-        />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Telejornais Section - Fixed, no scroll */}
+        <div className="shrink-0">
+          <TelejornalSection 
+            telejornais={telejornais} 
+            selectedJournal={selectedJournal} 
+            onSelectJournal={onSelectJournal}
+            onAddTelejornal={handleOpenTelejornalModal}
+            isLoading={isLoading}
+            onDataChange={loadData}
+          />
+        </div>
 
-        {/* Pautas Section */}
-        <PautaSection 
-          pautas={pautas} 
-          onAddPauta={handleOpenPautaModal}
-          isLoading={isLoading}
-          onDataChange={loadData}
-        />
+        {/* Pautas Section - Scrollable */}
+        <div className="flex-1 overflow-hidden">
+          <PautaSection 
+            pautas={pautas} 
+            onAddPauta={handleOpenPautaModal}
+            isLoading={isLoading}
+            onDataChange={loadData}
+          />
+        </div>
       </div>
 
       {/* Modals */}
