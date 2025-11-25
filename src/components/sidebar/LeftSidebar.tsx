@@ -216,22 +216,24 @@ export const LeftSidebar = ({
   };
 
   return (
-    <div className={`${isMobile ? 'w-full' : 'w-64'} bg-gray-100 h-full ${!isMobile ? 'border-r border-gray-200' : ''} flex flex-col`}>
+    <div className={`${isMobile ? 'w-full' : 'w-64'} bg-gray-100 ${isMobile ? 'h-full' : 'h-screen'} ${!isMobile ? 'border-r border-gray-200' : ''} flex flex-col`}>
+      {/* Fixed Header */}
       {!isMobile && (
-        <div className="p-4 bg-primary text-primary-foreground">
+        <div className="p-4 bg-primary text-primary-foreground flex-shrink-0">
           <h2 className="text-lg font-semibold">Newsroomate</h2>
         </div>
       )}
       
-      {/* Menu Button */}
-      <div className="p-4 border-b border-gray-200">
+      {/* Fixed Menu Button */}
+      <div className="p-4 border-b border-gray-200 flex-shrink-0">
         <Button variant="outline" className="w-full" onClick={handleToggleMainMenu}>
           <Menu className="h-4 w-4 mr-2" />
           Menu
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
+      {/* Scrollable Content Area */}
+      <div className="flex-1 overflow-y-auto min-h-0">
         {/* Telejornais Section */}
         <TelejornalSection 
           telejornais={telejornais} 
