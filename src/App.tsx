@@ -42,7 +42,7 @@ const AppContent = () => {
   }, []);
 
   return (
-    <div className="flex flex-col h-screen">
+    <div className="flex flex-col min-h-screen h-screen overflow-hidden">
       <Suspense fallback={<div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>}>
@@ -50,11 +50,9 @@ const AppContent = () => {
           <Route path="/teleprompter" element={<TeleprompterWindow />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/" element={
-            <div className="flex-1 overflow-hidden">
-              <ProtectedRoute>
-                <Index />
-              </ProtectedRoute>
-            </div>
+            <ProtectedRoute>
+              <Index />
+            </ProtectedRoute>
           } />
           <Route path="*" element={<NotFound />} />
         </Routes>
