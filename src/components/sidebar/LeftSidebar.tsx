@@ -216,7 +216,7 @@ export const LeftSidebar = ({
   };
 
   return (
-    <div className={`${isMobile ? 'w-full' : 'w-64'} bg-gray-100 h-full ${!isMobile ? 'border-r border-gray-200' : ''} flex flex-col`}>
+    <div className={`${isMobile ? 'w-full' : 'w-64 flex-shrink-0'} bg-gray-100 h-full ${!isMobile ? 'border-r border-gray-200' : ''} flex flex-col overflow-hidden`}>
       {!isMobile && (
         <div className="p-4 bg-primary text-primary-foreground">
           <h2 className="text-lg font-semibold">Newsroomate</h2>
