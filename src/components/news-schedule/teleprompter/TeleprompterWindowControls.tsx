@@ -15,6 +15,7 @@ interface TeleprompterWindowControlsProps {
   cabecaColor: string;
   retrancaColor: string;
   tipoMaterialColor: string;
+  isMirrored: boolean;
   onPlayPause: () => void;
   onSpeedChange: (value: number[]) => void;
   onReset: () => void;
@@ -24,6 +25,7 @@ interface TeleprompterWindowControlsProps {
   onCabecaColorChange: (color: string) => void;
   onRetrancaColorChange: (color: string) => void;
   onTipoMaterialColorChange: (color: string) => void;
+  onMirrorToggle: () => void;
   onClose: () => void;
   isMobile?: boolean;
 }
@@ -38,6 +40,7 @@ export const TeleprompterWindowControls = ({
   cabecaColor,
   retrancaColor,
   tipoMaterialColor,
+  isMirrored,
   onPlayPause,
   onSpeedChange,
   onReset,
@@ -47,6 +50,7 @@ export const TeleprompterWindowControls = ({
   onCabecaColorChange,
   onRetrancaColorChange,
   onTipoMaterialColorChange,
+  onMirrorToggle,
   onClose,
   isMobile = false
 }: TeleprompterWindowControlsProps) => {
@@ -73,6 +77,8 @@ export const TeleprompterWindowControls = ({
           onIncreaseFontSize={onIncreaseFontSize}
           onDecreaseFontSize={onDecreaseFontSize}
           onFontSizeChange={onFontSizeChange}
+          isMirrored={isMirrored}
+          onMirrorToggle={onMirrorToggle}
           isMobile={isMobile}
         />
       </div>

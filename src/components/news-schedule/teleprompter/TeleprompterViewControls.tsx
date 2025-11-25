@@ -2,13 +2,15 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Minus } from "lucide-react";
+import { Plus, Minus, FlipHorizontal2 } from "lucide-react";
 
 interface TeleprompterViewControlsProps {
   fontSize: number;
   onIncreaseFontSize: () => void;
   onDecreaseFontSize: () => void;
   onFontSizeChange: (size: number) => void;
+  isMirrored?: boolean;
+  onMirrorToggle?: () => void;
   isMobile?: boolean;
 }
 
@@ -17,6 +19,8 @@ export const TeleprompterViewControls = ({
   onIncreaseFontSize,
   onDecreaseFontSize,
   onFontSizeChange,
+  isMirrored = false,
+  onMirrorToggle,
   isMobile = false
 }: TeleprompterViewControlsProps) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -99,6 +103,16 @@ export const TeleprompterViewControls = ({
         className={isMobile ? "h-10 w-10 p-0" : ""}
       >
         <Plus className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
+      </Button>
+      
+      <Button
+        variant={isMirrored ? "default" : "outline"}
+        size={isMobile ? "default" : "sm"}
+        onClick={onMirrorToggle}
+        title="Espelhar texto"
+        className={isMobile ? "h-10 w-10 p-0" : ""}
+      >
+        <FlipHorizontal2 className={isMobile ? "h-5 w-5" : "h-4 w-4"} />
       </Button>
     </div>
   );

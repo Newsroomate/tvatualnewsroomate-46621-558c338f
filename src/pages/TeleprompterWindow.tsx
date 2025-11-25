@@ -29,6 +29,7 @@ const TeleprompterWindow = () => {
     cabecaColor,
     retrancaColor,
     tipoMaterialColor,
+    isMirrored,
     
     // Refs
     contentRef,
@@ -46,7 +47,8 @@ const TeleprompterWindow = () => {
     handleFontSizeChange,
     handleCabecaColorChange,
     handleRetrancaColorChange,
-    handleTipoMaterialColorChange
+    handleTipoMaterialColorChange,
+    handleMirrorToggle
   } = useTeleprompterWindowState();
 
   // Setup keyboard controls with scroll position sync
@@ -148,6 +150,7 @@ const TeleprompterWindow = () => {
         cabecaColor={cabecaColor}
         retrancaColor={retrancaColor}
         tipoMaterialColor={tipoMaterialColor}
+        isMirrored={isMirrored}
         onPlayPause={handlePlayPause}
         onSpeedChange={handleSpeedChange}
         onReset={resetPosition}
@@ -157,6 +160,7 @@ const TeleprompterWindow = () => {
         onCabecaColorChange={handleCabecaColorChange}
         onRetrancaColorChange={handleRetrancaColorChange}
         onTipoMaterialColorChange={handleTipoMaterialColorChange}
+        onMirrorToggle={handleMirrorToggle}
         onClose={() => window.close()}
         isMobile={isMobile}
       />
@@ -170,6 +174,7 @@ const TeleprompterWindow = () => {
           cabecaColor={cabecaColor}
           retrancaColor={retrancaColor}
           tipoMaterialColor={tipoMaterialColor}
+          isMirrored={isMirrored}
           isMobile={isMobile}
         />
       </div>

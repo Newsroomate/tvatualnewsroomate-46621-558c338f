@@ -14,6 +14,7 @@ export const useTeleprompterWindowState = () => {
   const [cabecaColor, setCabecaColor] = useState("#ffffff");
   const [retrancaColor, setRetrancaColor] = useState("#facc15");
   const [tipoMaterialColor, setTipoMaterialColor] = useState("#f97316");
+  const [isMirrored, setIsMirrored] = useState(false);
   
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -74,6 +75,11 @@ export const useTeleprompterWindowState = () => {
     console.log("Tipo Material color changed to:", color);
   };
 
+  const handleMirrorToggle = () => {
+    setIsMirrored(prev => !prev);
+    console.log("Mirror mode toggled:", !isMirrored);
+  };
+
   return {
     // State
     blocks,
@@ -93,6 +99,7 @@ export const useTeleprompterWindowState = () => {
     cabecaColor,
     retrancaColor,
     tipoMaterialColor,
+    isMirrored,
     
     // Refs
     contentRef,
@@ -110,6 +117,7 @@ export const useTeleprompterWindowState = () => {
     handleFontSizeChange,
     handleCabecaColorChange,
     handleRetrancaColorChange,
-    handleTipoMaterialColorChange
+    handleTipoMaterialColorChange,
+    handleMirrorToggle
   };
 };
