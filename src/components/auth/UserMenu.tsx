@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -9,10 +10,13 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/context/AuthContext";
-import { LogOut, Settings, User } from "lucide-react";
+import { LogOut, Shield, User } from "lucide-react";
+import { isEditorChefe } from "@/utils/permission";
+import { TelejornalAccessModal } from "@/components/admin";
 
 export const UserMenu = () => {
   const { profile, signOut } = useAuth();
+  const [isAccessModalOpen, setIsAccessModalOpen] = useState(false);
 
   const translateRole = (role: string) => {
     const roles: Record<string, string> = {
@@ -43,6 +47,18 @@ export const UserMenu = () => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            {isEditorChefe(profile) && (
+              <>
+                <DropdownMenuItem
+                  onClick={() => setIsAccessModalOpen(true)}
+                  className="cursor-pointer"
+                >
+                  <Shield className="mr-2 h-4 w-4" />
+                  <span>Gerenciar Permissões</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+              </>
+            )}
             <DropdownMenuItem
               onClick={() => signOut()}
               className="cursor-pointer"
@@ -53,6 +69,10 @@ export const UserMenu = () => {
           </>
         )}
       </DropdownMenuContent>
+      <TelejornalAccessModal
+        open={isAccessModalOpen}
+        onOpenChange={setIsAccessModalOpen}
+      />
     </DropdownMenu>
   );
 };
