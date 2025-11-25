@@ -49,8 +49,9 @@ export const TelejornalSection = ({
   };
   
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-2">
+    <div className="p-4 flex flex-col min-h-0">
+      {/* Fixed Header */}
+      <div className="flex items-center justify-between mb-2 flex-shrink-0">
         <h3 className="text-sm font-semibold uppercase text-gray-500">Telejornais</h3>
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onAddTelejornal}>
           <PlusCircle className="h-4 w-4" />
@@ -61,7 +62,7 @@ export const TelejornalSection = ({
       {isLoading ? (
         <p className="text-sm text-gray-500">Carregando...</p>
       ) : (
-        <ul className="space-y-1">
+        <ul className="space-y-1 flex-shrink-0">
           {telejornais.map(jornal => {
             const isEspelhoAberto = jornal.espelho_aberto;
             const isExpanded = expandedTelejornais.has(jornal.id);
