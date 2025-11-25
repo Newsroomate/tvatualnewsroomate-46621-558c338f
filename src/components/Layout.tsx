@@ -410,7 +410,7 @@ const Layout = () => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="flex flex-col h-screen overflow-hidden">
+      <div className="flex flex-col h-full overflow-hidden">
         {/* App Header */}
         <AppHeader 
           showMenuButton={isMobile}
