@@ -8,11 +8,12 @@ interface TeleprompterContentProps {
   cabecaColor?: string;
   retrancaColor?: string;
   tipoMaterialColor?: string;
+  isMirrored?: boolean;
   isMobile?: boolean;
 }
 
 export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterContentProps>(
-  ({ blocks, fontSize, cabecaColor = "#ffffff", retrancaColor = "#facc15", tipoMaterialColor = "#f97316", isMobile = false }, ref) => {
+  ({ blocks, fontSize, cabecaColor = "#ffffff", retrancaColor = "#facc15", tipoMaterialColor = "#f97316", isMirrored = false, isMobile = false }, ref) => {
     console.log("TeleprompterContent received blocks:", blocks);
     
     const touchStartRef = useRef<number>(0);
@@ -79,7 +80,8 @@ export const TeleprompterContent = forwardRef<HTMLDivElement, TeleprompterConten
           boxSizing: 'border-box',
           width: '100%',
           maxWidth: '100vw',
-          willChange: 'scroll-position'
+          willChange: 'scroll-position',
+          transform: isMirrored ? 'scaleX(-1)' : 'none'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}

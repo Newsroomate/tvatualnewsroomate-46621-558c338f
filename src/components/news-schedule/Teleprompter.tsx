@@ -27,6 +27,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const [cabecaColor, setCabecaColor] = useState("#ffffff");
   const [retrancaColor, setRetrancaColor] = useState("#facc15");
   const [tipoMaterialColor, setTipoMaterialColor] = useState("#f97316");
+  const [isMirrored, setIsMirrored] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const animationFrameRef = useRef<number | null>(null);
@@ -229,6 +230,10 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     setTipoMaterialColor(color);
   };
 
+  const handleMirrorToggle = () => {
+    setIsMirrored(prev => !prev);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
@@ -270,6 +275,8 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
                 onIncreaseFontSize={increaseFontSize}
                 onDecreaseFontSize={decreaseFontSize}
                 onFontSizeChange={handleFontSizeChange}
+                isMirrored={isMirrored}
+                onMirrorToggle={handleMirrorToggle}
                 isMobile={isMobile}
               />
             </div>
@@ -303,6 +310,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
             cabecaColor={cabecaColor}
             retrancaColor={retrancaColor}
             tipoMaterialColor={tipoMaterialColor}
+            isMirrored={isMirrored}
             isMobile={isMobile}
           />
         </div>
