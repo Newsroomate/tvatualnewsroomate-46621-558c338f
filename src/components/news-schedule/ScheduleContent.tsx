@@ -106,9 +106,9 @@ export const ScheduleContent = ({
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-8">
       {blocks.map((block, index) => (
-        <div key={block.id}>
+        <div key={block.id} className="mb-8">
           <NewsBlock
             block={block}
             newItemBlock={newItemBlock}
@@ -126,6 +126,10 @@ export const ScheduleContent = ({
             selectedMateria={selectedMateria}
             onMateriaSelect={onMateriaSelect}
           />
+          {/* Add extra spacing after the last block for better visibility */}
+          {index === blocks.length - 1 && (
+            <div className="h-16" />
+          )}
         </div>
       ))}
     </div>

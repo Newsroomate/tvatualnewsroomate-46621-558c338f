@@ -121,10 +121,10 @@ export const NewsScheduleCore = ({
       {/* Main area with blocks - enhanced scrolling and real-time updates */}
       <div 
         ref={scrollContainerRef}
-        className="flex-1 overflow-y-auto px-4 pt-2"
-        style={{
+        className="flex-1 overflow-y-auto p-4 pb-32 space-y-6"
+        style={{ 
           scrollBehavior: 'smooth',
-          paddingBottom: '1rem'
+          paddingBottom: 'max(8rem, 20vh)'
         }}
       >
         <ScheduleContent

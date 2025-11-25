@@ -185,7 +185,7 @@ export const ScheduleHeader = ({
       
       {/* Seção de Botões - Apenas Desktop */}
       {!isMobile && (
-        <div className="px-4 pb-2">
+        <div className="px-4 pb-4">
           <div className="flex flex-wrap gap-2">
             {/* Ações Principais */}
             <div className="flex flex-wrap gap-2">
