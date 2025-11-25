@@ -62,7 +62,21 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       }
 
       if (data) {
-        setProfile(data as UserProfile);
+        // Check if user has telejornal-specific exceptions
+        const { data: accessData } = await supabase
+          .from('user_telejornal_access')
+          .select('role')
+          .eq('user_id', userId)
+          .limit(1)
+          .single();
+
+        // If user has exception, use that role instead of global role
+        const effectiveRole = accessData?.role || data.role;
+        
+        setProfile({
+          ...data,
+          role: effectiveRole
+        } as UserProfile);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
