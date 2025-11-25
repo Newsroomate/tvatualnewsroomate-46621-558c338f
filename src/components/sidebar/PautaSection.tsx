@@ -1,14 +1,12 @@
-import { useState, useMemo } from "react";
+
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle } from "lucide-react";
+import { PlusCircle, Edit2, Trash2, FileText } from "lucide-react";
 import { Pauta } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { deletePauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
 import { generatePautaPDF } from "@/utils/pdf-utils";
-import { PautaFilters } from "./pauta/PautaFilters";
-import { PautaGroupCollapsible } from "./pauta/PautaGroupCollapsible";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface PautaSectionProps {
   pautas: Pauta[];
@@ -24,8 +22,6 @@ export const PautaSection = ({
   onDataChange
 }: PautaSectionProps) => {
   const [deletingPauta, setDeletingPauta] = useState<Pauta | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<'date' | 'title' | 'status' | 'reporter'>('date');
   const { toast } = useToast();
 
   const handleDeletePauta = (pauta: Pauta, e: React.MouseEvent) => {
@@ -52,10 +48,6 @@ export const PautaSection = ({
     try {
       await deletePauta(deletingPauta.id);
       onDataChange();
-      toast({
-        title: "Pauta excluída",
-        description: "A pauta foi excluída com sucesso.",
-      });
     } catch (error) {
       console.error("Erro ao excluir pauta:", error);
       toast({
@@ -67,160 +59,48 @@ export const PautaSection = ({
       setDeletingPauta(null);
     }
   };
-
-  // Filter and sort pautas
-  const filteredAndSortedPautas = useMemo(() => {
-    let filtered = pautas;
-
-    // Apply search filter
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase();
-      filtered = filtered.filter(
-        (p) =>
-          p.titulo.toLowerCase().includes(term) ||
-          p.reporter?.toLowerCase().includes(term) ||
-          p.local?.toLowerCase().includes(term) ||
-          p.produtor?.toLowerCase().includes(term)
-      );
-    }
-
-    // Sort
-    const sorted = [...filtered].sort((a, b) => {
-      switch (sortBy) {
-        case 'date':
-          const dateA = a.data_cobertura ? new Date(a.data_cobertura).getTime() : 0;
-          const dateB = b.data_cobertura ? new Date(b.data_cobertura).getTime() : 0;
-          return dateB - dateA;
-        case 'title':
-          return a.titulo.localeCompare(b.titulo);
-        case 'status':
-          return (a.status || 'pendente').localeCompare(b.status || 'pendente');
-        case 'reporter':
-          return (a.reporter || '').localeCompare(b.reporter || '');
-        default:
-          return 0;
-      }
-    });
-
-    return sorted;
-  }, [pautas, searchTerm, sortBy]);
-
-  // Group by status
-  const groupedPautas = useMemo(() => {
-    const groups: Record<string, Pauta[]> = {
-      em_producao: [],
-      pendente: [],
-      concluida: [],
-      cancelada: [],
-      outros: []
-    };
-
-    filteredAndSortedPautas.forEach((pauta) => {
-      const status = pauta.status?.toLowerCase() || 'pendente';
-      if (groups[status]) {
-        groups[status].push(pauta);
-      } else {
-        groups.outros.push(pauta);
-      }
-    });
-
-    return groups;
-  }, [filteredAndSortedPautas]);
-
-  const getGroupTitle = (status: string) => {
-    switch (status) {
-      case 'em_producao': return 'Em Produção';
-      case 'pendente': return 'Pendentes';
-      case 'concluida': return 'Concluídas';
-      case 'cancelada': return 'Canceladas';
-      case 'outros': return 'Outros';
-      default: return status;
-    }
-  };
-
+  
   return (
-    <div className="border-t border-border">
-      <div className="p-3 pb-2 space-y-2">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <h3 className="text-xs font-semibold uppercase text-muted-foreground">
-            Pautas
-          </h3>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="h-7 w-7 p-0" 
-            onClick={onAddPauta}
-          >
-            <PlusCircle className="h-4 w-4" />
-            <span className="sr-only">Adicionar Pauta</span>
-          </Button>
-        </div>
-
-        {/* Filters */}
-        {!isLoading && pautas.length > 0 && (
-          <PautaFilters
-            searchTerm={searchTerm}
-            onSearchChange={setSearchTerm}
-            sortBy={sortBy}
-            onSortChange={setSortBy}
-          />
-        )}
+    <div className="p-4 border-t border-gray-200">
+      <div className="flex items-center justify-between mb-2">
+        <h3 className="text-sm font-semibold uppercase text-gray-500">Pautas</h3>
+        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onAddPauta}>
+          <PlusCircle className="h-4 w-4" />
+          <span className="sr-only">Adicionar Pauta</span>
+        </Button>
       </div>
-
-      {/* Content */}
-      <ScrollArea className="h-full px-3 pb-3">
-        {isLoading ? (
-          <div className="text-xs text-muted-foreground py-4 text-center">
-            Carregando pautas...
-          </div>
-        ) : filteredAndSortedPautas.length === 0 ? (
-          <div className="text-xs text-muted-foreground italic py-4 text-center">
-            {searchTerm ? 'Nenhuma pauta encontrada' : 'Nenhuma pauta disponível'}
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {/* Show groups based on priority */}
-            <PautaGroupCollapsible
-              title={getGroupTitle('em_producao')}
-              pautas={groupedPautas.em_producao}
-              defaultOpen={true}
-              onPrint={handlePrintPauta}
-              onDelete={handleDeletePauta}
-            />
-            <PautaGroupCollapsible
-              title={getGroupTitle('pendente')}
-              pautas={groupedPautas.pendente}
-              defaultOpen={true}
-              onPrint={handlePrintPauta}
-              onDelete={handleDeletePauta}
-            />
-            <PautaGroupCollapsible
-              title={getGroupTitle('concluida')}
-              pautas={groupedPautas.concluida}
-              defaultOpen={false}
-              onPrint={handlePrintPauta}
-              onDelete={handleDeletePauta}
-            />
-            <PautaGroupCollapsible
-              title={getGroupTitle('cancelada')}
-              pautas={groupedPautas.cancelada}
-              defaultOpen={false}
-              onPrint={handlePrintPauta}
-              onDelete={handleDeletePauta}
-            />
-            <PautaGroupCollapsible
-              title={getGroupTitle('outros')}
-              pautas={groupedPautas.outros}
-              defaultOpen={false}
-              onPrint={handlePrintPauta}
-              onDelete={handleDeletePauta}
-            />
-          </div>
-        )}
-      </ScrollArea>
-
-      {/* Delete Confirmation Dialog */}
+      
+      {isLoading ? (
+        <p className="text-sm text-gray-500">Carregando...</p>
+      ) : (
+        <ul className="space-y-1">
+          {pautas.map(pauta => (
+            <li key={pauta.id} className="relative group">
+              <Button variant="ghost" className="w-full justify-start text-left pr-24">
+                {pauta.titulo}
+              </Button>
+              <div className="absolute top-1 right-1 hidden group-hover:flex space-x-1">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => handlePrintPauta(pauta, e)}>
+                  <FileText className="h-4 w-4" />
+                  <span className="sr-only">Imprimir PDF</span>
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 text-red-500 hover:text-red-700" 
+                  onClick={e => handleDeletePauta(pauta, e)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">Excluir</span>
+                </Button>
+              </div>
+            </li>
+          ))}
+          {pautas.length === 0 && <p className="text-sm text-gray-500 italic">Nenhuma pauta disponível</p>}
+        </ul>
+      )}
+      
+      {/* Delete Pauta Confirmation */}
       <AlertDialog open={!!deletingPauta} onOpenChange={() => setDeletingPauta(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -235,10 +115,7 @@ export const PautaSection = ({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={confirmDeletePauta} 
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
+            <AlertDialogAction onClick={confirmDeletePauta} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>
