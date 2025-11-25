@@ -126,6 +126,10 @@ export const ScheduleContent = ({
             selectedMateria={selectedMateria}
             onMateriaSelect={onMateriaSelect}
           />
+          {/* Add extra spacing after the last block for better visibility */}
+          {index === blocks.length - 1 && (
+            <div className="h-16" />
+          )}
         </div>
       ))}
     </div>
