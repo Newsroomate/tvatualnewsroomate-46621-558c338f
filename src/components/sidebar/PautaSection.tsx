@@ -61,9 +61,8 @@ export const PautaSection = ({
   };
   
   return (
-    <div className="p-4 border-t border-gray-200 flex flex-col min-h-0">
-      {/* Fixed Header */}
-      <div className="flex items-center justify-between mb-2 flex-shrink-0">
+    <div className="p-4 border-t border-gray-200">
+      <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold uppercase text-gray-500">Pautas</h3>
         <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onAddPauta}>
           <PlusCircle className="h-4 w-4" />
@@ -71,37 +70,34 @@ export const PautaSection = ({
         </Button>
       </div>
       
-      {/* Scrollable List */}
       {isLoading ? (
         <p className="text-sm text-gray-500">Carregando...</p>
       ) : (
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <ul className="space-y-1">
-            {pautas.map(pauta => (
-              <li key={pauta.id} className="relative group">
-                <Button variant="ghost" className="w-full justify-start text-left pr-24">
-                  {pauta.titulo}
+        <ul className="space-y-1">
+          {pautas.map(pauta => (
+            <li key={pauta.id} className="relative group">
+              <Button variant="ghost" className="w-full justify-start text-left pr-24">
+                {pauta.titulo}
+              </Button>
+              <div className="absolute top-1 right-1 hidden group-hover:flex space-x-1">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => handlePrintPauta(pauta, e)}>
+                  <FileText className="h-4 w-4" />
+                  <span className="sr-only">Imprimir PDF</span>
                 </Button>
-                <div className="absolute top-1 right-1 hidden group-hover:flex space-x-1">
-                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={e => handlePrintPauta(pauta, e)}>
-                    <FileText className="h-4 w-4" />
-                    <span className="sr-only">Imprimir PDF</span>
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="h-7 w-7 text-red-500 hover:text-red-700" 
-                    onClick={e => handleDeletePauta(pauta, e)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    <span className="sr-only">Excluir</span>
-                  </Button>
-                </div>
-              </li>
-            ))}
-            {pautas.length === 0 && <p className="text-sm text-gray-500 italic">Nenhuma pauta disponível</p>}
-          </ul>
-        </div>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 text-red-500 hover:text-red-700" 
+                  onClick={e => handleDeletePauta(pauta, e)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span className="sr-only">Excluir</span>
+                </Button>
+              </div>
+            </li>
+          ))}
+          {pautas.length === 0 && <p className="text-sm text-gray-500 italic">Nenhuma pauta disponível</p>}
+        </ul>
       )}
       
       {/* Delete Pauta Confirmation */}
