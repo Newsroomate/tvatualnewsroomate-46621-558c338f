@@ -106,9 +106,9 @@ export const ScheduleContent = ({
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {blocks.map((block, index) => (
-        <div key={block.id} className="mb-8">
+        <div key={block.id}>
           <NewsBlock
             block={block}
             newItemBlock={newItemBlock}
