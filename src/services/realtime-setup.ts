@@ -10,7 +10,8 @@ const tablesToEnable = [
   'espelhos_salvos',
   'modelos_salvos',
   'materias_snapshots',
-  'profiles'
+  'profiles',
+  'user_telejornal_access'
 ];
 
 export const enableAllTables = async () => {
