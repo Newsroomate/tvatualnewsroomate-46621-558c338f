@@ -441,6 +441,38 @@ export type Database = {
         }
         Relationships: []
       }
+      user_telejornal_access: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["user_role"]
+          telejornal_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["user_role"]
+          telejornal_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["user_role"]
+          telejornal_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_telejornal_access_telejornal_id_fkey"
+            columns: ["telejornal_id"]
+            isOneToOne: false
+            referencedRelation: "telejornais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -449,6 +481,10 @@ export type Database = {
       cleanup_expired_locks: { Args: never; Returns: undefined }
       enable_realtime: { Args: { table_name: string }; Returns: boolean }
       get_current_user_role: { Args: never; Returns: string }
+      get_effective_telejornal_role: {
+        Args: { _telejornal_id: string; _user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
