@@ -7,6 +7,7 @@ import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { createPauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface PautaIndependenteModalProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ export const PautaIndependenteModal = ({
   
   const { toast } = useToast();
   const { user } = useAuth();
+  const { guardAction } = usePermissionGuard();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,7 +55,8 @@ export const PautaIndependenteModal = ({
     }
     
     setIsSubmitting(true);
-    try {
+    
+    await guardAction('create', 'pauta', async () => {
       const pautaData = {
         titulo: retranca,
         descricao: roteiro1,
@@ -80,16 +83,9 @@ export const PautaIndependenteModal = ({
       
       onPautaCreated();
       handleClose();
-    } catch (error: any) {
-      console.error("[PautaIndependenteModal] Erro ao criar pauta:", error);
-      toast({
-        title: "Erro ao criar pauta",
-        description: error?.message || "Ocorreu um erro ao criar a pauta. Tente novamente.",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
+    
+    setIsSubmitting(false);
   };
 
   const handleClose = () => {

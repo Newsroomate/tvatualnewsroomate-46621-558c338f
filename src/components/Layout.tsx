@@ -16,6 +16,7 @@ import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 import { useRealtimeTelejornais } from "@/hooks/useRealtimeTelejornais";
 import { useRealtimeInvalidation } from "@/hooks/useRealtimeInvalidation";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -40,6 +41,7 @@ const Layout = () => {
   const [isCloseRundownDialogOpen, setIsCloseRundownDialogOpen] = useState(false);
   const { toast } = useToast();
   const { profile } = useAuth();
+  const { guardAction } = usePermissionGuard();
   const [isPostCloseModalOpen, setIsPostCloseModalOpen] = useState(false);
   const [isSavedRundownsModalOpen, setIsSavedRundownsModalOpen] = useState(false);
   const [selectedViewDate, setSelectedViewDate] = useState<Date>(new Date());
@@ -194,17 +196,24 @@ const Layout = () => {
 
       console.log("Fechamento manual - usando data atual:", dataReferencia);
 
-      // Save the snapshot
-      await saveRundownSnapshot({
-        telejornal_id: selectedJournal,
-        data_referencia: dataReferencia,
-        nome: currentTelejornal.nome,
-        estrutura: {
-          blocos: blocksWithItems
-        }
-      });
+      // Get current user
+      const currentUser = await supabase.auth.getUser();
+      if (!currentUser.data.user) {
+        throw new Error("Usuário não autenticado");
+      }
 
-      console.log("Snapshot salvo com sucesso para fechamento manual!");
+      // Save the snapshot with permission check
+      await guardAction('create', 'espelho', async () => {
+        await saveRundownSnapshot({
+          telejornal_id: selectedJournal,
+          data_referencia: dataReferencia,
+          nome: currentTelejornal.nome,
+          estrutura: {
+            blocos: blocksWithItems
+          }
+        });
+        console.log("Snapshot salvo com sucesso para fechamento manual!");
+      });
     } catch (error: any) {
       console.error("❌ ERRO AO SALVAR SNAPSHOT:", error);
       

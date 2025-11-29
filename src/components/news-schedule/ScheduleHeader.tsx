@@ -9,6 +9,7 @@ import { generateGCTextFile } from "@/utils/gc-txt-utils";
 import { exportPlayoutPDF } from "@/utils/playout-export-utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatDate, DATE_FORMATS } from "@/utils/date-utils";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface ScheduleHeaderProps {
   currentTelejornal: Telejornal | null;
@@ -40,13 +41,21 @@ export const ScheduleHeader = ({
   blocks = []
 }: ScheduleHeaderProps) => {
   const isMobile = useIsMobile();
+  const { checkPermission } = usePermissionGuard();
 
   const handleExportGC = () => {
+    if (!checkPermission('export', 'gc')) return;
     generateGCTextFile(blocks, currentTelejornal);
   };
 
   const handleExportPlayout = () => {
+    if (!checkPermission('export', 'playout')) return;
     exportPlayoutPDF(blocks, currentTelejornal);
+  };
+
+  const handleViewLaudas = () => {
+    if (!checkPermission('view', 'lauda')) return;
+    onViewLaudas?.();
   };
 
   return (
@@ -171,7 +180,7 @@ export const ScheduleHeader = ({
                 </DropdownMenuItem>
                 
                 <DropdownMenuItem 
-                  onClick={onViewLaudas}
+                  onClick={handleViewLaudas}
                   disabled={!currentTelejornal?.espelho_aberto}
                 >
                   <BookOpen className="h-4 w-4 mr-2" />
@@ -291,7 +300,7 @@ export const ScheduleHeader = ({
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={onViewLaudas}
+                onClick={handleViewLaudas}
                 disabled={!currentTelejornal?.espelho_aberto}
                 className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
               >
