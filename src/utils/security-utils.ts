@@ -1,6 +1,7 @@
 
 import { UserProfile } from "@/types/auth";
 import DOMPurify from "dompurify";
+import { getDefaultRolePermissions } from "@/services/user-permissions-api";
 
 // Input validation utilities
 export const validateTextLength = (text: string, maxLength: number = 1000): boolean => {
@@ -29,18 +30,30 @@ const getPermissionType = (
   resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot'
 ): string | null => {
   const permissionMap: Record<string, string> = {
+    // Matérias
     'create-materia': 'criar_materia',
     'update-materia': 'editar_materia',
     'delete-materia': 'excluir_materia',
+    // Blocos
     'create-bloco': 'criar_bloco',
     'update-bloco': 'editar_bloco',
     'delete-bloco': 'excluir_bloco',
+    // Telejornais
     'create-telejornal': 'criar_telejornal',
     'update-telejornal': 'editar_telejornal',
     'delete-telejornal': 'excluir_telejornal',
+    // Pautas
     'create-pauta': 'criar_pauta',
     'update-pauta': 'editar_pauta',
     'delete-pauta': 'excluir_pauta',
+    'view-pauta': 'visualizar_todas_pautas',
+    // Espelhos
+    'create-espelho': 'gerenciar_espelho',
+    'update-espelho': 'gerenciar_espelho',
+    'delete-espelho': 'gerenciar_espelho',
+    // Snapshots
+    'view-snapshot': 'visualizar_snapshots',
+    'delete-snapshot': 'excluir_snapshots',
   };
 
   return permissionMap[`${action}-${resource}`] || null;
@@ -52,29 +65,40 @@ export const canPerformAction = (
   action: 'create' | 'update' | 'delete' | 'view',
   resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot',
   resourceOwnerId?: string,
-  userPermissions?: string[] // Granular permissions from user_permissions table
+  userPermissions?: string[] // Effective permissions (with is_granted applied)
 ): boolean => {
   if (!profile) return false;
 
   const { role } = profile;
-
-  // Check ownership for user-specific resources
   const isOwner = resourceOwnerId ? profile.id === resourceOwnerId : false;
   const isEditorChefe = role === 'editor_chefe';
   const isEditor = ['editor', 'editor_chefe'].includes(role);
 
-  // FIRST: Check granular permissions if provided
+  // CRITICAL: Check granular permissions FIRST
+  // userPermissions already contains the effective set (role + overrides with is_granted applied)
   if (userPermissions && userPermissions.length > 0) {
     const requiredPermission = getPermissionType(action, resource);
-    if (requiredPermission && userPermissions.includes(requiredPermission)) {
-      return true; // User has explicit permission
+    if (requiredPermission) {
+      const hasPermission = userPermissions.includes(requiredPermission);
+      
+      // If user has the permission in effective list, grant access
+      if (hasPermission) {
+        return true;
+      }
+      
+      // If user doesn't have it but role would grant it, it means it was revoked
+      const rolePerms = getDefaultRolePermissions(profile.role);
+      if (rolePerms.includes(requiredPermission as any)) {
+        // Permission was revoked via is_granted=false
+        return false;
+      }
     }
   }
 
   // SECOND: Fallback to role-based permissions
   switch (resource) {
     case 'telejornal':
-      if (action === 'view') return true; // All authenticated users can view
+      if (action === 'view') return true;
       if (action === 'create' || action === 'update') {
         return isEditor;
       }
@@ -84,14 +108,14 @@ export const canPerformAction = (
       break;
 
     case 'bloco':
-      if (action === 'view') return true; // All authenticated users can view
+      if (action === 'view') return true;
       if (action === 'create' || action === 'update' || action === 'delete') {
         return isEditor;
       }
       break;
 
     case 'materia':
-      if (action === 'view') return true; // All authenticated users can view
+      if (action === 'view') return true;
       if (action === 'create' || action === 'update') {
         return ['reporter', 'editor', 'editor_chefe'].includes(role);
       }
@@ -101,7 +125,7 @@ export const canPerformAction = (
       break;
 
     case 'pauta':
-      if (action === 'view') return true; // All authenticated users can view
+      if (action === 'view') return true;
       if (action === 'create') {
         return ['produtor', 'editor_chefe'].includes(role) || isOwner;
       }
@@ -127,7 +151,7 @@ export const canPerformAction = (
         return isEditor || isOwner;
       }
       if (action === 'create') {
-        return true; // All authenticated users can create snapshots
+        return true;
       }
       if (action === 'update' || action === 'delete') {
         return isEditor || isOwner;
@@ -140,7 +164,6 @@ export const canPerformAction = (
 
 // Enhanced error handling with security considerations
 export const getSecureErrorMessage = (error: any): string => {
-  // Don't expose internal error details to users
   if (typeof error === 'string') {
     if (error.includes('permission') || error.includes('unauthorized') || error.includes('PGRST116')) {
       return 'Você não tem permissão para realizar esta ação.';
@@ -164,16 +187,14 @@ export const sanitizeFormData = (data: Record<string, any>): Record<string, any>
   
   for (const [key, value] of Object.entries(data)) {
     if (typeof value === 'string') {
-      // Remove potential XSS, trim whitespace, and validate length
       const sanitizedValue = sanitizeHtml(value).trim();
-      if (validateTextLength(sanitizedValue, 10000)) { // Increased limit for content fields
+      if (validateTextLength(sanitizedValue, 10000)) {
         sanitized[key] = sanitizedValue;
       } else {
         console.warn(`Field ${key} exceeds maximum length and was truncated`);
         sanitized[key] = sanitizedValue.substring(0, 10000);
       }
     } else if (Array.isArray(value)) {
-      // Sanitize array elements
       sanitized[key] = value.map(item => 
         typeof item === 'string' ? sanitizeHtml(item).trim() : item
       );
@@ -187,11 +208,11 @@ export const sanitizeFormData = (data: Record<string, any>): Record<string, any>
 
 // Enhanced session management
 export const isSessionExpired = (lastActivity: number): boolean => {
-  const SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes in milliseconds
+  const SESSION_TIMEOUT = 30 * 60 * 1000;
   return Date.now() - lastActivity > SESSION_TIMEOUT;
 };
 
-// New: Resource ownership validation
+// Resource ownership validation
 export const validateResourceOwnership = (
   profile: UserProfile | null,
   resourceOwnerId: string | null | undefined
@@ -200,7 +221,7 @@ export const validateResourceOwnership = (
   return profile.id === resourceOwnerId || profile.role === 'editor_chefe';
 };
 
-// New: Audit logging helper
+// Audit logging helper
 export const logSecurityEvent = (
   event: 'access_denied' | 'unauthorized_attempt' | 'permission_granted',
   resource: string,
@@ -215,7 +236,7 @@ export const logSecurityEvent = (
   });
 };
 
-// New: Rate limiting helper (client-side basic implementation)
+// Rate limiting helper
 const rateLimitMap = new Map<string, number[]>();
 
 export const checkRateLimit = (
@@ -226,16 +247,14 @@ export const checkRateLimit = (
   const now = Date.now();
   const requests = rateLimitMap.get(key) || [];
   
-  // Remove old requests outside the window
   const validRequests = requests.filter(time => now - time < windowMs);
   
   if (validRequests.length >= maxRequests) {
-    return false; // Rate limit exceeded
+    return false;
   }
   
-  // Add current request
   validRequests.push(now);
   rateLimitMap.set(key, validRequests);
   
-  return true; // Request allowed
+  return true;
 };
