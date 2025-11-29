@@ -109,12 +109,12 @@ export const fetchClosedRundownSnapshots = async (
       telejornal_id: telejornalId,
       data_fechamento: item.created_at,
       data_referencia: item.data_referencia || payload.data_referencia || '',
-      nome_telejornal: telejornalData.nome || payload.nome_telejornal || "Telejornal",
+      nome_telejornal: telejornalData.nome || payload.nome_telejornal || item.nome || "Telejornal",
       horario: telejornalData.horario || payload.horario || "",
       estrutura_completa: {
         telejornal: {
           id: telejornalId,
-          nome: telejornalData.nome || payload.nome_telejornal || "Telejornal",
+          nome: telejornalData.nome || payload.nome_telejornal || item.nome || "Telejornal",
           horario: telejornalData.horario || payload.horario || ""
         },
         blocos: payload.blocos || [],
