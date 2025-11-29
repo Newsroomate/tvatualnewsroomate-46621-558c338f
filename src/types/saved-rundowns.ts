@@ -6,6 +6,14 @@ export interface SavedRundown {
   data_referencia: string;
   nome: string;
   estrutura: {
+    telejornal?: {
+      id: string;
+      nome: string;
+      horario?: string;
+    };
+    telejornal_id?: string;
+    nome_telejornal?: string;
+    horario?: string;
     blocos: Array<{
       id: string;
       nome: string;
@@ -34,6 +42,14 @@ export interface SavedRundownCreateInput {
   data_referencia: string;
   nome: string;
   estrutura: {
+    telejornal?: {
+      id: string;
+      nome: string;
+      horario?: string;
+    };
+    telejornal_id?: string;
+    nome_telejornal?: string;
+    horario?: string;
     blocos: Array<{
       id: string;
       nome: string;

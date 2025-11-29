@@ -142,6 +142,13 @@ export const recoverLostRundown = async (
     const totalMaterias = blocksWithItems.reduce((sum, block) => sum + block.items.length, 0);
     console.log(`Estrutura recuperada: ${blocks.length} blocos, ${totalMaterias} matérias`);
     
+    // Buscar dados do telejornal para incluir na estrutura
+    const { data: telejornalData } = await supabase
+      .from('telejornais')
+      .select('id, nome, horario')
+      .eq('id', telejornalId)
+      .single();
+    
     // Criar snapshot com nome indicando que foi recuperado
     const { error } = await supabase
       .from('espelhos_salvos')
@@ -150,6 +157,14 @@ export const recoverLostRundown = async (
         telejornal_id: telejornalId,
         data_referencia: dataReferencia,
         estrutura: {
+          telejornal: telejornalData ? {
+            id: telejornalData.id,
+            nome: telejornalData.nome,
+            horario: telejornalData.horario || ''
+          } : undefined,
+          telejornal_id: telejornalId,
+          nome_telejornal: telejornalData?.nome || telejornalNome,
+          horario: telejornalData?.horario || '',
           blocos: blocksWithItems
         },
         user_id: currentUser.user.id
