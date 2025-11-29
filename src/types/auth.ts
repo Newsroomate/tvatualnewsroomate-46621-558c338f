@@ -6,6 +6,7 @@ export interface AuthContextType {
   session: Session | null;
   user: User | null;
   profile: UserProfile | null;
+  userPermissions: string[];
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, fullName: string) => Promise<void>;

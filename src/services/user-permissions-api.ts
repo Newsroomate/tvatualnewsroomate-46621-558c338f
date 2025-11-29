@@ -180,3 +180,90 @@ export const getAllPermissions = (): PermissionType[] => {
     'excluir_snapshots'
   ];
 };
+
+// Get default permissions for a given role
+export const getDefaultRolePermissions = (role: UserRole): PermissionType[] => {
+  const rolePermissions: Record<UserRole, PermissionType[]> = {
+    editor_chefe: [
+      'criar_materia',
+      'editar_materia',
+      'excluir_materia',
+      'criar_bloco',
+      'editar_bloco',
+      'excluir_bloco',
+      'criar_telejornal',
+      'editar_telejornal',
+      'excluir_telejornal',
+      'gerenciar_espelho',
+      'fechar_espelho',
+      'criar_pauta',
+      'editar_pauta',
+      'excluir_pauta',
+      'visualizar_todas_pautas',
+      'gerenciar_usuarios',
+      'gerenciar_permissoes',
+      'visualizar_snapshots',
+      'excluir_snapshots'
+    ],
+    editor: [
+      'criar_materia',
+      'editar_materia',
+      'excluir_materia',
+      'criar_bloco',
+      'editar_bloco',
+      'excluir_bloco',
+      'criar_telejornal',
+      'editar_telejornal',
+      'gerenciar_espelho',
+      'visualizar_snapshots'
+    ],
+    reporter: [
+      'criar_materia',
+      'editar_materia'
+    ],
+    produtor: [
+      'criar_pauta',
+      'editar_pauta',
+      'excluir_pauta'
+    ]
+  };
+
+  return rolePermissions[role] || [];
+};
+
+// Get user's effective permissions (role + extra permissions)
+export const getUserEffectivePermissions = async (userId: string): Promise<{
+  rolePermissions: PermissionType[];
+  extraPermissions: PermissionType[];
+  allPermissions: PermissionType[];
+}> => {
+  // Get user's role
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userId)
+    .single();
+
+  if (profileError) throw profileError;
+
+  const rolePermissions = getDefaultRolePermissions(profile.role);
+
+  // Get user's extra permissions
+  const { data: userPerms, error: permsError } = await supabase
+    .from("user_permissions")
+    .select("permission")
+    .eq("user_id", userId);
+
+  if (permsError) throw permsError;
+
+  const extraPermissions = (userPerms || []).map(p => p.permission as PermissionType);
+
+  // Combine all unique permissions
+  const allPermissions = Array.from(new Set([...rolePermissions, ...extraPermissions]));
+
+  return {
+    rolePermissions,
+    extraPermissions,
+    allPermissions
+  };
+};

@@ -23,12 +23,36 @@ export const validateEmail = (email: string): boolean => {
   return emailRegex.test(email);
 };
 
-// Authorization utilities with enhanced security checks
+// Map action+resource to permission type
+const getPermissionType = (
+  action: 'create' | 'update' | 'delete' | 'view',
+  resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot'
+): string | null => {
+  const permissionMap: Record<string, string> = {
+    'create-materia': 'criar_materia',
+    'update-materia': 'editar_materia',
+    'delete-materia': 'excluir_materia',
+    'create-bloco': 'criar_bloco',
+    'update-bloco': 'editar_bloco',
+    'delete-bloco': 'excluir_bloco',
+    'create-telejornal': 'criar_telejornal',
+    'update-telejornal': 'editar_telejornal',
+    'delete-telejornal': 'excluir_telejornal',
+    'create-pauta': 'criar_pauta',
+    'update-pauta': 'editar_pauta',
+    'delete-pauta': 'excluir_pauta',
+  };
+
+  return permissionMap[`${action}-${resource}`] || null;
+};
+
+// Authorization utilities with granular permissions support
 export const canPerformAction = (
   profile: UserProfile | null,
   action: 'create' | 'update' | 'delete' | 'view',
   resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot',
-  resourceOwnerId?: string
+  resourceOwnerId?: string,
+  userPermissions?: string[] // Granular permissions from user_permissions table
 ): boolean => {
   if (!profile) return false;
 
@@ -39,6 +63,15 @@ export const canPerformAction = (
   const isEditorChefe = role === 'editor_chefe';
   const isEditor = ['editor', 'editor_chefe'].includes(role);
 
+  // FIRST: Check granular permissions if provided
+  if (userPermissions && userPermissions.length > 0) {
+    const requiredPermission = getPermissionType(action, resource);
+    if (requiredPermission && userPermissions.includes(requiredPermission)) {
+      return true; // User has explicit permission
+    }
+  }
+
+  // SECOND: Fallback to role-based permissions
   switch (resource) {
     case 'telejornal':
       if (action === 'view') return true; // All authenticated users can view

@@ -1,28 +1,36 @@
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
-  fetchUsersWithPermissions,
+  getUserEffectivePermissions,
   grantPermission,
   revokePermission,
   getAllPermissions,
   getPermissionLabel,
   PermissionType
 } from "@/services/user-permissions-api";
+import { fetchUsersWithPermissions } from "@/services/user-permissions-api";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Shield, Star } from "lucide-react";
 
 export function UserPermissionsTab() {
   const queryClient = useQueryClient();
   const [selectedUserId, setSelectedUserId] = useState<string>("");
-  const [selectedPermission, setSelectedPermission] = useState<PermissionType | "">("");
 
-  const { data: users, isLoading } = useQuery({
+  const { data: users, isLoading: isLoadingUsers } = useQuery({
     queryKey: ["users-with-permissions"],
     queryFn: fetchUsersWithPermissions
+  });
+
+  const { data: effectivePerms, isLoading: isLoadingPerms } = useQuery({
+    queryKey: ["effective-permissions", selectedUserId],
+    queryFn: () => getUserEffectivePermissions(selectedUserId),
+    enabled: !!selectedUserId
   });
 
   const grantMutation = useMutation({
@@ -30,8 +38,8 @@ export function UserPermissionsTab() {
       grantPermission(userId, permission),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users-with-permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["effective-permissions", selectedUserId] });
       toast.success("Permissão concedida");
-      setSelectedPermission("");
     },
     onError: (error: any) => {
       toast.error(error.message || "Erro ao conceder permissão");
@@ -43,6 +51,7 @@ export function UserPermissionsTab() {
       revokePermission(userId, permission),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users-with-permissions"] });
+      queryClient.invalidateQueries({ queryKey: ["effective-permissions", selectedUserId] });
       toast.success("Permissão removida");
     },
     onError: (error: any) => {
@@ -52,21 +61,28 @@ export function UserPermissionsTab() {
 
   const selectedUser = users?.find(u => u.id === selectedUserId);
   const allPermissions = getAllPermissions();
-  const availablePermissions = allPermissions.filter(
-    p => !selectedUser?.permissions.includes(p)
-  );
 
-  const handleGrantPermission = () => {
-    if (!selectedUserId || !selectedPermission) return;
-    grantMutation.mutate({ userId: selectedUserId, permission: selectedPermission });
-  };
-
-  const handleRevokePermission = (permission: PermissionType) => {
+  const handleTogglePermission = (permission: PermissionType, isActive: boolean) => {
     if (!selectedUserId) return;
-    revokeMutation.mutate({ userId: selectedUserId, permission });
+
+    const isRolePermission = effectivePerms?.rolePermissions.includes(permission);
+    
+    // Se é permissão do role, não pode desativar (apenas via mudança de role)
+    if (isRolePermission && isActive) {
+      toast.info("Esta permissão vem do role global e não pode ser removida diretamente");
+      return;
+    }
+
+    if (isActive) {
+      // Remover permissão extra
+      revokeMutation.mutate({ userId: selectedUserId, permission });
+    } else {
+      // Adicionar permissão extra
+      grantMutation.mutate({ userId: selectedUserId, permission });
+    }
   };
 
-  if (isLoading) {
+  if (isLoadingUsers) {
     return (
       <div className="flex items-center justify-center py-8">
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -77,7 +93,7 @@ export function UserPermissionsTab() {
   return (
     <div className="space-y-6">
       <div className="text-sm text-muted-foreground">
-        Atribua permissões específicas para usuários individuais, complementando seus roles globais.
+        Visualize e gerencie permissões granulares por usuário. Permissões extras complementam as permissões do role global.
       </div>
 
       {/* User Selection */}
@@ -101,63 +117,97 @@ export function UserPermissionsTab() {
 
           {selectedUser && (
             <div className="pt-4 border-t">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h4 className="font-medium">{selectedUser.full_name || "Sem nome"}</h4>
+                  <h4 className="font-medium text-lg">{selectedUser.full_name || "Sem nome"}</h4>
                   <p className="text-sm text-muted-foreground">
-                    Role: <span className="font-medium">{selectedUser.role}</span>
+                    Role Global: <Badge variant="outline" className="ml-1">{selectedUser.role}</Badge>
                   </p>
                 </div>
-              </div>
-
-              {/* Add Permission */}
-              <div className="flex gap-2 mb-4">
-                <Select
-                  value={selectedPermission}
-                  onValueChange={(v) => setSelectedPermission(v as PermissionType)}
-                >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Adicionar permissão..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {availablePermissions.map((perm) => (
-                      <SelectItem key={perm} value={perm}>
-                        {getPermissionLabel(perm)}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button
-                  onClick={handleGrantPermission}
-                  disabled={!selectedPermission || grantMutation.isPending}
-                  size="sm"
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Adicionar
-                </Button>
-              </div>
-
-              {/* Current Permissions */}
-              <div>
-                <h5 className="text-sm font-medium mb-2">Permissões Atuais:</h5>
-                {selectedUser.permissions.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Nenhuma permissão extra atribuída</p>
-                ) : (
-                  <div className="flex flex-wrap gap-2">
-                    {selectedUser.permissions.map((perm) => (
-                      <Badge key={perm} variant="secondary" className="gap-1">
-                        {getPermissionLabel(perm)}
-                        <button
-                          onClick={() => handleRevokePermission(perm)}
-                          className="ml-1 hover:text-destructive"
-                          disabled={revokeMutation.isPending}
-                        >
-                          <X className="h-3 w-3" />
-                        </button>
-                      </Badge>
-                    ))}
+                {effectivePerms && (
+                  <div className="text-right text-sm text-muted-foreground">
+                    <div>
+                      Permissões do Role: <span className="font-medium">{effectivePerms.rolePermissions.length}</span>
+                    </div>
+                    <div>
+                      Permissões Extras: <span className="font-medium text-primary">{effectivePerms.extraPermissions.length}</span>
+                    </div>
                   </div>
                 )}
+              </div>
+
+              {isLoadingPerms ? (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : (
+                <div className="border rounded-lg">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[50%]">Permissão</TableHead>
+                        <TableHead className="w-[25%]">Status</TableHead>
+                        <TableHead className="w-[25%] text-center">Ação</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {allPermissions.map((permission) => {
+                        const isRolePermission = effectivePerms?.rolePermissions.includes(permission);
+                        const isExtraPermission = effectivePerms?.extraPermissions.includes(permission);
+                        const isActive = effectivePerms?.allPermissions.includes(permission);
+
+                        return (
+                          <TableRow key={permission}>
+                            <TableCell className="font-medium">
+                              {getPermissionLabel(permission)}
+                            </TableCell>
+                            <TableCell>
+                              {isActive ? (
+                                <div className="flex items-center gap-2">
+                                  {isRolePermission && !isExtraPermission && (
+                                    <Badge variant="secondary" className="gap-1">
+                                      <Shield className="h-3 w-3" />
+                                      Via Role
+                                    </Badge>
+                                  )}
+                                  {isExtraPermission && (
+                                    <Badge variant="default" className="gap-1 bg-primary">
+                                      <Star className="h-3 w-3" />
+                                      Extra
+                                    </Badge>
+                                  )}
+                                </div>
+                              ) : (
+                                <Badge variant="outline" className="text-muted-foreground">
+                                  Inativo
+                                </Badge>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-center">
+                              <Switch
+                                checked={isActive || false}
+                                onCheckedChange={() => handleTogglePermission(permission, isActive || false)}
+                                disabled={
+                                  grantMutation.isPending || 
+                                  revokeMutation.isPending ||
+                                  (isRolePermission && !isExtraPermission) // Disable if only from role
+                                }
+                              />
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+
+              <div className="mt-4 p-3 bg-muted/50 rounded-lg">
+                <p className="text-xs text-muted-foreground">
+                  <strong>Dica:</strong> Permissões marcadas como "Via Role" são herdadas do role global do usuário. 
+                  Para removê-las, você precisa alterar o role do usuário na aba "Usuários". 
+                  Permissões "Extra" podem ser ativadas/desativadas independentemente.
+                </p>
               </div>
             </div>
           )}
