@@ -468,6 +468,7 @@ export type Database = {
           assigned_by: string | null
           created_at: string | null
           id: string
+          is_granted: boolean
           permission: Database["public"]["Enums"]["permission_type"]
           user_id: string
         }
@@ -475,6 +476,7 @@ export type Database = {
           assigned_by?: string | null
           created_at?: string | null
           id?: string
+          is_granted?: boolean
           permission: Database["public"]["Enums"]["permission_type"]
           user_id: string
         }
@@ -482,6 +484,7 @@ export type Database = {
           assigned_by?: string | null
           created_at?: string | null
           id?: string
+          is_granted?: boolean
           permission?: Database["public"]["Enums"]["permission_type"]
           user_id?: string
         }
@@ -601,6 +604,33 @@ export type Database = {
         | "gerenciar_permissoes"
         | "visualizar_snapshots"
         | "excluir_snapshots"
+        | "duplicar_materia"
+        | "copiar_materia"
+        | "colar_materia"
+        | "reordenar_materias"
+        | "transferir_materias"
+        | "copiar_bloco"
+        | "colar_bloco"
+        | "renomear_bloco"
+        | "salvar_modelo"
+        | "aplicar_modelo"
+        | "excluir_modelo"
+        | "visualizar_modelos"
+        | "exportar_gc"
+        | "exportar_playout"
+        | "exportar_lauda"
+        | "exportar_clip_retranca"
+        | "exportar_rss"
+        | "visualizar_teleprompter"
+        | "visualizar_laudas"
+        | "busca_profunda"
+        | "visualizar_historico_espelhos"
+        | "abrir_espelho"
+        | "salvar_espelho"
+        | "editar_espelho_salvo"
+        | "excluir_espelho_salvo"
+        | "criar_snapshot"
+        | "editar_snapshot"
       user_role: "reporter" | "editor" | "editor_chefe" | "produtor"
     }
     CompositeTypes: {
@@ -749,6 +779,33 @@ export const Constants = {
         "gerenciar_permissoes",
         "visualizar_snapshots",
         "excluir_snapshots",
+        "duplicar_materia",
+        "copiar_materia",
+        "colar_materia",
+        "reordenar_materias",
+        "transferir_materias",
+        "copiar_bloco",
+        "colar_bloco",
+        "renomear_bloco",
+        "salvar_modelo",
+        "aplicar_modelo",
+        "excluir_modelo",
+        "visualizar_modelos",
+        "exportar_gc",
+        "exportar_playout",
+        "exportar_lauda",
+        "exportar_clip_retranca",
+        "exportar_rss",
+        "visualizar_teleprompter",
+        "visualizar_laudas",
+        "busca_profunda",
+        "visualizar_historico_espelhos",
+        "abrir_espelho",
+        "salvar_espelho",
+        "editar_espelho_salvo",
+        "excluir_espelho_salvo",
+        "criar_snapshot",
+        "editar_snapshot",
       ],
       user_role: ["reporter", "editor", "editor_chefe", "produtor"],
     },

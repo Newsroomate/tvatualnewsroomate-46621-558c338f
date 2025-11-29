@@ -4,50 +4,14 @@ import { Check, X } from "lucide-react";
 import { getAllPermissions, getPermissionLabel } from "@/services/user-permissions-api";
 import { UserRole } from "@/types/auth";
 
-// Default permissions by role (based on existing permission.ts)
+import { getDefaultRolePermissions } from "@/services/user-permissions-api";
+
+// Use centralized default permissions
 const defaultPermissionsByRole: Record<UserRole, string[]> = {
-  reporter: [
-    'criar_materia',
-    'editar_materia',
-    'visualizar_snapshots'
-  ],
-  produtor: [
-    'criar_pauta',
-    'editar_pauta',
-    'excluir_pauta'
-  ],
-  editor: [
-    'criar_materia',
-    'editar_materia',
-    'excluir_materia',
-    'criar_bloco',
-    'editar_bloco',
-    'criar_telejornal',
-    'editar_telejornal',
-    'gerenciar_espelho',
-    'visualizar_snapshots'
-  ],
-  editor_chefe: [
-    'criar_materia',
-    'editar_materia',
-    'excluir_materia',
-    'criar_bloco',
-    'editar_bloco',
-    'excluir_bloco',
-    'criar_telejornal',
-    'editar_telejornal',
-    'excluir_telejornal',
-    'gerenciar_espelho',
-    'fechar_espelho',
-    'criar_pauta',
-    'editar_pauta',
-    'excluir_pauta',
-    'visualizar_todas_pautas',
-    'gerenciar_usuarios',
-    'gerenciar_permissoes',
-    'visualizar_snapshots',
-    'excluir_snapshots'
-  ]
+  reporter: getDefaultRolePermissions('reporter'),
+  produtor: getDefaultRolePermissions('produtor'),
+  editor: getDefaultRolePermissions('editor'),
+  editor_chefe: getDefaultRolePermissions('editor_chefe'),
 };
 
 const roleLabels: Record<UserRole, string> = {

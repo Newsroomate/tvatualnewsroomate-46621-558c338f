@@ -5,7 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuthContextType, AuthProviderProps, UserProfile } from '@/types/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
-import { PermissionType } from '@/services/user-permissions-api';
+import { PermissionType, getDefaultRolePermissions } from '@/services/user-permissions-api';
 
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
@@ -81,13 +81,26 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           role: effectiveRole
         } as UserProfile);
 
-        // Fetch user's granular permissions
-        const { data: perms } = await supabase
+        // Get user's effective permissions (role + overrides with is_granted)
+        const rolePerms = new Set(getDefaultRolePermissions(data.role));
+        
+        const { data: overrides } = await supabase
           .from('user_permissions')
-          .select('permission')
+          .select('permission, is_granted')
           .eq('user_id', userId);
 
-        setUserPermissions((perms || []).map(p => p.permission as PermissionType));
+        // Apply overrides
+        if (overrides) {
+          for (const override of overrides) {
+            if (override.is_granted) {
+              rolePerms.add(override.permission as PermissionType);
+            } else {
+              rolePerms.delete(override.permission as PermissionType);
+            }
+          }
+        }
+
+        setUserPermissions(Array.from(rolePerms));
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
