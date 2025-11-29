@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { updateMateria } from "@/services/materias-api";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface UseItemRenumberingProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
@@ -17,8 +18,14 @@ export const useItemRenumbering = ({
 }: UseItemRenumberingProps) => {
   const [renumberConfirmOpen, setRenumberConfirmOpen] = useState(false);
   const { toast } = useToast();
+  const { checkPermission } = usePermissionGuard();
 
   const handleRenumberItems = async () => {
+    // Check permission first
+    if (!checkPermission('update', 'materia')) {
+      return;
+    }
+    
     // Can't renumber if espelho is not open
     if (!currentTelejornal?.espelho_aberto) {
       toast({

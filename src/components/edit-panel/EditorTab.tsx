@@ -8,8 +8,7 @@ import { EditorAttachments } from "./EditorAttachments";
 import { EditorActions } from "./EditorActions";
 import { validateTextLength, validateRequired, sanitizeFormData } from "@/utils/security-utils";
 import { toast } from "@/hooks/use-toast";
-import { useAuth } from "@/context/AuthContext";
-import { canPerformAction } from "@/utils/security-utils";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface EditorTabProps {
   formData: Partial<Materia>;
@@ -30,18 +29,13 @@ export const EditorTab = ({
   isSaving,
   disabled = false
 }: EditorTabProps) => {
-  const { profile } = useAuth();
+  const { checkPermission } = usePermissionGuard();
 
   // Enhanced save handler with authorization and validation
   const handleSecureSave = () => {
     // Check permissions
     const action = formData.id ? 'update' : 'create';
-    if (!canPerformAction(profile, action, 'materia')) {
-      toast({
-        title: "Acesso negado",
-        description: `Você não tem permissão para ${action === 'create' ? 'criar' : 'editar'} matérias.`,
-        variant: "destructive",
-      });
+    if (!checkPermission(action, 'materia')) {
       return;
     }
 
@@ -90,7 +84,7 @@ export const EditorTab = ({
     onSave();
   };
 
-  const isEditingDisabled = disabled || (!canPerformAction(profile, formData.id ? 'update' : 'create', 'materia'));
+  const isEditingDisabled = disabled || !checkPermission(formData.id ? 'update' : 'create', 'materia', undefined, false);
 
   return (
     <TabsContent value="editor" className="p-4 space-y-4">

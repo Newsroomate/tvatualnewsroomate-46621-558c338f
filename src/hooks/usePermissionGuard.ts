@@ -34,7 +34,7 @@ export const usePermissionGuard = () => {
 
   const checkPermission = (
     action: 'create' | 'update' | 'delete' | 'view' | 'export',
-    resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot' | 'gc' | 'playout' | 'lauda' | 'rss' | 'clip_retranca',
+    resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot' | 'gc' | 'playout' | 'lauda' | 'rss' | 'clip_retranca' | 'modelo' | 'teleprompter' | 'deep_search' | 'historico',
     resourceOwnerId?: string,
     useDialog: boolean = true
   ): boolean => {
@@ -64,7 +64,7 @@ export const usePermissionGuard = () => {
 
   const guardAction = async <T,>(
     action: 'create' | 'update' | 'delete' | 'view' | 'export',
-    resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot' | 'gc' | 'playout' | 'lauda' | 'rss' | 'clip_retranca',
+    resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot' | 'gc' | 'playout' | 'lauda' | 'rss' | 'clip_retranca' | 'modelo' | 'teleprompter' | 'deep_search' | 'historico',
     callback: () => Promise<T> | T,
     resourceOwnerId?: string,
     useDialog: boolean = true

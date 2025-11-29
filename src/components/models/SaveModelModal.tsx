@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { saveCurrentStructureAsModel } from "@/services/models-api";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { isAtLeastEditor } from "@/utils/permission";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface SaveModelModalProps {
   isOpen: boolean;
@@ -27,6 +27,7 @@ export const SaveModelModal = ({
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const { profile } = useAuth();
+  const { guardAction } = usePermissionGuard();
 
   const handleSave = async () => {
     if (!nome.trim()) {
@@ -38,17 +39,9 @@ export const SaveModelModal = ({
       return;
     }
 
-    if (!isAtLeastEditor(profile)) {
-      toast({
-        title: "Acesso negado",
-        description: "Apenas editores podem salvar modelos",
-        variant: "destructive"
-      });
-      return;
-    }
-
     setIsSaving(true);
-    try {
+    
+    const result = await guardAction('create', 'modelo', async () => {
       await saveCurrentStructureAsModel(telejornalId, {
         nome: nome.trim(),
         descricao: descricao.trim() || undefined,
@@ -64,16 +57,10 @@ export const SaveModelModal = ({
       setNome("");
       setDescricao("");
       onClose();
-    } catch (error) {
-      console.error("Erro ao salvar modelo:", error);
-      toast({
-        title: "Erro ao salvar modelo",
-        description: error instanceof Error ? error.message : "Não foi possível salvar o modelo",
-        variant: "destructive"
-      });
-    } finally {
-      setIsSaving(false);
-    }
+      return true;
+    });
+    
+    setIsSaving(false);
   };
 
   const handleClose = () => {
@@ -125,7 +112,7 @@ export const SaveModelModal = ({
             </Button>
             <Button
               onClick={handleSave}
-              disabled={isSaving || !isAtLeastEditor(profile)}
+              disabled={isSaving}
             >
               {isSaving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Salvar Modelo

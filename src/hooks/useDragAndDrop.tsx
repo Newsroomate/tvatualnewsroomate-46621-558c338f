@@ -3,6 +3,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia } from "@/types";
 import { updateMateriasOrdem } from "@/services/api";
 import { calculateBlockTotalTime } from "@/components/news-schedule/utils";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface UseDragAndDropProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
@@ -13,8 +14,13 @@ interface UseDragAndDropProps {
 
 export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto, isDualView = false }: UseDragAndDropProps) => {
   const { toast } = useToast();
+  const { checkPermission } = usePermissionGuard();
 
   const handleDragEnd = async (result: any) => {
+    // Check permission first
+    if (!checkPermission('update', 'materia')) {
+      return;
+    }
     // In dual view mode, cross-panel drag and drop is handled by useCrossPanelDragAndDrop
     // Only handle intra-panel moves here
     if (isDualView) {
