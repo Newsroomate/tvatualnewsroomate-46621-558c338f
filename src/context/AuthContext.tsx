@@ -5,12 +5,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { AuthContextType, AuthProviderProps, UserProfile } from '@/types/auth';
 import { useToast } from '@/hooks/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { PermissionType } from '@/services/user-permissions-api';
 
 // Create context with default values
 const AuthContext = createContext<AuthContextType>({
   session: null,
   user: null,
   profile: null,
+  userPermissions: [],
   isLoading: true,
   signIn: async () => {},
   signUp: async () => {},
@@ -23,6 +25,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [userPermissions, setUserPermissions] = useState<PermissionType[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -77,6 +80,14 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           ...data,
           role: effectiveRole
         } as UserProfile);
+
+        // Fetch user's granular permissions
+        const { data: perms } = await supabase
+          .from('user_permissions')
+          .select('permission')
+          .eq('user_id', userId);
+
+        setUserPermissions((perms || []).map(p => p.permission as PermissionType));
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -190,6 +201,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setSession(null);
       setUser(null);
       setProfile(null);
+      setUserPermissions([]);
       
       toast({
         title: 'Logout bem-sucedido',
@@ -226,6 +238,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
         if (event === 'SIGNED_OUT') {
           setProfile(null);
+          setUserPermissions([]);
         }
       }
     );
@@ -261,6 +274,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     session,
     user,
     profile,
+    userPermissions,
     isLoading,
     signIn,
     signUp,
