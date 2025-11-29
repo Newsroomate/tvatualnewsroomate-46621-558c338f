@@ -1,1 +1,4 @@
 project_id = "rigluylhplrrlfkssrur"
+
+[functions.backup-espelhos]
+verify_jwt = false

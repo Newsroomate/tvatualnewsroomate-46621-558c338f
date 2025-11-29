@@ -7,3 +7,4 @@ export { UserPermissionsTab } from "./UserPermissionsTab";
 export { TelejornalAccessTab } from "./TelejornalAccessTab";
 export { PermissionsMatrixTab } from "./PermissionsMatrixTab";
 export { AuditLogsTab } from "./AuditLogsTab";
+export { BackupManagementTab } from "./BackupManagementTab";

@@ -49,6 +49,42 @@ export type Database = {
           },
         ]
       }
+      espelhos_backup: {
+        Row: {
+          backup_type: string
+          created_at: string
+          created_by: string | null
+          data: Json
+          id: string
+          notes: string | null
+          total_blocos: number
+          total_espelhos: number
+          total_materias: number
+        }
+        Insert: {
+          backup_type?: string
+          created_at?: string
+          created_by?: string | null
+          data: Json
+          id?: string
+          notes?: string | null
+          total_blocos?: number
+          total_espelhos?: number
+          total_materias?: number
+        }
+        Update: {
+          backup_type?: string
+          created_at?: string
+          created_by?: string | null
+          data?: Json
+          id?: string
+          notes?: string | null
+          total_blocos?: number
+          total_espelhos?: number
+          total_materias?: number
+        }
+        Relationships: []
+      }
       espelhos_salvos: {
         Row: {
           created_at: string
@@ -556,6 +592,7 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_locks: { Args: never; Returns: undefined }
+      cleanup_old_backups: { Args: never; Returns: undefined }
       enable_realtime: { Args: { table_name: string }; Returns: boolean }
       get_current_user_role: { Args: never; Returns: string }
       get_effective_telejornal_role: {
