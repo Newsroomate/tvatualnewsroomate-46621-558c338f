@@ -2,6 +2,7 @@
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Telejornal } from "@/types";
 import { createBloco, updateBloco, deleteBloco } from "@/services/blocos-api";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface UseBasicBlockOperationsProps {
   selectedJournal: string | null;
@@ -19,6 +20,7 @@ export const useBasicBlockOperations = ({
   blocosQuery
 }: UseBasicBlockOperationsProps) => {
   const { toast } = useToast();
+  const { guardAction } = usePermissionGuard();
 
   const createBasicBlock = async (telejornalId: string, blockName: string, order: number) => {
     // Criar apenas o bloco básico vazio
@@ -55,28 +57,30 @@ export const useBasicBlockOperations = ({
       return;
     }
 
-    try {
-      await updateBloco(blockId, { nome: newName });
-      
-      // Update local state
-      setBlocks(prevBlocks => 
-        prevBlocks.map(block => 
-          block.id === blockId 
-            ? { ...block, nome: newName }
-            : block
-        )
-      );
-      
-      // Refresh the blocks query to sync with server
-      blocosQuery.refetch();
-    } catch (error) {
-      console.error("Erro ao renomear bloco:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível renomear o bloco",
-        variant: "destructive"
-      });
-    }
+    await guardAction('update', 'bloco', async () => {
+      try {
+        await updateBloco(blockId, { nome: newName });
+        
+        // Update local state
+        setBlocks(prevBlocks => 
+          prevBlocks.map(block => 
+            block.id === blockId 
+              ? { ...block, nome: newName }
+              : block
+          )
+        );
+        
+        // Refresh the blocks query to sync with server
+        blocosQuery.refetch();
+      } catch (error) {
+        console.error("Erro ao renomear bloco:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível renomear o bloco",
+          variant: "destructive"
+        });
+      }
+    });
   };
 
   const handleDeleteBlock = async (blockId: string) => {
@@ -89,22 +93,24 @@ export const useBasicBlockOperations = ({
       return;
     }
 
-    try {
-      await deleteBloco(blockId);
-      
-      // Update local state
-      setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== blockId));
-      
-      // Refresh the blocks query to sync with server
-      blocosQuery.refetch();
-    } catch (error) {
-      console.error("Erro ao excluir bloco:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível excluir o bloco",
-        variant: "destructive"
-      });
-    }
+    await guardAction('delete', 'bloco', async () => {
+      try {
+        await deleteBloco(blockId);
+        
+        // Update local state
+        setBlocks(prevBlocks => prevBlocks.filter(block => block.id !== blockId));
+        
+        // Refresh the blocks query to sync with server
+        blocosQuery.refetch();
+      } catch (error) {
+        console.error("Erro ao excluir bloco:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível excluir o bloco",
+          variant: "destructive"
+        });
+      }
+    });
   };
 
   return {

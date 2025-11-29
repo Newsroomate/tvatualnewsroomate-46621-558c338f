@@ -3,6 +3,7 @@ import { useState, useRef } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Telejornal } from "@/types";
 import { useBasicBlockOperations } from "./useBasicBlockOperations";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface UseBlockCreationProps {
   blocks: (Bloco & { items: any[], totalTime: number })[];
@@ -22,6 +23,7 @@ export const useBlockCreation = ({
   const [isCreatingFirstBlock, setIsCreatingFirstBlock] = useState(false);
   const blockCreationInProgress = useRef(false);
   const { toast } = useToast();
+  const { checkPermission, guardAction } = usePermissionGuard();
 
   const { createBasicBlock } = useBasicBlockOperations({
     selectedJournal,
@@ -97,7 +99,13 @@ export const useBlockCreation = ({
       return;
     }
     
-    try {
+    // Check permission BEFORE proceeding
+    if (!checkPermission('create', 'bloco')) {
+      return;
+    }
+    
+    await guardAction('create', 'bloco', async () => {
+      try {
       const nextOrder = blocks.length + 1;
       const newBlock = await createBasicBlock(selectedJournal, `Bloco ${nextOrder}`, nextOrder);
       
@@ -126,12 +134,13 @@ export const useBlockCreation = ({
         }
       }
       
-      toast({
-        title: "Erro",
-        description: "Não foi possível adicionar o bloco",
-        variant: "destructive"
-      });
-    }
+        toast({
+          title: "Erro",
+          description: "Não foi possível adicionar o bloco",
+          variant: "destructive"
+        });
+      }
+    });
   };
 
   return {
