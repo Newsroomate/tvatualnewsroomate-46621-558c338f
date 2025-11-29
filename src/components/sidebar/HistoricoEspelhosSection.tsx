@@ -9,6 +9,7 @@ import { Telejornal } from "@/types";
 import { ClosedRundownSnapshot, fetchClosedRundownSnapshots } from "@/services/snapshots-api";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface HistoricoEspelhosSectionProps {
   telejornais: Telejornal[];
@@ -26,12 +27,18 @@ export const HistoricoEspelhosSection = ({
   const [espelhos, setEspelhos] = useState<ClosedRundownSnapshot[]>([]);
   const [isLoadingEspelhos, setIsLoadingEspelhos] = useState(false);
   const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const { checkPermission } = usePermissionGuard();
 
   useEffect(() => {
     loadEspelhos();
   }, [selectedTelejornal, selectedDate]);
 
   const loadEspelhos = async () => {
+    // Check permission before loading
+    if (!checkPermission('view', 'historico', undefined, false)) {
+      return;
+    }
+    
     if (!selectedDate) return;
     
     setIsLoadingEspelhos(true);
@@ -143,7 +150,11 @@ export const HistoricoEspelhosSection = ({
               <div
                 key={espelho.id}
                 className="p-3 bg-gray-50 rounded-md border border-gray-200 hover:bg-gray-100 cursor-pointer transition-colors"
-                onClick={() => onOpenHistorico(espelho)}
+                onClick={() => {
+                  if (checkPermission('view', 'historico', undefined, false)) {
+                    onOpenHistorico(espelho);
+                  }
+                }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex-1 min-w-0">
@@ -170,7 +181,9 @@ export const HistoricoEspelhosSection = ({
                     className="h-6 w-6 p-0 flex-shrink-0"
                     onClick={(e) => {
                       e.stopPropagation();
-                      onOpenHistorico(espelho);
+                      if (checkPermission('view', 'historico', undefined, false)) {
+                        onOpenHistorico(espelho);
+                      }
                     }}
                   >
                     <Eye className="h-3 w-3" />

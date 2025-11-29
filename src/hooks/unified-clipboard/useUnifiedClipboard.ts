@@ -17,6 +17,7 @@ import {
 import { executeMateriaImpast } from './materia-operations';
 import { executeBlockPaste } from './block-operations';
 import { logCopyMateria, logCopyBlock } from './logger';
+import { usePermissionGuard } from '@/hooks/usePermissionGuard';
 
 export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
   const {
@@ -28,6 +29,8 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
     refreshBlocks,
     markOptimisticUpdate
   } = props;
+
+  const { checkPermission } = usePermissionGuard();
 
   const [clipboardState, setClipboardState] = useState<ClipboardState>({
     type: null,
@@ -58,6 +61,7 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
 
   // Função para copiar matéria
   const copyMateria = (materia: Materia) => {
+    if (!checkPermission('create', 'materia')) return;
     if (!validateMateriaForCopy(materia)) return;
 
     const newState: ClipboardState = {
@@ -84,6 +88,7 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
 
   // Função para copiar bloco
   const copyBlock = (block: any, materias: Materia[]) => {
+    if (!checkPermission('create', 'bloco')) return;
     if (!validateBlockForCopy(block, materias)) return;
 
     const copiedBlockData: CopiedBlock = {
@@ -138,6 +143,12 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
 
   // Função para colar matéria
   const pasteMateria = async (): Promise<PasteOperationResult> => {
+    if (!checkPermission('create', 'materia')) {
+      return {
+        success: false,
+        message: "Sem permissão para colar matéria"
+      };
+    }
     if (!validateMateriaForPaste(clipboardState.copiedMateria, blocks || [])) {
       return {
         success: false,
@@ -183,6 +194,12 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
 
   // Função para colar bloco
   const pasteBlock = async (): Promise<PasteOperationResult> => {
+    if (!checkPermission('create', 'bloco')) {
+      return {
+        success: false,
+        message: "Sem permissão para colar bloco"
+      };
+    }
     if (!validateBlockForPaste(clipboardState.copiedBlock, selectedJournal || null, currentTelejornal)) {
       return {
         success: false,

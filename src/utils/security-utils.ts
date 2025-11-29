@@ -27,7 +27,7 @@ export const validateEmail = (email: string): boolean => {
 // Map action+resource to permission type
 const getPermissionType = (
   action: 'create' | 'update' | 'delete' | 'view' | 'export',
-  resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot' | 'gc' | 'playout' | 'lauda' | 'rss' | 'clip_retranca'
+  resource: string
 ): string | null => {
   const permissionMap: Record<string, string> = {
     // Matérias
@@ -63,8 +63,16 @@ const getPermissionType = (
     'export-lauda': 'exportar_lauda',
     'export-rss': 'exportar_rss',
     'export-clip_retranca': 'exportar_clip_retranca',
-    // View laudas
+    // Views
     'view-lauda': 'visualizar_laudas',
+    'view-teleprompter': 'visualizar_teleprompter',
+    'view-deep_search': 'busca_profunda',
+    'view-historico': 'visualizar_historico_espelhos',
+    // Modelos
+    'create-modelo': 'salvar_modelo',
+    'update-modelo': 'aplicar_modelo',
+    'delete-modelo': 'excluir_modelo',
+    'view-modelo': 'visualizar_modelos',
   };
 
   return permissionMap[`${action}-${resource}`] || null;
@@ -74,7 +82,7 @@ const getPermissionType = (
 export const canPerformAction = (
   profile: UserProfile | null,
   action: 'create' | 'update' | 'delete' | 'view' | 'export',
-  resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot' | 'gc' | 'playout' | 'lauda' | 'rss' | 'clip_retranca',
+  resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot' | 'gc' | 'playout' | 'lauda' | 'rss' | 'clip_retranca' | 'modelo' | 'teleprompter' | 'deep_search' | 'historico',
   resourceOwnerId?: string,
   userPermissions?: string[] // Effective permissions (with is_granted applied)
 ): boolean => {

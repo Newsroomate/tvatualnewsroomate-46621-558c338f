@@ -10,6 +10,7 @@ import { Telejornal } from "@/types";
 import { DeepSearchFilters as FiltersComponent } from "./deep-search/DeepSearchFilters";
 import { DeepSearchResults } from "./deep-search/DeepSearchResults";
 import { convertSearchResultToMateria } from "./deep-search/utils";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface DeepSearchModalProps {
   isOpen: boolean;
@@ -28,6 +29,7 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
   const [hasSearched, setHasSearched] = useState(false);
   const { toast } = useToast();
   const { copyMateria } = useClipboard();
+  const { checkPermission } = usePermissionGuard();
 
   useEffect(() => {
     if (isOpen) {
@@ -50,6 +52,10 @@ export const DeepSearchModal = ({ isOpen, onClose }: DeepSearchModalProps) => {
   };
 
   const handleSearch = async () => {
+    if (!checkPermission('view', 'deep_search')) {
+      return;
+    }
+    
     if (!query.trim()) {
       toast({
         title: "Campo obrigatório",

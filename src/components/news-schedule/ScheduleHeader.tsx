@@ -58,6 +58,16 @@ export const ScheduleHeader = ({
     onViewLaudas?.();
   };
 
+  const handleViewTeleprompter = () => {
+    if (!checkPermission('view', 'teleprompter')) return;
+    onViewTeleprompter?.();
+  };
+
+  const handleExportClipRetranca = () => {
+    if (!checkPermission('export', 'clip_retranca')) return;
+    onExportClipRetranca?.();
+  };
+
   return (
     <div className="bg-white border-b border-gray-200 sticky top-0 z-10">
       {/* Header Principal */}
@@ -172,7 +182,7 @@ export const ScheduleHeader = ({
                 <DropdownMenuSeparator />
                 
                 <DropdownMenuItem 
-                  onClick={onViewTeleprompter}
+                  onClick={handleViewTeleprompter}
                   disabled={!currentTelejornal?.espelho_aberto}
                 >
                   <Eye className="h-4 w-4 mr-2" />
@@ -289,7 +299,7 @@ export const ScheduleHeader = ({
               <Button 
                 variant="outline" 
                 size="sm" 
-                onClick={onViewTeleprompter}
+                onClick={handleViewTeleprompter}
                 disabled={!currentTelejornal?.espelho_aberto}
                 className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
               >
