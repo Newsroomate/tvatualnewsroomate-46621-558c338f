@@ -568,6 +568,13 @@ export type Database = {
           permission: string
         }[]
       }
+      has_effective_permission: {
+        Args: {
+          _permission: Database["public"]["Enums"]["permission_type"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_permission: {
         Args: {
           _permission: Database["public"]["Enums"]["permission_type"]
