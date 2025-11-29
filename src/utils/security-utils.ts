@@ -26,8 +26,8 @@ export const validateEmail = (email: string): boolean => {
 
 // Map action+resource to permission type
 const getPermissionType = (
-  action: 'create' | 'update' | 'delete' | 'view',
-  resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot'
+  action: 'create' | 'update' | 'delete' | 'view' | 'export',
+  resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot' | 'gc' | 'playout' | 'lauda' | 'rss' | 'clip_retranca'
 ): string | null => {
   const permissionMap: Record<string, string> = {
     // Matérias
@@ -48,12 +48,23 @@ const getPermissionType = (
     'delete-pauta': 'excluir_pauta',
     'view-pauta': 'visualizar_todas_pautas',
     // Espelhos
-    'create-espelho': 'gerenciar_espelho',
-    'update-espelho': 'gerenciar_espelho',
-    'delete-espelho': 'gerenciar_espelho',
+    'create-espelho': 'salvar_espelho',
+    'update-espelho': 'editar_espelho_salvo',
+    'delete-espelho': 'excluir_espelho_salvo',
+    'view-espelho': 'visualizar_historico_espelhos',
     // Snapshots
-    'view-snapshot': 'visualizar_snapshots',
+    'create-snapshot': 'criar_snapshot',
+    'update-snapshot': 'editar_snapshot',
     'delete-snapshot': 'excluir_snapshots',
+    'view-snapshot': 'visualizar_snapshots',
+    // Exports
+    'export-gc': 'exportar_gc',
+    'export-playout': 'exportar_playout',
+    'export-lauda': 'exportar_lauda',
+    'export-rss': 'exportar_rss',
+    'export-clip_retranca': 'exportar_clip_retranca',
+    // View laudas
+    'view-lauda': 'visualizar_laudas',
   };
 
   return permissionMap[`${action}-${resource}`] || null;
@@ -62,8 +73,8 @@ const getPermissionType = (
 // Authorization utilities with granular permissions support
 export const canPerformAction = (
   profile: UserProfile | null,
-  action: 'create' | 'update' | 'delete' | 'view',
-  resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot',
+  action: 'create' | 'update' | 'delete' | 'view' | 'export',
+  resource: 'telejornal' | 'bloco' | 'materia' | 'pauta' | 'espelho' | 'snapshot' | 'gc' | 'playout' | 'lauda' | 'rss' | 'clip_retranca',
   resourceOwnerId?: string,
   userPermissions?: string[] // Effective permissions (with is_granted applied)
 ): boolean => {
@@ -96,6 +107,12 @@ export const canPerformAction = (
   }
 
   // SECOND: Fallback to role-based permissions
+  // Handle export actions
+  if (action === 'export') {
+    // Exports generally require editor or higher permissions
+    return isEditor;
+  }
+
   switch (resource) {
     case 'telejornal':
       if (action === 'view') return true;
@@ -136,13 +153,13 @@ export const canPerformAction = (
 
     case 'espelho':
       if (action === 'view') {
-        return isEditorChefe || isOwner;
+        return isEditor;
       }
       if (action === 'create') {
         return isEditor;
       }
       if (action === 'update' || action === 'delete') {
-        return isEditorChefe || isOwner;
+        return isEditor;
       }
       break;
 
@@ -155,6 +172,12 @@ export const canPerformAction = (
       }
       if (action === 'update' || action === 'delete') {
         return isEditor || isOwner;
+      }
+      break;
+      
+    case 'lauda':
+      if (action === 'view') {
+        return true;
       }
       break;
   }

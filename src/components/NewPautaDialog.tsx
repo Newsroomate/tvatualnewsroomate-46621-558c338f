@@ -8,6 +8,7 @@ import { createPauta } from "@/services/pautas-api";
 import { PautaCreateInput } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface NewPautaDialogProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { guardAction } = usePermissionGuard();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -58,7 +60,8 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
     }
     
     setIsSubmitting(true);
-    try {
+    
+    await guardAction('create', 'pauta', async () => {
       const newPauta: PautaCreateInput = {
         titulo: retranca,
         descricao: roteiro1,
@@ -100,18 +103,9 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
       
       onPautaCreated();
       onClose();
-    } catch (error: any) {
-      console.error("NewPautaDialog - Erro completo ao criar pauta:", error);
-      console.error("NewPautaDialog - Mensagem do erro:", error?.message);
-      console.error("NewPautaDialog - Detalhes do erro:", error?.details);
-      toast({
-        title: "Erro ao criar pauta",
-        description: error?.message || "Ocorreu um erro ao criar a pauta. Tente novamente.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+    });
+    
+    setIsSubmitting(false);
   };
 
   return (

@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/AuthContext";
 import { SecurityProvider } from "./components/auth/SecurityProvider";
+import { PermissionGuardProvider } from "./components/auth/PermissionGuardProvider";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { enableAllTables } from "./services/realtime-setup";
 import { useEffect, Suspense, lazy } from "react";
@@ -71,7 +72,9 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <SecurityProvider>
-            <AppContent />
+            <PermissionGuardProvider>
+              <AppContent />
+            </PermissionGuardProvider>
           </SecurityProvider>
         </AuthProvider>
       </BrowserRouter>

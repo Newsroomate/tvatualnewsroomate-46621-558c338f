@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { deletePauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
 import { generatePautaPDF } from "@/utils/pdf-utils";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface PautaSectionProps {
   pautas: Pauta[];
@@ -23,9 +24,11 @@ export const PautaSection = ({
 }: PautaSectionProps) => {
   const [deletingPauta, setDeletingPauta] = useState<Pauta | null>(null);
   const { toast } = useToast();
+  const { checkPermission, guardAction } = usePermissionGuard();
 
   const handleDeletePauta = (pauta: Pauta, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!checkPermission('delete', 'pauta', pauta.user_id || undefined)) return;
     setDeletingPauta(pauta);
   };
 
@@ -45,19 +48,17 @@ export const PautaSection = ({
 
   const confirmDeletePauta = async () => {
     if (!deletingPauta) return;
-    try {
+    
+    await guardAction('delete', 'pauta', async () => {
       await deletePauta(deletingPauta.id);
       onDataChange();
-    } catch (error) {
-      console.error("Erro ao excluir pauta:", error);
       toast({
-        title: "Erro ao excluir pauta",
-        description: "Ocorreu um erro ao excluir a pauta. Tente novamente.",
-        variant: "destructive",
+        title: "Pauta excluída",
+        description: "A pauta foi excluída com sucesso.",
       });
-    } finally {
-      setDeletingPauta(null);
-    }
+    }, deletingPauta.user_id || undefined);
+    
+    setDeletingPauta(null);
   };
   
   return (
