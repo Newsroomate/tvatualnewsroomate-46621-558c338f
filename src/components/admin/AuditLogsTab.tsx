@@ -13,12 +13,12 @@ import { ptBR } from "date-fns/locale";
 import { getPermissionLabel } from "@/services/user-permissions-api";
 
 export function AuditLogsTab() {
-  const [actionFilter, setActionFilter] = useState<string>("");
+  const [actionFilter, setActionFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState("");
 
   const { data: logs, isLoading } = useQuery({
     queryKey: ["audit-logs", actionFilter],
-    queryFn: () => fetchAuditLogs({ action: actionFilter || undefined }),
+    queryFn: () => fetchAuditLogs({ action: actionFilter === "all" ? undefined : actionFilter }),
   });
 
   const filteredLogs = logs?.filter(log => {
@@ -68,7 +68,7 @@ export function AuditLogsTab() {
                 <SelectValue placeholder="Todas as ações" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as ações</SelectItem>
+                <SelectItem value="all">Todas as ações</SelectItem>
                 <SelectItem value="grant_permission">Permissão Concedida</SelectItem>
                 <SelectItem value="revoke_permission">Permissão Removida</SelectItem>
                 <SelectItem value="update_role">Role Atualizado</SelectItem>
