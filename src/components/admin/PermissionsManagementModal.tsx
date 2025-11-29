@@ -4,6 +4,7 @@ import { UserManagementTab } from "./UserManagementTab";
 import { UserPermissionsTab } from "./UserPermissionsTab";
 import { TelejornalAccessTab } from "./TelejornalAccessTab";
 import { PermissionsMatrixTab } from "./PermissionsMatrixTab";
+import { AuditLogsTab } from "./AuditLogsTab";
 
 interface PermissionsManagementModalProps {
   open: boolean;
@@ -22,11 +23,12 @@ export function PermissionsManagementModal({
         </DialogHeader>
 
         <Tabs defaultValue="users" className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="users">Usuários</TabsTrigger>
             <TabsTrigger value="permissions">Permissões</TabsTrigger>
             <TabsTrigger value="telejornal">Telejornal</TabsTrigger>
             <TabsTrigger value="matrix">Matriz</TabsTrigger>
+            <TabsTrigger value="audit">Auditoria</TabsTrigger>
           </TabsList>
 
           <div className="flex-1 overflow-auto mt-4">
@@ -44,6 +46,10 @@ export function PermissionsManagementModal({
 
             <TabsContent value="matrix" className="m-0">
               <PermissionsMatrixTab />
+            </TabsContent>
+
+            <TabsContent value="audit" className="m-0">
+              <AuditLogsTab />
             </TabsContent>
           </div>
         </Tabs>
