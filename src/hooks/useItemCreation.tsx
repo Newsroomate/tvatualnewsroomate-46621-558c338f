@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { createMateria } from "@/services/api";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 import { findHighestPageNumber } from "@/components/news-schedule/utils";
 
 interface UseItemCreationProps {
@@ -18,6 +19,7 @@ export const useItemCreation = ({
 }: UseItemCreationProps) => {
   const [newItemBlock, setNewItemBlock] = useState<string | null>(null);
   const { toast } = useToast();
+  const { checkPermission, guardAction } = usePermissionGuard();
 
   const handleAddItem = async (blocoId: string) => {
     // Can't add items if espelho is not open
@@ -30,9 +32,15 @@ export const useItemCreation = ({
       return;
     }
     
+    // Check permission BEFORE proceeding
+    if (!checkPermission('create', 'materia')) {
+      return;
+    }
+    
     setNewItemBlock(blocoId);
     
-    try {
+    await guardAction('create', 'materia', async () => {
+      try {
       const bloco = blocks.find(b => b.id === blocoId);
       if (!bloco) return;
       
@@ -65,16 +73,17 @@ export const useItemCreation = ({
         return block;
       }));
       
-      setNewItemBlock(null);
-    } catch (error) {
-      console.error("Erro ao adicionar matéria:", error);
-      setNewItemBlock(null);
-      toast({
-        title: "Erro",
-        description: "Não foi possível adicionar a matéria",
-        variant: "destructive"
-      });
-    }
+        setNewItemBlock(null);
+      } catch (error) {
+        console.error("Erro ao adicionar matéria:", error);
+        setNewItemBlock(null);
+        toast({
+          title: "Erro",
+          description: "Não foi possível adicionar a matéria",
+          variant: "destructive"
+        });
+      }
+    });
   };
 
   return {

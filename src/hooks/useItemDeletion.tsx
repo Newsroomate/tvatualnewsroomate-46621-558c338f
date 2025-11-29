@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useToast } from "@/hooks/use-toast";
 import { Bloco, Materia, Telejornal } from "@/types";
 import { deleteMateria } from "@/services/api";
+import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 
 interface UseItemDeletionProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
@@ -19,6 +20,7 @@ export const useItemDeletion = ({
   const [materiaToDelete, setMateriaToDelete] = useState<Materia | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
+  const { checkPermission, guardAction } = usePermissionGuard();
 
   const handleDeleteMateria = (item: Materia) => {
     // Can't delete items if espelho is not open
@@ -31,6 +33,11 @@ export const useItemDeletion = ({
       return;
     }
     
+    // Check permission BEFORE opening confirmation dialog
+    if (!checkPermission('delete', 'materia')) {
+      return;
+    }
+    
     setMateriaToDelete(item);
     setDeleteConfirmOpen(true);
   };
@@ -38,32 +45,34 @@ export const useItemDeletion = ({
   const confirmDeleteMateria = async () => {
     if (!materiaToDelete) return;
     
-    try {
-      await deleteMateria(materiaToDelete.id);
-      
-      // Update UI after successful deletion
-      setBlocks(blocks.map(block => {
-        if (block.id === materiaToDelete.bloco_id) {
-          const updatedItems = block.items.filter(item => item.id !== materiaToDelete.id);
-          return {
-            ...block,
-            items: updatedItems,
-            totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
-          };
-        }
-        return block;
-      }));
-      
-      setDeleteConfirmOpen(false);
-      setMateriaToDelete(null);
-    } catch (error) {
-      console.error("Erro ao excluir matéria:", error);
-      toast({
-        title: "Erro",
-        description: "Não foi possível excluir a matéria",
-        variant: "destructive"
-      });
-    }
+    await guardAction('delete', 'materia', async () => {
+      try {
+        await deleteMateria(materiaToDelete.id);
+        
+        // Update UI after successful deletion
+        setBlocks(blocks.map(block => {
+          if (block.id === materiaToDelete.bloco_id) {
+            const updatedItems = block.items.filter(item => item.id !== materiaToDelete.id);
+            return {
+              ...block,
+              items: updatedItems,
+              totalTime: updatedItems.reduce((sum, item) => sum + item.duracao, 0)
+            };
+          }
+          return block;
+        }));
+        
+        setDeleteConfirmOpen(false);
+        setMateriaToDelete(null);
+      } catch (error) {
+        console.error("Erro ao excluir matéria:", error);
+        toast({
+          title: "Erro",
+          description: "Não foi possível excluir a matéria",
+          variant: "destructive"
+        });
+      }
+    });
   };
 
   const handleBatchDeleteMaterias = async (materiasToDelete: Materia[]) => {
@@ -78,6 +87,11 @@ export const useItemDeletion = ({
     }
 
     if (materiasToDelete.length === 0) return;
+
+    // Check permission BEFORE proceeding
+    if (!checkPermission('delete', 'materia')) {
+      return;
+    }
 
     setIsDeleting(true);
     
