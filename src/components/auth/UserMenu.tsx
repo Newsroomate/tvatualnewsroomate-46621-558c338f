@@ -12,7 +12,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { LogOut, Shield, User } from "lucide-react";
 import { isEditorChefe } from "@/utils/permission";
-import { TelejornalAccessModal } from "@/components/admin";
+import { PermissionsManagementModal } from "@/components/admin";
 
 export const UserMenu = () => {
   const { profile, signOut } = useAuth();
@@ -69,7 +69,7 @@ export const UserMenu = () => {
           </>
         )}
       </DropdownMenuContent>
-      <TelejornalAccessModal
+      <PermissionsManagementModal
         open={isAccessModalOpen}
         onOpenChange={setIsAccessModalOpen}
       />

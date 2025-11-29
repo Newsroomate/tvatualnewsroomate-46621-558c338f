@@ -417,6 +417,30 @@ export type Database = {
         }
         Relationships: []
       }
+      user_permissions: {
+        Row: {
+          assigned_by: string | null
+          created_at: string | null
+          id: string
+          permission: Database["public"]["Enums"]["permission_type"]
+          user_id: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          created_at?: string | null
+          id?: string
+          permission: Database["public"]["Enums"]["permission_type"]
+          user_id: string
+        }
+        Update: {
+          assigned_by?: string | null
+          created_at?: string | null
+          id?: string
+          permission?: Database["public"]["Enums"]["permission_type"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           assigned_at: string | null
@@ -489,6 +513,19 @@ export type Database = {
         Args: { _telejornal_id: string; _user_id: string }
         Returns: string
       }
+      get_user_permissions: {
+        Args: { _user_id: string }
+        Returns: {
+          permission: string
+        }[]
+      }
+      has_permission: {
+        Args: {
+          _permission: Database["public"]["Enums"]["permission_type"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["user_role"]
@@ -498,6 +535,26 @@ export type Database = {
       }
     }
     Enums: {
+      permission_type:
+        | "criar_materia"
+        | "editar_materia"
+        | "excluir_materia"
+        | "criar_bloco"
+        | "editar_bloco"
+        | "excluir_bloco"
+        | "criar_telejornal"
+        | "editar_telejornal"
+        | "excluir_telejornal"
+        | "gerenciar_espelho"
+        | "fechar_espelho"
+        | "criar_pauta"
+        | "editar_pauta"
+        | "excluir_pauta"
+        | "visualizar_todas_pautas"
+        | "gerenciar_usuarios"
+        | "gerenciar_permissoes"
+        | "visualizar_snapshots"
+        | "excluir_snapshots"
       user_role: "reporter" | "editor" | "editor_chefe" | "produtor"
     }
     CompositeTypes: {
@@ -626,6 +683,27 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      permission_type: [
+        "criar_materia",
+        "editar_materia",
+        "excluir_materia",
+        "criar_bloco",
+        "editar_bloco",
+        "excluir_bloco",
+        "criar_telejornal",
+        "editar_telejornal",
+        "excluir_telejornal",
+        "gerenciar_espelho",
+        "fechar_espelho",
+        "criar_pauta",
+        "editar_pauta",
+        "excluir_pauta",
+        "visualizar_todas_pautas",
+        "gerenciar_usuarios",
+        "gerenciar_permissoes",
+        "visualizar_snapshots",
+        "excluir_snapshots",
+      ],
       user_role: ["reporter", "editor", "editor_chefe", "produtor"],
     },
   },

@@ -1,0 +1,53 @@
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { UserManagementTab } from "./UserManagementTab";
+import { UserPermissionsTab } from "./UserPermissionsTab";
+import { TelejornalAccessTab } from "./TelejornalAccessTab";
+import { PermissionsMatrixTab } from "./PermissionsMatrixTab";
+
+interface PermissionsManagementModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}
+
+export function PermissionsManagementModal({
+  open,
+  onOpenChange,
+}: PermissionsManagementModalProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle>Gerenciar Permissões do Sistema</DialogTitle>
+        </DialogHeader>
+
+        <Tabs defaultValue="users" className="flex-1 flex flex-col overflow-hidden">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="users">Usuários</TabsTrigger>
+            <TabsTrigger value="permissions">Permissões</TabsTrigger>
+            <TabsTrigger value="telejornal">Telejornal</TabsTrigger>
+            <TabsTrigger value="matrix">Matriz</TabsTrigger>
+          </TabsList>
+
+          <div className="flex-1 overflow-auto mt-4">
+            <TabsContent value="users" className="m-0">
+              <UserManagementTab />
+            </TabsContent>
+
+            <TabsContent value="permissions" className="m-0">
+              <UserPermissionsTab />
+            </TabsContent>
+
+            <TabsContent value="telejornal" className="m-0">
+              <TelejornalAccessTab />
+            </TabsContent>
+
+            <TabsContent value="matrix" className="m-0">
+              <PermissionsMatrixTab />
+            </TabsContent>
+          </div>
+        </Tabs>
+      </DialogContent>
+    </Dialog>
+  );
+}

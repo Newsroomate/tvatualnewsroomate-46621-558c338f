@@ -1,3 +1,8 @@
 export { TelejornalAccessModal } from "./TelejornalAccessModal";
 export { TelejornalAccessForm } from "./TelejornalAccessForm";
 export { TelejornalAccessTable } from "./TelejornalAccessTable";
+export { PermissionsManagementModal } from "./PermissionsManagementModal";
+export { UserManagementTab } from "./UserManagementTab";
+export { UserPermissionsTab } from "./UserPermissionsTab";
+export { TelejornalAccessTab } from "./TelejornalAccessTab";
+export { PermissionsMatrixTab } from "./PermissionsMatrixTab";
