@@ -366,6 +366,52 @@ export type Database = {
         }
         Relationships: []
       }
+      permission_audit_logs: {
+        Row: {
+          action: string
+          actor_user_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          new_role: Database["public"]["Enums"]["user_role"] | null
+          old_role: Database["public"]["Enums"]["user_role"] | null
+          permission_type: Database["public"]["Enums"]["permission_type"] | null
+          target_user_id: string
+          telejornal_id: string | null
+          timestamp: string
+        }
+        Insert: {
+          action: string
+          actor_user_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          new_role?: Database["public"]["Enums"]["user_role"] | null
+          old_role?: Database["public"]["Enums"]["user_role"] | null
+          permission_type?:
+            | Database["public"]["Enums"]["permission_type"]
+            | null
+          target_user_id: string
+          telejornal_id?: string | null
+          timestamp?: string
+        }
+        Update: {
+          action?: string
+          actor_user_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          new_role?: Database["public"]["Enums"]["user_role"] | null
+          old_role?: Database["public"]["Enums"]["user_role"] | null
+          permission_type?:
+            | Database["public"]["Enums"]["permission_type"]
+            | null
+          target_user_id?: string
+          telejornal_id?: string | null
+          timestamp?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
