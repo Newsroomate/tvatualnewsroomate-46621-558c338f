@@ -209,6 +209,14 @@ const Layout = () => {
           data_referencia: dataReferencia,
           nome: currentTelejornal.nome,
           estrutura: {
+            telejornal: {
+              id: selectedJournal,
+              nome: currentTelejornal.nome,
+              horario: currentTelejornal.horario || ''
+            },
+            telejornal_id: selectedJournal,
+            nome_telejornal: currentTelejornal.nome,
+            horario: currentTelejornal.horario || '',
             blocos: blocksWithItems
           }
         });

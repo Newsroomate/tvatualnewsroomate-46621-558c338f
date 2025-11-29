@@ -206,9 +206,10 @@ export const performDeepSearch = async (filters: DeepSearchFilters): Promise<Dee
     for (const espelho of espelhosResult.data) {
       const estrutura = espelho.estrutura as any;
       
-      // Extrair nome do telejornal do espelho
+      // Fallback chain robusto para identificação do telejornal
       const telejornalNome = estrutura?.telejornal?.nome || 
                             estrutura?.nome_telejornal ||
+                            espelho.nome?.split(' (')[0] ||  // Extrai do campo 'nome' do snapshot
                             'Histórico';
       
       if (estrutura?.blocos) {

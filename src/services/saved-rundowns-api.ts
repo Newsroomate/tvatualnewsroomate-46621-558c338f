@@ -14,13 +14,48 @@ export const saveRundownSnapshot = async (rundownData: SavedRundownCreateInput):
 
   console.log("✅ Usuário autenticado:", currentUser.user.id);
   
+  // Enriquecer estrutura com dados do telejornal se não estiverem presentes
+  let enrichedEstrutura = rundownData.estrutura;
+  
+  if (!enrichedEstrutura.telejornal || !enrichedEstrutura.nome_telejornal) {
+    console.log("Enriquecendo estrutura com dados do telejornal...");
+    
+    const { data: telejornalData, error: tjError } = await supabase
+      .from('telejornais')
+      .select('id, nome, horario')
+      .eq('id', rundownData.telejornal_id)
+      .single();
+    
+    if (telejornalData) {
+      enrichedEstrutura = {
+        ...enrichedEstrutura,
+        telejornal: {
+          id: telejornalData.id,
+          nome: telejornalData.nome,
+          horario: telejornalData.horario || ''
+        },
+        telejornal_id: telejornalData.id,
+        nome_telejornal: telejornalData.nome,
+        horario: telejornalData.horario || ''
+      };
+      console.log("Estrutura enriquecida com dados do telejornal:", telejornalData.nome);
+    } else if (tjError) {
+      console.warn("Telejornal não encontrado, usando nome do snapshot:", tjError);
+      enrichedEstrutura = {
+        ...enrichedEstrutura,
+        nome_telejornal: rundownData.nome,
+        telejornal_id: rundownData.telejornal_id
+      };
+    }
+  }
+  
   const { data, error } = await supabase
     .from('espelhos_salvos')
     .insert({
       nome: rundownData.nome,
       telejornal_id: rundownData.telejornal_id,
       data_referencia: rundownData.data_referencia,
-      estrutura: rundownData.estrutura,
+      estrutura: enrichedEstrutura,
       user_id: currentUser.user.id  // ✅ CAMPO OBRIGATÓRIO PARA RLS
     })
     .select()

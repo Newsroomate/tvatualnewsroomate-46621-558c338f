@@ -97,9 +97,16 @@ export const fetchClosedRundownSnapshots = async (
     // Extrair telejornal_id do item ou da estrutura
     const telejornalId = item.telejornal_id || payload.telejornal_id || telejornalData.id || '';
     
+    // Fallback chain robusto para nome do telejornal
+    const nomeTelejornal = telejornalData.nome || 
+                           payload.nome_telejornal || 
+                           item.nome?.split(' (')[0] ||  // Extrai do campo 'nome' do snapshot
+                           "Telejornal";
+    
     console.log('Processing snapshot:', {
       id: item.id,
       telejornal_id: telejornalId,
+      nome_telejornal: nomeTelejornal,
       payload_keys: Object.keys(payload),
       telejornal_data: telejornalData
     });
@@ -109,12 +116,12 @@ export const fetchClosedRundownSnapshots = async (
       telejornal_id: telejornalId,
       data_fechamento: item.created_at,
       data_referencia: item.data_referencia || payload.data_referencia || '',
-      nome_telejornal: telejornalData.nome || payload.nome_telejornal || item.nome || "Telejornal",
+      nome_telejornal: nomeTelejornal,
       horario: telejornalData.horario || payload.horario || "",
       estrutura_completa: {
         telejornal: {
           id: telejornalId,
-          nome: telejornalData.nome || payload.nome_telejornal || item.nome || "Telejornal",
+          nome: nomeTelejornal,
           horario: telejornalData.horario || payload.horario || ""
         },
         blocos: payload.blocos || [],
