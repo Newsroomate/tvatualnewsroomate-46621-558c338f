@@ -71,7 +71,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           .select('role')
           .eq('user_id', userId)
           .limit(1)
-          .single();
+          .maybeSingle();
 
         // If user has exception, use that role instead of global role
         const effectiveRole = accessData?.role || data.role;
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         } as UserProfile);
 
         // Get user's effective permissions (role + overrides with is_granted)
-        const rolePerms = new Set(getDefaultRolePermissions(data.role));
+        const rolePerms = new Set(getDefaultRolePermissions(effectiveRole));
         
         const { data: overrides } = await supabase
           .from('user_permissions')
