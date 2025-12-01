@@ -183,18 +183,12 @@ export const updateUserRole = async (
   newRole: UserRole
 ): Promise<void> => {
   const { error } = await supabase
-    .from("profiles")
-    .update({ role: newRole })
-    .eq("id", userId);
+    .rpc('admin_update_user_role', {
+      _target_user_id: userId,
+      _new_role: newRole
+    });
 
   if (error) throw error;
-
-  const { error: roleError } = await supabase
-    .from("user_roles")
-    .update({ role: newRole })
-    .eq("user_id", userId);
-
-  if (roleError) throw roleError;
 };
 
 // Get permission labels for display
