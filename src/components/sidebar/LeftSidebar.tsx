@@ -12,6 +12,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { TelejornalSection } from "./TelejornalSection";
 import { PautaSection } from "./PautaSection";
 import { MainMenu } from "./MainMenu";
+import { PautasTelejornalModal } from "@/components/telejornal-content/PautasTelejornalModal";
+import { ReportagensModal } from "@/components/telejornal-content/ReportagensModal";
+import { EntrevistasModal } from "@/components/telejornal-content/EntrevistasModal";
 
 interface LeftSidebarProps {
   selectedJournal: string | null;
@@ -280,43 +283,34 @@ export const LeftSidebar = ({
       
       <TelejornalModal isOpen={isTelejornalModalOpen} onClose={() => setIsTelejornalModalOpen(false)} onTelejornalCreated={loadData} />
       
-      {/* Pautas do Telejornal Modal - Placeholder */}
+      {/* Pautas do Telejornal Modal */}
       {pautasModalTelejornalId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setPautasModalTelejornalId(null)}>
-          <div className="bg-background p-6 rounded-lg max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">Pautas do Telejornal</h2>
-            <p className="text-muted-foreground mb-4">
-              Funcionalidade em desenvolvimento: aqui aparecerão todas as pautas vinculadas a este telejornal específico, com opção de criar novas.
-            </p>
-            <Button onClick={() => setPautasModalTelejornalId(null)}>Fechar</Button>
-          </div>
-        </div>
+        <PautasTelejornalModal
+          isOpen={!!pautasModalTelejornalId}
+          onClose={() => setPautasModalTelejornalId(null)}
+          telejornalId={pautasModalTelejornalId}
+          telejornalNome={telejornais.find(t => t.id === pautasModalTelejornalId)?.nome || ""}
+        />
       )}
 
-      {/* Reportagens Modal - Placeholder */}
+      {/* Reportagens Modal */}
       {reportagensModalTelejornalId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setReportagensModalTelejornalId(null)}>
-          <div className="bg-background p-6 rounded-lg max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">Reportagens do Telejornal</h2>
-            <p className="text-muted-foreground mb-4">
-              Funcionalidade em desenvolvimento: aqui aparecerão todas as reportagens vinculadas a este telejornal específico, com opção de criar novas.
-            </p>
-            <Button onClick={() => setReportagensModalTelejornalId(null)}>Fechar</Button>
-          </div>
-        </div>
+        <ReportagensModal
+          isOpen={!!reportagensModalTelejornalId}
+          onClose={() => setReportagensModalTelejornalId(null)}
+          telejornalId={reportagensModalTelejornalId}
+          telejornalNome={telejornais.find(t => t.id === reportagensModalTelejornalId)?.nome || ""}
+        />
       )}
 
-      {/* Entrevistas Modal - Placeholder */}
+      {/* Entrevistas Modal */}
       {entrevistasModalTelejornalId && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setEntrevistasModalTelejornalId(null)}>
-          <div className="bg-background p-6 rounded-lg max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
-            <h2 className="text-xl font-bold mb-4">Entrevistas do Telejornal</h2>
-            <p className="text-muted-foreground mb-4">
-              Funcionalidade em desenvolvimento: aqui aparecerão todas as entrevistas vinculadas a este telejornal específico, com opção de criar novas.
-            </p>
-            <Button onClick={() => setEntrevistasModalTelejornalId(null)}>Fechar</Button>
-          </div>
-        </div>
+        <EntrevistasModal
+          isOpen={!!entrevistasModalTelejornalId}
+          onClose={() => setEntrevistasModalTelejornalId(null)}
+          telejornalId={entrevistasModalTelejornalId}
+          telejornalNome={telejornais.find(t => t.id === entrevistasModalTelejornalId)?.nome || ""}
+        />
       )}
       
       {/* Main Menu */}
