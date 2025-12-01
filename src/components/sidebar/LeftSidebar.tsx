@@ -34,6 +34,9 @@ export const LeftSidebar = ({
   const [pautas, setPautas] = useState<Pauta[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [pautasModalTelejornalId, setPautasModalTelejornalId] = useState<string | null>(null);
+  const [reportagensModalTelejornalId, setReportagensModalTelejornalId] = useState<string | null>(null);
+  const [entrevistasModalTelejornalId, setEntrevistasModalTelejornalId] = useState<string | null>(null);
 
   useEffect(() => {
     initializeData();
@@ -215,6 +218,18 @@ export const LeftSidebar = ({
     }
   };
 
+  const handleOpenPautas = (telejornalId: string) => {
+    setPautasModalTelejornalId(telejornalId);
+  };
+
+  const handleOpenReportagens = (telejornalId: string) => {
+    setReportagensModalTelejornalId(telejornalId);
+  };
+
+  const handleOpenEntrevistas = (telejornalId: string) => {
+    setEntrevistasModalTelejornalId(telejornalId);
+  };
+
   return (
     <div className={`${isMobile ? 'w-full' : 'w-64'} bg-gray-100 h-full ${!isMobile ? 'border-r border-gray-200' : ''} flex flex-col`}>
       {!isMobile && (
@@ -240,6 +255,9 @@ export const LeftSidebar = ({
           onAddTelejornal={handleOpenTelejornalModal}
           isLoading={isLoading}
           onDataChange={loadData}
+          onOpenPautas={handleOpenPautas}
+          onOpenReportagens={handleOpenReportagens}
+          onOpenEntrevistas={handleOpenEntrevistas}
         />
 
         {/* Pautas Section */}
@@ -261,6 +279,45 @@ export const LeftSidebar = ({
       />
       
       <TelejornalModal isOpen={isTelejornalModalOpen} onClose={() => setIsTelejornalModalOpen(false)} onTelejornalCreated={loadData} />
+      
+      {/* Pautas do Telejornal Modal - Placeholder */}
+      {pautasModalTelejornalId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setPautasModalTelejornalId(null)}>
+          <div className="bg-background p-6 rounded-lg max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-4">Pautas do Telejornal</h2>
+            <p className="text-muted-foreground mb-4">
+              Funcionalidade em desenvolvimento: aqui aparecerão todas as pautas vinculadas a este telejornal específico, com opção de criar novas.
+            </p>
+            <Button onClick={() => setPautasModalTelejornalId(null)}>Fechar</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Reportagens Modal - Placeholder */}
+      {reportagensModalTelejornalId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setReportagensModalTelejornalId(null)}>
+          <div className="bg-background p-6 rounded-lg max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-4">Reportagens do Telejornal</h2>
+            <p className="text-muted-foreground mb-4">
+              Funcionalidade em desenvolvimento: aqui aparecerão todas as reportagens vinculadas a este telejornal específico, com opção de criar novas.
+            </p>
+            <Button onClick={() => setReportagensModalTelejornalId(null)}>Fechar</Button>
+          </div>
+        </div>
+      )}
+
+      {/* Entrevistas Modal - Placeholder */}
+      {entrevistasModalTelejornalId && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50" onClick={() => setEntrevistasModalTelejornalId(null)}>
+          <div className="bg-background p-6 rounded-lg max-w-2xl w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-xl font-bold mb-4">Entrevistas do Telejornal</h2>
+            <p className="text-muted-foreground mb-4">
+              Funcionalidade em desenvolvimento: aqui aparecerão todas as entrevistas vinculadas a este telejornal específico, com opção de criar novas.
+            </p>
+            <Button onClick={() => setEntrevistasModalTelejornalId(null)}>Fechar</Button>
+          </div>
+        </div>
+      )}
       
       {/* Main Menu */}
       <MainMenu
