@@ -18,12 +18,35 @@ export const EditorFormFields = ({
   disabled = false
 }: EditorFormFieldsProps) => {
   const gcTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const cabecaTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const textoTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   const handleGCTextChange = (newText: string) => {
-    // Create a synthetic event to maintain compatibility with onInputChange
     const syntheticEvent = {
       target: {
         id: 'gc',
+        value: newText
+      }
+    } as React.ChangeEvent<HTMLTextAreaElement>;
+    
+    onInputChange(syntheticEvent);
+  };
+
+  const handleCabecaTextChange = (newText: string) => {
+    const syntheticEvent = {
+      target: {
+        id: 'cabeca',
+        value: newText
+      }
+    } as React.ChangeEvent<HTMLTextAreaElement>;
+    
+    onInputChange(syntheticEvent);
+  };
+
+  const handleTextoTextChange = (newText: string) => {
+    const syntheticEvent = {
+      target: {
+        id: 'texto',
         value: newText
       }
     } as React.ChangeEvent<HTMLTextAreaElement>;
@@ -44,8 +67,15 @@ export const EditorFormFields = ({
       </div>
       
       <div className="space-y-1.5">
-        <Label htmlFor="cabeca">Cabeça</Label>
+        <div className="flex justify-between items-center">
+          <Label htmlFor="cabeca">Cabeça</Label>
+          <AllCapsGCButton 
+            textareaRef={cabecaTextareaRef}
+            onTextChange={handleCabecaTextChange}
+          />
+        </div>
         <Textarea 
+          ref={cabecaTextareaRef}
           id="cabeca" 
           rows={3} 
           value={formData.cabeca || ''} 
@@ -75,8 +105,15 @@ export const EditorFormFields = ({
       </div>
       
       <div className="space-y-1.5">
-        <Label htmlFor="texto">Corpo da Matéria</Label>
+        <div className="flex justify-between items-center">
+          <Label htmlFor="texto">Corpo da Matéria</Label>
+          <AllCapsGCButton 
+            textareaRef={textoTextareaRef}
+            onTextChange={handleTextoTextChange}
+          />
+        </div>
         <Textarea 
+          ref={textoTextareaRef}
           id="texto" 
           rows={10} 
           value={formData.texto || ''} 
