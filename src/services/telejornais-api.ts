@@ -40,11 +40,16 @@ export const updateTelejornal = async (id: string, updates: TablesInsert<'telejo
     .update(updates)
     .eq('id', id)
     .select('*')
-    .single();
+    .maybeSingle();
 
   if (error) {
     console.error("Erro ao atualizar telejornal:", error);
     throw error;
+  }
+
+  if (!data) {
+    console.error("Nenhum telejornal foi atualizado - verifique permissões RLS");
+    throw new Error("Sem permissão para atualizar este telejornal");
   }
 
   console.log('updateTelejornal - Telejornal atualizado com sucesso:', data);
