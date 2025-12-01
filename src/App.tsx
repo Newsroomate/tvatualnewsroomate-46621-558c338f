@@ -10,11 +10,11 @@ import { PermissionGuardProvider } from "./components/auth/PermissionGuardProvid
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { enableAllTables } from "./services/realtime-setup";
 import { useEffect, Suspense, lazy } from "react";
+import Auth from "./pages/Auth";
 
 // Lazy load route components to reduce initial bundle size
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
-const Auth = lazy(() => import("./pages/Auth"));
 const TeleprompterWindow = lazy(() => import("./pages/TeleprompterWindow"));
 
 const queryClient = new QueryClient({
