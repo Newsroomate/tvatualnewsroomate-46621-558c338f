@@ -49,6 +49,93 @@ export type Database = {
           },
         ]
       }
+      entrevistas: {
+        Row: {
+          created_at: string | null
+          data_entrevista: string | null
+          descricao: string | null
+          duracao: number | null
+          entrevistado: string
+          id: string
+          local: string | null
+          observacoes: string | null
+          reporter: string | null
+          status: string | null
+          tema: string | null
+          titulo: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_entrevista?: string | null
+          descricao?: string | null
+          duracao?: number | null
+          entrevistado: string
+          id?: string
+          local?: string | null
+          observacoes?: string | null
+          reporter?: string | null
+          status?: string | null
+          tema?: string | null
+          titulo: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_entrevista?: string | null
+          descricao?: string | null
+          duracao?: number | null
+          entrevistado?: string
+          id?: string
+          local?: string | null
+          observacoes?: string | null
+          reporter?: string | null
+          status?: string | null
+          tema?: string | null
+          titulo?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      entrevistas_telejornal: {
+        Row: {
+          created_at: string | null
+          entrevista_id: string
+          id: string
+          telejornal_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          entrevista_id: string
+          id?: string
+          telejornal_id: string
+        }
+        Update: {
+          created_at?: string | null
+          entrevista_id?: string
+          id?: string
+          telejornal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "entrevistas_telejornal_entrevista_id_fkey"
+            columns: ["entrevista_id"]
+            isOneToOne: false
+            referencedRelation: "entrevistas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "entrevistas_telejornal_telejornal_id_fkey"
+            columns: ["telejornal_id"]
+            isOneToOne: false
+            referencedRelation: "telejornais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       espelhos_backup: {
         Row: {
           backup_type: string
@@ -402,6 +489,42 @@ export type Database = {
         }
         Relationships: []
       }
+      pautas_telejornal: {
+        Row: {
+          created_at: string | null
+          id: string
+          pauta_id: string
+          telejornal_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          pauta_id: string
+          telejornal_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          pauta_id?: string
+          telejornal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pautas_telejornal_pauta_id_fkey"
+            columns: ["pauta_id"]
+            isOneToOne: false
+            referencedRelation: "pautas"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pautas_telejornal_telejornal_id_fkey"
+            columns: ["telejornal_id"]
+            isOneToOne: false
+            referencedRelation: "telejornais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       permission_audit_logs: {
         Row: {
           action: string
@@ -471,6 +594,93 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reportagens: {
+        Row: {
+          created_at: string | null
+          data_gravacao: string | null
+          descricao: string | null
+          duracao: number | null
+          editor: string | null
+          equipamento: string | null
+          id: string
+          local_gravacao: string | null
+          observacoes: string | null
+          reporter: string | null
+          status: string | null
+          titulo: string
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          data_gravacao?: string | null
+          descricao?: string | null
+          duracao?: number | null
+          editor?: string | null
+          equipamento?: string | null
+          id?: string
+          local_gravacao?: string | null
+          observacoes?: string | null
+          reporter?: string | null
+          status?: string | null
+          titulo: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          data_gravacao?: string | null
+          descricao?: string | null
+          duracao?: number | null
+          editor?: string | null
+          equipamento?: string | null
+          id?: string
+          local_gravacao?: string | null
+          observacoes?: string | null
+          reporter?: string | null
+          status?: string | null
+          titulo?: string
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      reportagens_telejornal: {
+        Row: {
+          created_at: string | null
+          id: string
+          reportagem_id: string
+          telejornal_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          reportagem_id: string
+          telejornal_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          reportagem_id?: string
+          telejornal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reportagens_telejornal_reportagem_id_fkey"
+            columns: ["reportagem_id"]
+            isOneToOne: false
+            referencedRelation: "reportagens"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reportagens_telejornal_telejornal_id_fkey"
+            columns: ["telejornal_id"]
+            isOneToOne: false
+            referencedRelation: "telejornais"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       telejornais: {
         Row: {
