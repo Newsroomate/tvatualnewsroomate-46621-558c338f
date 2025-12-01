@@ -10,8 +10,8 @@ import { updateTelejornal, fetchTelejornal } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { CloseRundownDialog } from "./CloseRundownDialog";
 import { useAuth } from "@/context/AuthContext";
-import { canCreateEspelhos } from "@/utils/permission";
 import { PostCloseRundownModal } from "./PostCloseRundownModal";
+import { usePermissionCheck } from "@/hooks/usePermissionCheck";
 import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { supabase } from "@/integrations/supabase/client";
@@ -40,8 +40,9 @@ const Layout = () => {
   const [currentTelejornal, setCurrentTelejornal] = useState<Telejornal | null>(null);
   const [isCloseRundownDialogOpen, setIsCloseRundownDialogOpen] = useState(false);
   const { toast } = useToast();
-  const { profile } = useAuth();
+  const { profile, userPermissions } = useAuth();
   const { guardAction } = usePermissionGuard();
+  const permissionCheck = usePermissionCheck();
   const [isPostCloseModalOpen, setIsPostCloseModalOpen] = useState(false);
   const [isSavedRundownsModalOpen, setIsSavedRundownsModalOpen] = useState(false);
   const [selectedViewDate, setSelectedViewDate] = useState<Date>(new Date());
@@ -243,11 +244,25 @@ const Layout = () => {
   const handleToggleRundown = async () => {
     if (!selectedJournal || !currentTelejornal) return;
     
-    // Verificar permissões para abrir/fechar espelho
-    if (!canCreateEspelhos(profile)) {
+    // Verificar permissões granulares para abrir/fechar espelho
+    const canOpen = userPermissions.includes('abrir_espelho');
+    const canClose = userPermissions.includes('fechar_espelho');
+    
+    // Se está tentando abrir e não tem permissão
+    if (!currentTelejornal.espelho_aberto && !canOpen) {
       toast({
         title: "Permissão negada",
-        description: "Você não tem permissão para abrir ou fechar espelhos.",
+        description: "Você não tem permissão para abrir espelhos. Entre em contato com o editor-chefe.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Se está tentando fechar e não tem permissão
+    if (currentTelejornal.espelho_aberto && !canClose) {
+      toast({
+        title: "Permissão negada",
+        description: "Você não tem permissão para fechar espelhos. Entre em contato com o editor-chefe.",
         variant: "destructive"
       });
       return;
@@ -507,7 +522,7 @@ const Layout = () => {
                 )}
               </div>
               
-              {canCreateEspelhos(profile) && !isDualViewActive && !isMobile && (
+              {(userPermissions.includes('abrir_espelho') || userPermissions.includes('fechar_espelho')) && !isDualViewActive && !isMobile && (
                 <button 
                   onClick={handleToggleRundown}
                   className={`px-3 py-1 rounded-md text-xs font-medium ${

@@ -76,6 +76,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // If user has exception, use that role instead of global role
         const effectiveRole = accessData?.role || data.role;
         
+        console.log('[AuthContext] Calculando permissões para usuário:', {
+          userId,
+          globalRole: data.role,
+          telejornalExceptionRole: accessData?.role,
+          effectiveRole
+        });
+        
         setProfile({
           ...data,
           role: effectiveRole
@@ -84,10 +91,17 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         // Get user's effective permissions (role + overrides with is_granted)
         const rolePerms = new Set(getDefaultRolePermissions(effectiveRole));
         
+        console.log('[AuthContext] Permissões base do role:', {
+          effectiveRole,
+          basePermissions: Array.from(rolePerms)
+        });
+        
         const { data: overrides } = await supabase
           .from('user_permissions')
           .select('permission, is_granted')
           .eq('user_id', userId);
+
+        console.log('[AuthContext] Overrides encontrados:', overrides);
 
         // Apply overrides
         if (overrides) {
@@ -100,7 +114,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           }
         }
 
-        setUserPermissions(Array.from(rolePerms));
+        const finalPermissions = Array.from(rolePerms);
+        console.log('[AuthContext] Permissões finais calculadas:', finalPermissions);
+        
+        setUserPermissions(finalPermissions);
       }
     } catch (error) {
       console.error('Error fetching profile:', error);
