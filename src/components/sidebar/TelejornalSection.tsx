@@ -106,7 +106,7 @@ export const TelejornalSection = ({
                       <Button 
                         variant={selectedJournal === jornal.id ? "secondary" : "ghost"} 
                         className={`flex-1 justify-start text-left text-xs font-medium transition-all duration-200 ${
-                          isEspelhoAberto ? 'border-l-2 border-primary' : ''
+                          isEspelhoAberto ? 'border-l-2 border-green-500' : ''
                         } ${selectedJournal === jornal.id ? 'bg-accent hover:bg-accent/80 shadow-sm' : 'hover:bg-accent/50'}`}
                         onClick={() => handleSelectTelejornal(jornal.id)}
                       >
@@ -115,7 +115,7 @@ export const TelejornalSection = ({
                           <TooltipProvider>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="ml-2 h-2 w-2 rounded-full bg-primary animate-pulse flex-shrink-0" />
+                                <span className="ml-2 h-2 w-2 rounded-full bg-green-500 animate-pulse flex-shrink-0" />
                               </TooltipTrigger>
                               <TooltipContent side="right">
                                 <p className="text-xs">Espelho aberto</p>
