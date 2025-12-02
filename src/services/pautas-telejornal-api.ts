@@ -2,15 +2,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { Pauta } from "@/types";
 
 export const fetchPautasByTelejornal = async (telejornalId: string): Promise<Pauta[]> => {
+  console.log('[pautas-telejornal-api] Buscando pautas para telejornal:', telejornalId);
+  
   const { data: links, error: linksError } = await supabase
     .from('pautas_telejornal')
     .select('pauta_id')
     .eq('telejornal_id', telejornalId);
 
-  if (linksError) throw linksError;
-  if (!links || links.length === 0) return [];
+  if (linksError) {
+    console.error('[pautas-telejornal-api] Erro ao buscar links:', linksError);
+    throw linksError;
+  }
+  
+  console.log('[pautas-telejornal-api] Links encontrados:', links);
+  
+  if (!links || links.length === 0) {
+    console.log('[pautas-telejornal-api] Nenhum link encontrado');
+    return [];
+  }
 
   const pautaIds = links.map(l => l.pauta_id);
+  console.log('[pautas-telejornal-api] IDs de pautas:', pautaIds);
 
   const { data, error } = await supabase
     .from('pautas')
@@ -18,7 +30,13 @@ export const fetchPautasByTelejornal = async (telejornalId: string): Promise<Pau
     .in('id', pautaIds)
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error('[pautas-telejornal-api] Erro ao buscar pautas:', error);
+    throw error;
+  }
+  
+  console.log('[pautas-telejornal-api] Pautas encontradas:', data);
+  
   return (data || []).map((row: any) => ({
     id: row.id,
     titulo: row.titulo,
@@ -40,6 +58,8 @@ export const fetchPautasByTelejornal = async (telejornalId: string): Promise<Pau
 };
 
 export const linkPautaToTelejornal = async (pautaId: string, telejornalId: string): Promise<boolean> => {
+  console.log('[pautas-telejornal-api] Vinculando pauta ao telejornal:', { pautaId, telejornalId });
+  
   const { error } = await supabase
     .from('pautas_telejornal')
     .insert({
@@ -47,7 +67,12 @@ export const linkPautaToTelejornal = async (pautaId: string, telejornalId: strin
       telejornal_id: telejornalId
     });
 
-  if (error) throw error;
+  if (error) {
+    console.error('[pautas-telejornal-api] Erro ao vincular:', error);
+    throw error;
+  }
+  
+  console.log('[pautas-telejornal-api] Pauta vinculada com sucesso');
   return true;
 };
 

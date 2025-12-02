@@ -2,15 +2,27 @@ import { supabase } from "@/integrations/supabase/client";
 import { Reportagem, ReportagemCreateInput } from "@/types/reportagens";
 
 export const fetchReportagensByTelejornal = async (telejornalId: string): Promise<Reportagem[]> => {
+  console.log('[reportagens-api] Buscando reportagens para telejornal:', telejornalId);
+  
   const { data: links, error: linksError } = await supabase
     .from('reportagens_telejornal')
     .select('reportagem_id')
     .eq('telejornal_id', telejornalId);
 
-  if (linksError) throw linksError;
-  if (!links || links.length === 0) return [];
+  if (linksError) {
+    console.error('[reportagens-api] Erro ao buscar links:', linksError);
+    throw linksError;
+  }
+  
+  console.log('[reportagens-api] Links encontrados:', links);
+  
+  if (!links || links.length === 0) {
+    console.log('[reportagens-api] Nenhum link encontrado');
+    return [];
+  }
 
   const reportagemIds = links.map(l => l.reportagem_id);
+  console.log('[reportagens-api] IDs de reportagens:', reportagemIds);
 
   const { data, error } = await supabase
     .from('reportagens')
@@ -18,7 +30,12 @@ export const fetchReportagensByTelejornal = async (telejornalId: string): Promis
     .in('id', reportagemIds)
     .order('created_at', { ascending: false });
 
-  if (error) throw error;
+  if (error) {
+    console.error('[reportagens-api] Erro ao buscar reportagens:', error);
+    throw error;
+  }
+  
+  console.log('[reportagens-api] Reportagens encontradas:', data);
   return data || [];
 };
 
@@ -27,6 +44,8 @@ export const createReportagem = async (
   telejornalId: string,
   userId: string
 ): Promise<Reportagem> => {
+  console.log('[reportagens-api] Criando reportagem:', { reportagem, telejornalId, userId });
+  
   const { data, error } = await supabase
     .from('reportagens')
     .insert({
@@ -36,7 +55,12 @@ export const createReportagem = async (
     .select()
     .single();
 
-  if (error) throw error;
+  if (error) {
+    console.error('[reportagens-api] Erro ao criar reportagem:', error);
+    throw error;
+  }
+
+  console.log('[reportagens-api] Reportagem criada:', data);
 
   // Link to telejornal
   const { error: linkError } = await supabase
@@ -46,8 +70,12 @@ export const createReportagem = async (
       telejornal_id: telejornalId
     });
 
-  if (linkError) throw linkError;
+  if (linkError) {
+    console.error('[reportagens-api] Erro ao vincular reportagem:', linkError);
+    throw linkError;
+  }
 
+  console.log('[reportagens-api] Reportagem vinculada ao telejornal');
   return data;
 };
 

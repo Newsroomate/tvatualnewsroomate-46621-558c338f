@@ -2,13 +2,13 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Plus, Search, Loader2 } from "lucide-react";
+import { Plus, Search, Loader2, Edit, Trash2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { fetchPautasByTelejornal, linkPautaToTelejornal } from "@/services/pautas-telejornal-api";
-import { fetchPautas, createPauta } from "@/services/api";
+import { fetchPautasByTelejornal } from "@/services/pautas-telejornal-api";
+import { deletePauta } from "@/services/api";
 import { Pauta } from "@/types";
 import { toast } from "sonner";
-import { NewPautaDialog } from "@/components/NewPautaDialog";
+import { PautaTelejornalFormDialog } from "./PautaTelejornalFormDialog";
 
 interface PautasTelejornalModalProps {
   isOpen: boolean;
@@ -27,7 +27,8 @@ export const PautasTelejornalModal = ({
   const [pautas, setPautas] = useState<Pauta[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [isNewPautaDialogOpen, setIsNewPautaDialogOpen] = useState(false);
+  const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
+  const [editingPauta, setEditingPauta] = useState<Pauta | null>(null);
 
   useEffect(() => {
     if (isOpen && telejornalId) {
@@ -39,6 +40,7 @@ export const PautasTelejornalModal = ({
     setIsLoading(true);
     try {
       const data = await fetchPautasByTelejornal(telejornalId);
+      console.log('[PautasTelejornalModal] Pautas carregadas:', data);
       setPautas(data);
     } catch (error) {
       console.error("Erro ao carregar pautas:", error);
@@ -48,22 +50,22 @@ export const PautasTelejornalModal = ({
     }
   };
 
-  const handleCreatePauta = async (pautaData: any) => {
-    if (!user?.id) {
-      toast.error("Usuário não autenticado");
-      return;
-    }
+  const handleDelete = async (id: string) => {
+    if (!confirm("Tem certeza que deseja excluir esta pauta?")) return;
 
     try {
-      const newPauta = await createPauta(pautaData, user.id);
-      await linkPautaToTelejornal(newPauta.id, telejornalId);
-      toast.success("Pauta criada e vinculada ao telejornal!");
+      await deletePauta(id);
+      toast.success("Pauta excluída com sucesso!");
       loadPautas();
-      setIsNewPautaDialogOpen(false);
     } catch (error) {
-      console.error("Erro ao criar pauta:", error);
-      toast.error("Erro ao criar pauta");
+      console.error("Erro ao excluir pauta:", error);
+      toast.error("Erro ao excluir pauta");
     }
+  };
+
+  const handleEdit = (pauta: Pauta) => {
+    setEditingPauta(pauta);
+    setIsFormDialogOpen(true);
   };
 
   const filteredPautas = pautas.filter(pauta =>
@@ -91,7 +93,10 @@ export const PautasTelejornalModal = ({
                   className="pl-10"
                 />
               </div>
-              <Button onClick={() => setIsNewPautaDialogOpen(true)}>
+              <Button onClick={() => {
+                setEditingPauta(null);
+                setIsFormDialogOpen(true);
+              }}>
                 <Plus className="h-4 w-4 mr-2" />
                 Nova Pauta
               </Button>
@@ -124,13 +129,21 @@ export const PautasTelejornalModal = ({
                           {pauta.reporter && <span>👤 {pauta.reporter}</span>}
                         </div>
                       </div>
-                      <span className={`px-2 py-1 text-xs rounded ${
-                        pauta.status === 'concluida' ? 'bg-green-100 text-green-800' :
-                        pauta.status === 'em_andamento' ? 'bg-blue-100 text-blue-800' :
-                        'bg-gray-100 text-gray-800'
-                      }`}>
-                        {pauta.status}
-                      </span>
+                      <div className="flex gap-2 items-start">
+                        <span className={`px-2 py-1 text-xs rounded ${
+                          pauta.status === 'concluida' ? 'bg-green-100 text-green-800' :
+                          pauta.status === 'em_andamento' ? 'bg-blue-100 text-blue-800' :
+                          'bg-gray-100 text-gray-800'
+                        }`}>
+                          {pauta.status}
+                        </span>
+                        <Button size="sm" variant="ghost" onClick={() => handleEdit(pauta)}>
+                          <Edit className="h-4 w-4" />
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => handleDelete(pauta.id)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -140,13 +153,15 @@ export const PautasTelejornalModal = ({
         </DialogContent>
       </Dialog>
 
-      <NewPautaDialog
-        isOpen={isNewPautaDialogOpen}
-        onClose={() => setIsNewPautaDialogOpen(false)}
-        onPautaCreated={() => {
-          loadPautas();
-          setIsNewPautaDialogOpen(false);
+      <PautaTelejornalFormDialog
+        isOpen={isFormDialogOpen}
+        onClose={() => {
+          setIsFormDialogOpen(false);
+          setEditingPauta(null);
         }}
+        telejornalId={telejornalId}
+        pauta={editingPauta}
+        onSuccess={loadPautas}
       />
     </>
   );

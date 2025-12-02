@@ -39,6 +39,7 @@ export const ReportagensModal = ({
     setIsLoading(true);
     try {
       const data = await fetchReportagensByTelejornal(telejornalId);
+      console.log('[ReportagensModal] Reportagens carregadas:', data);
       setReportagens(data);
     } catch (error) {
       console.error("Erro ao carregar reportagens:", error);
