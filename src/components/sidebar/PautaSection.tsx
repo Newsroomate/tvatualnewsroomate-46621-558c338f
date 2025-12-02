@@ -171,9 +171,9 @@ export const PautaSection = ({
 
   const getStatusColor = (status: string): string => {
     const colors: Record<string, string> = {
-      pendente: 'bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200',
-      em_andamento: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
-      concluida: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+      pendente: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+      em_andamento: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+      concluida: 'bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/20'
     };
     return colors[status] || 'bg-muted text-muted-foreground';
   };
@@ -181,9 +181,9 @@ export const PautaSection = ({
   const totalPautas = Object.values(groupedPautas).reduce((sum, group) => sum + group.length, 0);
   
   return (
-    <div className="border-t border-border/50 bg-gradient-to-b from-background to-muted/20">
+    <div className="border-t border-border/50">
       {/* Header with Add Button */}
-      <div className="p-4 space-y-4">
+      <div className="p-4 space-y-3">
         {/* Title Row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -223,16 +223,16 @@ export const PautaSection = ({
         </div>
 
         {/* Status Filter */}
-        <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/30">
+        <div className="flex items-center gap-2 p-2 bg-muted/50 rounded-lg border border-border/50">
           <div className="flex items-center gap-2 flex-1">
             <Filter className="h-3.5 w-3.5 text-muted-foreground ml-1" />
             <span className="text-[11px] font-medium text-muted-foreground">Filtro:</span>
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-7 text-xs flex-1 border-border/50 bg-background/50 shadow-sm">
+            <SelectTrigger className="h-7 text-xs flex-1 border-border/50 bg-background shadow-sm">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent className="bg-background/95 backdrop-blur-md border-border/50 shadow-lg">
+            <SelectContent className="bg-background backdrop-blur-md border-border/50 shadow-lg">
               <SelectItem value="all" className="text-xs">Todos os status</SelectItem>
               <SelectItem value="pendente" className="text-xs">Pendentes</SelectItem>
               <SelectItem value="em_andamento" className="text-xs">Em Andamento</SelectItem>
