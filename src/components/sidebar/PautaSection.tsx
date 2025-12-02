@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, FileText, Search, Filter, ChevronDown, ChevronRight } from "lucide-react";
+import { PlusCircle, Trash2, FileText, Search, Filter, ChevronDown, ChevronRight, Edit2 } from "lucide-react";
 import { Pauta } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { deletePauta } from "@/services/pautas-api";
@@ -22,6 +22,7 @@ import {
 interface PautaSectionProps {
   pautas: Pauta[];
   onAddPauta: () => void;
+  onEditPauta: (pauta: Pauta) => void;
   isLoading: boolean;
   onDataChange: () => void;
 }
@@ -29,6 +30,7 @@ interface PautaSectionProps {
 export const PautaSection = ({
   pautas,
   onAddPauta,
+  onEditPauta,
   isLoading,
   onDataChange
 }: PautaSectionProps) => {
@@ -47,6 +49,12 @@ export const PautaSection = ({
     e.stopPropagation();
     if (!checkPermission('delete', 'pauta', pauta.user_id || undefined)) return;
     setDeletingPauta(pauta);
+  };
+
+  const handleEditPauta = (pauta: Pauta, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!checkPermission('update', 'pauta', pauta.user_id || undefined)) return;
+    onEditPauta(pauta);
   };
 
   const handlePrintPauta = (pauta: Pauta, e: React.MouseEvent) => {
@@ -305,6 +313,15 @@ export const PautaSection = ({
                             </div>
                             
                             <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/item:opacity-100 transition-all duration-200 translate-x-2 group-hover/item:translate-x-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-blue-50 hover:border-blue-200 hover:scale-110 transition-all duration-200 shadow-sm text-blue-600 dark:hover:bg-blue-950 dark:text-blue-400"
+                                onClick={(e) => handleEditPauta(pauta, e)}
+                              >
+                                <Edit2 className="h-3.5 w-3.5" />
+                                <span className="sr-only">Editar Pauta</span>
+                              </Button>
                               <Button
                                 variant="ghost"
                                 size="icon"
