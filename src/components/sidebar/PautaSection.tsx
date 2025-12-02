@@ -2,11 +2,14 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, FileText, Search, ChevronDown, ChevronRight } from "lucide-react";
+import { PlusCircle, Trash2, FileText, Search, ChevronDown, ChevronRight, User, Calendar, MapPin, Clock } from "lucide-react";
 import { Pauta } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { deletePauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
 import { generatePautaPDF } from "@/utils/pdf-utils";
@@ -78,11 +81,15 @@ export const PautaSection = ({
     setOpenGroups(prev => ({ ...prev, [status]: !prev[status] }));
   };
 
-  const statusLabels: Record<string, { label: string; variant: "default" | "secondary" | "success" }> = {
-    pendente: { label: "Pendente", variant: "default" },
-    em_andamento: { label: "Em Andamento", variant: "secondary" },
-    concluida: { label: "Concluída", variant: "success" }
+  const statusLabels: Record<string, { label: string; color: string; bgColor: string }> = {
+    pendente: { label: "Pendente", color: "text-orange-600", bgColor: "bg-orange-50 dark:bg-orange-950/30" },
+    em_andamento: { label: "Em Andamento", color: "text-blue-600", bgColor: "bg-blue-50 dark:bg-blue-950/30" },
+    concluida: { label: "Concluída", color: "text-green-600", bgColor: "bg-green-50 dark:bg-green-950/30" }
   };
+  
+  const totalCount = pautas.length;
+  const pendenteCount = groupedPautas.pendente.length;
+  const emAndamentoCount = groupedPautas.em_andamento.length;
 
   const handleDeletePauta = (pauta: Pauta, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -120,143 +127,211 @@ export const PautaSection = ({
   };
   
   return (
-    <div className="flex flex-col h-full border-t">
-      {/* Header fixo */}
-      <div className="flex-shrink-0 p-3 space-y-2">
+    <div className="flex flex-col h-full border-t bg-background">
+      {/* Header fixo com design moderno */}
+      <div className="flex-shrink-0 px-4 pt-4 pb-3 space-y-3 border-b bg-card">
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-muted-foreground">PAUTAS</h3>
-          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={onAddPauta}>
-            <PlusCircle className="h-4 w-4" />
-            <span className="sr-only">Adicionar Pauta</span>
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-bold tracking-tight">PAUTAS</h3>
+            <Badge variant="secondary" className="h-5 px-2 text-[10px] font-semibold">
+              {totalCount}
+            </Badge>
+          </div>
+          <Button 
+            variant="default" 
+            size="sm" 
+            className="h-7 px-2 gap-1.5 shadow-sm" 
+            onClick={onAddPauta}
+          >
+            <PlusCircle className="h-3.5 w-3.5" />
+            <span className="text-xs font-medium">Nova</span>
           </Button>
         </div>
         
-        {/* Busca */}
+        {/* Busca moderna */}
         <div className="relative">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Search className="absolute left-2.5 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Buscar pautas..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-8 pl-8 text-xs"
+            className="h-9 pl-9 text-xs bg-background border-border/60 focus:border-primary/40 transition-colors"
           />
         </div>
         
-        {/* Filtros de status */}
-        <div className="flex gap-1">
-          <Button
-            variant={filterStatus === "all" ? "default" : "ghost"}
-            size="sm"
-            className="h-6 text-xs flex-1"
-            onClick={() => setFilterStatus("all")}
-          >
-            Todas
-          </Button>
-          <Button
-            variant={filterStatus === "pendente" ? "default" : "ghost"}
-            size="sm"
-            className="h-6 text-xs flex-1"
-            onClick={() => setFilterStatus("pendente")}
-          >
-            Pendentes
-          </Button>
-          <Button
-            variant={filterStatus === "em_andamento" ? "default" : "ghost"}
-            size="sm"
-            className="h-6 text-xs flex-1"
-            onClick={() => setFilterStatus("em_andamento")}
-          >
-            Em And.
-          </Button>
-        </div>
+        {/* Tabs de filtros */}
+        <Tabs value={filterStatus} onValueChange={setFilterStatus} className="w-full">
+          <TabsList className="grid w-full grid-cols-3 h-9 bg-muted/50">
+            <TabsTrigger value="all" className="text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              Todas
+              <Badge variant="secondary" className="ml-1.5 h-4 px-1.5 text-[9px]">
+                {totalCount}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="pendente" className="text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              Pendentes
+              <Badge variant="secondary" className="ml-1.5 h-4 px-1.5 text-[9px]">
+                {pendenteCount}
+              </Badge>
+            </TabsTrigger>
+            <TabsTrigger value="em_andamento" className="text-xs data-[state=active]:bg-background data-[state=active]:shadow-sm">
+              Em And.
+              <Badge variant="secondary" className="ml-1.5 h-4 px-1.5 text-[9px]">
+                {emAndamentoCount}
+              </Badge>
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Lista com scroll */}
-      <div className="flex-1 overflow-y-auto px-3 pb-3">
-        {isLoading ? (
-          <p className="text-xs text-muted-foreground py-4 text-center">Carregando...</p>
-        ) : (
-          <div className="space-y-2">
-            {Object.entries(groupedPautas).map(([status, pautasInGroup]) => {
-              if (pautasInGroup.length === 0) return null;
+      <ScrollArea className="flex-1">
+        <div className="p-3">
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="flex flex-col items-center gap-2">
+                <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                <p className="text-xs text-muted-foreground">Carregando pautas...</p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {Object.entries(groupedPautas).map(([status, pautasInGroup]) => {
+                if (pautasInGroup.length === 0) return null;
+                
+                return (
+                  <div key={status} className="space-y-2">
+                    <Collapsible
+                      open={openGroups[status]}
+                      onOpenChange={() => toggleGroup(status)}
+                    >
+                      <CollapsibleTrigger className="flex items-center justify-between w-full py-2 px-3 rounded-lg hover:bg-accent/60 transition-all group">
+                        <div className="flex items-center gap-2.5">
+                          {openGroups[status] ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform" />
+                          )}
+                          <span className="text-xs font-semibold tracking-tight">{statusLabels[status].label}</span>
+                          <Badge 
+                            variant="secondary" 
+                            className={`h-5 px-2 text-[10px] font-bold ${statusLabels[status].color} ${statusLabels[status].bgColor}`}
+                          >
+                            {pautasInGroup.length}
+                          </Badge>
+                        </div>
+                      </CollapsibleTrigger>
+                      
+                      <CollapsibleContent className="space-y-2 mt-2">
+                        {pautasInGroup.map(pauta => (
+                          <div
+                            key={pauta.id}
+                            className="group relative p-3 rounded-lg border border-border/60 bg-card hover:border-primary/30 hover:shadow-sm transition-all duration-200"
+                          >
+                            <div className="flex flex-col gap-2">
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="text-xs font-semibold leading-snug line-clamp-2 pr-12">
+                                  {pauta.titulo}
+                                </h4>
+                                <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 hover:bg-primary/10 hover:text-primary"
+                                    onClick={(e) => handlePrintPauta(pauta, e)}
+                                  >
+                                    <FileText className="h-3.5 w-3.5" />
+                                    <span className="sr-only">PDF</span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-7 w-7 hover:bg-destructive/10 hover:text-destructive"
+                                    onClick={(e) => handleDeletePauta(pauta, e)}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                    <span className="sr-only">Excluir</span>
+                                  </Button>
+                                </div>
+                              </div>
+                              
+                              {(pauta.reporter || pauta.data_cobertura || pauta.local || pauta.horario) && (
+                                <div className="flex flex-col gap-1.5 pt-1">
+                                  {pauta.reporter && (
+                                    <div className="flex items-center gap-1.5">
+                                      <User className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                      <span className="text-[10px] text-muted-foreground font-medium truncate">
+                                        {pauta.reporter}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {pauta.data_cobertura && (
+                                    <div className="flex items-center gap-1.5">
+                                      <Calendar className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                      <span className="text-[10px] text-muted-foreground font-medium">
+                                        {pauta.data_cobertura}
+                                      </span>
+                                      {pauta.horario && (
+                                        <>
+                                          <Separator orientation="vertical" className="h-3" />
+                                          <Clock className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                          <span className="text-[10px] text-muted-foreground font-medium">
+                                            {pauta.horario}
+                                          </span>
+                                        </>
+                                      )}
+                                    </div>
+                                  )}
+                                  {pauta.local && (
+                                    <div className="flex items-center gap-1.5">
+                                      <MapPin className="h-3 w-3 text-muted-foreground flex-shrink-0" />
+                                      <span className="text-[10px] text-muted-foreground font-medium truncate">
+                                        {pauta.local}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
+                );
+              })}
               
-              return (
-                <Collapsible
-                  key={status}
-                  open={openGroups[status]}
-                  onOpenChange={() => toggleGroup(status)}
-                >
-                  <CollapsibleTrigger className="flex items-center justify-between w-full py-1.5 px-2 rounded hover:bg-accent/50 transition-colors">
-                    <div className="flex items-center gap-2">
-                      {openGroups[status] ? (
-                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                      ) : (
-                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                      )}
-                      <span className="text-xs font-medium">{statusLabels[status].label}</span>
-                      <Badge variant={statusLabels[status].variant as any} className="h-4 px-1.5 text-[10px]">
-                        {pautasInGroup.length}
-                      </Badge>
-                    </div>
-                  </CollapsibleTrigger>
-                  
-                  <CollapsibleContent className="space-y-1 mt-1">
-                    {pautasInGroup.map(pauta => (
-                      <div
-                        key={pauta.id}
-                        className="group relative pl-6 pr-2 py-2 rounded border border-border/50 hover:border-border hover:bg-accent/30 transition-all"
-                      >
-                        <div className="flex flex-col gap-1">
-                          <p className="text-xs font-medium line-clamp-2 pr-14">{pauta.titulo}</p>
-                          {pauta.reporter && (
-                            <p className="text-[10px] text-muted-foreground">👤 {pauta.reporter}</p>
-                          )}
-                          {pauta.data_cobertura && (
-                            <p className="text-[10px] text-muted-foreground">📅 {pauta.data_cobertura}</p>
-                          )}
-                        </div>
-                        
-                        <div className="absolute top-1 right-1 hidden group-hover:flex gap-0.5">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6"
-                            onClick={(e) => handlePrintPauta(pauta, e)}
-                          >
-                            <FileText className="h-3 w-3" />
-                            <span className="sr-only">PDF</span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-6 w-6 text-destructive hover:text-destructive"
-                            onClick={(e) => handleDeletePauta(pauta, e)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                            <span className="sr-only">Excluir</span>
-                          </Button>
-                        </div>
-                      </div>
-                    ))}
-                  </CollapsibleContent>
-                </Collapsible>
-              );
-            })}
-            
-            {pautas.length === 0 && (
-              <p className="text-xs text-muted-foreground italic py-4 text-center">
-                Nenhuma pauta disponível
-              </p>
-            )}
-            
-            {pautas.length > 0 && Object.values(groupedPautas).every(g => g.length === 0) && (
-              <p className="text-xs text-muted-foreground italic py-4 text-center">
-                Nenhuma pauta encontrada
-              </p>
-            )}
-          </div>
-        )}
-      </div>
+              {pautas.length === 0 && (
+                <div className="flex flex-col items-center justify-center py-12 px-4">
+                  <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                    <FileText className="h-8 w-8 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    Nenhuma pauta disponível
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 text-center">
+                    Clique em "Nova" para criar sua primeira pauta
+                  </p>
+                </div>
+              )}
+              
+              {pautas.length > 0 && Object.values(groupedPautas).every(g => g.length === 0) && (
+                <div className="flex flex-col items-center justify-center py-12 px-4">
+                  <div className="w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-3">
+                    <Search className="h-8 w-8 text-muted-foreground/50" />
+                  </div>
+                  <p className="text-sm font-medium text-muted-foreground mb-1">
+                    Nenhuma pauta encontrada
+                  </p>
+                  <p className="text-xs text-muted-foreground/70 text-center">
+                    Tente ajustar os filtros ou buscar por outro termo
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </ScrollArea>
       
       {/* Delete Pauta Confirmation */}
       <AlertDialog open={!!deletingPauta} onOpenChange={() => setDeletingPauta(null)}>
