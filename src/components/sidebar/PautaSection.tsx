@@ -139,157 +139,202 @@ export const PautaSection = ({
   const totalPautas = Object.values(groupedPautas).reduce((sum, group) => sum + group.length, 0);
   
   return (
-    <div className="border-t border-border">
+    <div className="border-t border-border/50 bg-gradient-to-b from-background to-muted/20">
       {/* Header with Add Button */}
-      <div className="p-3 bg-muted/50">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <h3 className="text-sm font-semibold text-foreground">Pautas</h3>
-            <Badge variant="secondary" className="text-xs">
-              {totalPautas}
-            </Badge>
+      <div className="p-4 space-y-4">
+        {/* Title Row */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+              <FileText className="h-4 w-4 text-primary" />
+            </div>
+            <div className="flex items-baseline gap-2">
+              <h3 className="text-sm font-semibold text-foreground tracking-tight">Pautas</h3>
+              <Badge 
+                variant="secondary" 
+                className="text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm"
+              >
+                {totalPautas}
+              </Badge>
+            </div>
           </div>
           <Button 
-            variant="ghost" 
+            variant="default" 
             size="sm" 
-            className="h-7 w-7 p-0" 
+            className="h-8 px-3 shadow-sm hover:shadow-md transition-all duration-200 hover:scale-105" 
             onClick={onAddPauta}
           >
-            <PlusCircle className="h-4 w-4" />
-            <span className="sr-only">Adicionar Pauta</span>
+            <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
+            <span className="text-xs font-medium">Nova</span>
           </Button>
         </div>
 
         {/* Search Bar */}
-        <div className="relative mb-2">
-          <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/70" />
           <Input
-            placeholder="Buscar pautas..."
+            placeholder="Buscar por título, local, repórter..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="h-8 pl-8 text-xs"
+            className="h-10 pl-10 pr-4 text-xs bg-background/50 backdrop-blur-sm border-border/50 rounded-lg shadow-sm focus:shadow-md transition-all duration-200 focus:border-primary/50"
           />
         </div>
 
         {/* Status Filter */}
-        <div className="flex items-center gap-2">
-          <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+        <div className="flex items-center gap-2 p-2 bg-muted/30 rounded-lg border border-border/30">
+          <div className="flex items-center gap-2 flex-1">
+            <Filter className="h-3.5 w-3.5 text-muted-foreground ml-1" />
+            <span className="text-[11px] font-medium text-muted-foreground">Filtro:</span>
+          </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="h-7 text-xs flex-1">
+            <SelectTrigger className="h-7 text-xs flex-1 border-border/50 bg-background/50 shadow-sm">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos</SelectItem>
-              <SelectItem value="pendente">Pendentes</SelectItem>
-              <SelectItem value="em_andamento">Em Andamento</SelectItem>
-              <SelectItem value="concluida">Concluídas</SelectItem>
+            <SelectContent className="bg-background/95 backdrop-blur-md border-border/50 shadow-lg">
+              <SelectItem value="all" className="text-xs">Todos os status</SelectItem>
+              <SelectItem value="pendente" className="text-xs">Pendentes</SelectItem>
+              <SelectItem value="em_andamento" className="text-xs">Em Andamento</SelectItem>
+              <SelectItem value="concluida" className="text-xs">Concluídas</SelectItem>
             </SelectContent>
           </Select>
         </div>
       </div>
 
       {/* Pautas List with ScrollArea */}
-      {isLoading ? (
-        <div className="p-4 text-center">
-          <p className="text-sm text-muted-foreground">Carregando...</p>
-        </div>
-      ) : totalPautas === 0 ? (
-        <div className="p-4 text-center">
-          <p className="text-xs text-muted-foreground italic">
-            {searchTerm || statusFilter !== "all" 
-              ? "Nenhuma pauta encontrada" 
-              : "Nenhuma pauta disponível"}
-          </p>
-        </div>
-      ) : (
-        <ScrollArea className="h-[400px]">
-          <div className="p-2 space-y-1">
-            {Object.entries(groupedPautas).map(([status, pautasGroup]) => {
-              if (pautasGroup.length === 0) return null;
-              
-              return (
-                <Collapsible
-                  key={status}
-                  open={expandedGroups[status]}
-                  onOpenChange={() => toggleGroup(status)}
-                >
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-accent rounded-md transition-colors group">
-                    <div className="flex items-center gap-2">
-                      {expandedGroups[status] ? (
-                        <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
-                      ) : (
-                        <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
-                      )}
-                      <span className="text-xs font-medium text-foreground">
-                        {getStatusLabel(status)}
-                      </span>
-                      <Badge variant="outline" className="text-xs h-4 px-1">
-                        {pautasGroup.length}
-                      </Badge>
-                    </div>
-                  </CollapsibleTrigger>
-                  
-                  <CollapsibleContent>
-                    <div className="ml-2 mt-1 space-y-1">
-                      {pautasGroup.map((pauta) => (
-                        <div
-                          key={pauta.id}
-                          className="group/item relative rounded-md hover:bg-accent/50 transition-colors"
+      <div className="px-3 pb-3">
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12 space-y-3">
+            <div className="w-10 h-10 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+            <p className="text-sm text-muted-foreground font-medium">Carregando pautas...</p>
+          </div>
+        ) : totalPautas === 0 ? (
+          <div className="flex flex-col items-center justify-center py-12 px-6 space-y-3">
+            <div className="w-16 h-16 rounded-2xl bg-muted/50 flex items-center justify-center">
+              <FileText className="h-8 w-8 text-muted-foreground/50" />
+            </div>
+            <div className="text-center space-y-1">
+              <p className="text-sm font-medium text-foreground">
+                {searchTerm || statusFilter !== "all" ? "Nenhuma pauta encontrada" : "Nenhuma pauta"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {searchTerm || statusFilter !== "all" 
+                  ? "Tente ajustar os filtros" 
+                  : "Crie sua primeira pauta"}
+              </p>
+            </div>
+          </div>
+        ) : (
+          <ScrollArea className="h-[420px] pr-1">
+            <div className="space-y-3 py-1">
+              {Object.entries(groupedPautas).map(([status, pautasGroup]) => {
+                if (pautasGroup.length === 0) return null;
+                
+                return (
+                  <Collapsible
+                    key={status}
+                    open={expandedGroups[status]}
+                    onOpenChange={() => toggleGroup(status)}
+                    className="space-y-2"
+                  >
+                    <CollapsibleTrigger className="flex items-center justify-between w-full px-3 py-2.5 hover:bg-accent/50 rounded-lg transition-all duration-200 group border border-transparent hover:border-border/50 hover:shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <div className="transition-transform duration-200 group-hover:scale-110">
+                          {expandedGroups[status] ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <span className="text-xs font-semibold text-foreground tracking-wide uppercase">
+                          {getStatusLabel(status)}
+                        </span>
+                        <Badge 
+                          variant="secondary" 
+                          className={`text-[10px] font-medium px-2 py-0.5 rounded-full shadow-sm ${getStatusColor(status)}`}
                         >
-                          <div className="p-2 pr-16">
-                            <div className="flex items-start gap-2">
-                              <div className="flex-1 min-w-0">
-                                <p className="text-xs font-medium text-foreground truncate">
+                          {pautasGroup.length}
+                        </Badge>
+                      </div>
+                    </CollapsibleTrigger>
+                    
+                    <CollapsibleContent className="animate-accordion-down">
+                      <div className="ml-3 space-y-2 pt-1">
+                        {pautasGroup.map((pauta, index) => (
+                          <div
+                            key={pauta.id}
+                            className="group/item relative rounded-lg border border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card hover:border-border hover:shadow-md transition-all duration-200 overflow-hidden animate-fade-in"
+                            style={{ animationDelay: `${index * 30}ms` }}
+                          >
+                            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
+                            
+                            <div className="relative p-3 pr-20">
+                              <div className="space-y-2">
+                                <p className="text-xs font-semibold text-foreground leading-relaxed line-clamp-2 group-hover/item:text-primary transition-colors duration-200">
                                   {pauta.titulo}
                                 </p>
-                                {(pauta.local || pauta.reporter) && (
-                                  <div className="flex flex-wrap gap-1 mt-1">
+                                
+                                {(pauta.local || pauta.reporter || pauta.data_cobertura) && (
+                                  <div className="flex flex-wrap gap-2">
                                     {pauta.local && (
-                                      <span className="text-[10px] text-muted-foreground truncate">
-                                        📍 {pauta.local}
-                                      </span>
+                                      <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 border border-border/30">
+                                        <span className="text-[10px]">📍</span>
+                                        <span className="text-[10px] font-medium text-muted-foreground">
+                                          {pauta.local}
+                                        </span>
+                                      </div>
                                     )}
                                     {pauta.reporter && (
-                                      <span className="text-[10px] text-muted-foreground truncate">
-                                        👤 {pauta.reporter}
-                                      </span>
+                                      <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 border border-border/30">
+                                        <span className="text-[10px]">👤</span>
+                                        <span className="text-[10px] font-medium text-muted-foreground">
+                                          {pauta.reporter}
+                                        </span>
+                                      </div>
+                                    )}
+                                    {pauta.data_cobertura && (
+                                      <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 border border-border/30">
+                                        <span className="text-[10px]">📅</span>
+                                        <span className="text-[10px] font-medium text-muted-foreground">
+                                          {pauta.data_cobertura}
+                                        </span>
+                                      </div>
                                     )}
                                   </div>
                                 )}
                               </div>
                             </div>
+                            
+                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/item:opacity-100 transition-all duration-200 translate-x-2 group-hover/item:translate-x-0">
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:scale-110 transition-all duration-200 shadow-sm"
+                                onClick={(e) => handlePrintPauta(pauta, e)}
+                              >
+                                <FileText className="h-3.5 w-3.5" />
+                                <span className="sr-only">Imprimir PDF</span>
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-destructive/10 hover:border-destructive/50 hover:scale-110 transition-all duration-200 shadow-sm text-destructive"
+                                onClick={(e) => handleDeletePauta(pauta, e)}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                                <span className="sr-only">Excluir</span>
+                              </Button>
+                            </div>
                           </div>
-                          
-                          <div className="absolute top-1 right-1 opacity-0 group-hover/item:opacity-100 transition-opacity flex gap-0.5">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6"
-                              onClick={(e) => handlePrintPauta(pauta, e)}
-                            >
-                              <FileText className="h-3.5 w-3.5" />
-                              <span className="sr-only">Imprimir PDF</span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 text-destructive hover:text-destructive"
-                              onClick={(e) => handleDeletePauta(pauta, e)}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                              <span className="sr-only">Excluir</span>
-                            </Button>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CollapsibleContent>
-                </Collapsible>
-              );
-            })}
-          </div>
-        </ScrollArea>
-      )}
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              })}
+            </div>
+          </ScrollArea>
+        )}
+      </div>
       
       {/* Delete Pauta Confirmation */}
       <AlertDialog open={!!deletingPauta} onOpenChange={() => setDeletingPauta(null)}>
