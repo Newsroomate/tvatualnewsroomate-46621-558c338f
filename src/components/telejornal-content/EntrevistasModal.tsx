@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { fetchEntrevistasByTelejornal, createEntrevista, updateEntrevista, delet
 import { Entrevista } from "@/types/entrevistas";
 import { toast } from "sonner";
 import { EntrevistaFormDialog } from "./EntrevistaFormDialog";
+import { useRealtimeEntrevistasTelejornal } from "@/hooks/useRealtimeEntrevistasTelejornal";
 
 interface EntrevistasModalProps {
   isOpen: boolean;
@@ -28,6 +29,16 @@ export const EntrevistasModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [editingEntrevista, setEditingEntrevista] = useState<Entrevista | null>(null);
+
+  const loadEntrevistasCallback = useCallback(() => {
+    loadEntrevistas();
+  }, [telejornalId]);
+
+  // Setup realtime subscription
+  useRealtimeEntrevistasTelejornal({
+    telejornalId: telejornalId || '',
+    onEntrevistaChange: loadEntrevistasCallback
+  });
 
   useEffect(() => {
     if (isOpen && telejornalId) {
