@@ -117,7 +117,7 @@ export const createPauta = async (pauta: PautaCreateInput, userId: string) => {
   } as Pauta;
 };
 
-export const updatePauta = async (id: string, updates: { 
+export const updatePauta = async (id: string, updates: Partial<{ 
   titulo: string;
   descricao?: string;
   local?: string;
@@ -131,25 +131,23 @@ export const updatePauta = async (id: string, updates: {
   informacoes?: string;
   programa?: string;
   reporter?: string;
-}) => {
-  // Usar colunas existentes no DB
-  const row: any = {
-    titulo: updates.titulo,
-    descricao: updates.descricao || null,
-    local: updates.local || null,
-    horario: updates.horario || null,
-    entrevistado: updates.entrevistado || null,
-    produtor: updates.produtor || null,
-    status: updates.status || 'pendente',
-    proposta: updates.proposta || null,
-    encaminhamento: updates.encaminhamento || null,
-    informacoes: updates.informacoes || null,
-    programa: updates.programa || null,
-    reporter: updates.reporter || null,
-  };
-  if (updates.data_cobertura) {
-    row.data_cobertura = updates.data_cobertura;
-  }
+}>) => {
+  // Criar objeto apenas com os campos que foram passados
+  const row: any = {};
+  
+  if (updates.titulo !== undefined) row.titulo = updates.titulo;
+  if (updates.descricao !== undefined) row.descricao = updates.descricao || null;
+  if (updates.local !== undefined) row.local = updates.local || null;
+  if (updates.horario !== undefined) row.horario = updates.horario || null;
+  if (updates.entrevistado !== undefined) row.entrevistado = updates.entrevistado || null;
+  if (updates.produtor !== undefined) row.produtor = updates.produtor || null;
+  if (updates.status !== undefined) row.status = updates.status;
+  if (updates.proposta !== undefined) row.proposta = updates.proposta || null;
+  if (updates.encaminhamento !== undefined) row.encaminhamento = updates.encaminhamento || null;
+  if (updates.informacoes !== undefined) row.informacoes = updates.informacoes || null;
+  if (updates.programa !== undefined) row.programa = updates.programa || null;
+  if (updates.reporter !== undefined) row.reporter = updates.reporter || null;
+  if (updates.data_cobertura !== undefined) row.data_cobertura = updates.data_cobertura;
 
   const { data, error } = await supabase
     .from('pautas')
