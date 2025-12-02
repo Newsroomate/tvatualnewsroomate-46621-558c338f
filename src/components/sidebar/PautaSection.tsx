@@ -1,10 +1,10 @@
 import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { PlusCircle, Trash2, FileText, Search, Filter, ChevronDown, ChevronRight, Edit2 } from "lucide-react";
+import { PlusCircle, Trash2, FileText, Search, Filter, ChevronDown, ChevronRight, Edit2, MapPin, User, Calendar } from "lucide-react";
 import { Pauta } from "@/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { deletePauta } from "@/services/pautas-api";
+import { deletePauta, updatePauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
 import { generatePautaPDF } from "@/utils/pdf-utils";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
@@ -18,6 +18,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface PautaSectionProps {
   pautas: Pauta[];
@@ -84,6 +90,17 @@ export const PautaSection = ({
     }, deletingPauta.user_id || undefined);
     
     setDeletingPauta(null);
+  };
+
+  const handleStatusChange = async (pauta: Pauta, newStatus: string) => {
+    await guardAction('update', 'pauta', async () => {
+      await updatePauta(pauta.id, { status: newStatus });
+      onDataChange();
+      toast({
+        title: "Status atualizado",
+        description: `Status alterado para ${getStatusLabel(newStatus)}`,
+      });
+    }, pauta.user_id || undefined);
   };
 
   const toggleGroup = (status: string) => {
@@ -266,80 +283,128 @@ export const PautaSection = ({
                     </CollapsibleTrigger>
                     
                     <CollapsibleContent className="animate-accordion-down">
-                      <div className="ml-3 space-y-2 pt-1">
+                      <div className="ml-1 space-y-2 pt-1">
                         {pautasGroup.map((pauta, index) => (
                           <div
                             key={pauta.id}
-                            className="group/item relative rounded-lg border border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card hover:border-border hover:shadow-md transition-all duration-200 overflow-hidden animate-fade-in"
+                            className="group/item rounded-lg border border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card hover:border-border hover:shadow-md transition-all duration-200 overflow-hidden animate-fade-in"
                             style={{ animationDelay: `${index * 30}ms` }}
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-primary/5 to-primary/0 opacity-0 group-hover/item:opacity-100 transition-opacity duration-300" />
-                            
-                            <div className="relative p-3 pr-20">
-                              <div className="space-y-2">
-                                <p className="text-xs font-semibold text-foreground leading-relaxed line-clamp-2 group-hover/item:text-primary transition-colors duration-200">
+                            {/* Card Header with Title and Actions */}
+                            <div className="p-3 space-y-2.5">
+                              {/* Title Row */}
+                              <div className="flex items-start justify-between gap-2">
+                                <h4 className="text-xs font-semibold text-foreground leading-tight flex-1 min-w-0">
                                   {pauta.titulo}
-                                </p>
+                                </h4>
                                 
-                                {(pauta.local || pauta.reporter || pauta.data_cobertura) && (
-                                  <div className="flex flex-wrap gap-2">
-                                    {pauta.local && (
-                                      <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 border border-border/30">
-                                        <span className="text-[10px]">📍</span>
-                                        <span className="text-[10px] font-medium text-muted-foreground">
-                                          {pauta.local}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {pauta.reporter && (
-                                      <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 border border-border/30">
-                                        <span className="text-[10px]">👤</span>
-                                        <span className="text-[10px] font-medium text-muted-foreground">
-                                          {pauta.reporter}
-                                        </span>
-                                      </div>
-                                    )}
-                                    {pauta.data_cobertura && (
-                                      <div className="flex items-center gap-1 px-2 py-1 rounded-md bg-muted/50 border border-border/30">
-                                        <span className="text-[10px]">📅</span>
-                                        <span className="text-[10px] font-medium text-muted-foreground">
-                                          {pauta.data_cobertura}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
+                                {/* Action Buttons */}
+                                <div className="flex gap-1 flex-shrink-0">
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 rounded-md hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950 dark:text-blue-400 transition-colors"
+                                    onClick={(e) => handleEditPauta(pauta, e)}
+                                  >
+                                    <Edit2 className="h-3 w-3" />
+                                    <span className="sr-only">Editar</span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 rounded-md hover:bg-primary/10 hover:text-primary transition-colors"
+                                    onClick={(e) => handlePrintPauta(pauta, e)}
+                                  >
+                                    <FileText className="h-3 w-3" />
+                                    <span className="sr-only">PDF</span>
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="h-6 w-6 rounded-md hover:bg-destructive/10 hover:text-destructive transition-colors"
+                                    onClick={(e) => handleDeletePauta(pauta, e)}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                    <span className="sr-only">Excluir</span>
+                                  </Button>
+                                </div>
                               </div>
-                            </div>
-                            
-                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/item:opacity-100 transition-all duration-200 translate-x-2 group-hover/item:translate-x-0">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-blue-50 hover:border-blue-200 hover:scale-110 transition-all duration-200 shadow-sm text-blue-600 dark:hover:bg-blue-950 dark:text-blue-400"
-                                onClick={(e) => handleEditPauta(pauta, e)}
-                              >
-                                <Edit2 className="h-3.5 w-3.5" />
-                                <span className="sr-only">Editar Pauta</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-primary/10 hover:border-primary/50 hover:scale-110 transition-all duration-200 shadow-sm"
-                                onClick={(e) => handlePrintPauta(pauta, e)}
-                              >
-                                <FileText className="h-3.5 w-3.5" />
-                                <span className="sr-only">Imprimir PDF</span>
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7 rounded-md bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-destructive/10 hover:border-destructive/50 hover:scale-110 transition-all duration-200 shadow-sm text-destructive"
-                                onClick={(e) => handleDeletePauta(pauta, e)}
-                              >
-                                <Trash2 className="h-3.5 w-3.5" />
-                                <span className="sr-only">Excluir</span>
-                              </Button>
+
+                              {/* Status Dropdown */}
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-muted-foreground font-medium">Status:</span>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className={`h-6 px-2 text-[10px] font-medium ${getStatusColor(pauta.status || 'pendente')} border-none`}
+                                    >
+                                      {getStatusLabel(pauta.status || 'pendente')}
+                                      <ChevronDown className="h-3 w-3 ml-1" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="start" className="w-40">
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusChange(pauta, 'pendente')}
+                                      className="text-xs"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-amber-500" />
+                                        Pendente
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusChange(pauta, 'em_andamento')}
+                                      className="text-xs"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-blue-500" />
+                                        Em Andamento
+                                      </div>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleStatusChange(pauta, 'concluida')}
+                                      className="text-xs"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-green-500" />
+                                        Concluída
+                                      </div>
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
+
+                              {/* Meta Information */}
+                              {(pauta.local || pauta.reporter || pauta.data_cobertura) && (
+                                <div className="flex flex-col gap-1.5 pt-1 border-t border-border/30">
+                                  {pauta.local && (
+                                    <div className="flex items-center gap-1.5">
+                                      <MapPin className="h-3 w-3 text-muted-foreground/70 flex-shrink-0" />
+                                      <span className="text-[10px] text-muted-foreground truncate">
+                                        {pauta.local}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {pauta.reporter && (
+                                    <div className="flex items-center gap-1.5">
+                                      <User className="h-3 w-3 text-muted-foreground/70 flex-shrink-0" />
+                                      <span className="text-[10px] text-muted-foreground truncate">
+                                        {pauta.reporter}
+                                      </span>
+                                    </div>
+                                  )}
+                                  {pauta.data_cobertura && (
+                                    <div className="flex items-center gap-1.5">
+                                      <Calendar className="h-3 w-3 text-muted-foreground/70 flex-shrink-0" />
+                                      <span className="text-[10px] text-muted-foreground">
+                                        {pauta.data_cobertura}
+                                      </span>
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
                         ))}
