@@ -1,24 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AutoTextarea } from "@/components/ui/auto-textarea";
-import { createPauta } from "@/services/pautas-api";
+import { createPauta, updatePauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
+import { Pauta } from "@/types";
 
 interface PautaIndependenteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPautaCreated: () => void;
+  pauta?: Pauta | null;
 }
 
 export const PautaIndependenteModal = ({
   isOpen,
   onClose,
-  onPautaCreated
+  onPautaCreated,
+  pauta
 }: PautaIndependenteModalProps) => {
   const [data, setData] = useState("");
   const [retranca, setRetranca] = useState("");
@@ -36,6 +39,36 @@ export const PautaIndependenteModal = ({
   const { toast } = useToast();
   const { user } = useAuth();
   const { guardAction } = usePermissionGuard();
+
+  // Load pauta data when editing
+  useEffect(() => {
+    if (pauta) {
+      setData(pauta.data_cobertura || "");
+      setRetranca(pauta.titulo || "");
+      setPrograma(pauta.programa || "");
+      setProdutor(pauta.produtor || "");
+      setReporter(pauta.reporter || "");
+      setImagens(pauta.local || "");
+      setRoteiro1(pauta.descricao || "");
+      setEntrevistados(pauta.entrevistado || "");
+      setProposta(pauta.proposta || "");
+      setEncaminhamento(pauta.encaminhamento || "");
+      setInformacoes(pauta.informacoes || "");
+    } else {
+      // Reset form when creating new
+      setData("");
+      setRetranca("");
+      setPrograma("");
+      setProdutor("");
+      setReporter("");
+      setImagens("");
+      setRoteiro1("");
+      setEntrevistados("");
+      setProposta("");
+      setEncaminhamento("");
+      setInformacoes("");
+    }
+  }, [pauta, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,7 +89,9 @@ export const PautaIndependenteModal = ({
     
     setIsSubmitting(true);
     
-    await guardAction('create', 'pauta', async () => {
+    const actionType = pauta ? 'update' : 'create';
+    
+    await guardAction(actionType, 'pauta', async () => {
       const pautaData = {
         titulo: retranca,
         descricao: roteiro1,
@@ -67,23 +102,31 @@ export const PautaIndependenteModal = ({
         proposta,
         encaminhamento,
         informacoes,
-        status: "pendente",
+        status: pauta?.status || "pendente",
         data_cobertura: data,
         programa,
         reporter
       };
 
-      console.log('[PautaIndependenteModal] Criando pauta independente:', pautaData);
-      await createPauta(pautaData, user.id);
-      
-      toast({
-        title: "Sucesso!",
-        description: "Pauta criada com sucesso.",
-      });
+      if (pauta) {
+        console.log('[PautaIndependenteModal] Atualizando pauta:', pauta.id, pautaData);
+        await updatePauta(pauta.id, pautaData);
+        toast({
+          title: "Sucesso!",
+          description: "Pauta atualizada com sucesso.",
+        });
+      } else {
+        console.log('[PautaIndependenteModal] Criando pauta independente:', pautaData);
+        await createPauta(pautaData, user.id);
+        toast({
+          title: "Sucesso!",
+          description: "Pauta criada com sucesso.",
+        });
+      }
       
       onPautaCreated();
       handleClose();
-    });
+    }, pauta?.user_id);
     
     setIsSubmitting(false);
   };
@@ -107,7 +150,7 @@ export const PautaIndependenteModal = ({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Nova Pauta Independente</DialogTitle>
+          <DialogTitle>{pauta ? "Editar Pauta" : "Nova Pauta Independente"}</DialogTitle>
         </DialogHeader>
         
         <form onSubmit={handleSubmit} className="space-y-3">
@@ -175,7 +218,7 @@ export const PautaIndependenteModal = ({
               Cancelar
             </Button>
             <Button type="submit" disabled={isSubmitting || !retranca.trim()}>
-              {isSubmitting ? "Salvando..." : "Salvar Pauta"}
+              {isSubmitting ? "Salvando..." : pauta ? "Atualizar Pauta" : "Salvar Pauta"}
             </Button>
           </DialogFooter>
         </form>

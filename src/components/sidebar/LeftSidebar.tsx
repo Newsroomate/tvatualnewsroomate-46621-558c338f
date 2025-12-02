@@ -15,6 +15,7 @@ import { MainMenu } from "./MainMenu";
 import { PautasTelejornalModal } from "@/components/telejornal-content/PautasTelejornalModal";
 import { ReportagensModal } from "@/components/telejornal-content/ReportagensModal";
 import { EntrevistasModal } from "@/components/telejornal-content/EntrevistasModal";
+import { updatePauta } from "@/services/pautas-api";
 
 interface LeftSidebarProps {
   selectedJournal: string | null;
@@ -31,6 +32,7 @@ export const LeftSidebar = ({
 }: LeftSidebarProps) => {
   const [isGeneralScheduleOpen, setIsGeneralScheduleOpen] = useState(false);
   const [isPautaIndependenteModalOpen, setIsPautaIndependenteModalOpen] = useState(false);
+  const [editingPauta, setEditingPauta] = useState<Pauta | null>(null);
   const [isTelejornalModalOpen, setIsTelejornalModalOpen] = useState(false);
   const [isMainMenuOpen, setIsMainMenuOpen] = useState(false);
   const [telejornais, setTelejornais] = useState<Telejornal[]>([]);
@@ -198,6 +200,12 @@ export const LeftSidebar = ({
   };
 
   const handleOpenPautaModal = () => {
+    setEditingPauta(null);
+    setIsPautaIndependenteModalOpen(true);
+  };
+
+  const handleEditPautaModal = (pauta: Pauta) => {
+    setEditingPauta(pauta);
     setIsPautaIndependenteModalOpen(true);
   };
 
@@ -267,6 +275,7 @@ export const LeftSidebar = ({
         <PautaSection 
           pautas={pautas} 
           onAddPauta={handleOpenPautaModal}
+          onEditPauta={handleEditPautaModal}
           isLoading={isLoading}
           onDataChange={loadData}
         />
@@ -277,7 +286,11 @@ export const LeftSidebar = ({
       
       <PautaIndependenteModal 
         isOpen={isPautaIndependenteModalOpen} 
-        onClose={() => setIsPautaIndependenteModalOpen(false)} 
+        onClose={() => {
+          setIsPautaIndependenteModalOpen(false);
+          setEditingPauta(null);
+        }}
+        pauta={editingPauta}
         onPautaCreated={loadData}
       />
       
