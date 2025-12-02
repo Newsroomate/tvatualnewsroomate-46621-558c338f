@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { fetchReportagensByTelejornal, createReportagem, updateReportagem, delet
 import { Reportagem } from "@/types/reportagens";
 import { toast } from "sonner";
 import { ReportagemFormDialog } from "./ReportagemFormDialog";
+import { useRealtimeReportagensTelejornal } from "@/hooks/useRealtimeReportagensTelejornal";
 
 interface ReportagensModalProps {
   isOpen: boolean;
@@ -28,6 +29,16 @@ export const ReportagensModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [editingReportagem, setEditingReportagem] = useState<Reportagem | null>(null);
+
+  const loadReportagensCallback = useCallback(() => {
+    loadReportagens();
+  }, [telejornalId]);
+
+  // Setup realtime subscription
+  useRealtimeReportagensTelejornal({
+    telejornalId: telejornalId || '',
+    onReportagemChange: loadReportagensCallback
+  });
 
   useEffect(() => {
     if (isOpen && telejornalId) {

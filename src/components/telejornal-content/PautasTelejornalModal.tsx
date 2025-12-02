@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { deletePauta } from "@/services/api";
 import { Pauta } from "@/types";
 import { toast } from "sonner";
 import { PautaTelejornalFormDialog } from "./PautaTelejornalFormDialog";
+import { useRealtimePautasTelejornal } from "@/hooks/useRealtimePautasTelejornal";
 
 interface PautasTelejornalModalProps {
   isOpen: boolean;
@@ -29,6 +30,16 @@ export const PautasTelejornalModal = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isFormDialogOpen, setIsFormDialogOpen] = useState(false);
   const [editingPauta, setEditingPauta] = useState<Pauta | null>(null);
+
+  const loadPautasCallback = useCallback(() => {
+    loadPautas();
+  }, [telejornalId]);
+
+  // Setup realtime subscription
+  useRealtimePautasTelejornal({
+    telejornalId: telejornalId || '',
+    onPautaChange: loadPautasCallback
+  });
 
   useEffect(() => {
     if (isOpen && telejornalId) {
