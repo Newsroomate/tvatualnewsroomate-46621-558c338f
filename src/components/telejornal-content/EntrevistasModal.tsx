@@ -39,6 +39,7 @@ export const EntrevistasModal = ({
     setIsLoading(true);
     try {
       const data = await fetchEntrevistasByTelejornal(telejornalId);
+      console.log('[EntrevistasModal] Entrevistas carregadas:', data);
       setEntrevistas(data);
     } catch (error) {
       console.error("Erro ao carregar entrevistas:", error);
