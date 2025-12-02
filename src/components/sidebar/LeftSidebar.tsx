@@ -242,23 +242,22 @@ export const LeftSidebar = ({
   };
 
   return (
-    <div className={`${isMobile ? 'w-full' : 'w-64'} bg-gray-100 h-full ${!isMobile ? 'border-r border-gray-200' : ''} flex flex-col`}>
+    <div className={`${isMobile ? 'w-full' : 'w-64'} bg-background h-full ${!isMobile ? 'border-r border-border/50' : ''} flex flex-col`}>
       {!isMobile && (
-        <div className="p-4 bg-primary text-primary-foreground">
-          <h2 className="text-lg font-semibold">Newsroomate</h2>
+        <div className="p-4 bg-gradient-to-r from-primary to-primary/90 text-primary-foreground shadow-sm">
+          <h2 className="text-lg font-semibold tracking-tight">Newsroomate</h2>
         </div>
       )}
       
       {/* Menu Button */}
-      <div className="p-4 border-b border-gray-200">
-        <Button variant="outline" className="w-full" onClick={handleToggleMainMenu}>
+      <div className="p-3 border-b border-border/50">
+        <Button variant="outline" className="w-full shadow-sm hover:shadow-md transition-all duration-200" onClick={handleToggleMainMenu}>
           <Menu className="h-4 w-4 mr-2" />
-          Menu
+          <span className="text-sm font-medium">Menu</span>
         </Button>
       </div>
 
-      <div className="flex-1 overflow-y-auto">
-        {/* Telejornais Section */}
+      <div className="flex-1 overflow-y-auto">{/* Telejornais Section */}
         <TelejornalSection 
           telejornais={telejornais} 
           selectedJournal={selectedJournal} 
