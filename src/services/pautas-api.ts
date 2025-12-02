@@ -132,6 +132,8 @@ export const updatePauta = async (id: string, updates: Partial<{
   programa?: string;
   reporter?: string;
 }>) => {
+  console.log('[pautas-api] updatePauta chamado com:', { id, updates });
+  
   // Criar objeto apenas com os campos que foram passados
   const row: any = {};
   
@@ -149,6 +151,8 @@ export const updatePauta = async (id: string, updates: Partial<{
   if (updates.reporter !== undefined) row.reporter = updates.reporter || null;
   if (updates.data_cobertura !== undefined) row.data_cobertura = updates.data_cobertura;
 
+  console.log('[pautas-api] Dados a serem atualizados:', row);
+
   const { data, error } = await supabase
     .from('pautas')
     .update(row)
@@ -157,9 +161,11 @@ export const updatePauta = async (id: string, updates: Partial<{
     .single();
 
   if (error) {
-    console.error('Erro ao atualizar pauta:', error);
+    console.error('[pautas-api] Erro ao atualizar pauta:', error);
     throw error;
   }
+
+  console.log('[pautas-api] Pauta atualizada com sucesso:', data);
 
   return {
     id: data.id,
@@ -178,6 +184,7 @@ export const updatePauta = async (id: string, updates: Partial<{
     informacoes: data.informacoes,
     programa: data.programa,
     reporter: data.reporter,
+    user_id: data.user_id,
   } as Pauta;
 };
 

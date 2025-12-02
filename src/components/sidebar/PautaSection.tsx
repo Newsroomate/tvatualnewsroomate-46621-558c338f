@@ -93,14 +93,31 @@ export const PautaSection = ({
   };
 
   const handleStatusChange = async (pauta: Pauta, newStatus: string) => {
-    await guardAction('update', 'pauta', async () => {
-      await updatePauta(pauta.id, { status: newStatus });
-      onDataChange();
+    console.log('[PautaSection] Alterando status da pauta:', pauta.id, 'para:', newStatus);
+    console.log('[PautaSection] Pauta user_id:', pauta.user_id);
+    
+    try {
+      await guardAction('update', 'pauta', async () => {
+        console.log('[PautaSection] Chamando updatePauta...');
+        const result = await updatePauta(pauta.id, { status: newStatus });
+        console.log('[PautaSection] Resultado da atualização:', result);
+        
+        await onDataChange();
+        console.log('[PautaSection] Dados recarregados');
+        
+        toast({
+          title: "Status atualizado",
+          description: `Status alterado para ${getStatusLabel(newStatus)}`,
+        });
+      }, pauta.user_id || undefined);
+    } catch (error) {
+      console.error('[PautaSection] Erro ao atualizar status:', error);
       toast({
-        title: "Status atualizado",
-        description: `Status alterado para ${getStatusLabel(newStatus)}`,
+        title: "Erro ao atualizar status",
+        description: "Não foi possível atualizar o status da pauta. Verifique suas permissões.",
+        variant: "destructive"
       });
-    }, pauta.user_id || undefined);
+    }
   };
 
   const toggleGroup = (status: string) => {
