@@ -17,6 +17,64 @@ interface BackupData {
   user_id: string | null;
 }
 
+// Helper function to verify user authorization
+async function verifyAuthorization(
+  req: Request,
+  supabase: any
+): Promise<{ authorized: boolean; userId: string | null; error?: string }> {
+  const authHeader = req.headers.get('authorization');
+  
+  if (!authHeader) {
+    return { authorized: false, userId: null, error: 'Authorization header missing' };
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  
+  try {
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      console.error('Auth error:', authError);
+      return { authorized: false, userId: null, error: 'Invalid or expired token' };
+    }
+
+    // Check if user has editor_chefe role using has_role function
+    const { data: hasEditorChefeRole, error: roleError } = await supabase.rpc('has_role', {
+      _user_id: user.id,
+      _role: 'editor_chefe'
+    });
+
+    if (roleError) {
+      console.error('Role check error:', roleError);
+      return { authorized: false, userId: user.id, error: 'Failed to verify permissions' };
+    }
+
+    if (hasEditorChefeRole) {
+      return { authorized: true, userId: user.id };
+    }
+
+    // Also check for gerenciar_permissoes permission as fallback
+    const { data: hasPermission, error: permError } = await supabase.rpc('has_permission', {
+      _user_id: user.id,
+      _permission: 'gerenciar_permissoes'
+    });
+
+    if (permError) {
+      console.error('Permission check error:', permError);
+      return { authorized: false, userId: user.id, error: 'Failed to verify permissions' };
+    }
+
+    if (hasPermission) {
+      return { authorized: true, userId: user.id };
+    }
+
+    return { authorized: false, userId: user.id, error: 'Insufficient permissions. Requires editor_chefe role or gerenciar_permissoes permission.' };
+  } catch (error) {
+    console.error('Authorization verification error:', error);
+    return { authorized: false, userId: null, error: 'Authorization verification failed' };
+  }
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -30,6 +88,22 @@ Deno.serve(async (req) => {
 
     const url = new URL(req.url);
     const path = url.pathname.split('/').pop();
+
+    // Verify authorization for all operations
+    const { authorized, userId, error: authError } = await verifyAuthorization(req, supabase);
+    
+    if (!authorized) {
+      console.log(`Authorization denied: ${authError}`);
+      return new Response(
+        JSON.stringify({ error: authError || 'Unauthorized' }),
+        {
+          status: authError?.includes('permissions') ? 403 : 401,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log(`Authorized request from user: ${userId}`);
 
     // GET /list - List all backups
     if (req.method === 'GET' && path === 'backup-espelhos') {
@@ -76,7 +150,7 @@ Deno.serve(async (req) => {
       const body = await req.json();
       const backupType = body.type || 'manual';
 
-      console.log(`Creating ${backupType} backup...`);
+      console.log(`Creating ${backupType} backup by user ${userId}...`);
 
       // Fetch all espelhos_salvos
       const { data: espelhos, error: fetchError } = await supabase
@@ -112,16 +186,7 @@ Deno.serve(async (req) => {
         }
       });
 
-      // Get current user for manual backups
-      const authHeader = req.headers.get('authorization');
-      let userId = null;
-      if (authHeader && backupType === 'manual') {
-        const token = authHeader.replace('Bearer ', '');
-        const { data: { user } } = await supabase.auth.getUser(token);
-        userId = user?.id;
-      }
-
-      // Create backup record
+      // Create backup record with authenticated user
       const { data: backup, error: insertError } = await supabase
         .from('espelhos_backup')
         .insert({
@@ -164,7 +229,7 @@ Deno.serve(async (req) => {
       const restoreType = body.restoreType || 'complete'; // complete, partial, merge
       const selectedIds = body.selectedIds || []; // for partial restore
 
-      console.log(`Restoring backup ${backupId} (type: ${restoreType})...`);
+      console.log(`Restoring backup ${backupId} (type: ${restoreType}) by user ${userId}...`);
 
       // Fetch backup
       const { data: backup, error: fetchError } = await supabase
@@ -217,7 +282,7 @@ Deno.serve(async (req) => {
 
       if (insertError) throw insertError;
 
-      console.log(`Restored ${restored?.length || 0} espelhos successfully`);
+      console.log(`Restored ${restored?.length || 0} espelhos successfully by user ${userId}`);
 
       return new Response(
         JSON.stringify({
@@ -235,6 +300,8 @@ Deno.serve(async (req) => {
     if (req.method === 'DELETE') {
       const backupId = path;
       
+      console.log(`Deleting backup ${backupId} by user ${userId}...`);
+
       const { error } = await supabase
         .from('espelhos_backup')
         .delete()
