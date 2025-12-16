@@ -5,8 +5,9 @@ import { NewsSchedule } from "./news-schedule/NewsSchedule";
 import { DualViewLayout } from "./DualViewLayout";
 import { EditPanel } from "./EditPanel";
 import { AppHeader } from "./AppHeader";
-import { Materia, Telejornal } from "@/types/index";
-import { updateTelejornal, fetchTelejornal } from "@/services/api";
+import { PautaEditorView } from "./PautaEditorView";
+import { Materia, Telejornal, Pauta } from "@/types/index";
+import { updateTelejornal, fetchTelejornal, fetchTelejornais } from "@/services/api";
 import { useToast } from "@/hooks/use-toast";
 import { CloseRundownDialog } from "./CloseRundownDialog";
 import { useAuth } from "@/context/AuthContext";
@@ -56,6 +57,13 @@ const Layout = () => {
   const [secondaryJournal, setSecondaryJournal] = useState<string | null>(null);
   const [secondaryTelejornal, setSecondaryTelejornal] = useState<Telejornal | null>(null);
 
+  // Pauta editor state
+  const [pautaEditorMode, setPautaEditorMode] = useState<{
+    isActive: boolean;
+    pauta: Pauta | null;
+  }>({ isActive: false, pauta: null });
+  const [telejornaisList, setTelejornaisList] = useState<Telejornal[]>([]);
+
   // Setup realtime subscription for telejornais
   useRealtimeTelejornais({
     onTelejornalUpdate: (updatedTelejornal: Telejornal) => {
@@ -77,6 +85,33 @@ const Layout = () => {
 
   // Setup global realtime invalidation
   useRealtimeInvalidation();
+
+  // Load telejornais for pauta editor
+  useEffect(() => {
+    const loadTelejornais = async () => {
+      try {
+        const data = await fetchTelejornais();
+        setTelejornaisList(data);
+      } catch (error) {
+        console.error('Erro ao carregar telejornais:', error);
+      }
+    };
+    loadTelejornais();
+  }, []);
+
+  // Pauta editor handlers
+  const handleOpenPautaEditor = (pauta: Pauta | null) => {
+    setPautaEditorMode({ isActive: true, pauta });
+  };
+
+  const handleClosePautaEditor = () => {
+    setPautaEditorMode({ isActive: false, pauta: null });
+  };
+
+  const handlePautaSaved = () => {
+    // Refresh data if needed
+    queryClient.invalidateQueries({ queryKey: ['pautas'] });
+  };
 
   const handleSelectJournal = (journalId: string) => {
     setSelectedJournal(journalId);
@@ -456,6 +491,7 @@ const Layout = () => {
             selectedJournal={selectedJournal}
             onSelectJournal={handleSelectJournal}
             onToggleDualView={handleToggleDualView}
+            onOpenPautaEditor={handleOpenPautaEditor}
           />
         )}
 
@@ -473,6 +509,7 @@ const Layout = () => {
                 setIsMobileDrawerOpen(false);
               }}
               onToggleDualView={handleToggleDualView}
+              onOpenPautaEditor={handleOpenPautaEditor}
               isMobile={true}
             />
           </MobileDrawer>
@@ -480,91 +517,104 @@ const Layout = () => {
 
         {/* Main Content Area */}
         <div className={`flex-1 flex flex-col overflow-hidden ${
-          !isMobile && isEditPanelOpen ? 'mr-[400px]' : ''
+          !isMobile && isEditPanelOpen && !pautaEditorMode.isActive ? 'mr-[400px]' : ''
         }`}>
-          {/* Rundown Status Bar */}
-          {selectedJournal && (
-            <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
-              <div>
-                {isDualViewActive ? (
-                  <div className="text-sm space-y-1">
-                    <div>
-                      <span className="font-medium">Visualização Dual Ativa</span>
-                    </div>
-                    <div className="text-xs text-muted-foreground">
-                      Principal: {currentTelejornal?.nome} | Secundário: {secondaryTelejornal?.nome}
-                    </div>
-                  </div>
-                ) : (
-                  currentTelejornal && (
-                    <div className="text-sm">
-                      <span className="font-medium">
-                        Espelho {currentTelejornal.espelho_aberto ? (
-                          <span className="text-green-600">ABERTO</span>
-                        ) : (
-                          <span className="text-red-600">FECHADO</span>
-                        )}:
-                      </span> {' '}
-                      {currentTelejornal.nome} {currentTelejornal.espelho_aberto && currentTelejornal.created_at && (
-                        <>- ({new Date(currentTelejornal.created_at).toLocaleDateString('pt-BR', {
-                          day: '2-digit',
-                          month: '2-digit',
-                          year: 'numeric'
-                        })})</>
-                      )}
-                    </div>
-                  )
-                )}
-                {!currentTelejornal && !isDualViewActive && (
-                  <div className="text-sm text-muted-foreground">
-                    Nenhum espelho selecionado
-                  </div>
-                )}
-              </div>
-              
-              {(userPermissions.includes('abrir_espelho') || userPermissions.includes('fechar_espelho')) && !isDualViewActive && !isMobile && (
-                <button 
-                  onClick={handleToggleRundown}
-                  className={`px-3 py-1 rounded-md text-xs font-medium ${
-                    currentTelejornal?.espelho_aberto 
-                      ? "bg-red-100 text-red-700 hover:bg-red-200"
-                      : "bg-green-100 text-green-700 hover:bg-green-200"
-                  }`}
-                >
-                  {currentTelejornal?.espelho_aberto 
-                    ? "Fechar Espelho" 
-                    : "Abrir Espelho Agora"
-                  }
-                </button>
-              )}
-            </div>
-          )}
-          
-          {!selectedJournal && (
-            <div className="bg-muted px-4 py-2 border-b">
-              <div className="text-sm text-muted-foreground">
-                Nenhum espelho aberto no momento
-              </div>
-            </div>
-          )}
-
-          {/* Content Area - Single or Dual View */}
-          {isDualViewActive && selectedJournal && secondaryJournal ? (
-            <DualViewLayout
-              primaryJournal={selectedJournal}
-              secondaryJournal={secondaryJournal}
-              onEditItem={handleEditItem}
-              primaryTelejornal={currentTelejornal}
-              secondaryTelejornal={secondaryTelejornal}
-              onOpenRundown={handleToggleRundown}
+          {/* Pauta Editor Mode - Full Screen */}
+          {pautaEditorMode.isActive ? (
+            <PautaEditorView
+              pauta={pautaEditorMode.pauta}
+              onClose={handleClosePautaEditor}
+              onSave={handlePautaSaved}
+              selectedTelejornalId={selectedJournal}
+              telejornais={telejornaisList}
             />
           ) : (
-            <NewsSchedule
-              selectedJournal={selectedJournal}
-              onEditItem={handleEditItem}
-              currentTelejornal={currentTelejornal}
-              onOpenRundown={handleToggleRundown}
-            />
+            <>
+              {/* Rundown Status Bar */}
+              {selectedJournal && (
+                <div className="bg-muted px-4 py-2 border-b flex justify-between items-center">
+                  <div>
+                    {isDualViewActive ? (
+                      <div className="text-sm space-y-1">
+                        <div>
+                          <span className="font-medium">Visualização Dual Ativa</span>
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Principal: {currentTelejornal?.nome} | Secundário: {secondaryTelejornal?.nome}
+                        </div>
+                      </div>
+                    ) : (
+                      currentTelejornal && (
+                        <div className="text-sm">
+                          <span className="font-medium">
+                            Espelho {currentTelejornal.espelho_aberto ? (
+                              <span className="text-green-600">ABERTO</span>
+                            ) : (
+                              <span className="text-red-600">FECHADO</span>
+                            )}:
+                          </span> {' '}
+                          {currentTelejornal.nome} {currentTelejornal.espelho_aberto && currentTelejornal.created_at && (
+                            <>- ({new Date(currentTelejornal.created_at).toLocaleDateString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric'
+                            })})</>
+                          )}
+                        </div>
+                      )
+                    )}
+                    {!currentTelejornal && !isDualViewActive && (
+                      <div className="text-sm text-muted-foreground">
+                        Nenhum espelho selecionado
+                      </div>
+                    )}
+                  </div>
+                  
+                  {(userPermissions.includes('abrir_espelho') || userPermissions.includes('fechar_espelho')) && !isDualViewActive && !isMobile && (
+                    <button 
+                      onClick={handleToggleRundown}
+                      className={`px-3 py-1 rounded-md text-xs font-medium ${
+                        currentTelejornal?.espelho_aberto 
+                          ? "bg-red-100 text-red-700 hover:bg-red-200"
+                          : "bg-green-100 text-green-700 hover:bg-green-200"
+                      }`}
+                    >
+                      {currentTelejornal?.espelho_aberto 
+                        ? "Fechar Espelho" 
+                        : "Abrir Espelho Agora"
+                      }
+                    </button>
+                  )}
+                </div>
+              )}
+              
+              {!selectedJournal && (
+                <div className="bg-muted px-4 py-2 border-b">
+                  <div className="text-sm text-muted-foreground">
+                    Nenhum espelho aberto no momento
+                  </div>
+                </div>
+              )}
+
+              {/* Content Area - Single or Dual View */}
+              {isDualViewActive && selectedJournal && secondaryJournal ? (
+                <DualViewLayout
+                  primaryJournal={selectedJournal}
+                  secondaryJournal={secondaryJournal}
+                  onEditItem={handleEditItem}
+                  primaryTelejornal={currentTelejornal}
+                  secondaryTelejornal={secondaryTelejornal}
+                  onOpenRundown={handleToggleRundown}
+                />
+              ) : (
+                <NewsSchedule
+                  selectedJournal={selectedJournal}
+                  onEditItem={handleEditItem}
+                  currentTelejornal={currentTelejornal}
+                  onOpenRundown={handleToggleRundown}
+                />
+              )}
+            </>
           )}
         </div>
 
