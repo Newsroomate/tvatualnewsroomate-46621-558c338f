@@ -5,23 +5,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { createPauta, updatePauta } from "@/services/pautas-api";
+import { createMateria } from "@/services/materias-create";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
-import { Pauta } from "@/types";
+import { Pauta, Telejornal, MateriaCreateInput } from "@/types";
+import { supabase } from "@/integrations/supabase/client";
+import { FileOutput } from "lucide-react";
 
 interface PautaIndependenteModalProps {
   isOpen: boolean;
   onClose: () => void;
   onPautaCreated: () => void;
   pauta?: Pauta | null;
+  selectedTelejornalId?: string | null;
+  telejornais?: Telejornal[];
 }
 
 export const PautaIndependenteModal = ({
   isOpen,
   onClose,
   onPautaCreated,
-  pauta
+  pauta,
+  selectedTelejornalId,
+  telejornais = []
 }: PautaIndependenteModalProps) => {
   const [data, setData] = useState("");
   const [retranca, setRetranca] = useState("");
@@ -35,10 +42,15 @@ export const PautaIndependenteModal = ({
   const [encaminhamento, setEncaminhamento] = useState("");
   const [informacoes, setInformacoes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingMateria, setIsGeneratingMateria] = useState(false);
   
   const { toast } = useToast();
   const { user } = useAuth();
   const { guardAction } = usePermissionGuard();
+
+  // Check if selected telejornal has open espelho
+  const selectedTelejornal = telejornais.find(t => t.id === selectedTelejornalId);
+  const canGenerateMateria = pauta && selectedTelejornal?.espelho_aberto;
 
   // Load pauta data when editing
   useEffect(() => {
@@ -69,6 +81,81 @@ export const PautaIndependenteModal = ({
       setInformacoes("");
     }
   }, [pauta, isOpen]);
+
+  const handleGenerateMateria = async () => {
+    if (!pauta || !selectedTelejornalId) return;
+    
+    setIsGeneratingMateria(true);
+    
+    await guardAction('create', 'materia', async () => {
+      // Fetch first block of the telejornal
+      const { data: blocos, error: blocosError } = await supabase
+        .from('blocos')
+        .select('*')
+        .eq('telejornal_id', selectedTelejornalId)
+        .order('ordem', { ascending: true })
+        .limit(1);
+      
+      if (blocosError || !blocos || blocos.length === 0) {
+        toast({
+          title: "Erro",
+          description: "Não foi possível encontrar um bloco no espelho. Crie um bloco primeiro.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      const firstBlock = blocos[0];
+      
+      // Get max ordem in the block
+      const { data: materias } = await supabase
+        .from('materias')
+        .select('ordem')
+        .eq('bloco_id', firstBlock.id)
+        .order('ordem', { ascending: false })
+        .limit(1);
+      
+      const nextOrdem = materias && materias.length > 0 ? materias[0].ordem + 1 : 1;
+      
+      // Build texto with all pauta details
+      const textoCompleto = [
+        roteiro1 && `📝 ROTEIRO:\n${roteiro1}`,
+        proposta && `📌 PROPOSTA:\n${proposta}`,
+        entrevistados && `🎤 ENTREVISTADOS:\n${entrevistados}`,
+        encaminhamento && `➡️ ENCAMINHAMENTO:\n${encaminhamento}`,
+        informacoes && `ℹ️ INFORMAÇÕES:\n${informacoes}`,
+        produtor && `👤 PRODUTOR: ${produtor}`,
+        programa && `📺 PROGRAMA: ${programa}`,
+        data && `📅 DATA: ${data}`,
+        imagens && `🖼️ IMAGENS: ${imagens}`,
+      ].filter(Boolean).join('\n\n');
+      
+      const materiaData: MateriaCreateInput = {
+        bloco_id: firstBlock.id,
+        retranca: retranca || pauta.titulo,
+        reporter: reporter || '',
+        local_gravacao: imagens || '',
+        texto: textoCompleto,
+        cabeca: '', // Empty to not appear in teleprompter
+        tipo_material: 'PAUTA',
+        status: 'draft', // Draft so it doesn't go to teleprompter
+        duracao: 0,
+        ordem: nextOrdem,
+      };
+      
+      await createMateria(materiaData);
+      
+      toast({
+        title: "Matéria gerada!",
+        description: `Matéria "${retranca}" criada no ${firstBlock.nome} com status rascunho.`,
+      });
+      
+      onPautaCreated();
+      handleClose();
+    });
+    
+    setIsGeneratingMateria(false);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -213,11 +300,24 @@ export const PautaIndependenteModal = ({
             <AutoTextarea id="informacoes" value={informacoes} onChange={e => setInformacoes(e.target.value)} placeholder="Informações adicionais" />
           </div>
           
-          <DialogFooter className="pt-3">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting}>
+          <DialogFooter className="pt-3 flex-col sm:flex-row gap-2">
+            <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting || isGeneratingMateria}>
               Cancelar
             </Button>
-            <Button type="submit" disabled={isSubmitting || !retranca.trim()}>
+            
+            {canGenerateMateria && (
+              <Button 
+                type="button" 
+                variant="secondary"
+                onClick={handleGenerateMateria}
+                disabled={isSubmitting || isGeneratingMateria || !retranca.trim()}
+              >
+                <FileOutput className="h-4 w-4 mr-2" />
+                {isGeneratingMateria ? "Gerando..." : "Gerar Matéria"}
+              </Button>
+            )}
+            
+            <Button type="submit" disabled={isSubmitting || isGeneratingMateria || !retranca.trim()}>
               {isSubmitting ? "Salvando..." : pauta ? "Atualizar Pauta" : "Salvar Pauta"}
             </Button>
           </DialogFooter>

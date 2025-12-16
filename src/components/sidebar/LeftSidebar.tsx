@@ -292,6 +292,8 @@ export const LeftSidebar = ({
         }}
         pauta={editingPauta}
         onPautaCreated={loadData}
+        selectedTelejornalId={selectedJournal}
+        telejornais={telejornais}
       />
       
       <TelejornalModal isOpen={isTelejornalModalOpen} onClose={() => setIsTelejornalModalOpen(false)} onTelejornalCreated={loadData} />
