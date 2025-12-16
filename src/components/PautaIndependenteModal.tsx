@@ -88,13 +88,12 @@ export const PautaIndependenteModal = ({
     setIsGeneratingMateria(true);
     
     await guardAction('create', 'materia', async () => {
-      // Fetch first block of the telejornal
+      // Fetch all blocks of the telejornal ordered by ordem descending to get the last block
       const { data: blocos, error: blocosError } = await supabase
         .from('blocos')
         .select('*')
         .eq('telejornal_id', selectedTelejornalId)
-        .order('ordem', { ascending: true })
-        .limit(1);
+        .order('ordem', { ascending: false });
       
       if (blocosError || !blocos || blocos.length === 0) {
         toast({
@@ -105,17 +104,28 @@ export const PautaIndependenteModal = ({
         return;
       }
       
-      const firstBlock = blocos[0];
+      const lastBlock = blocos[0]; // Last block by ordem
+      const allBlockIds = blocos.map(b => b.id);
       
-      // Get max ordem in the block
-      const { data: materias } = await supabase
+      // Get max ordem and pagina across ALL blocks of this telejornal
+      const { data: allMaterias } = await supabase
         .from('materias')
-        .select('ordem')
-        .eq('bloco_id', firstBlock.id)
-        .order('ordem', { ascending: false })
-        .limit(1);
+        .select('ordem, pagina')
+        .in('bloco_id', allBlockIds);
       
-      const nextOrdem = materias && materias.length > 0 ? materias[0].ordem + 1 : 1;
+      let maxOrdem = 0;
+      let maxPagina = 0;
+      
+      if (allMaterias && allMaterias.length > 0) {
+        maxOrdem = Math.max(...allMaterias.map(m => m.ordem || 0));
+        maxPagina = Math.max(...allMaterias.map(m => {
+          const pageNum = parseInt(m.pagina || '0');
+          return isNaN(pageNum) ? 0 : pageNum;
+        }));
+      }
+      
+      const nextOrdem = maxOrdem + 1;
+      const nextPagina = (maxPagina + 1).toString();
       
       // Build texto with all pauta details
       const textoCompleto = [
@@ -131,7 +141,7 @@ export const PautaIndependenteModal = ({
       ].filter(Boolean).join('\n\n');
       
       const materiaData: MateriaCreateInput = {
-        bloco_id: firstBlock.id,
+        bloco_id: lastBlock.id,
         retranca: retranca || pauta.titulo,
         reporter: reporter || '',
         local_gravacao: imagens || '',
@@ -141,13 +151,14 @@ export const PautaIndependenteModal = ({
         status: 'draft', // Draft so it doesn't go to teleprompter
         duracao: 0,
         ordem: nextOrdem,
+        pagina: nextPagina,
       };
       
       await createMateria(materiaData);
       
       toast({
         title: "Matéria gerada!",
-        description: `Matéria "${retranca}" criada no ${firstBlock.nome} com status rascunho.`,
+        description: `Matéria "${retranca}" criada no ${lastBlock.nome} (página ${nextPagina}) com status rascunho.`,
       });
       
       onPautaCreated();
