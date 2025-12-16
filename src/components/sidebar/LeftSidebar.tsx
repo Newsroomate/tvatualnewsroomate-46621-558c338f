@@ -21,6 +21,7 @@ interface LeftSidebarProps {
   selectedJournal: string | null;
   onSelectJournal: (journalId: string) => void;
   onToggleDualView?: (enabled: boolean, secondJournal?: string) => void;
+  onOpenPautaEditor?: (pauta: Pauta | null) => void;
   isMobile?: boolean;
 }
 
@@ -28,6 +29,7 @@ export const LeftSidebar = ({
   selectedJournal,
   onSelectJournal,
   onToggleDualView,
+  onOpenPautaEditor,
   isMobile = false
 }: LeftSidebarProps) => {
   const [isGeneralScheduleOpen, setIsGeneralScheduleOpen] = useState(false);
@@ -200,13 +202,21 @@ export const LeftSidebar = ({
   };
 
   const handleOpenPautaModal = () => {
-    setEditingPauta(null);
-    setIsPautaIndependenteModalOpen(true);
+    if (onOpenPautaEditor) {
+      onOpenPautaEditor(null);
+    } else {
+      setEditingPauta(null);
+      setIsPautaIndependenteModalOpen(true);
+    }
   };
 
   const handleEditPautaModal = (pauta: Pauta) => {
-    setEditingPauta(pauta);
-    setIsPautaIndependenteModalOpen(true);
+    if (onOpenPautaEditor) {
+      onOpenPautaEditor(pauta);
+    } else {
+      setEditingPauta(pauta);
+      setIsPautaIndependenteModalOpen(true);
+    }
   };
 
   const handleOpenTelejornalModal = () => {
