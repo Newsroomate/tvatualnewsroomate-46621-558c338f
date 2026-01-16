@@ -792,6 +792,121 @@ export type Database = {
           },
         ]
       }
+      viewer_messages: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          created_at: string | null
+          id: string
+          media_url: string | null
+          message_text: string
+          message_type: string | null
+          phone_number: string
+          profile_photo_url: string | null
+          received_at: string | null
+          sender_name: string | null
+          sent_to_vmix_at: string | null
+          status: string | null
+          telejornal_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          id?: string
+          media_url?: string | null
+          message_text: string
+          message_type?: string | null
+          phone_number: string
+          profile_photo_url?: string | null
+          received_at?: string | null
+          sender_name?: string | null
+          sent_to_vmix_at?: string | null
+          status?: string | null
+          telejornal_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          created_at?: string | null
+          id?: string
+          media_url?: string | null
+          message_text?: string
+          message_type?: string | null
+          phone_number?: string
+          profile_photo_url?: string | null
+          received_at?: string | null
+          sender_name?: string | null
+          sent_to_vmix_at?: string | null
+          status?: string | null
+          telejornal_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "viewer_messages_telejornal_id_fkey"
+            columns: ["telejornal_id"]
+            isOneToOne: false
+            referencedRelation: "telejornais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vmix_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          message_field: string
+          name_field: string
+          overlay_number: number
+          photo_field: string
+          telejornal_id: string | null
+          title_input_name: string
+          updated_at: string | null
+          vmix_host: string
+          vmix_port: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message_field?: string
+          name_field?: string
+          overlay_number?: number
+          photo_field?: string
+          telejornal_id?: string | null
+          title_input_name?: string
+          updated_at?: string | null
+          vmix_host?: string
+          vmix_port?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          message_field?: string
+          name_field?: string
+          overlay_number?: number
+          photo_field?: string
+          telejornal_id?: string | null
+          title_input_name?: string
+          updated_at?: string | null
+          vmix_host?: string
+          vmix_port?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vmix_settings_telejornal_id_fkey"
+            columns: ["telejornal_id"]
+            isOneToOne: true
+            referencedRelation: "telejornais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
