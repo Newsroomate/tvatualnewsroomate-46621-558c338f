@@ -2,3 +2,9 @@ project_id = "rigluylhplrrlfkssrur"
 
 [functions.backup-espelhos]
 verify_jwt = false
+
+[functions.whatsapp-webhook]
+verify_jwt = false
+
+[functions.vmix-control]
+verify_jwt = false
