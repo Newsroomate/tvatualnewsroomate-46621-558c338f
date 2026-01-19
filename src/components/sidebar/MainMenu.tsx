@@ -1,11 +1,11 @@
-
 import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MonitorSpeaker, ArrowLeft, BarChart, Search } from "lucide-react";
+import { MonitorSpeaker, ArrowLeft, BarChart, Search, Radio } from "lucide-react";
 import { Telejornal } from "@/types";
 import { DeepSearchModal } from "@/components/DeepSearchModal";
+import { VmixControlPanel } from "@/components/vmix";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,6 +33,7 @@ export const MainMenu = ({
   const [currentSection, setCurrentSection] = useState<MenuSection>('main');
   const [selectedSecondJournal, setSelectedSecondJournal] = useState<string>("");
   const [isDeepSearchOpen, setIsDeepSearchOpen] = useState(false);
+  const [isVmixPanelOpen, setIsVmixPanelOpen] = useState(false);
   const isMobile = useIsMobile();
   const { toast } = useToast();
 
@@ -133,6 +134,15 @@ export const MainMenu = ({
                   <Search className="h-4 w-4 mr-3" />
                   Busca Profunda
                 </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => { setIsVmixPanelOpen(true); handleClose(); }}
+                >
+                  <Radio className="h-4 w-4 mr-3 text-green-600" />
+                  Mensagens ZAP / vMix
+                </Button>
               </div>
             )}
 
@@ -182,6 +192,13 @@ export const MainMenu = ({
       <DeepSearchModal 
         isOpen={isDeepSearchOpen}
         onClose={() => setIsDeepSearchOpen(false)}
+      />
+
+      <VmixControlPanel
+        isOpen={isVmixPanelOpen}
+        onClose={() => setIsVmixPanelOpen(false)}
+        telejornais={telejornais}
+        currentTelejornalId={selectedJournal || undefined}
       />
     </>
   );
