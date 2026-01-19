@@ -5,6 +5,72 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
+// Helper to download media from WhatsApp
+async function downloadWhatsAppMedia(
+  mediaId: string, 
+  accessToken: string
+): Promise<{ blob: Blob; mimeType: string } | null> {
+  try {
+    // Step 1: Get media URL from WhatsApp
+    const mediaInfoResponse = await fetch(
+      `https://graph.facebook.com/v18.0/${mediaId}`,
+      {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        }
+      }
+    )
+
+    if (!mediaInfoResponse.ok) {
+      console.error('Failed to get media info:', await mediaInfoResponse.text())
+      return null
+    }
+
+    const mediaInfo = await mediaInfoResponse.json()
+    const mediaUrl = mediaInfo.url
+    const mimeType = mediaInfo.mime_type || 'application/octet-stream'
+
+    console.log('Media info:', { mediaId, mimeType, url: mediaUrl?.substring(0, 50) + '...' })
+
+    // Step 2: Download the actual media file
+    const mediaResponse = await fetch(mediaUrl, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`
+      }
+    })
+
+    if (!mediaResponse.ok) {
+      console.error('Failed to download media:', await mediaResponse.text())
+      return null
+    }
+
+    const blob = await mediaResponse.blob()
+    console.log('Media downloaded:', { size: blob.size, type: mimeType })
+
+    return { blob, mimeType }
+  } catch (error) {
+    console.error('Error downloading media:', error)
+    return null
+  }
+}
+
+// Helper to get file extension from mime type
+function getExtensionFromMimeType(mimeType: string): string {
+  const extensions: Record<string, string> = {
+    'image/jpeg': 'jpg',
+    'image/png': 'png',
+    'image/webp': 'webp',
+    'image/gif': 'gif',
+    'video/mp4': 'mp4',
+    'video/3gpp': '3gp',
+    'audio/aac': 'aac',
+    'audio/mpeg': 'mp3',
+    'audio/ogg': 'ogg',
+    'application/pdf': 'pdf',
+  }
+  return extensions[mimeType] || 'bin'
+}
+
 Deno.serve(async (req) => {
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
@@ -55,31 +121,80 @@ Deno.serve(async (req) => {
               const contacts = value.contacts || []
 
               for (const message of messages) {
-                // Only process text messages
-                if (message.type !== 'text') {
-                  console.log('Skipping non-text message:', message.type)
-                  continue
-                }
-
+                const messageType = message.type
                 const phoneNumber = message.from
-                const messageText = message.text?.body || ''
-                const messageId = message.id
                 const timestamp = new Date(parseInt(message.timestamp) * 1000)
 
                 // Find contact info
                 const contact = contacts.find((c: any) => c.wa_id === phoneNumber)
                 const senderName = contact?.profile?.name || phoneNumber
 
+                // Supported message types
+                const supportedTypes = ['text', 'image', 'video', 'audio', 'document', 'sticker']
+                if (!supportedTypes.includes(messageType)) {
+                  console.log('Skipping unsupported message type:', messageType)
+                  continue
+                }
+
                 console.log('Processing message:', {
+                  type: messageType,
                   from: phoneNumber,
-                  name: senderName,
-                  text: messageText
+                  name: senderName
                 })
 
-                // Try to get profile photo
+                let messageText = ''
+                let mediaUrl: string | null = null
                 let profilePhotoUrl: string | null = null
+
+                // Extract message text
+                if (messageType === 'text') {
+                  messageText = message.text?.body || ''
+                } else if (message[messageType]?.caption) {
+                  // Media with caption
+                  messageText = message[messageType].caption
+                }
+
+                // Process media messages
+                if (['image', 'video', 'audio', 'document', 'sticker'].includes(messageType)) {
+                  const mediaData = message[messageType]
+                  const mediaId = mediaData?.id
+
+                  if (mediaId) {
+                    console.log(`Downloading ${messageType}:`, mediaId)
+                    
+                    const downloadedMedia = await downloadWhatsAppMedia(mediaId, whatsappAccessToken)
+                    
+                    if (downloadedMedia) {
+                      const { blob, mimeType } = downloadedMedia
+                      const extension = getExtensionFromMimeType(mimeType)
+                      const fileName = `media/${phoneNumber}_${Date.now()}.${extension}`
+
+                      // Upload to Supabase Storage
+                      const { data: uploadData, error: uploadError } = await supabase
+                        .storage
+                        .from('viewer-media')
+                        .upload(fileName, blob, {
+                          contentType: mimeType,
+                          upsert: true
+                        })
+
+                      if (!uploadError && uploadData) {
+                        const { data: publicUrl } = supabase
+                          .storage
+                          .from('viewer-media')
+                          .getPublicUrl(fileName)
+                        
+                        mediaUrl = publicUrl.publicUrl
+                        console.log('Media uploaded:', mediaUrl)
+                      } else {
+                        console.error('Error uploading media:', uploadError)
+                      }
+                    }
+                  }
+                }
+
+                // Try to get profile photo
                 try {
-                  // Get profile photo URL from WhatsApp
                   const profileResponse = await fetch(
                     `https://graph.facebook.com/v18.0/${phoneNumber}/profile_picture`,
                     {
@@ -92,13 +207,11 @@ Deno.serve(async (req) => {
                   if (profileResponse.ok) {
                     const profileData = await profileResponse.json()
                     if (profileData.url) {
-                      // Download the image
                       const imageResponse = await fetch(profileData.url)
                       if (imageResponse.ok) {
                         const imageBlob = await imageResponse.blob()
                         const fileName = `profiles/${phoneNumber}_${Date.now()}.jpg`
 
-                        // Upload to Supabase Storage
                         const { data: uploadData, error: uploadError } = await supabase
                           .storage
                           .from('viewer-media')
@@ -129,9 +242,10 @@ Deno.serve(async (req) => {
                   .insert({
                     phone_number: phoneNumber,
                     sender_name: senderName,
-                    message_text: messageText,
+                    message_text: messageText || `[${messageType.toUpperCase()}]`,
+                    message_type: messageType,
+                    media_url: mediaUrl,
                     profile_photo_url: profilePhotoUrl,
-                    message_type: 'text',
                     status: 'pending',
                     received_at: timestamp.toISOString()
                   })
@@ -141,7 +255,7 @@ Deno.serve(async (req) => {
                 if (error) {
                   console.error('Error inserting message:', error)
                 } else {
-                  console.log('Message saved:', data.id)
+                  console.log('Message saved:', data.id, { type: messageType, hasMedia: !!mediaUrl })
                 }
               }
             }
