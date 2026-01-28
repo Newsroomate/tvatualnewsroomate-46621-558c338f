@@ -72,8 +72,19 @@ function getExtensionFromMimeType(mimeType: string): string {
 }
 
 Deno.serve(async (req) => {
+  const requestTime = new Date().toISOString()
+  const requestMethod = req.method
+  const requestUrl = req.url
+  
+  // Log EVERY request for debugging
+  console.log(`[${requestTime}] ========== INCOMING REQUEST ==========`)
+  console.log(`[${requestTime}] Method: ${requestMethod}`)
+  console.log(`[${requestTime}] URL: ${requestUrl}`)
+  console.log(`[${requestTime}] Headers:`, Object.fromEntries(req.headers.entries()))
+
   // Handle CORS preflight
   if (req.method === 'OPTIONS') {
+    console.log(`[${requestTime}] Handling CORS preflight`)
     return new Response(null, { headers: corsHeaders })
   }
 
@@ -82,34 +93,78 @@ Deno.serve(async (req) => {
   const whatsappVerifyToken = Deno.env.get('WHATSAPP_VERIFY_TOKEN')!
   const whatsappAccessToken = Deno.env.get('WHATSAPP_ACCESS_TOKEN')!
 
+  console.log(`[${requestTime}] Secrets check - VERIFY_TOKEN exists: ${!!whatsappVerifyToken}, ACCESS_TOKEN exists: ${!!whatsappAccessToken}`)
+
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
   try {
-    // GET request - Webhook verification from Meta
+    // GET request - Webhook verification OR test endpoint
     if (req.method === 'GET') {
       const url = new URL(req.url)
+      
+      // Test endpoint: /whatsapp-webhook?test=true
+      if (url.searchParams.get('test') === 'true') {
+        console.log(`[${requestTime}] TEST ENDPOINT CALLED - Simulating message insertion`)
+        
+        const { data, error } = await supabase
+          .from('viewer_messages')
+          .insert({
+            phone_number: '5511999999999',
+            sender_name: 'Teste Manual',
+            message_text: `Mensagem de teste - ${requestTime}`,
+            message_type: 'text',
+            status: 'pending',
+            received_at: requestTime
+          })
+          .select()
+          .single()
+        
+        if (error) {
+          console.error(`[${requestTime}] TEST FAILED - Error inserting:`, error)
+          return new Response(JSON.stringify({ success: false, error: error.message }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          })
+        }
+        
+        console.log(`[${requestTime}] TEST SUCCESS - Message inserted:`, data.id)
+        return new Response(JSON.stringify({ 
+          success: true, 
+          message: 'Test message inserted successfully',
+          data 
+        }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        })
+      }
+      
+      // Normal webhook verification
       const mode = url.searchParams.get('hub.mode')
       const token = url.searchParams.get('hub.verify_token')
       const challenge = url.searchParams.get('hub.challenge')
 
-      console.log('Webhook verification request:', { mode, token, challenge })
+      console.log(`[${requestTime}] Webhook verification request:`, { mode, token: token?.substring(0, 5) + '...', challenge: challenge?.substring(0, 10) + '...' })
+      console.log(`[${requestTime}] Expected token starts with: ${whatsappVerifyToken?.substring(0, 5)}...`)
 
       if (mode === 'subscribe' && token === whatsappVerifyToken) {
-        console.log('Webhook verified successfully')
+        console.log(`[${requestTime}] ✓ Webhook verified successfully`)
         return new Response(challenge, { 
           status: 200,
           headers: { ...corsHeaders, 'Content-Type': 'text/plain' }
         })
       } else {
-        console.error('Webhook verification failed')
+        console.error(`[${requestTime}] ✗ Webhook verification FAILED - Token mismatch`)
         return new Response('Forbidden', { status: 403, headers: corsHeaders })
       }
     }
 
     // POST request - Incoming messages
     if (req.method === 'POST') {
-      const body = await req.json()
-      console.log('Received webhook:', JSON.stringify(body, null, 2))
+      const rawBody = await req.text()
+      console.log(`[${requestTime}] POST body (raw):`, rawBody.substring(0, 500))
+      
+      const body = JSON.parse(rawBody)
+      console.log(`[${requestTime}] POST body (parsed):`, JSON.stringify(body, null, 2))
 
       // Process WhatsApp messages
       if (body.object === 'whatsapp_business_account') {
