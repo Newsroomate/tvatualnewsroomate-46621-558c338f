@@ -5,6 +5,7 @@ import { Bloco, Materia, Telejornal } from "@/types";
 import { ScheduleHeader } from "./ScheduleHeader";
 import { ScheduleContent } from "./ScheduleContent";
 import { LaudasVisualizationModal } from "./LaudasVisualizationModal";
+import { FloatingTimeBar } from "./FloatingTimeBar";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
 
@@ -151,6 +152,9 @@ export const NewsScheduleCore = ({
           onMateriaSelect={onMateriaSelect}
         />
       </div>
+
+      {/* Floating time bar at the bottom */}
+      <FloatingTimeBar blocks={blocks} totalJournalTime={totalJournalTime} />
     </>
   );
 

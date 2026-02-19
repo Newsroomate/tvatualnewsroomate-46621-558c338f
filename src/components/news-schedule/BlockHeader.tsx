@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { PlusCircle, Pencil, Trash2, Check, X, CheckSquare } from "lucide-react";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
@@ -145,7 +146,10 @@ export const BlockHeader = ({
               </div>}
           </div>
           <div className={`${isMobile ? 'flex justify-between items-center w-full' : 'flex items-center space-x-2'}`}>
-            <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium`}>
+            <span className={cn(
+              `${isMobile ? 'text-xs' : 'text-sm'} font-medium`,
+              totalTime === 0 ? 'text-muted-foreground' : totalTime > 600 ? 'text-destructive font-bold' : totalTime > 300 ? 'text-yellow-600 font-semibold' : 'text-green-600 font-semibold'
+            )}>
               Tempo: {formatTime(totalTime)}
             </span>
             
