@@ -118,6 +118,33 @@ export const deleteMessage = async (messageId: string): Promise<void> => {
   }
 };
 
+export const testWebhookConnection = async (): Promise<{ success: boolean; message: string }> => {
+  try {
+    const url = 'https://rigluylhplrrlfkssrur.supabase.co/functions/v1/whatsapp-webhook?test=true';
+    const response = await fetch(url);
+    const data = await response.json();
+    return { success: response.ok, message: data?.message || data?.status || 'Endpoint respondeu' };
+  } catch (err) {
+    console.error('Error testing webhook:', err);
+    return { success: false, message: 'Falha ao conectar ao endpoint' };
+  }
+};
+
+export const fetchLastMessage = async (): Promise<{ received_at: string | null } | null> => {
+  const { data, error } = await supabase
+    .from('viewer_messages')
+    .select('received_at')
+    .order('received_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) {
+    console.error('Error fetching last message:', error);
+    return null;
+  }
+  return data;
+};
+
 export const assignMessageToTelejornal = async (
   messageId: string,
   telejornalId: string

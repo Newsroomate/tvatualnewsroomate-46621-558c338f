@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ViewerMessagesPanel } from './ViewerMessagesPanel';
 import { VmixSettingsModal } from './VmixSettingsModal';
 import { WhatsAppSettingsModal } from './WhatsAppSettingsModal';
+import { WebhookStatusPanel } from './WebhookStatusPanel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -74,6 +75,11 @@ export const VmixControlPanel = ({
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          {/* Webhook Status */}
+          <div className="flex-shrink-0">
+            <WebhookStatusPanel telejornalId={selectedTelejornalId} />
           </div>
 
           {/* Messages Panel */}
