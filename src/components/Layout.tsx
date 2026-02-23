@@ -17,6 +17,7 @@ import { SavedRundownsModal } from "./SavedRundownsModal";
 import { saveRundownSnapshot } from "@/services/saved-rundowns-api";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchBlocosByTelejornal, fetchMateriasByBloco, deleteAllBlocos } from "@/services/api";
+import { createBloco } from "@/services/blocos-api";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 import { useRealtimeTelejornais } from "@/hooks/useRealtimeTelejornais";
 import { useRealtimeInvalidation } from "@/hooks/useRealtimeInvalidation";
@@ -437,8 +438,16 @@ const Layout = () => {
         console.log('Telejornal aberto com sucesso:', result);
       }
       
-      // O primeiro bloco será criado automaticamente pelo componente NewsSchedule
-      // quando detectar espelho aberto sem blocos (bloco vazio sem dados anteriores)
+      // Create first block immediately so the user sees a ready espelho
+      try {
+        await createBloco({ nome: 'Bloco 1', ordem: 1, telejornal_id: selectedJournal });
+        console.log('Bloco inicial criado automaticamente');
+      } catch (blockError: any) {
+        // Ignore duplicate key errors – block may already exist from auto-creation
+        if (!blockError?.message?.includes('duplicate key value')) {
+          console.error('Erro ao criar bloco inicial:', blockError);
+        }
+      }
       
       toast({
         title: "Novo espelho criado",
