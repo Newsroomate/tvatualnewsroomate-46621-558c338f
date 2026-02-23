@@ -16,7 +16,7 @@ import Auth from "./pages/Auth";
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TeleprompterWindow = lazy(() => import("./pages/TeleprompterWindow"));
-const SalesKit = lazy(() => import("./pages/SalesKit"));
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -51,7 +51,7 @@ const AppContent = () => {
         <Routes>
           <Route path="/teleprompter" element={<TeleprompterWindow />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/sales" element={<SalesKit />} />
+          
           <Route path="/" element={
             <div className="flex-1 overflow-hidden">
               <ProtectedRoute>
