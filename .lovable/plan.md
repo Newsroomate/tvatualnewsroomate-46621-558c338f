@@ -1,48 +1,45 @@
 
 
-# Sales Kit em PDF — Exportacao do Material de Vendas
+## Diagnostico: WhatsApp Webhook nao recebe mensagens
 
-## Resumo
-Criar um botao/pagina simples em `/sales` que, ao ser acessada, gera e faz download automatico de um PDF profissional com todo o material de vendas do Newsroomate, usando a biblioteca `jsPDF` ja instalada no projeto.
+### O que foi verificado
 
-## Estrutura do PDF (paginas)
+1. **Edge Function esta online e funcional** -- O teste `?test=true` inseriu mensagem com sucesso (status 200)
+2. **Verificacao de token funciona** -- Token incorreto retorna 403 corretamente
+3. **Nenhum log do Meta** -- O Meta nunca enviou requisicoes ao webhook, indicando que a configuracao no painel Meta for Developers nao esta completa
 
-1. **Capa** — "Newsroomate — A redacao inteira na palma da mao." com subtitulo e data
-2. **O Problema** — Lista de dores das redacoes tradicionais
-3. **A Solucao** — Visao geral da plataforma integrada
-4. **Funcionalidades** (2 paginas) — Cards descritivos:
-   - Espelho em tempo real
-   - Reporter no campo (acesso remoto, pautas pelo celular)
-   - Teleprompter integrado
-   - Alertas visuais de tempo (barra flutuante verde/amarelo/vermelho)
-   - Dual View e drag-and-drop
-   - Integracoes vMix e WhatsApp
-   - Permissoes granulares e historico/snapshots
-5. **Para Quem** — TVs regionais, webjornais, universidades, redacoes 4+ pessoas
-6. **Diferenciais** — 100% web, qualquer dispositivo, tempo real, sem software legado
-7. **Contato / CTA** — "Pronto para transformar sua redacao?" com informacoes de contato
+### Causa raiz
 
-## Implementacao Tecnica
+O problema nao e de codigo. O Meta for Developers nao esta configurado para enviar webhooks ao seu endpoint. Existem 3 causas possiveis:
 
-### Arquivos a criar
-1. **`src/utils/sales-kit-pdf.ts`** — Funcao `generateSalesKitPDF()` que monta o documento inteiro usando `jsPDF`, seguindo o mesmo padrao de `src/utils/pdf-utils.ts` e `TeleprompterExport.tsx`
-2. **`src/pages/SalesKit.tsx`** — Pagina minima com botao "Baixar Sales Kit (PDF)" que chama a funcao acima
+### Checklist de configuracao no Meta for Developers
 
-### Rota
-- Adicionar `/sales` em `App.tsx` como rota publica (lazy loaded, fora do `ProtectedRoute`)
+**1. Verificar se o Webhook esta registrado**
+- Acesse: Meta for Developers → Seu App → WhatsApp → Configuration
+- A **Callback URL** deve ser exatamente:
+  `https://rigluylhplrrlfkssrur.supabase.co/functions/v1/whatsapp-webhook`
+- O **Verify Token** deve ser o mesmo valor que esta no secret `WHATSAPP_VERIFY_TOKEN` do Supabase
+- Clique "Verify and Save" -- se der erro, o token nao bate
 
-### Detalhes do PDF
-- Formato A4 com margens de 20mm
-- Titulo principal em fonte 28pt bold, subtitulos em 18pt bold
-- Corpo em 12pt normal
-- Separadores visuais com linhas horizontais
-- Numeracao de paginas no rodape ("Pagina X de Y")
-- Cores usadas via `setTextColor` para destaques (azul para titulos de secao, preto para corpo, cinza para rodape)
-- Blocos de funcionalidades com titulos em bold e descricoes em texto normal, separados por espacamento
-- Cada secao principal inicia em nova pagina para clareza visual
-- Nome do arquivo: `newsroomate_sales_kit_YYYY-MM-DD.pdf`
+**2. Verificar se o campo "messages" esta subscrito**
+- Na mesma pagina de Webhook, em "Webhook fields", o campo **messages** deve estar com toggle ativo
+- Sem isso, o Meta nao envia nada mesmo com o webhook verificado
 
-### Dependencias
-- Nenhuma nova — usa `jsPDF` ja instalado
-- Reutiliza componentes `Button` e icones `Download` do lucide-react na pagina
+**3. Verificar se o app esta em modo Live (nao Test)**
+- No topo do painel Meta, verifique se o app esta em **Live mode** (nao Development)
+- Em modo Development, apenas mensagens enviadas por numeros de teste cadastrados sao processadas
+- Se estiver em Development: va em "App Settings → Basic" e mude para Live
+
+**4. Verificar o numero de telefone**
+- Em WhatsApp → API Setup, confirme que o numero +55 11 96174-4517 aparece
+- O `WHATSAPP_PHONE_NUMBER_ID` deve corresponder ao ID exibido ao lado desse numero
+
+### O que Lovable pode fazer
+
+Nao ha mudancas de codigo necessarias. A Edge Function ja esta pronta. O plano e:
+
+1. **Criar um painel de diagnostico** no app que valide automaticamente se o webhook recebeu alguma chamada do Meta nos ultimos 5 minutos, facilitando o troubleshooting
+2. **Adicionar um botao "Enviar mensagem de teste"** que faz uma requisicao GET ao endpoint `?test=true` diretamente do painel, para confirmar que a pipeline Edge Function → banco de dados esta funcional
+
+Porem, a acao principal agora e voce verificar as 4 configuracoes acima no painel do Meta for Developers e confirmar/reconfiguar o webhook.
 
