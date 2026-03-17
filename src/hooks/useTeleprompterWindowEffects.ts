@@ -13,7 +13,7 @@ interface UseTeleprompterWindowEffectsProps {
   setIsPlaying: (playing: boolean) => void;
   speed: number[];
   setScrollPosition: (position: number) => void;
-  intervalRef: React.MutableRefObject<NodeJS.Timeout | null>;
+  intervalRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
   animationFrameRef?: React.MutableRefObject<number | null>;
   lastTimeRef?: React.MutableRefObject<number>;
   contentRef: React.MutableRefObject<HTMLDivElement | null>;
@@ -213,7 +213,7 @@ export const useTeleprompterWindowEffects = ({
     const contentElement = contentRef.current;
     if (!contentElement) return;
 
-    let scrollTimeout: NodeJS.Timeout;
+    let scrollTimeout: ReturnType<typeof setTimeout>;
     const handleScroll = () => {
       // Only update state if not auto-scrolling to avoid conflicts
       if (!isPlaying) {

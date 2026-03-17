@@ -21,7 +21,7 @@ export const useMateriaLock = ({ materiaId, isOpen, onClose }: UseMateriaLockPro
   const [isLocked, setIsLocked] = useState(false);
   const [lockOwner, setLockOwner] = useState<string | null>(null);
   const [isOwnLock, setIsOwnLock] = useState(false);
-  const lockIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const lockIntervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const { toast } = useToast();
 
   // Verificar se a matéria está bloqueada

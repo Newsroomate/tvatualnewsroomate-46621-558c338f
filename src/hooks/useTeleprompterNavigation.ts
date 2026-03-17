@@ -17,7 +17,7 @@ export const useTeleprompterNavigation = ({
 }: UseTeleprompterNavigationProps) => {
   const currentRetrancaIndexRef = useRef<number>(0);
   const isNavigatingRef = useRef(false);
-  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get all approved retrancas for navigation
   const getAllRetrancas = useCallback(() => {

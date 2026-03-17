@@ -17,7 +17,7 @@ class TeleprompterService {
   private windowRef: Window | null = null;
   private retryAttempts = 0;
   private maxRetries = 15;
-  private heartbeatInterval: NodeJS.Timeout | null = null;
+  private heartbeatInterval: ReturnType<typeof setTimeout> | null = null;
   private isWindowReady = false;
   private pendingData: TeleprompterData | null = null;
 

@@ -82,7 +82,7 @@ export const useTeleprompterScroll = ({
     const contentElement = contentRef.current;
     if (!contentElement) return;
 
-    let scrollTimeout: NodeJS.Timeout;
+    let scrollTimeout: ReturnType<typeof setTimeout>;
     const handleScroll = () => {
       // Only update state if not auto-scrolling and not navigating to avoid conflicts
       if (!isPlaying && !isNavigating) {
