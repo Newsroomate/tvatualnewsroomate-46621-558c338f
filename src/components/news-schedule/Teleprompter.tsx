@@ -29,7 +29,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const [tipoMaterialColor, setTipoMaterialColor] = useState("#f97316");
   const [isMirrored, setIsMirrored] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
 
@@ -174,7 +174,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
       }
     };
 
-    let scrollTimeout: NodeJS.Timeout;
+    let scrollTimeout: ReturnType<typeof setTimeout>;
     const debouncedScrollHandler = () => {
       clearTimeout(scrollTimeout);
       scrollTimeout = setTimeout(handleScroll, 100);

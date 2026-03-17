@@ -17,7 +17,7 @@ export const useTeleprompterWindowState = () => {
   const [isMirrored, setIsMirrored] = useState(false);
   
   const contentRef = useRef<HTMLDivElement>(null);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
   const hasReceivedDataRef = useRef(false);

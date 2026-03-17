@@ -25,7 +25,7 @@ export const useTeleprompterKeyboardControls = ({
 }: UseTeleprompterKeyboardControlsProps) => {
   const currentRetrancaIndex = useRef(0);
   const isNavigating = useRef(false);
-  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Get all retrancas in order
   const getAllRetrancas = useCallback(() => {
