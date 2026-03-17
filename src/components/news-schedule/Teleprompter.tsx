@@ -29,7 +29,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const [tipoMaterialColor, setTipoMaterialColor] = useState("#f97316");
   const [isMirrored, setIsMirrored] = useState(false);
   const contentRef = useRef<HTMLDivElement>(null);
-  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null); // browser timeout
   const animationFrameRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
 
