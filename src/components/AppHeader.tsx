@@ -4,6 +4,7 @@ import { Button } from "./ui/button";
 import { Link } from "react-router-dom";
 import { Menu } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { OnlineUsersPanel } from "./OnlineUsersPanel";
 interface AppHeaderProps {
   onMenuToggle?: () => void;
   showMenuButton?: boolean;
@@ -34,7 +35,8 @@ export const AppHeader = ({
         <div className="text-lg font-semibold">Newsroomate</div>
       </div>
       
-      {user ? <div className="flex items-center gap-4">
+      {user ? <div className="flex items-center gap-3">
+          <OnlineUsersPanel />
           {profile && <div className="text-sm hidden md:block">
               <span className="text-gray-500 mr-1">Conectado como:</span>
               <span className="font-medium">{profile.full_name}</span>
