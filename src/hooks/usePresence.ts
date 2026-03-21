@@ -15,7 +15,7 @@ export const usePresence = () => {
   const { user, profile } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
-  const previousUsersRef = useRef<Set<string>>(new Set());
+  const previousUsersRef = useRef<Map<string, OnlineUser>>(new Map());
   const isEditorChefe = profile?.role === "editor_chefe";
 
   useEffect(() => {
