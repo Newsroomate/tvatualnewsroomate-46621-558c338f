@@ -1,48 +1,56 @@
 
 
-# Sales Kit em PDF — Exportacao do Material de Vendas
+# Melhorias na Integração vMix
 
-## Resumo
-Criar um botao/pagina simples em `/sales` que, ao ser acessada, gera e faz download automatico de um PDF profissional com todo o material de vendas do Newsroomate, usando a biblioteca `jsPDF` ja instalada no projeto.
+## Bug Critico Atual
 
-## Estrutura do PDF (paginas)
+Existe um **loop infinito** no `VmixSettingsModal` (visivel nos logs do console). O `useEffect` na linha 39 depende de `settings`, mas o hook `useVmixSettings` retorna um novo objeto `effectiveSettings` a cada render quando nao ha settings salvos, causando re-renders infinitos.
 
-1. **Capa** — "Newsroomate — A redacao inteira na palma da mao." com subtitulo e data
-2. **O Problema** — Lista de dores das redacoes tradicionais
-3. **A Solucao** — Visao geral da plataforma integrada
-4. **Funcionalidades** (2 paginas) — Cards descritivos:
-   - Espelho em tempo real
-   - Reporter no campo (acesso remoto, pautas pelo celular)
-   - Teleprompter integrado
-   - Alertas visuais de tempo (barra flutuante verde/amarelo/vermelho)
-   - Dual View e drag-and-drop
-   - Integracoes vMix e WhatsApp
-   - Permissoes granulares e historico/snapshots
-5. **Para Quem** — TVs regionais, webjornais, universidades, redacoes 4+ pessoas
-6. **Diferenciais** — 100% web, qualquer dispositivo, tempo real, sem software legado
-7. **Contato / CTA** — "Pronto para transformar sua redacao?" com informacoes de contato
+## Melhorias Propostas
 
-## Implementacao Tecnica
+### 1. Corrigir o loop infinito no VmixSettingsModal
+- No hook `useVmixSettings`, memorizar o `effectiveSettings` com `useMemo` para evitar criar um novo objeto a cada render
+- No `VmixSettingsModal`, usar comparacao estavel no `useEffect` (ex: `JSON.stringify` ou campos individuais)
 
-### Arquivos a criar
-1. **`src/utils/sales-kit-pdf.ts`** — Funcao `generateSalesKitPDF()` que monta o documento inteiro usando `jsPDF`, seguindo o mesmo padrao de `src/utils/pdf-utils.ts` e `TeleprompterExport.tsx`
-2. **`src/pages/SalesKit.tsx`** — Pagina minima com botao "Baixar Sales Kit (PDF)" que chama a funcao acima
+### 2. Auto-reconexao e health check periodico
+- Adicionar um intervalo de verificacao automatica da conexao vMix (a cada 30s quando o painel esta aberto)
+- Mostrar indicador visual de "ultima verificacao" no status panel
+- Alertar o operador se a conexao cair durante o uso
 
-### Rota
-- Adicionar `/sales` em `App.tsx` como rota publica (lazy loaded, fora do `ProtectedRoute`)
+### 3. Fila de mensagens com auto-avanço
+- Implementar um modo "fila automatica" onde, ao remover uma mensagem do ar, a proxima aprovada entra automaticamente apos um delay configuravel
+- Adicionar controle de tempo de exibicao (timer) para cada mensagem no ar
 
-### Detalhes do PDF
-- Formato A4 com margens de 20mm
-- Titulo principal em fonte 28pt bold, subtitulos em 18pt bold
-- Corpo em 12pt normal
-- Separadores visuais com linhas horizontais
-- Numeracao de paginas no rodape ("Pagina X de Y")
-- Cores usadas via `setTextColor` para destaques (azul para titulos de secao, preto para corpo, cinza para rodape)
-- Blocos de funcionalidades com titulos em bold e descricoes em texto normal, separados por espacamento
-- Cada secao principal inicia em nova pagina para clareza visual
-- Nome do arquivo: `newsroomate_sales_kit_YYYY-MM-DD.pdf`
+### 4. Atalhos de teclado para operacao rapida
+- `Espaço` para aprovar/enviar ao ar a proxima mensagem pendente
+- `Esc` para remover do ar
+- `R` para rejeitar
+- Indicadores visuais dos atalhos nos botoes
 
-### Dependencias
-- Nenhuma nova — usa `jsPDF` ja instalado
-- Reutiliza componentes `Button` e icones `Download` do lucide-react na pagina
+### 5. Preview da tarja antes de enviar
+- Mostrar uma preview visual de como a mensagem vai aparecer na tarja do vMix antes de enviar ao ar
+- Permitir editar o texto da mensagem antes de enviar (ex: corrigir erros de digitacao do telespectador)
+
+### 6. Logs de operacao
+- Registrar em tabela todas as acoes do operador (aprovar, rejeitar, enviar ao ar, remover)
+- Mostrar historico de operacoes na sessao atual
+
+## Arquivos Afetados
+
+| Arquivo | Alteracao |
+|---|---|
+| `src/hooks/useVmixSettings.ts` | Memorizar effectiveSettings, adicionar health check |
+| `src/components/vmix/VmixSettingsModal.tsx` | Corrigir useEffect, adicionar config de fila |
+| `src/components/vmix/ViewerMessagesPanel.tsx` | Fila automatica, atalhos, preview, edicao |
+| `src/components/vmix/MessageCard.tsx` | Timer de exibicao, preview da tarja |
+| `src/components/vmix/WebhookStatusPanel.tsx` | Auto-reconexao periodica |
+
+## Prioridade Sugerida
+
+1. **Corrigir bug do loop infinito** (critico - esta causando erros no console agora)
+2. Preview e edicao de mensagem antes de enviar
+3. Fila automatica com timer
+4. Atalhos de teclado
+5. Health check periodico
+6. Logs de operacao
 
