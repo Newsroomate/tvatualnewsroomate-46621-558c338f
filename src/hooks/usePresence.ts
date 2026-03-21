@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import { playJoinSound, playLeaveSound } from "@/utils/notification-sound";
 
 export interface OnlineUser {
   userId: string;
