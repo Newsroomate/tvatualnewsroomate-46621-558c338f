@@ -15,7 +15,7 @@ export const usePresence = () => {
   const { user, profile } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
-  const previousUsersRef = useRef<Set<string>>(new Set());
+  const previousUsersRef = useRef<Map<string, OnlineUser>>(new Map());
   const isEditorChefe = profile?.role === "editor_chefe";
 
   useEffect(() => {
@@ -67,18 +67,21 @@ export const usePresence = () => {
             }
           }
           // Users that left
-          const userMap = new Map(users.map((u) => [u.userId, u]));
-          for (const prevId of previousUsersRef.current) {
+          for (const [prevId, prevUser] of previousUsersRef.current) {
             if (!currentIds.has(prevId) && prevId !== user.id) {
-              toast(`Usuário saiu do sistema`, {
-                description: `Um membro da equipe ficou offline`,
+              toast(`${prevUser.fullName} saiu do sistema`, {
+                description: `Cargo: ${translateRoleShort(prevUser.role)}`,
                 duration: 4000,
               });
             }
           }
         }
 
-        previousUsersRef.current = currentIds;
+        const newMap = new Map<string, OnlineUser>();
+        for (const u of users) {
+          newMap.set(u.userId, u);
+        }
+        previousUsersRef.current = newMap;
         setOnlineUsers(users);
       })
       .subscribe(async (status) => {
