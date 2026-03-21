@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { RealtimeChannel } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import { playJoinSound, playLeaveSound } from "@/utils/notification-sound";
 
 export interface OnlineUser {
   userId: string;
@@ -60,6 +61,7 @@ export const usePresence = () => {
           // New users that joined
           for (const u of users) {
             if (!previousUsersRef.current.has(u.userId) && u.userId !== user.id) {
+              playJoinSound();
               toast.info(`${u.fullName} entrou no sistema`, {
                 description: `Cargo: ${translateRoleShort(u.role)}`,
                 duration: 5000,
@@ -69,6 +71,7 @@ export const usePresence = () => {
           // Users that left
           for (const [prevId, prevUser] of previousUsersRef.current) {
             if (!currentIds.has(prevId) && prevId !== user.id) {
+              playLeaveSound();
               toast(`${prevUser.fullName} saiu do sistema`, {
                 description: `Cargo: ${translateRoleShort(prevUser.role)}`,
                 duration: 4000,
