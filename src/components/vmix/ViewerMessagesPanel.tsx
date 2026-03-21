@@ -1,17 +1,21 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRealtimeViewerMessages } from '@/hooks/useRealtimeViewerMessages';
 import { useVmixSettings } from '@/hooks/useVmixSettings';
 import { useAuth } from '@/context/AuthContext';
 import { ViewerMessage, MessageStatus } from '@/types/vmix';
 import { MessageCard } from './MessageCard';
+import { MessageEditDialog } from './MessageEditDialog';
+import { OperationLog, OperationEntry } from './OperationLog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { RefreshCw, Inbox, CheckCircle, Radio, History, XCircle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { RefreshCw, Inbox, CheckCircle, Radio, History, XCircle, Keyboard } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { approveMessage, rejectMessage, markAsUsed } from '@/services/viewer-messages-api';
-import { sendMessageToAir, removeFromAir } from '@/services/vmix-api';
+import { sendMessageToAir, removeFromAir, updateVmixText } from '@/services/vmix-api';
 
 interface ViewerMessagesPanelProps {
   telejornalId?: string;
@@ -21,6 +25,11 @@ export const ViewerMessagesPanel = ({ telejornalId }: ViewerMessagesPanelProps) 
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<MessageStatus>('pending');
   const [loadingMessageId, setLoadingMessageId] = useState<string | null>(null);
+  const [autoQueue, setAutoQueue] = useState(false);
+  const [editMessage, setEditMessage] = useState<ViewerMessage | null>(null);
+  const [operationLog, setOperationLog] = useState<OperationEntry[]>([]);
+  const autoQueueRef = useRef(autoQueue);
+  autoQueueRef.current = autoQueue;
 
   const { messages, isLoading, refresh, counts } = useRealtimeViewerMessages({
     telejornalId,
@@ -31,112 +40,137 @@ export const ViewerMessagesPanel = ({ telejornalId }: ViewerMessagesPanelProps) 
 
   const filteredMessages = messages.filter(m => m.status === activeTab);
 
-  const handleApprove = async (message: ViewerMessage) => {
-    if (!user?.id) return;
+  const addLog = useCallback((action: OperationEntry['action'], msg: ViewerMessage) => {
+    setOperationLog(prev => [{
+      id: `${Date.now()}-${msg.id}`,
+      action,
+      messageSender: msg.sender_name || msg.phone_number,
+      timestamp: new Date()
+    }, ...prev]);
+  }, []);
 
+  const handleApprove = useCallback(async (message: ViewerMessage) => {
+    if (!user?.id) return;
     try {
       setLoadingMessageId(message.id);
       await approveMessage(message.id, user.id);
-      toast({
-        title: "Mensagem aprovada",
-        description: "A mensagem está pronta para ser enviada ao ar"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao aprovar",
-        description: "Não foi possível aprovar a mensagem",
-        variant: "destructive"
-      });
+      addLog('approve', message);
+      toast({ title: "Mensagem aprovada", description: "Pronta para enviar ao ar" });
+    } catch {
+      toast({ title: "Erro ao aprovar", variant: "destructive" });
     } finally {
       setLoadingMessageId(null);
     }
-  };
+  }, [user?.id, addLog]);
 
-  const handleReject = async (message: ViewerMessage) => {
+  const handleReject = useCallback(async (message: ViewerMessage) => {
     try {
       setLoadingMessageId(message.id);
       await rejectMessage(message.id);
-      toast({
-        title: "Mensagem rejeitada"
-      });
-    } catch (error) {
-      toast({
-        title: "Erro ao rejeitar",
-        description: "Não foi possível rejeitar a mensagem",
-        variant: "destructive"
-      });
+      addLog('reject', message);
+      toast({ title: "Mensagem rejeitada" });
+    } catch {
+      toast({ title: "Erro ao rejeitar", variant: "destructive" });
     } finally {
       setLoadingMessageId(null);
     }
-  };
+  }, [addLog]);
 
-  const handleSendToAir = async (message: ViewerMessage) => {
+  const handleSendToAir = useCallback(async (message: ViewerMessage, editedName?: string, editedText?: string) => {
     if (!settings) {
-      toast({
-        title: "Configurações não encontradas",
-        description: "Configure o vMix antes de enviar mensagens",
-        variant: "destructive"
-      });
+      toast({ title: "Configure o vMix primeiro", variant: "destructive" });
       return;
     }
-
     try {
       setLoadingMessageId(message.id);
-      const result = await sendMessageToAir(message, settings);
       
+      // If text was edited, update vMix fields with edited values
+      if (editedText && editedText !== message.message_text) {
+        await updateVmixText(settings, settings.message_field, editedText);
+      }
+      if (editedName && editedName !== (message.sender_name || message.phone_number)) {
+        await updateVmixText(settings, settings.name_field, editedName);
+      }
+      
+      const result = await sendMessageToAir(message, settings);
       if (result.success) {
-        toast({
-          title: "Mensagem no ar!",
-          description: result.message
-        });
+        addLog('send_to_air', message);
+        toast({ title: "Mensagem no ar!", description: result.message });
       } else {
-        toast({
-          title: "Erro ao enviar",
-          description: result.message,
-          variant: "destructive"
-        });
+        toast({ title: "Erro ao enviar", description: result.message, variant: "destructive" });
       }
     } catch (error: any) {
-      toast({
-        title: "Erro ao enviar ao vMix",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast({ title: "Erro ao enviar ao vMix", description: error.message, variant: "destructive" });
     } finally {
       setLoadingMessageId(null);
+      setEditMessage(null);
     }
-  };
+  }, [settings, addLog]);
 
-  const handleRemoveFromAir = async (message: ViewerMessage) => {
+  const handleRemoveFromAir = useCallback(async (message: ViewerMessage) => {
     if (!settings) return;
-
     try {
       setLoadingMessageId(message.id);
       const result = await removeFromAir(settings, message.id);
-      
       if (result.success) {
         await markAsUsed(message.id);
-        toast({
-          title: "Removido do ar",
-          description: result.message
-        });
+        addLog('remove_from_air', message);
+        toast({ title: "Removido do ar", description: result.message });
+        
+        // Auto-queue: send next approved message
+        if (autoQueueRef.current) {
+          const nextApproved = messages.find(m => m.status === 'approved' && m.id !== message.id);
+          if (nextApproved) {
+            setTimeout(() => handleSendToAir(nextApproved), 1500);
+          }
+        }
       } else {
-        toast({
-          title: "Erro ao remover",
-          description: result.message,
-          variant: "destructive"
-        });
+        toast({ title: "Erro ao remover", description: result.message, variant: "destructive" });
       }
     } catch (error: any) {
-      toast({
-        title: "Erro",
-        description: error.message,
-        variant: "destructive"
-      });
+      toast({ title: "Erro", description: error.message, variant: "destructive" });
     } finally {
       setLoadingMessageId(null);
     }
-  };
+  }, [settings, messages, addLog, handleSendToAir]);
+
+  const handlePreviewAndSend = useCallback((message: ViewerMessage) => {
+    setEditMessage(message);
+  }, []);
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      // Don't trigger when typing in inputs
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+
+      if (e.code === 'Space' && !e.repeat) {
+        e.preventDefault();
+        if (activeTab === 'pending') {
+          const next = filteredMessages[0];
+          if (next) handleApprove(next);
+        } else if (activeTab === 'approved') {
+          const next = filteredMessages[0];
+          if (next) handlePreviewAndSend(next);
+        }
+      }
+
+      if (e.code === 'Escape') {
+        const onAir = messages.find(m => m.status === 'on_air');
+        if (onAir) handleRemoveFromAir(onAir);
+      }
+
+      if (e.code === 'KeyR' && !e.ctrlKey && !e.metaKey) {
+        if (activeTab === 'pending') {
+          const next = filteredMessages[0];
+          if (next) handleReject(next);
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [activeTab, filteredMessages, messages, handleApprove, handleReject, handleRemoveFromAir, handlePreviewAndSend]);
 
   const TabLabel = ({ status, icon: Icon, label }: { status: MessageStatus; icon: any; label: string }) => (
     <div className="flex items-center gap-1.5">
@@ -155,20 +189,29 @@ export const ViewerMessagesPanel = ({ telejornalId }: ViewerMessagesPanelProps) 
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <h3 className="font-semibold text-lg">Mensagens do WhatsApp</h3>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={refresh}
-          disabled={isLoading}
-        >
-          <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
+            <Switch id="auto-queue" checked={autoQueue} onCheckedChange={setAutoQueue} className="scale-75" />
+            <Label htmlFor="auto-queue" className="text-xs text-muted-foreground cursor-pointer">Auto</Label>
+          </div>
+          <Button variant="outline" size="sm" onClick={refresh} disabled={isLoading}>
+            <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+      </div>
+
+      {/* Keyboard hints */}
+      <div className="flex items-center gap-2 mb-2 text-[10px] text-muted-foreground">
+        <Keyboard className="h-3 w-3" />
+        <span><kbd className="px-1 py-0.5 rounded bg-muted text-foreground">Espaço</kbd> Aprovar/Ar</span>
+        <span><kbd className="px-1 py-0.5 rounded bg-muted text-foreground">R</kbd> Rejeitar</span>
+        <span><kbd className="px-1 py-0.5 rounded bg-muted text-foreground">Esc</kbd> Remover</span>
       </div>
 
       <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as MessageStatus)} className="flex-1 flex flex-col">
-        <TabsList className="grid grid-cols-5 mb-4">
+        <TabsList className="grid grid-cols-5 mb-3">
           <TabsTrigger value="pending">
             <TabLabel status="pending" icon={Inbox} label="Aguardando" />
           </TabsTrigger>
@@ -200,7 +243,7 @@ export const ViewerMessagesPanel = ({ telejornalId }: ViewerMessagesPanelProps) 
                   message={message}
                   onApprove={handleApprove}
                   onReject={handleReject}
-                  onSendToAir={handleSendToAir}
+                  onSendToAir={handlePreviewAndSend}
                   onRemoveFromAir={handleRemoveFromAir}
                   isLoading={loadingMessageId === message.id}
                 />
@@ -209,6 +252,20 @@ export const ViewerMessagesPanel = ({ telejornalId }: ViewerMessagesPanelProps) 
           </div>
         </ScrollArea>
       </Tabs>
+
+      {/* Operation Log */}
+      <div className="mt-2 pt-2 border-t">
+        <OperationLog entries={operationLog} />
+      </div>
+
+      {/* Preview/Edit Dialog */}
+      <MessageEditDialog
+        message={editMessage}
+        isOpen={!!editMessage}
+        onClose={() => setEditMessage(null)}
+        onSend={handleSendToAir}
+        isLoading={loadingMessageId === editMessage?.id}
+      />
     </div>
   );
 };

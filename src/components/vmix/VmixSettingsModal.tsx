@@ -36,8 +36,10 @@ export const VmixSettingsModal = ({ isOpen, onClose, telejornalId }: VmixSetting
     overlay_number: 1
   });
 
+  // Only sync form when settings.id changes (i.e., real data loaded/saved)
+  const settingsId = settings?.id;
   useEffect(() => {
-    if (settings) {
+    if (settingsId && settings) {
       setFormData({
         vmix_host: settings.vmix_host,
         vmix_port: settings.vmix_port,
@@ -48,7 +50,7 @@ export const VmixSettingsModal = ({ isOpen, onClose, telejornalId }: VmixSetting
         overlay_number: settings.overlay_number
       });
     }
-  }, [settings]);
+  }, [settingsId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSave = async () => {
     try {
