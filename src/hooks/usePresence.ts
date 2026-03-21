@@ -71,6 +71,7 @@ export const usePresence = () => {
           // Users that left
           for (const [prevId, prevUser] of previousUsersRef.current) {
             if (!currentIds.has(prevId) && prevId !== user.id) {
+              playLeaveSound();
               toast(`${prevUser.fullName} saiu do sistema`, {
                 description: `Cargo: ${translateRoleShort(prevUser.role)}`,
                 duration: 4000,
