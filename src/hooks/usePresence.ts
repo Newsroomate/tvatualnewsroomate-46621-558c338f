@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { RealtimeChannel } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 export interface OnlineUser {
   userId: string;
@@ -14,6 +15,8 @@ export const usePresence = () => {
   const { user, profile } = useAuth();
   const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
+  const previousUsersRef = useRef<Set<string>>(new Set());
+  const isEditorChefe = profile?.role === "editor_chefe";
 
   useEffect(() => {
     if (!user || !profile) return;
@@ -33,6 +36,7 @@ export const usePresence = () => {
 
         const users: OnlineUser[] = [];
         const seen = new Set<string>();
+        const currentIds = new Set<string>();
 
         for (const key in state) {
           const presences = state[key];
@@ -40,6 +44,7 @@ export const usePresence = () => {
             const p = presences[0];
             if (!seen.has(p.userId)) {
               seen.add(p.userId);
+              currentIds.add(p.userId);
               users.push({
                 userId: p.userId,
                 fullName: p.fullName,
@@ -50,6 +55,30 @@ export const usePresence = () => {
           }
         }
 
+        // Notify editor_chefe about joins/leaves
+        if (isEditorChefe && previousUsersRef.current.size > 0) {
+          // New users that joined
+          for (const u of users) {
+            if (!previousUsersRef.current.has(u.userId) && u.userId !== user.id) {
+              toast.info(`${u.fullName} entrou no sistema`, {
+                description: `Cargo: ${translateRoleShort(u.role)}`,
+                duration: 5000,
+              });
+            }
+          }
+          // Users that left
+          const userMap = new Map(users.map((u) => [u.userId, u]));
+          for (const prevId of previousUsersRef.current) {
+            if (!currentIds.has(prevId) && prevId !== user.id) {
+              toast(`Usuário saiu do sistema`, {
+                description: `Um membro da equipe ficou offline`,
+                duration: 4000,
+              });
+            }
+          }
+        }
+
+        previousUsersRef.current = currentIds;
         setOnlineUsers(users);
       })
       .subscribe(async (status) => {
@@ -72,4 +101,14 @@ export const usePresence = () => {
   }, [user?.id, profile?.full_name, profile?.role]);
 
   return { onlineUsers };
+};
+
+const translateRoleShort = (role: string) => {
+  const roles: Record<string, string> = {
+    editor_chefe: "Editor-chefe",
+    editor: "Editor",
+    reporter: "Repórter",
+    produtor: "Produtor",
+  };
+  return roles[role] || role;
 };
