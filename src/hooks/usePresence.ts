@@ -61,6 +61,7 @@ export const usePresence = () => {
           // New users that joined
           for (const u of users) {
             if (!previousUsersRef.current.has(u.userId) && u.userId !== user.id) {
+              playJoinSound();
               toast.info(`${u.fullName} entrou no sistema`, {
                 description: `Cargo: ${translateRoleShort(u.role)}`,
                 duration: 5000,
