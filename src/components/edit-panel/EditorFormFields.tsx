@@ -4,6 +4,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Materia } from "@/types";
 import { AllCapsGCButton } from "./AllCapsGCButton";
+import { LinhaFinaButton } from "./LinhaFinaButton";
 import { useRef } from "react";
 
 interface EditorFormFieldsProps {
@@ -88,10 +89,17 @@ export const EditorFormFields = ({
       <div className="space-y-1.5">
         <div className="flex justify-between items-center">
           <Label htmlFor="gc">GC (Gerador de Caracteres)</Label>
-          <AllCapsGCButton 
-            textareaRef={gcTextareaRef}
-            onTextChange={handleGCTextChange}
-          />
+          <div className="flex items-center gap-1">
+            <LinhaFinaButton
+              texto={formData.texto || ''}
+              onApply={handleGCTextChange}
+              disabled={disabled}
+            />
+            <AllCapsGCButton 
+              textareaRef={gcTextareaRef}
+              onTextChange={handleGCTextChange}
+            />
+          </div>
         </div>
         <Textarea 
           ref={gcTextareaRef}
