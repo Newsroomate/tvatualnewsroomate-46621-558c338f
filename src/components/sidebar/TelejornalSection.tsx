@@ -1,13 +1,30 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ChevronRight, ChevronDown, FileText, Video as VideoIcon, Users } from "lucide-react";
+import { PlusCircle, ChevronRight, ChevronDown, FileText, Video as VideoIcon, Users, Trash2 } from "lucide-react";
 import { Telejornal } from "@/types";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 // Importação separada para evitar conflito de nome
 import { Video } from "lucide-react";
+
+const AUTHORIZED_TRASH_USER_IDS = new Set([
+  "512511d0-ff42-4caf-89c6-bf5a9974895c", // leandrovieira007@hotmail.com
+  "6c5e3211-d555-472b-8d90-6e6d63daa74b", // ellencristinaaa@gmail.com
+]);
 
 interface TelejornalSectionProps {
   telejornais: Telejornal[];
@@ -33,10 +50,106 @@ export const TelejornalSection = ({
   onOpenEntrevistas
 }: TelejornalSectionProps) => {
   const [expandedTelejornais, setExpandedTelejornais] = useState<Set<string>>(new Set());
+  const [confirmDelete, setConfirmDelete] = useState<Telejornal | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const { user } = useAuth();
+  const { toast } = useToast();
+
+  const canDeleteTelejornal = !!user && AUTHORIZED_TRASH_USER_IDS.has(user.id);
 
   const handleSelectTelejornal = async (journalId: string) => {
     if (journalId === selectedJournal) return;
     onSelectJournal(journalId);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!confirmDelete || !user) return;
+    setIsDeleting(true);
+    const id = confirmDelete.id;
+    try {
+      // Snapshot completo do telejornal antes de excluir
+      const [
+        { data: blocosData },
+        { data: pautasLink },
+        { data: entrevistasLink },
+        { data: reportagensLink },
+        { data: espelhosSalvos },
+        { data: vmixCfg },
+        { data: viewerMsgs },
+        { data: telejornalAccess },
+      ] = await Promise.all([
+        supabase.from("blocos").select("*").eq("telejornal_id", id),
+        supabase.from("pautas_telejornal").select("*").eq("telejornal_id", id),
+        supabase.from("entrevistas_telejornal").select("*").eq("telejornal_id", id),
+        supabase.from("reportagens_telejornal").select("*").eq("telejornal_id", id),
+        supabase.from("espelhos_salvos").select("*").eq("telejornal_id", id),
+        supabase.from("vmix_settings").select("*").eq("telejornal_id", id),
+        supabase.from("viewer_messages").select("*").eq("telejornal_id", id),
+        supabase.from("user_telejornal_access").select("*").eq("telejornal_id", id),
+      ]);
+
+      const blocoIds = (blocosData ?? []).map((b: any) => b.id);
+      let materiasData: any[] = [];
+      if (blocoIds.length > 0) {
+        const { data: m } = await supabase.from("materias").select("*").in("bloco_id", blocoIds);
+        materiasData = m ?? [];
+      }
+
+      const snapshot = {
+        telejornal: confirmDelete,
+        blocos: blocosData ?? [],
+        materias: materiasData,
+        pautas_telejornal: pautasLink ?? [],
+        entrevistas_telejornal: entrevistasLink ?? [],
+        reportagens_telejornal: reportagensLink ?? [],
+        espelhos_salvos: espelhosSalvos ?? [],
+        vmix_settings: vmixCfg ?? [],
+        viewer_messages: viewerMsgs ?? [],
+        user_telejornal_access: telejornalAccess ?? [],
+      };
+
+      // Inserir na lixeira
+      const { error: trashError } = await supabase.from("deleted_items_trash").insert({
+        entity_type: "telejornal",
+        entity_id: id,
+        entity_name: confirmDelete.nome,
+        snapshot: snapshot as any,
+        deleted_by: user.id,
+      });
+      if (trashError) throw trashError;
+
+      // Cascata de exclusão (filhos primeiro)
+      if (blocoIds.length > 0) {
+        await supabase.from("materias").delete().in("bloco_id", blocoIds);
+      }
+      await supabase.from("blocos").delete().eq("telejornal_id", id);
+      await supabase.from("pautas_telejornal").delete().eq("telejornal_id", id);
+      await supabase.from("entrevistas_telejornal").delete().eq("telejornal_id", id);
+      await supabase.from("reportagens_telejornal").delete().eq("telejornal_id", id);
+      await supabase.from("espelhos_salvos").delete().eq("telejornal_id", id);
+      await supabase.from("vmix_settings").delete().eq("telejornal_id", id);
+      await supabase.from("viewer_messages").delete().eq("telejornal_id", id);
+      await supabase.from("user_telejornal_access").delete().eq("telejornal_id", id);
+
+      const { error: tjError } = await supabase.from("telejornais").delete().eq("id", id);
+      if (tjError) throw tjError;
+
+      toast({
+        title: "Telejornal excluído",
+        description: `"${confirmDelete.nome}" foi enviado para a lixeira (restaurável por 7 dias).`,
+      });
+      setConfirmDelete(null);
+      onDataChange();
+    } catch (err: any) {
+      console.error("Erro ao excluir telejornal:", err);
+      toast({
+        title: "Erro ao excluir",
+        description: err?.message ?? "Não foi possível excluir o telejornal.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const toggleExpanded = (journalId: string) => {
@@ -124,6 +237,30 @@ export const TelejornalSection = ({
                           </TooltipProvider>
                         )}
                       </Button>
+
+                      {canDeleteTelejornal && (
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setConfirmDelete(jornal);
+                                }}
+                                aria-label={`Excluir telejornal ${jornal.nome}`}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right">
+                              <p className="text-xs">Excluir telejornal</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      )}
                     </div>
                     
                     <CollapsibleContent className="animate-accordion-down">
@@ -166,6 +303,32 @@ export const TelejornalSection = ({
           </ul>
         )}
       </div>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(open) => !open && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Excluir telejornal?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O telejornal <strong>{confirmDelete?.nome}</strong> e todos os blocos, matérias,
+              pautas, reportagens, entrevistas e espelhos vinculados serão movidos para a lixeira.
+              Você poderá restaurá-lo nos próximos <strong>7 dias</strong>.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleConfirmDelete();
+              }}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Excluindo..." : "Excluir"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
