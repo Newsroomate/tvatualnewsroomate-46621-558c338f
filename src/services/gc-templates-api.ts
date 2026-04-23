@@ -8,7 +8,7 @@ export const fetchGCTemplates = async (telejornalId?: string | null): Promise<GC
   }
   const { data, error } = await q;
   if (error) throw error;
-  return (data || []).map((d: any) => ({ ...d, campos: d.campos || [] })) as GCTemplate[];
+  return (data || []).map((d: any) => ({ ...d, campos: d.campos || [] })) as unknown as GCTemplate[];
 };
 
 export const createGCTemplate = async (input: {
