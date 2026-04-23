@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { MonitorSpeaker, ArrowLeft, BarChart, Search, Radio } from "lucide-react";
+import { MonitorSpeaker, ArrowLeft, BarChart, Search, Radio, ClipboardList } from "lucide-react";
 import { Telejornal } from "@/types";
 import { DeepSearchModal } from "@/components/DeepSearchModal";
 import { VmixControlPanel } from "@/components/vmix";
@@ -80,6 +80,21 @@ export const MainMenu = ({
     handleClose();
   };
 
+  const handleOpenProducaoPanel = () => {
+    const features = "width=1400,height=900,menubar=no,toolbar=no,location=no,status=no,resizable=yes,scrollbars=yes";
+    const opened = window.open("/producao", "producao-panel", features);
+    if (!opened) {
+      toast({
+        title: "Pop-up bloqueado",
+        description: "Permita pop-ups deste site para abrir o Painel de Produção.",
+        variant: "destructive",
+      });
+      return;
+    }
+    opened.focus();
+    handleClose();
+  };
+
   const availableJournals = telejornais.filter(journal => journal.id !== selectedJournal);
 
   return (
@@ -142,6 +157,15 @@ export const MainMenu = ({
                 >
                   <Radio className="h-4 w-4 mr-3 text-green-600" />
                   Mensagens ZAP / vMix
+                </Button>
+
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleOpenProducaoPanel}
+                >
+                  <ClipboardList className="h-4 w-4 mr-3" />
+                  Painel de Produção
                 </Button>
               </div>
             )}
