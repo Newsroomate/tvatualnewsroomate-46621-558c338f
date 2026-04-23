@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save, FolderOpen, Menu, BookOpen } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save, FolderOpen, Menu, BookOpen, Monitor, Type, Film } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal, Materia, Bloco } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -22,6 +22,9 @@ interface ScheduleHeaderProps {
   onSaveModel?: () => void;
   onViewSavedModels?: () => void;
   onViewLaudas?: () => void;
+  onOpenPlayout?: () => void;
+  onOpenGCLibrary?: () => void;
+  onOpenPlaylist?: () => void;
   materias?: Materia[];
   blocks?: (Bloco & { items: Materia[] })[];
 }
@@ -37,6 +40,9 @@ export const ScheduleHeader = ({
   onSaveModel,
   onViewSavedModels,
   onViewLaudas,
+  onOpenPlayout,
+  onOpenGCLibrary,
+  onOpenPlaylist,
   materias = [],
   blocks = []
 }: ScheduleHeaderProps) => {
@@ -196,6 +202,32 @@ export const ScheduleHeader = ({
                   <BookOpen className="h-4 w-4 mr-2" />
                   Visualizar Laudas
                 </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem 
+                  onClick={onOpenPlayout}
+                  disabled={!currentTelejornal?.espelho_aberto}
+                >
+                  <Monitor className="h-4 w-4 mr-2" />
+                  Playout
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={onOpenGCLibrary}
+                  disabled={!currentTelejornal?.espelho_aberto}
+                >
+                  <Type className="h-4 w-4 mr-2" />
+                  Biblioteca GC
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={onOpenPlaylist}
+                  disabled={!currentTelejornal?.espelho_aberto}
+                >
+                  <Film className="h-4 w-4 mr-2" />
+                  Playlist
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -316,6 +348,42 @@ export const ScheduleHeader = ({
               >
                 <BookOpen className="h-4 w-4 mr-2" />
                 Visualizar Laudas
+              </Button>
+            </div>
+
+            {/* Playout / GC / Playlist */}
+            <div className="flex flex-wrap gap-2">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onOpenPlayout}
+                disabled={!currentTelejornal?.espelho_aberto}
+                className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
+              >
+                <Monitor className="h-4 w-4 mr-2" />
+                Playout
+              </Button>
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onOpenGCLibrary}
+                disabled={!currentTelejornal?.espelho_aberto}
+                className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
+              >
+                <Type className="h-4 w-4 mr-2" />
+                Biblioteca GC
+              </Button>
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onOpenPlaylist}
+                disabled={!currentTelejornal?.espelho_aberto}
+                className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
+              >
+                <Film className="h-4 w-4 mr-2" />
+                Playlist
               </Button>
             </div>
           </div>
