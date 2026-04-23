@@ -30,7 +30,7 @@ export const createGCTemplate = async (input: {
     .select()
     .maybeSingle();
   if (error) throw error;
-  return data as GCTemplate;
+  return data as unknown as GCTemplate;
 };
 
 export const updateGCTemplate = async (id: string, updates: Partial<GCTemplate>): Promise<void> => {
