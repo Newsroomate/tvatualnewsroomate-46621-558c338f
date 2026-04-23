@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { TrashModal } from "@/components/trash/TrashModal";
 
 // Importação separada para evitar conflito de nome
 import { Video } from "lucide-react";
@@ -52,6 +53,7 @@ export const TelejornalSection = ({
   const [expandedTelejornais, setExpandedTelejornais] = useState<Set<string>>(new Set());
   const [confirmDelete, setConfirmDelete] = useState<Telejornal | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isTrashOpen, setIsTrashOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -174,15 +176,37 @@ export const TelejornalSection = ({
             </div>
             <h3 className="text-sm font-semibold text-foreground tracking-tight">Telejornais</h3>
           </div>
-          <Button 
-            variant="default" 
-            size="sm" 
-            className="h-8 px-3 shadow-sm hover:shadow-md transition-all duration-200" 
-            onClick={onAddTelejornal}
-          >
-            <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
-            <span className="text-xs font-medium">Novo</span>
-          </Button>
+          <div className="flex items-center gap-1.5">
+            {canDeleteTelejornal && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 w-8 p-0"
+                      onClick={() => setIsTrashOpen(true)}
+                      aria-label="Abrir lixeira"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom">
+                    <p className="text-xs">Lixeira</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            <Button
+              variant="default"
+              size="sm"
+              className="h-8 px-3 shadow-sm hover:shadow-md transition-all duration-200"
+              onClick={onAddTelejornal}
+            >
+              <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">Novo</span>
+            </Button>
+          </div>
         </div>
       </div>
       
@@ -329,6 +353,12 @@ export const TelejornalSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TrashModal
+        isOpen={isTrashOpen}
+        onClose={() => setIsTrashOpen(false)}
+        onRestored={onDataChange}
+      />
     </div>
   );
 };
