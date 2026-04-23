@@ -353,6 +353,12 @@ export const TelejornalSection = ({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <TrashModal
+        isOpen={isTrashOpen}
+        onClose={() => setIsTrashOpen(false)}
+        onRestored={onDataChange}
+      />
     </div>
   );
 };
