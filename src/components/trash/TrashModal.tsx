@@ -453,8 +453,8 @@ export const TrashModal = ({ isOpen, onClose, onRestored }: TrashModalProps) => 
                                 </span>
                                 {item.restored_at ? (
                                   <Badge
-                                    variant="outline"
-                                    className="gap-1 text-green-600 dark:text-green-400 border-green-600/30"
+                                    variant="secondary"
+                                    className="gap-1"
                                   >
                                     <CheckCircle2 className="h-3 w-3" />
                                     Restaurado
