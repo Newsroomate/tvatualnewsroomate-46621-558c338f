@@ -49,6 +49,45 @@ export type Database = {
           },
         ]
       }
+      deleted_items_trash: {
+        Row: {
+          created_at: string
+          deleted_at: string
+          deleted_by: string
+          entity_id: string
+          entity_name: string | null
+          entity_type: string
+          expires_at: string
+          id: string
+          restored_at: string | null
+          snapshot: Json
+        }
+        Insert: {
+          created_at?: string
+          deleted_at?: string
+          deleted_by: string
+          entity_id: string
+          entity_name?: string | null
+          entity_type: string
+          expires_at?: string
+          id?: string
+          restored_at?: string | null
+          snapshot: Json
+        }
+        Update: {
+          created_at?: string
+          deleted_at?: string
+          deleted_by?: string
+          entity_id?: string
+          entity_name?: string | null
+          entity_type?: string
+          expires_at?: string
+          id?: string
+          restored_at?: string | null
+          snapshot?: Json
+        }
+        Relationships: []
+      }
       entrevistas: {
         Row: {
           created_at: string | null
@@ -924,6 +963,7 @@ export type Database = {
         Returns: boolean
       }
       cleanup_expired_locks: { Args: never; Returns: undefined }
+      cleanup_expired_trash: { Args: never; Returns: number }
       cleanup_old_backups: { Args: never; Returns: undefined }
       enable_realtime: { Args: { table_name: string }; Returns: boolean }
       get_current_user_role: { Args: never; Returns: string }
@@ -959,6 +999,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_trash_manager: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       permission_type:
