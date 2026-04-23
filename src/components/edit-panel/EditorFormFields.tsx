@@ -3,19 +3,23 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Materia } from "@/types";
+import { GCEntry } from "@/types/gc";
 import { AllCapsGCButton } from "./AllCapsGCButton";
 import { LinhaFinaButton } from "./LinhaFinaButton";
+import { GCListEditor } from "./GCListEditor";
 import { useRef } from "react";
 
 interface EditorFormFieldsProps {
   formData: Partial<Materia>;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
+  onGcsChange?: (gcs: GCEntry[]) => void;
   disabled?: boolean;
 }
 
 export const EditorFormFields = ({
   formData,
   onInputChange,
+  onGcsChange,
   disabled = false
 }: EditorFormFieldsProps) => {
   const gcTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -86,31 +90,43 @@ export const EditorFormFields = ({
         />
       </div>
 
-      <div className="space-y-1.5">
-        <div className="flex justify-between items-center">
-          <Label htmlFor="gc">GC (Gerador de Caracteres)</Label>
-          <div className="flex items-center gap-1">
-            <LinhaFinaButton
-              texto={formData.texto || ''}
-              onApply={handleGCTextChange}
-              disabled={disabled}
-            />
-            <AllCapsGCButton 
-              textareaRef={gcTextareaRef}
-              onTextChange={handleGCTextChange}
-            />
-          </div>
+      {onGcsChange ? (
+        <div className="space-y-1.5">
+          <Label>GCs (Geradores de Caracteres)</Label>
+          <GCListEditor
+            formData={formData}
+            gcs={Array.isArray(formData.gcs) ? (formData.gcs as GCEntry[]) : []}
+            onChange={onGcsChange}
+            disabled={disabled}
+          />
         </div>
-        <Textarea 
-          ref={gcTextareaRef}
-          id="gc" 
-          rows={4} 
-          value={formData.gc || ''} 
-          onChange={onInputChange} 
-          placeholder="Texto do GC que será exibido na tela durante a matéria."
-          disabled={disabled}
-        />
-      </div>
+      ) : (
+        <div className="space-y-1.5">
+          <div className="flex justify-between items-center">
+            <Label htmlFor="gc">GC (Gerador de Caracteres)</Label>
+            <div className="flex items-center gap-1">
+              <LinhaFinaButton
+                texto={formData.texto || ''}
+                onApply={handleGCTextChange}
+                disabled={disabled}
+              />
+              <AllCapsGCButton 
+                textareaRef={gcTextareaRef}
+                onTextChange={handleGCTextChange}
+              />
+            </div>
+          </div>
+          <Textarea 
+            ref={gcTextareaRef}
+            id="gc" 
+            rows={4} 
+            value={formData.gc || ''} 
+            onChange={onInputChange} 
+            placeholder="Texto do GC que será exibido na tela durante a matéria."
+            disabled={disabled}
+          />
+        </div>
+      )}
       
       <div className="space-y-1.5">
         <div className="flex justify-between items-center">

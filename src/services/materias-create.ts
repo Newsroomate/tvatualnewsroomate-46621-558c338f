@@ -5,9 +5,14 @@ import { toastService } from "@/utils/toast-utils";
 
 export const createMateria = async (materia: MateriaCreateInput) => {
   // Remove any titulo field if it exists, as it's not in the database schema
-  const materiaToCreate = { ...materia };
+  const materiaToCreate: any = { ...materia };
   // @ts-ignore - Remove titulo property if it exists
   delete materiaToCreate.titulo;
+
+  // Ensure gcs is a valid array (jsonb default '[]')
+  if (materiaToCreate.gcs && !Array.isArray(materiaToCreate.gcs)) {
+    materiaToCreate.gcs = [];
+  }
 
   const { data, error } = await supabase
     .from('materias')
