@@ -195,6 +195,7 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
                 formData={formData}
                 onInputChange={handleInputChange}
                 onTagsChange={handleTagsChange}
+                onGcsChange={handleGcsChange}
                 onSave={handleSave}
                 onClose={onClose}
                 isSaving={isSaving}

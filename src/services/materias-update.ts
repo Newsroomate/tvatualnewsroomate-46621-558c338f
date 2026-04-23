@@ -54,14 +54,14 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
        pagina: updatesToSend.pagina,
        reporter: updatesToSend.reporter,
         status: updatesToSend.status || 'draft',
-        // Note: 'observacoes', 'lauda', and 'teleprompter' fields removed - don't exist in materias table (only in materias_snapshots)
          gc: updatesToSend.gc,
+         gcs: (updatesToSend as any).gcs ?? [],
         local_gravacao: updatesToSend.local_gravacao,
        tempo_clip: updatesToSend.tempo_clip,
        tipo_material: updatesToSend.tipo_material,
        tags: updatesToSend.tags,
-       cabeca: updatesToSend.cabeca,  // Save cabeca directly
-       texto: updatesToSend.texto     // Save texto directly
+       cabeca: updatesToSend.cabeca,
+       texto: updatesToSend.texto
      };
 
     // Create the materia with the specific ID

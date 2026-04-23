@@ -8,6 +8,7 @@ import { LaudasVisualizationModal } from "./LaudasVisualizationModal";
 import { FloatingTimeBar } from "./FloatingTimeBar";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
+import { PlayoutDashboard, GCTemplateLibrary, PlaylistPanel } from "@/components/playout";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -77,6 +78,9 @@ export const NewsScheduleCore = ({
   isDualView = false
 }: NewsScheduleCoreProps) => {
   const [isLaudasModalOpen, setIsLaudasModalOpen] = useState(false);
+  const [isPlayoutOpen, setIsPlayoutOpen] = useState(false);
+  const [isGCLibraryOpen, setIsGCLibraryOpen] = useState(false);
+  const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
   
   // Flatten all materias from all blocks
@@ -110,6 +114,9 @@ export const NewsScheduleCore = ({
         onSaveModel={handleSaveModel}
         onViewSavedModels={handleViewSavedModels}
         onViewLaudas={() => setIsLaudasModalOpen(true)}
+        onOpenPlayout={() => setIsPlayoutOpen(true)}
+        onOpenGCLibrary={() => setIsGCLibraryOpen(true)}
+        onOpenPlaylist={() => setIsPlaylistOpen(true)}
         blocks={blocks}
       />
       
@@ -117,6 +124,26 @@ export const NewsScheduleCore = ({
         isOpen={isLaudasModalOpen}
         onClose={() => setIsLaudasModalOpen(false)}
         materias={allMaterias}
+      />
+
+      <PlayoutDashboard
+        isOpen={isPlayoutOpen}
+        onClose={() => setIsPlayoutOpen(false)}
+        currentTelejornal={currentTelejornal}
+        blocks={blocks}
+      />
+
+      <GCTemplateLibrary
+        isOpen={isGCLibraryOpen}
+        onClose={() => setIsGCLibraryOpen(false)}
+        currentTelejornal={currentTelejornal}
+      />
+
+      <PlaylistPanel
+        isOpen={isPlaylistOpen}
+        onClose={() => setIsPlaylistOpen(false)}
+        currentTelejornal={currentTelejornal}
+        blocks={blocks}
       />
 
       {/* Main area with blocks - enhanced scrolling and real-time updates */}

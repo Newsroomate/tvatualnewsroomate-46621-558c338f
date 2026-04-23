@@ -1,11 +1,13 @@
 
 import { TabsContent } from "@/components/ui/tabs";
 import { Materia } from "@/types";
+import { GCEntry } from "@/types/gc";
 import { EditorFormFields } from "./EditorFormFields";
 import { EditorDurationField } from "./EditorDurationField";
 import { EditorMetaFields } from "./EditorMetaFields";
 import { EditorAttachments } from "./EditorAttachments";
 import { EditorActions } from "./EditorActions";
+import { PlayoutTriggerEditor } from "@/components/playout/PlayoutTriggerEditor";
 import { validateTextLength, validateRequired, sanitizeFormData } from "@/utils/security-utils";
 import { toast } from "@/hooks/use-toast";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
@@ -14,6 +16,7 @@ interface EditorTabProps {
   formData: Partial<Materia>;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onTagsChange: (tags: string[]) => void;
+  onGcsChange?: (gcs: GCEntry[]) => void;
   onSave: () => void;
   onClose: () => void;
   isSaving: boolean;
@@ -23,7 +26,8 @@ interface EditorTabProps {
 export const EditorTab = ({ 
   formData, 
   onInputChange, 
-  onTagsChange, 
+  onTagsChange,
+  onGcsChange,
   onSave, 
   onClose, 
   isSaving,
@@ -31,15 +35,12 @@ export const EditorTab = ({
 }: EditorTabProps) => {
   const { checkPermission } = usePermissionGuard();
 
-  // Enhanced save handler with authorization and validation
   const handleSecureSave = () => {
-    // Check permissions
     const action = formData.id ? 'update' : 'create';
     if (!checkPermission(action, 'materia')) {
       return;
     }
 
-    // Validate required fields
     if (!validateRequired(formData.retranca)) {
       toast({
         title: "Campo obrigatório",
@@ -49,7 +50,6 @@ export const EditorTab = ({
       return;
     }
 
-    // Validate text lengths
     const validations = [
       { field: 'retranca', value: formData.retranca, maxLength: 200 },
       { field: 'clip', value: formData.clip, maxLength: 100 },
@@ -71,7 +71,6 @@ export const EditorTab = ({
       }
     }
 
-    // Validate duration
     if (formData.duracao && (formData.duracao < 0 || formData.duracao > 3600)) {
       toast({
         title: "Duração inválida",
@@ -91,6 +90,7 @@ export const EditorTab = ({
       <EditorFormFields 
         formData={formData} 
         onInputChange={onInputChange}
+        onGcsChange={onGcsChange}
         disabled={isEditingDisabled}
       />
       <EditorDurationField 
@@ -105,6 +105,9 @@ export const EditorTab = ({
         disabled={isEditingDisabled}
       />
       <EditorAttachments />
+      {formData.id && (
+        <PlayoutTriggerEditor materiaId={formData.id} />
+      )}
       <EditorActions 
         onSave={handleSecureSave} 
         onClose={onClose} 

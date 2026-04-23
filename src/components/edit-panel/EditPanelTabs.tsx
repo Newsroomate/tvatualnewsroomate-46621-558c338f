@@ -1,6 +1,7 @@
 
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Materia } from "@/types";
+import { GCEntry } from "@/types/gc";
 import { EditorTab } from "./EditorTab";
 import { TeleprompterTab } from "./TeleprompterTab";
 
@@ -10,6 +11,7 @@ interface EditPanelTabsProps {
   formData: Partial<Materia>;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onTagsChange: (tags: string[]) => void;
+  onGcsChange?: (gcs: GCEntry[]) => void;
   onSave: () => void;
   onClose: () => void;
   isSaving: boolean;
@@ -22,6 +24,7 @@ export const EditPanelTabs = ({
   formData,
   onInputChange,
   onTagsChange,
+  onGcsChange,
   onSave,
   onClose,
   isSaving,
@@ -40,6 +43,7 @@ export const EditPanelTabs = ({
         formData={formData} 
         onInputChange={onInputChange} 
         onTagsChange={onTagsChange} 
+        onGcsChange={onGcsChange}
         onSave={onSave} 
         onClose={onClose} 
         isSaving={isSaving}
