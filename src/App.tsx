@@ -16,6 +16,7 @@ import Auth from "./pages/Auth";
 const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TeleprompterWindow = lazy(() => import("./pages/TeleprompterWindow"));
+const ProducaoPanel = lazy(() => import("./pages/ProducaoPanel"));
 
 
 const queryClient = new QueryClient({
@@ -50,6 +51,7 @@ const AppContent = () => {
       </div>}>
         <Routes>
           <Route path="/teleprompter" element={<TeleprompterWindow />} />
+          <Route path="/producao" element={<ProducaoPanel />} />
           <Route path="/auth" element={<Auth />} />
           
           <Route path="/" element={
