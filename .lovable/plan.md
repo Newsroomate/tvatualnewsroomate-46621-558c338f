@@ -1,35 +1,44 @@
 
 
-# Sistema de Sugestão de Linha Fina com IA
+# Alterar role do usuário editorchefe@gmail.com
 
-Replicação exata do sistema do projeto [DEMONSTRAÇÃO TV Sucesso](/projects/9547ee91-961d-4615-b09c-05667b746fdf).
+## Situação atual
 
-## O que será criado
+- **Usuário encontrado**: `editorchefe@gmail.com` (ID: `5a7496e0-2471-4204-b6b5-1a65be566ee6`)
+- **Role atual**: `reporter`
+- **Role solicitado**: `admin` — **não existe** no sistema
 
-Um botão "Linha Fina IA" ao lado do campo GC no editor de matérias. Ao clicar, a IA analisa o corpo da matéria e gera 3 sugestões de linha fina no formato de tarja jornalística (2 linhas com limites de caracteres). O usuário clica em uma sugestão para aplicá-la ao campo GC.
+## Roles disponíveis no sistema
 
-## Arquivos
+O enum `user_role` aceita apenas: `reporter`, `editor`, `editor_chefe`, `produtor`.
 
-### 1. Edge Function: `supabase/functions/generate-linha-fina/index.ts`
-- Recebe o texto da matéria, envia ao Lovable AI Gateway (gemini-3-flash-preview)
-- Prompt instrui a IA a gerar 3 sugestões no formato `LINHA1|LINHA2` com limites de caracteres (L1: 20-25, L2: 35-42)
-- Retorna array de sugestões parseadas
+Não há um role chamado `admin`. O equivalente administrativo é o **`editor_chefe`**, que possui:
+- Acesso total a todas as funcionalidades
+- Permissão para gerenciar usuários (`gerenciar_usuarios`)
+- Permissão para gerenciar permissões granulares (`gerenciar_permissoes`)
+- Permissão para criar/editar/excluir telejornais
+- Acesso a backups, auditoria, etc.
 
-### 2. Componente: `src/components/edit-panel/LinhaFinaButton.tsx`
-- Botão com ícone Sparkles que abre um Popover
-- Ao abrir, invoca a edge function automaticamente
-- Mostra 3 sugestões com contagem de caracteres e indicadores verde/vermelho
-- Clique aplica a sugestão ao campo GC
-- Botão "Gerar novas sugestões" para regenerar
+## Mudanças propostas
 
-### 3. Integração: `src/components/edit-panel/EditorFormFields.tsx`
-- Importar LinhaFinaButton
-- Adicionar ao lado do campo GC, junto ao AllCapsGCButton existente
-- Passar `formData.texto` como input e `handleGCTextChange` como callback
+Atualizar o usuário `editorchefe@gmail.com` para o role **`editor_chefe`** em duas tabelas (de forma atômica):
 
-### 4. Config: `supabase/config.toml`
-- Adicionar entrada `[functions.generate-linha-fina]` com `verify_jwt = false`
+1. **`profiles`**: alterar `role` de `reporter` → `editor_chefe`
+2. **`user_roles`**: inserir/atualizar entrada com `role = editor_chefe` e remover roles antigos
 
-## Dependências
-- `LOVABLE_API_KEY` -- ja configurado no projeto
+Isso será feito via operação de dados (não migração de schema), seguindo o mesmo padrão usado anteriormente para outros editores-chefe (Lucas Santana, Rawenna Brito, Leandro Vieira).
+
+## Observação importante
+
+Após a alteração, o usuário precisa **fazer logout e login novamente** para que as novas permissões entrem em vigor no frontend (o AuthContext carrega o role apenas no login).
+
+## Alternativa
+
+Se você realmente queria criar um novo role chamado `admin` (separado de `editor_chefe`), isso exigiria:
+- Migração para adicionar `admin` ao enum `user_role`
+- Atualização da matriz de permissões em `has_effective_permission()` SQL
+- Atualização de `getDefaultRolePermissions()` em `src/services/user-permissions-api.ts`
+- Atualização de tipos em `src/types/auth.ts`
+
+Avise se prefere essa segunda opção em vez de usar `editor_chefe`.
 
