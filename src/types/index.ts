@@ -39,6 +39,7 @@ export interface Materia {
   equipamento?: string;  // Equipment field from database
   // Note: 'observacoes', 'lauda', and 'teleprompter' fields removed - don't exist in materias table (only in materias_snapshots)
   gc?: string;  // Database field for GC (graphics/text overlay)
+  gcs?: import('./gc').GCEntry[];  // Structured GCs list (new)
   // Frontend form fields that map directly to database columns
   texto?: string;  // Maps to 'texto' column in database
   cabeca?: string; // Maps to 'cabeca' column in database
