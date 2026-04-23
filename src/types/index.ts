@@ -38,7 +38,8 @@ export interface Materia {
   editor?: string;
   equipamento?: string;  // Equipment field from database
   // Note: 'observacoes', 'lauda', and 'teleprompter' fields removed - don't exist in materias table (only in materias_snapshots)
-  gc?: string;  // Database field for GC (graphics/text overlay)
+  gc?: string;  // Database field for GC (graphics/text overlay) - kept as concatenated text for legacy
+  gcs?: any;  // Structured GCs list (GCEntry[]) - typed as any for Supabase Json compatibility
   // Frontend form fields that map directly to database columns
   texto?: string;  // Maps to 'texto' column in database
   cabeca?: string; // Maps to 'cabeca' column in database

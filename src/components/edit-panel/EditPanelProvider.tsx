@@ -39,16 +39,19 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
         duracao: item.duracao,
         reporter: item.reporter,
         editor: item.editor,
+        equipamento: item.equipamento,
         status: item.status,
         cabeca: item.cabeca || '',
         gc: item.gc || '',
+        gcs: Array.isArray(item.gcs) ? item.gcs : [],
         texto: item.texto || '',
         local_gravacao: item.local_gravacao || '',
         pagina: item.pagina,
         bloco_id: item.bloco_id,
         ordem: item.ordem,
         tags: item.tags,
-        tipo_material: item.tipo_material
+        tipo_material: item.tipo_material,
+        id: item.id,
       });
     }
   }, [item]);
@@ -83,6 +86,15 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
     setFormData(prev => ({ ...prev, tags }));
   };
 
+  const handleGcsChange = (gcs: any[]) => {
+    if (!canEdit) return;
+    const text = (gcs || [])
+      .map((g: any) => [g.linha1, g.linha2].filter(Boolean).join(' / '))
+      .filter(Boolean)
+      .join('\n');
+    setFormData(prev => ({ ...prev, gcs, gc: text }));
+  };
+
   const handleSave = async () => {
     if (!item || !canEdit) return;
     
@@ -97,6 +109,7 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
       status: formData.status,
       cabeca: formData.cabeca,
       gc: formData.gc,
+      gcs: formData.gcs,
       texto: formData.texto,
       local_gravacao: formData.local_gravacao,
       pagina: formData.pagina,

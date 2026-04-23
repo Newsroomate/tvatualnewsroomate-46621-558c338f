@@ -247,6 +247,72 @@ export type Database = {
         }
         Relationships: []
       }
+      gc_saved_entries: {
+        Row: {
+          created_at: string
+          id: string
+          linha1: string
+          linha2: string | null
+          tipo: string
+          updated_at: string
+          use_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          linha1: string
+          linha2?: string | null
+          tipo: string
+          updated_at?: string
+          use_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          linha1?: string
+          linha2?: string | null
+          tipo?: string
+          updated_at?: string
+          use_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      gc_templates: {
+        Row: {
+          campos: Json
+          categoria: string
+          created_at: string
+          created_by: string | null
+          id: string
+          nome: string
+          telejornal_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          campos?: Json
+          categoria?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome: string
+          telejornal_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campos?: Json
+          categoria?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          nome?: string
+          telejornal_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       materias: {
         Row: {
           bloco_id: string | null
@@ -257,6 +323,7 @@ export type Database = {
           editor: string | null
           equipamento: string | null
           gc: string | null
+          gcs: Json
           horario_exibicao: string | null
           id: string
           is_from_snapshot: boolean | null
@@ -281,6 +348,7 @@ export type Database = {
           editor?: string | null
           equipamento?: string | null
           gc?: string | null
+          gcs?: Json
           horario_exibicao?: string | null
           id?: string
           is_from_snapshot?: boolean | null
@@ -305,6 +373,7 @@ export type Database = {
           editor?: string | null
           equipamento?: string | null
           gc?: string | null
+          gcs?: Json
           horario_exibicao?: string | null
           id?: string
           is_from_snapshot?: boolean | null
@@ -610,6 +679,129 @@ export type Database = {
         }
         Relationships: []
       }
+      playlist_items: {
+        Row: {
+          clip: string | null
+          created_at: string
+          created_by: string | null
+          duracao: number | null
+          id: string
+          materia_id: string | null
+          notas: string | null
+          ordem: number
+          status: string
+          telejornal_id: string
+          tipo: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          clip?: string | null
+          created_at?: string
+          created_by?: string | null
+          duracao?: number | null
+          id?: string
+          materia_id?: string | null
+          notas?: string | null
+          ordem?: number
+          status?: string
+          telejornal_id: string
+          tipo?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          clip?: string | null
+          created_at?: string
+          created_by?: string | null
+          duracao?: number | null
+          id?: string
+          materia_id?: string | null
+          notas?: string | null
+          ordem?: number
+          status?: string
+          telejornal_id?: string
+          tipo?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      playout_status: {
+        Row: {
+          created_at: string
+          current_item_started_at: string | null
+          current_materia_id: string | null
+          id: string
+          started_at: string | null
+          status: Database["public"]["Enums"]["playout_status_type"]
+          telejornal_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_item_started_at?: string | null
+          current_materia_id?: string | null
+          id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["playout_status_type"]
+          telejornal_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_item_started_at?: string | null
+          current_materia_id?: string | null
+          id?: string
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["playout_status_type"]
+          telejornal_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      playout_triggers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          execute_at: string
+          id: string
+          materia_id: string
+          offset_ms: number
+          ordem: number
+          trigger_data: Json
+          trigger_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          execute_at?: string
+          id?: string
+          materia_id: string
+          offset_ms?: number
+          ordem?: number
+          trigger_data?: Json
+          trigger_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          execute_at?: string
+          id?: string
+          materia_id?: string
+          offset_ms?: number
+          ordem?: number
+          trigger_data?: Json
+          trigger_type?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -896,6 +1088,7 @@ export type Database = {
       vmix_settings: {
         Row: {
           created_at: string | null
+          gc_field_mappings: Json
           id: string
           is_active: boolean | null
           message_field: string
@@ -910,6 +1103,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
+          gc_field_mappings?: Json
           id?: string
           is_active?: boolean | null
           message_field?: string
@@ -924,6 +1118,7 @@ export type Database = {
         }
         Update: {
           created_at?: string | null
+          gc_field_mappings?: Json
           id?: string
           is_active?: boolean | null
           message_field?: string
@@ -1049,6 +1244,7 @@ export type Database = {
         | "excluir_espelho_salvo"
         | "criar_snapshot"
         | "editar_snapshot"
+      playout_status_type: "idle" | "running" | "paused"
       user_role: "reporter" | "editor" | "editor_chefe" | "produtor"
     }
     CompositeTypes: {
@@ -1225,6 +1421,7 @@ export const Constants = {
         "criar_snapshot",
         "editar_snapshot",
       ],
+      playout_status_type: ["idle", "running", "paused"],
       user_role: ["reporter", "editor", "editor_chefe", "produtor"],
     },
   },
