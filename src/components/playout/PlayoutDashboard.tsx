@@ -136,16 +136,38 @@ export const PlayoutDashboard = ({ isOpen, onClose, currentTelejornal, blocks }:
     }
   };
 
-  const start = async () => {
+  const start = async (fromIdx?: number) => {
     if (items.length === 0) return;
-    const first = items[0];
+    const idx = typeof fromIdx === 'number' && fromIdx >= 0 && fromIdx < items.length ? fromIdx : 0;
+    const target = items[idx];
     await updateStatus({
       status: 'running',
       started_at: new Date().toISOString(),
       current_item_started_at: new Date().toISOString(),
-      current_materia_id: first.id,
+      current_materia_id: target.id,
     });
-    fireTriggers(first.id, 'on_take');
+    setNavIndex(idx);
+    fireTriggers(target.id, 'on_take');
+  };
+
+  // Botão unificado "GO LIVE":
+  // - idle/parado → inicia do item selecionado (navIndex) ou do primeiro
+  // - running → executa TAKE no próximo item (ao vivo)
+  const goLive = async () => {
+    if (items.length === 0) return;
+    if (status?.status === 'running') {
+      const nextIdx = Math.min(items.length - 1, (currentIdx >= 0 ? currentIdx : -1) + 1);
+      if (nextIdx === currentIdx) {
+        toast.info('Último item da playlist');
+        return;
+      }
+      await take(nextIdx);
+      toast.success('TAKE ao vivo', { description: items[nextIdx]?.retranca || '' });
+    } else {
+      const startIdx = navIndex >= 0 && navIndex < items.length ? navIndex : 0;
+      await start(startIdx);
+      toast.success('NO AR', { description: items[startIdx]?.retranca || '' });
+    }
   };
   const stop = async () => {
     await updateStatus({ status: 'idle', current_materia_id: null, current_item_started_at: null });
@@ -207,11 +229,25 @@ export const PlayoutDashboard = ({ isOpen, onClose, currentTelejornal, blocks }:
         </DialogHeader>
         <div className="flex flex-col h-full">
           <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
-            <Button onClick={start} variant="default" size="sm"><Play className="h-4 w-4 mr-1" /> START (S)</Button>
+            <Button
+              onClick={goLive}
+              size="lg"
+              className={cn(
+                "font-bold tracking-wide shadow-md",
+                status?.status === 'running'
+                  ? "bg-amber-600 hover:bg-amber-700 text-white"
+                  : "bg-rose-600 hover:bg-rose-700 text-white animate-pulse"
+              )}
+            >
+              <Radio className="h-5 w-5 mr-2" />
+              {status?.status === 'running' ? 'GO LIVE — TAKE (G)' : 'GO LIVE (G)'}
+            </Button>
+            <div className="w-px h-8 bg-border mx-1" />
+            <Button onClick={() => start(0)} variant="outline" size="sm"><Play className="h-4 w-4 mr-1" /> START topo (S)</Button>
             <Button onClick={stop} variant="destructive" size="sm"><Square className="h-4 w-4 mr-1" /> STOP (Espaço)</Button>
             <Button onClick={prev} variant="outline" size="sm"><SkipBack className="h-4 w-4 mr-1" /> PREV (A)</Button>
             <Button onClick={next} variant="outline" size="sm"><SkipForward className="h-4 w-4 mr-1" /> NEXT (D)</Button>
-            <div className="ml-auto text-xs text-muted-foreground">↑/↓ navegar · Enter = TAKE</div>
+            <div className="ml-auto text-xs text-muted-foreground">↑/↓ navegar · Enter = TAKE · G = GO LIVE</div>
           </div>
           <div ref={containerRef} className="flex-1 overflow-auto p-3">
             <table className="w-full text-sm">
