@@ -136,16 +136,38 @@ export const PlayoutDashboard = ({ isOpen, onClose, currentTelejornal, blocks }:
     }
   };
 
-  const start = async () => {
+  const start = async (fromIdx?: number) => {
     if (items.length === 0) return;
-    const first = items[0];
+    const idx = typeof fromIdx === 'number' && fromIdx >= 0 && fromIdx < items.length ? fromIdx : 0;
+    const target = items[idx];
     await updateStatus({
       status: 'running',
       started_at: new Date().toISOString(),
       current_item_started_at: new Date().toISOString(),
-      current_materia_id: first.id,
+      current_materia_id: target.id,
     });
-    fireTriggers(first.id, 'on_take');
+    setNavIndex(idx);
+    fireTriggers(target.id, 'on_take');
+  };
+
+  // Botão unificado "GO LIVE":
+  // - idle/parado → inicia do item selecionado (navIndex) ou do primeiro
+  // - running → executa TAKE no próximo item (ao vivo)
+  const goLive = async () => {
+    if (items.length === 0) return;
+    if (status?.status === 'running') {
+      const nextIdx = Math.min(items.length - 1, (currentIdx >= 0 ? currentIdx : -1) + 1);
+      if (nextIdx === currentIdx) {
+        toast.info('Último item da playlist');
+        return;
+      }
+      await take(nextIdx);
+      toast.success('TAKE ao vivo', { description: items[nextIdx]?.retranca || '' });
+    } else {
+      const startIdx = navIndex >= 0 && navIndex < items.length ? navIndex : 0;
+      await start(startIdx);
+      toast.success('NO AR', { description: items[startIdx]?.retranca || '' });
+    }
   };
   const stop = async () => {
     await updateStatus({ status: 'idle', current_materia_id: null, current_item_started_at: null });
