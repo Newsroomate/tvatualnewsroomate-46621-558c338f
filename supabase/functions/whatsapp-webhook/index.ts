@@ -192,10 +192,22 @@ Deno.serve(async (req) => {
     // POST request - Incoming messages
     if (req.method === 'POST') {
       const rawBody = await req.text()
-      console.log(`[${requestTime}] POST body (raw):`, rawBody.substring(0, 500))
-      
+
+      // Verify HMAC signature from Meta to prevent forged webhook events
+      const whatsappAppSecret = Deno.env.get('WHATSAPP_APP_SECRET')
+      if (whatsappAppSecret) {
+        const signatureHeader = req.headers.get('x-hub-signature-256')
+        const valid = await verifyMetaSignature(rawBody, signatureHeader, whatsappAppSecret)
+        if (!valid) {
+          console.error(`[${requestTime}] ✗ Invalid X-Hub-Signature-256 — rejecting request`)
+          return new Response('Forbidden', { status: 403, headers: corsHeaders })
+        }
+        console.log(`[${requestTime}] ✓ Webhook signature verified`)
+      } else {
+        console.warn(`[${requestTime}] ⚠ WHATSAPP_APP_SECRET not configured — skipping signature verification (insecure)`)
+      }
+
       const body = JSON.parse(rawBody)
-      console.log(`[${requestTime}] POST body (parsed):`, JSON.stringify(body, null, 2))
 
       // Process WhatsApp messages
       if (body.object === 'whatsapp_business_account') {
