@@ -193,7 +193,8 @@ export const PlayoutDashboard = ({ isOpen, onClose, currentTelejornal, blocks }:
     if (!isOpen) return;
     const handler = (e: KeyboardEvent) => {
       if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName || '')) return;
-      if (e.key === 's' || e.key === 'S') { e.preventDefault(); start(); }
+      if (e.key === 'g' || e.key === 'G') { e.preventDefault(); goLive(); }
+      else if (e.key === 's' || e.key === 'S') { e.preventDefault(); start(0); }
       else if (e.key === ' ') { e.preventDefault(); stop(); }
       else if (e.key === 'd' || e.key === 'D') { e.preventDefault(); next(); }
       else if (e.key === 'a' || e.key === 'A') { e.preventDefault(); prev(); }
