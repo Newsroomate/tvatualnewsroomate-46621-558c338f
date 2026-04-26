@@ -229,11 +229,25 @@ export const PlayoutDashboard = ({ isOpen, onClose, currentTelejornal, blocks }:
         </DialogHeader>
         <div className="flex flex-col h-full">
           <div className="flex items-center gap-2 p-3 border-b bg-muted/30">
-            <Button onClick={start} variant="default" size="sm"><Play className="h-4 w-4 mr-1" /> START (S)</Button>
+            <Button
+              onClick={goLive}
+              size="lg"
+              className={cn(
+                "font-bold tracking-wide shadow-md",
+                status?.status === 'running'
+                  ? "bg-amber-600 hover:bg-amber-700 text-white"
+                  : "bg-rose-600 hover:bg-rose-700 text-white animate-pulse"
+              )}
+            >
+              <Radio className="h-5 w-5 mr-2" />
+              {status?.status === 'running' ? 'GO LIVE — TAKE (G)' : 'GO LIVE (G)'}
+            </Button>
+            <div className="w-px h-8 bg-border mx-1" />
+            <Button onClick={() => start(0)} variant="outline" size="sm"><Play className="h-4 w-4 mr-1" /> START topo (S)</Button>
             <Button onClick={stop} variant="destructive" size="sm"><Square className="h-4 w-4 mr-1" /> STOP (Espaço)</Button>
             <Button onClick={prev} variant="outline" size="sm"><SkipBack className="h-4 w-4 mr-1" /> PREV (A)</Button>
             <Button onClick={next} variant="outline" size="sm"><SkipForward className="h-4 w-4 mr-1" /> NEXT (D)</Button>
-            <div className="ml-auto text-xs text-muted-foreground">↑/↓ navegar · Enter = TAKE</div>
+            <div className="ml-auto text-xs text-muted-foreground">↑/↓ navegar · Enter = TAKE · G = GO LIVE</div>
           </div>
           <div ref={containerRef} className="flex-1 overflow-auto p-3">
             <table className="w-full text-sm">
