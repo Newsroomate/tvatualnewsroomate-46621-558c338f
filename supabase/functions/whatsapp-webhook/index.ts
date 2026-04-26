@@ -2,7 +2,38 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2"
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-hub-signature-256',
+}
+
+// Verify Meta webhook HMAC-SHA256 signature using timing-safe comparison
+async function verifyMetaSignature(
+  rawBody: string,
+  signatureHeader: string | null,
+  appSecret: string
+): Promise<boolean> {
+  if (!signatureHeader || !signatureHeader.startsWith('sha256=')) return false
+  const provided = signatureHeader.slice('sha256='.length)
+
+  const enc = new TextEncoder()
+  const key = await crypto.subtle.importKey(
+    'raw',
+    enc.encode(appSecret),
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  )
+  const sigBuf = await crypto.subtle.sign('HMAC', key, enc.encode(rawBody))
+  const expected = Array.from(new Uint8Array(sigBuf))
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('')
+
+  if (expected.length !== provided.length) return false
+  // Timing-safe comparison
+  let diff = 0
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i)
+  }
+  return diff === 0
 }
 
 // Helper to download media from WhatsApp
@@ -161,10 +192,22 @@ Deno.serve(async (req) => {
     // POST request - Incoming messages
     if (req.method === 'POST') {
       const rawBody = await req.text()
-      console.log(`[${requestTime}] POST body (raw):`, rawBody.substring(0, 500))
-      
+
+      // Verify HMAC signature from Meta to prevent forged webhook events
+      const whatsappAppSecret = Deno.env.get('WHATSAPP_APP_SECRET')
+      if (whatsappAppSecret) {
+        const signatureHeader = req.headers.get('x-hub-signature-256')
+        const valid = await verifyMetaSignature(rawBody, signatureHeader, whatsappAppSecret)
+        if (!valid) {
+          console.error(`[${requestTime}] ✗ Invalid X-Hub-Signature-256 — rejecting request`)
+          return new Response('Forbidden', { status: 403, headers: corsHeaders })
+        }
+        console.log(`[${requestTime}] ✓ Webhook signature verified`)
+      } else {
+        console.warn(`[${requestTime}] ⚠ WHATSAPP_APP_SECRET not configured — skipping signature verification (insecure)`)
+      }
+
       const body = JSON.parse(rawBody)
-      console.log(`[${requestTime}] POST body (parsed):`, JSON.stringify(body, null, 2))
 
       // Process WhatsApp messages
       if (body.object === 'whatsapp_business_account') {
