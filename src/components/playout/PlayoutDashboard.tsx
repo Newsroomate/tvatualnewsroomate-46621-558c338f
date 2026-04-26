@@ -248,7 +248,37 @@ export const PlayoutDashboard = ({ isOpen, onClose, currentTelejornal, blocks }:
             <Button onClick={stop} variant="destructive" size="sm"><Square className="h-4 w-4 mr-1" /> STOP (Espaço)</Button>
             <Button onClick={prev} variant="outline" size="sm"><SkipBack className="h-4 w-4 mr-1" /> PREV (A)</Button>
             <Button onClick={next} variant="outline" size="sm"><SkipForward className="h-4 w-4 mr-1" /> NEXT (D)</Button>
-            <div className="ml-auto text-xs text-muted-foreground">↑/↓ navegar · Enter = TAKE · G = GO LIVE</div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 px-3 py-2 border-b bg-background text-xs">
+            <span className="text-muted-foreground font-medium mr-1">Atalhos:</span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-rose-600/10 text-rose-700 border border-rose-600/30">
+              <kbd className="font-mono font-bold px-1.5 py-0.5 rounded bg-rose-600 text-white text-[10px]">G</kbd>
+              GO LIVE
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted border">
+              <kbd className="font-mono font-bold px-1.5 py-0.5 rounded bg-foreground text-background text-[10px]">S</kbd>
+              START
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted border">
+              <kbd className="font-mono font-bold px-1.5 py-0.5 rounded bg-foreground text-background text-[10px]">Espaço</kbd>
+              STOP
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted border">
+              <kbd className="font-mono font-bold px-1.5 py-0.5 rounded bg-foreground text-background text-[10px]">D</kbd>
+              PRÓXIMO
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted border">
+              <kbd className="font-mono font-bold px-1.5 py-0.5 rounded bg-foreground text-background text-[10px]">A</kbd>
+              ANTERIOR
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted border">
+              <kbd className="font-mono font-bold px-1.5 py-0.5 rounded bg-foreground text-background text-[10px]">Enter</kbd>
+              TAKE
+            </span>
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-muted border">
+              <kbd className="font-mono font-bold px-1.5 py-0.5 rounded bg-foreground text-background text-[10px]">↑ ↓</kbd>
+              Navegar
+            </span>
           </div>
           <div ref={containerRef} className="flex-1 overflow-auto p-3">
             <table className="w-full text-sm">
