@@ -41,11 +41,10 @@ export const generateGCTextFile = (blocks: (Bloco & { items: Materia[] })[], tel
       
       content += `${materia.ordem.toString().padStart(2, '0')}. RETRANCA: ${materia.retranca || 'Sem retranca'}\n`;
       
-      if (materia.gc && materia.gc.trim()) {
+      const gcText = getGCText(materia);
+      if (gcText && gcText.trim()) {
         content += `GC:\n`;
-        // Cada linha do GC sem recuo, alinhada à esquerda
-        const gcLines = materia.gc.split('\n');
-        gcLines.forEach(line => {
+        gcText.split('\n').forEach(line => {
           content += `${line}\n`;
         });
       } else {
