@@ -34,7 +34,7 @@ export const GC_TYPE_COLORS: Record<GCType, string> = {
 export const gcsToText = (gcs: GCEntry[] | undefined | null): string => {
   if (!gcs || gcs.length === 0) return '';
   return gcs
-    .map((g) => [g.linha1, g.linha2].filter(Boolean).join(' / '))
+    .map((g) => [g.linha1, g.linha2].filter(Boolean).join(' | '))
     .filter(Boolean)
     .join('\n');
 };

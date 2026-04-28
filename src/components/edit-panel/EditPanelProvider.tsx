@@ -89,7 +89,7 @@ export const EditPanelProvider = ({ item, onClose }: EditPanelProviderProps) => 
   const handleGcsChange = (gcs: any[]) => {
     if (!canEdit) return;
     const text = (gcs || [])
-      .map((g: any) => [g.linha1, g.linha2].filter(Boolean).join(' / '))
+      .map((g: any) => [g.linha1, g.linha2].filter(Boolean).join(' | '))
       .filter(Boolean)
       .join('\n');
     setFormData(prev => ({ ...prev, gcs, gc: text }));
