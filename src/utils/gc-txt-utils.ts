@@ -1,5 +1,16 @@
 
 import { Bloco, Materia, Telejornal } from "@/types";
+import { gcsToText, GCEntry } from "@/types/gc";
+
+const getGCText = (materia: Materia): string => {
+  const gcs = (materia as any).gcs as GCEntry[] | undefined;
+  if (gcs && Array.isArray(gcs) && gcs.length > 0) {
+    const text = gcsToText(gcs);
+    if (text.trim()) return text;
+  }
+  // Fallback: legacy text field — normalize ' / ' to ' | '
+  return (materia.gc || '').replace(/\s*\/\s*/g, ' | ');
+};
 
 export const generateGCTextFile = (blocks: (Bloco & { items: Materia[] })[], telejornal: Telejornal | null) => {
   if (!telejornal || blocks.length === 0) {
