@@ -1,5 +1,16 @@
 
 import { Bloco, Materia, Telejornal } from "@/types";
+import { gcsToText, GCEntry } from "@/types/gc";
+
+const getGCText = (materia: Materia): string => {
+  const gcs = (materia as any).gcs as GCEntry[] | undefined;
+  if (gcs && Array.isArray(gcs) && gcs.length > 0) {
+    const text = gcsToText(gcs);
+    if (text.trim()) return text;
+  }
+  // Fallback: legacy text field — normalize ' / ' to ' | '
+  return (materia.gc || '').replace(/\s*\/\s*/g, ' | ');
+};
 
 export const generateGCTextFile = (blocks: (Bloco & { items: Materia[] })[], telejornal: Telejornal | null) => {
   if (!telejornal || blocks.length === 0) {
@@ -30,11 +41,10 @@ export const generateGCTextFile = (blocks: (Bloco & { items: Materia[] })[], tel
       
       content += `${materia.ordem.toString().padStart(2, '0')}. RETRANCA: ${materia.retranca || 'Sem retranca'}\n`;
       
-      if (materia.gc && materia.gc.trim()) {
+      const gcText = getGCText(materia);
+      if (gcText && gcText.trim()) {
         content += `GC:\n`;
-        // Cada linha do GC sem recuo, alinhada à esquerda
-        const gcLines = materia.gc.split('\n');
-        gcLines.forEach(line => {
+        gcText.split('\n').forEach(line => {
           content += `${line}\n`;
         });
       } else {
