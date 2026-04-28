@@ -95,7 +95,7 @@ export const exportLaudaToPDF = (materias: Materia[], customFilename?: string) =
     addSection('CABEÇA (TELEPROMPTER):', materia.cabeca || 'Não informado');
 
     // GC (Gerador de Caracteres)
-    addSection('GC (GERADOR DE CARACTERES):', materia.gc || 'Não informado');
+    addSection('GC (GERADOR DE CARACTERES):', (materia.gc || 'Não informado').replace(/\s*\/\s*/g, ' | '));
 
     // Corpo da matéria - o mais importante, garantir que todo o texto seja incluído
     addSection('CORPO DA MATÉRIA:', materia.texto || 'Não informado');
