@@ -14,6 +14,11 @@ export const createMateria = async (materia: MateriaCreateInput) => {
     materiaToCreate.gcs = [];
   }
 
+  // Normalize GC separator: legacy ' / ' must be stored as ' | '
+  if (typeof materiaToCreate.gc === 'string') {
+    materiaToCreate.gc = materiaToCreate.gc.replace(/\s*\/\s*/g, ' | ');
+  }
+
   const { data, error } = await supabase
     .from('materias')
     .insert(materiaToCreate)
