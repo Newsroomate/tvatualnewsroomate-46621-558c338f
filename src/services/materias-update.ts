@@ -19,6 +19,11 @@ export const updateMateria = async (id: string, updates: Partial<Materia>) => {
     // @ts-ignore - Remove non-database fields
     delete updatesToSend[field];
   });
+
+  // Normalize GC separator: legacy ' / ' must be stored as ' | '
+  if (typeof updatesToSend.gc === 'string') {
+    updatesToSend.gc = updatesToSend.gc.replace(/\s*\/\s*/g, ' | ');
+  }
   
   // Ensure retranca is included since it's a required field in the database
   if (updatesToSend.retranca === undefined || updatesToSend.retranca === null || updatesToSend.retranca.trim() === '') {
