@@ -191,7 +191,7 @@ const TeleprompterWindow = () => {
       {!isMobile && !isFullscreen && (
         <div className="absolute bottom-4 right-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs">
           <div>← → Navegar retrancas</div>
-          <div>Espaço: Play/Pause</div>
+          <div>Espaço / B: Play/Pause</div>
         </div>
       )}
     </div>

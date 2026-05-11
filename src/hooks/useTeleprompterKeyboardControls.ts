@@ -185,8 +185,10 @@ export const useTeleprompterKeyboardControls = ({
           goToNextRetranca();
           break;
         case ' ':
+        case 'b':
+        case 'B':
           event.preventDefault();
-          console.log('Space pressed - toggling play/pause');
+          console.log('Play/Pause toggled via key:', event.key);
           onPlayPause();
           break;
       }
