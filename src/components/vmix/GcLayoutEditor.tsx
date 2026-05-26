@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -18,6 +18,7 @@ interface GcLayoutEditorProps {
   mediaUrl: string | null;
   mediaType: GcMediaType;
   onSave: (layout: GcLayout) => Promise<void> | void;
+  onLayoutChange?: (layout: GcLayout) => void;
 }
 
 const LineControls = ({
@@ -64,9 +65,11 @@ const LineControls = ({
   );
 };
 
-export const GcLayoutEditor = ({ open, onClose, title, initialLayout, mediaUrl, mediaType, onSave }: GcLayoutEditorProps) => {
+export const GcLayoutEditor = ({ open, onClose, title, initialLayout, mediaUrl, mediaType, onSave, onLayoutChange }: GcLayoutEditorProps) => {
   const [layout, setLayout] = useState<GcLayout>(initialLayout || DEFAULT_GC_LAYOUT);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => { onLayoutChange?.(layout); }, [layout, onLayoutChange]);
 
   const handleSave = async () => {
     setSaving(true);
