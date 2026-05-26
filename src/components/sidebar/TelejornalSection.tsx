@@ -371,6 +371,12 @@ export const TelejornalSection = ({
         onClose={() => setIsTrashOpen(false)}
         onRestored={onDataChange}
       />
+
+      <VmixSettingsModal
+        isOpen={!!settingsTelejornalId}
+        onClose={() => setSettingsTelejornalId(null)}
+        telejornalId={settingsTelejornalId ?? undefined}
+      />
     </div>
   );
 };
