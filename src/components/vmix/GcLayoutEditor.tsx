@@ -65,9 +65,11 @@ const LineControls = ({
   );
 };
 
-export const GcLayoutEditor = ({ open, onClose, title, initialLayout, mediaUrl, mediaType, onSave }: GcLayoutEditorProps) => {
+export const GcLayoutEditor = ({ open, onClose, title, initialLayout, mediaUrl, mediaType, onSave, onLayoutChange }: GcLayoutEditorProps) => {
   const [layout, setLayout] = useState<GcLayout>(initialLayout || DEFAULT_GC_LAYOUT);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => { onLayoutChange?.(layout); }, [layout, onLayoutChange]);
 
   const handleSave = async () => {
     setSaving(true);
