@@ -203,6 +203,9 @@ export const PacoteGraficoTab = ({ telejornalId }: PacoteGraficoTabProps) => {
           initialLayout={editing.layout}
           mediaUrl={editing.media_url}
           mediaType={editing.media_type}
+          onLayoutChange={(layout) =>
+            setEntries((prev) => prev.map((e) => (e.tipo === editing.tipo ? { ...e, layout } : e)))
+          }
           onSave={(layout) => handleSaveLayout(editing.tipo, layout)}
         />
       )}
