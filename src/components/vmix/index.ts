@@ -7,3 +7,6 @@ export { WebhookStatusPanel } from './WebhookStatusPanel';
 export { MessageEditDialog } from './MessageEditDialog';
 export { TarjaPreview } from './TarjaPreview';
 export { OperationLog } from './OperationLog';
+export { PacoteGraficoTab } from './PacoteGraficoTab';
+export { GcBackgroundPreview } from './GcBackgroundPreview';
+export { GcLayoutEditor } from './GcLayoutEditor';

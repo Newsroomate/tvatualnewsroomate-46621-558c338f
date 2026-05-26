@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Wifi, WifiOff, Loader2, Save, TestTube } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { PacoteGraficoTab } from './PacoteGraficoTab';
 
 interface VmixSettingsModalProps {
   isOpen: boolean;
@@ -112,13 +114,22 @@ export const VmixSettingsModal = ({ isOpen, onClose, telejornalId }: VmixSetting
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            Configurações do vMix
+            Configurações do Telejornal
           </DialogTitle>
         </DialogHeader>
+
+        <Tabs defaultValue="geral" className="w-full">
+          <TabsList className="grid grid-cols-2 w-full">
+            <TabsTrigger value="geral">Geral</TabsTrigger>
+            <TabsTrigger value="pacote">Pacote Gráfico</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="geral" className="mt-4">
+
 
         {isLoading ? (
           <div className="flex items-center justify-center py-8">
@@ -254,6 +265,12 @@ export const VmixSettingsModal = ({ isOpen, onClose, telejornalId }: VmixSetting
             </div>
           </div>
         )}
+          </TabsContent>
+
+          <TabsContent value="pacote" className="mt-4">
+            <PacoteGraficoTab telejornalId={telejornalId ?? null} />
+          </TabsContent>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

@@ -247,6 +247,42 @@ export type Database = {
         }
         Relationships: []
       }
+      gc_pacote_grafico: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          layout: Json
+          media_type: string | null
+          media_url: string | null
+          telejornal_id: string | null
+          tipo: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          layout?: Json
+          media_type?: string | null
+          media_url?: string | null
+          telejornal_id?: string | null
+          tipo: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          layout?: Json
+          media_type?: string | null
+          media_url?: string | null
+          telejornal_id?: string | null
+          tipo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       gc_saved_entries: {
         Row: {
           created_at: string
