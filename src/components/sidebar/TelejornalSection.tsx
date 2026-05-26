@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ChevronRight, ChevronDown, FileText, Video as VideoIcon, Users, Trash2 } from "lucide-react";
+import { PlusCircle, ChevronRight, ChevronDown, FileText, Video as VideoIcon, Users, Trash2, Settings } from "lucide-react";
+import { VmixSettingsModal } from "@/components/vmix/VmixSettingsModal";
 import { Telejornal } from "@/types";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
