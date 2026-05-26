@@ -18,6 +18,7 @@ interface GcLayoutEditorProps {
   mediaUrl: string | null;
   mediaType: GcMediaType;
   onSave: (layout: GcLayout) => Promise<void> | void;
+  onLayoutChange?: (layout: GcLayout) => void;
 }
 
 const LineControls = ({
