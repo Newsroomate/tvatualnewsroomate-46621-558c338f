@@ -320,6 +320,16 @@ export const TelejornalSection = ({
                           <Users className="mr-2 h-3 w-3" />
                           Entrevistas
                         </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-xs hover:bg-accent/50 transition-colors"
+                          onClick={() => setSettingsTelejornalId(jornal.id)}
+                        >
+                          <Settings className="mr-2 h-3 w-3" />
+                          Configurações
+                        </Button>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
