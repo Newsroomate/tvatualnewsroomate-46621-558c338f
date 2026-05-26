@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { PlusCircle, ChevronRight, ChevronDown, FileText, Video as VideoIcon, Users, Trash2 } from "lucide-react";
+import { PlusCircle, ChevronRight, ChevronDown, FileText, Video as VideoIcon, Users, Trash2, Settings } from "lucide-react";
+import { VmixSettingsModal } from "@/components/vmix/VmixSettingsModal";
 import { Telejornal } from "@/types";
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -54,6 +55,7 @@ export const TelejornalSection = ({
   const [confirmDelete, setConfirmDelete] = useState<Telejornal | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
+  const [settingsTelejornalId, setSettingsTelejornalId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -318,6 +320,16 @@ export const TelejornalSection = ({
                           <Users className="mr-2 h-3 w-3" />
                           Entrevistas
                         </Button>
+
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start text-xs hover:bg-accent/50 transition-colors"
+                          onClick={() => setSettingsTelejornalId(jornal.id)}
+                        >
+                          <Settings className="mr-2 h-3 w-3" />
+                          Configurações
+                        </Button>
                       </div>
                     </CollapsibleContent>
                   </Collapsible>
@@ -358,6 +370,12 @@ export const TelejornalSection = ({
         isOpen={isTrashOpen}
         onClose={() => setIsTrashOpen(false)}
         onRestored={onDataChange}
+      />
+
+      <VmixSettingsModal
+        isOpen={!!settingsTelejornalId}
+        onClose={() => setSettingsTelejornalId(null)}
+        telejornalId={settingsTelejornalId ?? undefined}
       />
     </div>
   );
