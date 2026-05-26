@@ -40,7 +40,7 @@ export const fetchPacoteGrafico = async (
         tipo: tipo as GCType,
         media_url: row.media_url,
         media_type: row.media_type as GcMediaType,
-        layout: (row.layout as GcLayout) || DEFAULT_GC_LAYOUT,
+        layout: (row.layout as unknown as GcLayout) || DEFAULT_GC_LAYOUT,
       };
     }
     return {
