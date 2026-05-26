@@ -55,6 +55,7 @@ export const TelejornalSection = ({
   const [confirmDelete, setConfirmDelete] = useState<Telejornal | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isTrashOpen, setIsTrashOpen] = useState(false);
+  const [settingsTelejornalId, setSettingsTelejornalId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
