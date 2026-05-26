@@ -30,7 +30,7 @@ export const PacoteGraficoTab = ({ telejornalId }: PacoteGraficoTabProps) => {
   const [editing, setEditing] = useState<GcPacoteGraficoEntry | null>(null);
   const inputsRef = useRef<Record<string, HTMLInputElement | null>>({});
 
-  const canEdit = checkPermission('update', 'telejornal', telejornalId ?? undefined, false);
+  const canEdit = checkPermission('update', 'telejornal', undefined, false);
 
   const load = async () => {
     setLoading(true);
