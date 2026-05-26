@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Settings, Wifi, WifiOff, Loader2, Save, TestTube } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { PacoteGraficoTab } from './PacoteGraficoTab';
 
 interface VmixSettingsModalProps {
   isOpen: boolean;
