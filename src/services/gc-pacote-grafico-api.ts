@@ -62,8 +62,9 @@ export const upsertPacoteGraficoTipo = async (
   // Try update first
   let updateQuery = supabase.from('gc_pacote_grafico').update({
     ...patch,
+    layout: patch.layout as any,
     updated_at: new Date().toISOString(),
-  }).eq('tipo', tipo);
+  } as any).eq('tipo', tipo);
   updateQuery = telejornalId
     ? updateQuery.eq('telejornal_id', telejornalId)
     : updateQuery.is('telejornal_id', null);
@@ -78,9 +79,9 @@ export const upsertPacoteGraficoTipo = async (
     tipo,
     media_url: patch.media_url ?? null,
     media_type: patch.media_type ?? null,
-    layout: patch.layout ?? DEFAULT_GC_LAYOUT,
+    layout: (patch.layout ?? DEFAULT_GC_LAYOUT) as any,
     created_by: user?.id ?? null,
-  });
+  } as any);
   if (insErr) throw insErr;
 };
 
