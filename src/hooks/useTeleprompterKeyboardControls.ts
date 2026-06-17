@@ -11,6 +11,10 @@ interface UseTeleprompterKeyboardControlsProps {
   setScrollPosition?: (position: number) => void;
   pauseAutoScroll?: () => void;
   resumeAutoScroll?: () => void;
+  speed?: number[];
+  onSpeedChange?: (value: number[]) => void;
+  onIncreaseFontSize?: () => void;
+  onDecreaseFontSize?: () => void;
 }
 
 export const useTeleprompterKeyboardControls = ({
@@ -21,8 +25,13 @@ export const useTeleprompterKeyboardControls = ({
   fontSize,
   setScrollPosition,
   pauseAutoScroll,
-  resumeAutoScroll
+  resumeAutoScroll,
+  speed,
+  onSpeedChange,
+  onIncreaseFontSize,
+  onDecreaseFontSize
 }: UseTeleprompterKeyboardControlsProps) => {
+
   const currentRetrancaIndex = useRef(0);
   const isNavigating = useRef(false);
   const navigationTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
