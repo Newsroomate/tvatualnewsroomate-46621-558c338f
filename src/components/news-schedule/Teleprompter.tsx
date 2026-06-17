@@ -57,8 +57,13 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     resumeAutoScroll: () => {
       // Resume happens automatically after short timeout
       console.log("Navigation ended - auto-scroll can resume");
-    }
+    },
+    speed,
+    onSpeedChange: (value) => setSpeed(value),
+    onIncreaseFontSize: () => setFontSize(prev => Math.min(prev + 2, 200)),
+    onDecreaseFontSize: () => setFontSize(prev => Math.max(prev - 2, 12))
   });
+
 
   // Listen for fullscreen changes
   useEffect(() => {
