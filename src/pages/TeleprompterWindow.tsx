@@ -60,8 +60,13 @@ const TeleprompterWindow = () => {
     fontSize,
     setScrollPosition,
     pauseAutoScroll: () => setIsPlaying(false),
-    resumeAutoScroll: () => setIsPlaying(true)
+    resumeAutoScroll: () => setIsPlaying(true),
+    speed,
+    onSpeedChange: handleSpeedChange,
+    onIncreaseFontSize: increaseFontSize,
+    onDecreaseFontSize: decreaseFontSize
   });
+
 
   // Setup all effects
   useTeleprompterWindowEffects({
