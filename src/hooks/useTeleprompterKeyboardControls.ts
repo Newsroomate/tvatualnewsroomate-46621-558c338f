@@ -200,6 +200,34 @@ export const useTeleprompterKeyboardControls = ({
           console.log('Play/Pause toggled via key:', event.key);
           onPlayPause();
           break;
+        case 'ArrowUp':
+          if (onSpeedChange && speed) {
+            event.preventDefault();
+            const next = Math.min(100, (speed[0] ?? 0) + 5);
+            onSpeedChange([next]);
+          }
+          break;
+        case 'ArrowDown':
+          if (onSpeedChange && speed) {
+            event.preventDefault();
+            const next = Math.max(0, (speed[0] ?? 0) - 5);
+            onSpeedChange([next]);
+          }
+          break;
+        case '+':
+        case '=':
+          if (onIncreaseFontSize) {
+            event.preventDefault();
+            onIncreaseFontSize();
+          }
+          break;
+        case '-':
+        case '_':
+          if (onDecreaseFontSize) {
+            event.preventDefault();
+            onDecreaseFontSize();
+          }
+          break;
       }
     };
 
@@ -212,7 +240,8 @@ export const useTeleprompterKeyboardControls = ({
       console.log('Removing keyboard event listener for teleprompter');
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [blocks, isPlaying, onPlayPause, goToPreviousRetranca, goToNextRetranca]);
+  }, [blocks, isPlaying, onPlayPause, goToPreviousRetranca, goToNextRetranca, speed, onSpeedChange, onIncreaseFontSize, onDecreaseFontSize]);
+
 
   // Reset current index when blocks change
   useEffect(() => {
