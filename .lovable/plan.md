@@ -1,24 +1,34 @@
-# Atalhos de velocidade e fonte no teleprompter
+# Trocar funções das setas no teleprompter
 
-## Novos atalhos
-- **↑ / ↓** — Aumentar / diminuir velocidade de rolagem (passo de 0.5, respeitando limites atuais)
-- **+ / =** — Aumentar tamanho da fonte
-- **- / _** — Diminuir tamanho da fonte
+## Objetivo
+Inverter as funções dos atalhos de seta no teleprompter:
+- **↑ / ↓** passam a navegar entre retrancas (hoje estão em ← / →)
+- **← / →** passam a ajustar a velocidade de rolagem (hoje estão em ↑ / ↓)
+- **Espaço / B** (play/pause) permanecem inalterados
 
-Atalhos existentes (Space/B play-pause, ← / → navegação entre retrancas) permanecem inalterados.
+## Alterações
 
-## Comportamento
-- Ignorados quando o foco estiver em `INPUT`, `TEXTAREA` ou `contentEditable` (mesma regra atual).
-- `event.preventDefault()` para evitar scroll nativo da página em ↑/↓.
-- Limites e passos reaproveitam a lógica já existente em `TeleprompterViewControls` (velocidade 0.5–10, passo 0.5; fonte com `increaseFontSize` / `decreaseFontSize` do `useTeleprompterWindowState`).
-- Pequeno toast opcional? Não — manter silencioso, igual aos atalhos atuais.
+### 1. `src/hooks/useTeleprompterKeyboardControls.ts`
+Trocar os casos no `handleKeyDown`:
+- `ArrowUp` / `ArrowDown` → chamam `goToPreviousRetranca()` / `goToNextRetranca()`
+- `ArrowLeft` / `ArrowRight` → ajustam `speed` em passos de 5 (clamped 0–100)
 
-## Detalhes técnicos
-- Estender `src/hooks/useTeleprompterKeyboardControls.ts`:
-  - Adicionar props opcionais: `onSpeedChange(speed:number)`, `currentSpeed:number`, `onIncreaseFontSize()`, `onDecreaseFontSize()`.
-  - No `handleKeyDown`, tratar `ArrowUp`, `ArrowDown`, `+`, `=`, `-`, `_` com `preventDefault()`.
-  - Clamp da velocidade entre 0.5 e 10 com passo 0.5.
-- No componente que monta o hook (janela do teleprompter, `TeleprompterWindow` / `useTeleprompterWindow`), passar os handlers já existentes em `useTeleprompterWindowState` (`handleSpeedChange`, `increaseFontSize`, `decreaseFontSize`, `speed`).
+Manter:
+- `event.preventDefault()` em todas as setas
+- Ignorar atalho quando foco estiver em `INPUT`, `TEXTAREA` ou `contentEditable`
+- Depende de `goToPreviousRetranca`, `goToNextRetranca`, `speed`, `onSpeedChange`
+
+### 2. `src/pages/TeleprompterWindow.tsx`
+Atualizar o texto de ajuda no overlay desktop:
+- De `← → Navegar retrancas` / `Espaço / B: Play/Pause`
+- Para `↑ ↓ Navegar retrancas` / `← → Velocidade` / `Espaço / B: Play/Pause`
+
+### 3. `src/components/news-schedule/Teleprompter.tsx`
+Atualizar o texto de ajuda no overlay desktop:
+- De `← → Navegar retrancas` / `Espaço: Play/Pause`
+- Para `↑ ↓ Navegar retrancas` / `← → Velocidade` / `Espaço: Play/Pause`
 
 ## Fora de escopo
-- Atalhos de fullscreen, Home/End, mirror, cores — não solicitados.
+- Nenhuma outra tecla de atalho será alterada
+- Limites de velocidade (0–100) e passo (5) permanecem os mesmos
+- Navegação por retrancas continua filtrando apenas itens `status === 'approved'`

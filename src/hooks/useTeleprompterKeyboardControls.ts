@@ -183,15 +183,29 @@ export const useTeleprompterKeyboardControls = ({
       console.log('Teleprompter keyboard event:', event.key);
 
       switch (event.key) {
-        case 'ArrowLeft':
+        case 'ArrowUp':
           event.preventDefault();
-          console.log('Arrow Left pressed - going to previous retranca');
+          console.log('Arrow Up pressed - going to previous retranca');
           goToPreviousRetranca();
           break;
-        case 'ArrowRight':
+        case 'ArrowDown':
           event.preventDefault();
-          console.log('Arrow Right pressed - going to next retranca');
+          console.log('Arrow Down pressed - going to next retranca');
           goToNextRetranca();
+          break;
+        case 'ArrowLeft':
+          if (onSpeedChange && speed) {
+            event.preventDefault();
+            const next = Math.max(0, (speed[0] ?? 0) - 5);
+            onSpeedChange([next]);
+          }
+          break;
+        case 'ArrowRight':
+          if (onSpeedChange && speed) {
+            event.preventDefault();
+            const next = Math.min(100, (speed[0] ?? 0) + 5);
+            onSpeedChange([next]);
+          }
           break;
         case ' ':
         case 'b':
@@ -199,20 +213,6 @@ export const useTeleprompterKeyboardControls = ({
           event.preventDefault();
           console.log('Play/Pause toggled via key:', event.key);
           onPlayPause();
-          break;
-        case 'ArrowUp':
-          if (onSpeedChange && speed) {
-            event.preventDefault();
-            const next = Math.min(100, (speed[0] ?? 0) + 5);
-            onSpeedChange([next]);
-          }
-          break;
-        case 'ArrowDown':
-          if (onSpeedChange && speed) {
-            event.preventDefault();
-            const next = Math.max(0, (speed[0] ?? 0) - 5);
-            onSpeedChange([next]);
-          }
           break;
         case '+':
         case '=':
