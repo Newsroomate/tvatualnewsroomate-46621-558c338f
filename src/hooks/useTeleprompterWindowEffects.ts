@@ -215,7 +215,7 @@ export const useTeleprompterWindowEffects = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [isPlaying, speed, setIsPlaying, setScrollPosition, animationFrameRef, contentRef, lastTimeRef]);
+  }, [isPlaying, speed, playDirection, setIsPlaying, setScrollPosition, animationFrameRef, contentRef, lastTimeRef]);
 
   // Debounced scroll sync for manual scrolling
   useEffect(() => {
