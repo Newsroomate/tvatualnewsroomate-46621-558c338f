@@ -25,7 +25,18 @@ export const useTeleprompterWindowState = () => {
 
   const handlePlayPause = () => {
     console.log("Play/Pause toggled:", !isPlaying);
+    setPlayDirection(1);
     setIsPlaying(!isPlaying);
+  };
+
+  const handleReversePlayToggle = () => {
+    // If already playing in reverse, pause. Otherwise start reverse play.
+    if (isPlaying && playDirection === -1) {
+      setIsPlaying(false);
+    } else {
+      setPlayDirection(-1);
+      setIsPlaying(true);
+    }
   };
 
   const handleSpeedChange = (value: number[]) => {
