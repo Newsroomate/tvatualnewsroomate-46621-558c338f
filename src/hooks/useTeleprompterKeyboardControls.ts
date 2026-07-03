@@ -203,10 +203,10 @@ export const useTeleprompterKeyboardControls = ({
           onPlayPause();
           break;
         case 'ArrowUp':
-          if (onSpeedChange && speed) {
+          if (onReversePlayToggle) {
             event.preventDefault();
-            const next = Math.min(100, (speed[0] ?? 0) + 5);
-            onSpeedChange([next]);
+            console.log('Arrow Up pressed - toggling reverse play');
+            onReversePlayToggle();
           }
           break;
         case 'ArrowDown':
