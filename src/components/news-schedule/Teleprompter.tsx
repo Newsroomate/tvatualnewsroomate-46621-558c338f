@@ -331,8 +331,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
         {/* Desktop keyboard controls info overlay */}
         {!isMobile && !isFullscreen && (
           <div className="absolute bottom-4 right-4 bg-black bg-opacity-75 text-white p-2 rounded text-xs z-10">
-            <div>↑ ↓ Navegar retrancas</div>
-            <div>← → Velocidade</div>
+            <div>← → Navegar retrancas</div>
             <div>Espaço: Play/Pause</div>
           </div>
         )}
