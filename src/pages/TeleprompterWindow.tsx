@@ -66,7 +66,8 @@ const TeleprompterWindow = () => {
     speed,
     onSpeedChange: handleSpeedChange,
     onIncreaseFontSize: increaseFontSize,
-    onDecreaseFontSize: decreaseFontSize
+    onDecreaseFontSize: decreaseFontSize,
+    onReversePlayToggle: handleReversePlayToggle
   });
 
 
