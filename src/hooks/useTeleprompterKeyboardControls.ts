@@ -30,7 +30,8 @@ export const useTeleprompterKeyboardControls = ({
   speed,
   onSpeedChange,
   onIncreaseFontSize,
-  onDecreaseFontSize
+  onDecreaseFontSize,
+  onReversePlayToggle
 }: UseTeleprompterKeyboardControlsProps) => {
 
   const currentRetrancaIndex = useRef(0);
