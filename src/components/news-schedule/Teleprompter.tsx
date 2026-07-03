@@ -185,7 +185,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [isPlaying, speed, fontSize, setScrollPosition, isNavigating]);
+  }, [isPlaying, speed, fontSize, setScrollPosition, isNavigating, playDirection]);
 
   // Debounced scroll synchronization - only when not auto-playing or navigating
   useEffect(() => {
