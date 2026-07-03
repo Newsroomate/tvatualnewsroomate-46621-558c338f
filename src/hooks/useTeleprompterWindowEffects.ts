@@ -12,6 +12,7 @@ interface UseTeleprompterWindowEffectsProps {
   isPlaying: boolean;
   setIsPlaying: (playing: boolean) => void;
   speed: number[];
+  playDirection?: 1 | -1;
   setScrollPosition: (position: number) => void;
   intervalRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>;
   animationFrameRef?: React.MutableRefObject<number | null>;
