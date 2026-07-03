@@ -40,6 +40,7 @@ const TeleprompterWindow = () => {
     
     // Handlers
     handlePlayPause,
+    handleReversePlayToggle,
     handleSpeedChange,
     resetPosition,
     increaseFontSize,
@@ -48,7 +49,8 @@ const TeleprompterWindow = () => {
     handleCabecaColorChange,
     handleRetrancaColorChange,
     handleTipoMaterialColorChange,
-    handleMirrorToggle
+    handleMirrorToggle,
+    playDirection
   } = useTeleprompterWindowState();
 
   // Setup keyboard controls with scroll position sync
