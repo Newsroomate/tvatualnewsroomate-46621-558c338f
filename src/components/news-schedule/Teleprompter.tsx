@@ -20,6 +20,7 @@ interface TeleprompterProps {
 export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: TeleprompterProps) => {
   const isMobile = useIsMobile();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playDirection, setPlayDirection] = useState<1 | -1>(1);
   const [speed, setSpeed] = useState([50]);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [fontSize, setFontSize] = useState(isMobile ? 18 : 24);
