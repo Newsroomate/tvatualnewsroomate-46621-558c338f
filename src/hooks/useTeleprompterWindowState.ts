@@ -112,6 +112,7 @@ export const useTeleprompterWindowState = () => {
     retrancaColor,
     tipoMaterialColor,
     isMirrored,
+    playDirection,
     
     // Refs
     contentRef,
@@ -122,6 +123,7 @@ export const useTeleprompterWindowState = () => {
     
     // Handlers
     handlePlayPause,
+    handleReversePlayToggle,
     handleSpeedChange,
     resetPosition,
     increaseFontSize,
