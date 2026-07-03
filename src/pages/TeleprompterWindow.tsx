@@ -82,6 +82,7 @@ const TeleprompterWindow = () => {
     isPlaying,
     setIsPlaying,
     speed,
+    playDirection,
     setScrollPosition,
     intervalRef,
     contentRef,
