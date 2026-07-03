@@ -15,6 +15,7 @@ export const useTeleprompterWindowState = () => {
   const [retrancaColor, setRetrancaColor] = useState("#facc15");
   const [tipoMaterialColor, setTipoMaterialColor] = useState("#f97316");
   const [isMirrored, setIsMirrored] = useState(false);
+  const [playDirection, setPlayDirection] = useState<1 | -1>(1);
   
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
