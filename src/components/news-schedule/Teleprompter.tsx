@@ -35,7 +35,17 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const lastTimeRef = useRef<number>(0);
 
   const handlePlayPause = () => {
+    setPlayDirection(1);
     setIsPlaying(!isPlaying);
+  };
+
+  const handleReversePlayToggle = () => {
+    if (isPlaying && playDirection === -1) {
+      setIsPlaying(false);
+    } else {
+      setPlayDirection(-1);
+      setIsPlaying(true);
+    }
   };
 
   const { 
