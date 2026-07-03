@@ -15,6 +15,7 @@ interface UseTeleprompterKeyboardControlsProps {
   onSpeedChange?: (value: number[]) => void;
   onIncreaseFontSize?: () => void;
   onDecreaseFontSize?: () => void;
+  onReversePlayToggle?: () => void;
 }
 
 export const useTeleprompterKeyboardControls = ({
