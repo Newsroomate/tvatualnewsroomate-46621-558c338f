@@ -72,7 +72,8 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     speed,
     onSpeedChange: (value) => setSpeed(value),
     onIncreaseFontSize: () => setFontSize(prev => Math.min(prev + 2, 200)),
-    onDecreaseFontSize: () => setFontSize(prev => Math.max(prev - 2, 12))
+    onDecreaseFontSize: () => setFontSize(prev => Math.max(prev - 2, 12)),
+    onReversePlayToggle: handleReversePlayToggle
   });
 
 
