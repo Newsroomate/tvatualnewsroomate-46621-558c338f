@@ -242,7 +242,7 @@ export const useTeleprompterKeyboardControls = ({
       console.log('Removing keyboard event listener for teleprompter');
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [blocks, isPlaying, onPlayPause, goToPreviousRetranca, goToNextRetranca, speed, onSpeedChange, onIncreaseFontSize, onDecreaseFontSize]);
+  }, [blocks, isPlaying, onPlayPause, goToPreviousRetranca, goToNextRetranca, speed, onSpeedChange, onIncreaseFontSize, onDecreaseFontSize, onReversePlayToggle]);
 
 
   // Reset current index when blocks change
