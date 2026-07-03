@@ -146,15 +146,22 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
       
       const deltaTime = currentTime - lastTime;
       const scrollSpeed = (speed[0] / 100) * 2; // Adjust base scroll speed
-      const scrollAmount = (deltaTime / 1000) * scrollSpeed * fontSize;
+      const scrollAmount = (deltaTime / 1000) * scrollSpeed * fontSize * playDirection;
       
       const container = contentRef.current;
       const newScrollTop = container.scrollTop + scrollAmount;
       
-      // Check if we've reached the end
-      if (newScrollTop >= container.scrollHeight - container.clientHeight) {
+      // Check bounds based on direction
+      if (playDirection > 0 && newScrollTop >= container.scrollHeight - container.clientHeight) {
         setIsPlaying(false);
         console.log("Reached end of content, stopping playback");
+        return;
+      }
+      if (playDirection < 0 && newScrollTop <= 0) {
+        container.scrollTop = 0;
+        setScrollPosition(0);
+        setIsPlaying(false);
+        console.log("Reached start of content, stopping reverse playback");
         return;
       }
       
