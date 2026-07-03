@@ -31,6 +31,7 @@ export const useTeleprompterWindowEffects = ({
   isPlaying,
   setIsPlaying,
   speed,
+  playDirection = 1,
   setScrollPosition,
   intervalRef,
   contentRef,
