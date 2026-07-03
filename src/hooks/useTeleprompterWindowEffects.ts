@@ -165,15 +165,22 @@ export const useTeleprompterWindowEffects = ({
         lastTimeRef.current = currentTime;
 
         // Calculate smooth scroll speed based on time elapsed
-        const scrollSpeed = (speed[0] / 10) * (deltaTime / 16.67); // Normalize to 60fps
+        const scrollSpeed = (speed[0] / 10) * (deltaTime / 16.67) * playDirection; // Normalize to 60fps, apply direction
         
         const currentScrollTop = contentElement.scrollTop;
         const maxScroll = contentElement.scrollHeight - contentElement.clientHeight;
         
         const nextPosition = currentScrollTop + scrollSpeed;
         
-        if (nextPosition >= maxScroll) {
+        if (playDirection > 0 && nextPosition >= maxScroll) {
           console.log("Reached end of content, stopping playback");
+          setIsPlaying(false);
+          return;
+        }
+        if (playDirection < 0 && nextPosition <= 0) {
+          console.log("Reached start of content, stopping reverse playback");
+          contentElement.scrollTop = 0;
+          if (setScrollPosition) setScrollPosition(0);
           setIsPlaying(false);
           return;
         }
