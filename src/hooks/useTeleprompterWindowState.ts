@@ -15,6 +15,7 @@ export const useTeleprompterWindowState = () => {
   const [retrancaColor, setRetrancaColor] = useState("#facc15");
   const [tipoMaterialColor, setTipoMaterialColor] = useState("#f97316");
   const [isMirrored, setIsMirrored] = useState(false);
+  const [playDirection, setPlayDirection] = useState<1 | -1>(1);
   
   const contentRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -24,7 +25,18 @@ export const useTeleprompterWindowState = () => {
 
   const handlePlayPause = () => {
     console.log("Play/Pause toggled:", !isPlaying);
+    setPlayDirection(1);
     setIsPlaying(!isPlaying);
+  };
+
+  const handleReversePlayToggle = () => {
+    // If already playing in reverse, pause. Otherwise start reverse play.
+    if (isPlaying && playDirection === -1) {
+      setIsPlaying(false);
+    } else {
+      setPlayDirection(-1);
+      setIsPlaying(true);
+    }
   };
 
   const handleSpeedChange = (value: number[]) => {
@@ -100,6 +112,7 @@ export const useTeleprompterWindowState = () => {
     retrancaColor,
     tipoMaterialColor,
     isMirrored,
+    playDirection,
     
     // Refs
     contentRef,
@@ -110,6 +123,7 @@ export const useTeleprompterWindowState = () => {
     
     // Handlers
     handlePlayPause,
+    handleReversePlayToggle,
     handleSpeedChange,
     resetPosition,
     increaseFontSize,

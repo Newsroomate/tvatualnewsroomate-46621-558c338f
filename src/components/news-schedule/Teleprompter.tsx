@@ -20,6 +20,7 @@ interface TeleprompterProps {
 export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: TeleprompterProps) => {
   const isMobile = useIsMobile();
   const [isPlaying, setIsPlaying] = useState(false);
+  const [playDirection, setPlayDirection] = useState<1 | -1>(1);
   const [speed, setSpeed] = useState([50]);
   const [scrollPosition, setScrollPosition] = useState(0);
   const [fontSize, setFontSize] = useState(isMobile ? 18 : 24);
@@ -34,7 +35,17 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
   const lastTimeRef = useRef<number>(0);
 
   const handlePlayPause = () => {
+    setPlayDirection(1);
     setIsPlaying(!isPlaying);
+  };
+
+  const handleReversePlayToggle = () => {
+    if (isPlaying && playDirection === -1) {
+      setIsPlaying(false);
+    } else {
+      setPlayDirection(-1);
+      setIsPlaying(true);
+    }
   };
 
   const { 
@@ -61,7 +72,8 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
     speed,
     onSpeedChange: (value) => setSpeed(value),
     onIncreaseFontSize: () => setFontSize(prev => Math.min(prev + 2, 200)),
-    onDecreaseFontSize: () => setFontSize(prev => Math.max(prev - 2, 12))
+    onDecreaseFontSize: () => setFontSize(prev => Math.max(prev - 2, 12)),
+    onReversePlayToggle: handleReversePlayToggle
   });
 
 
@@ -134,15 +146,22 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
       
       const deltaTime = currentTime - lastTime;
       const scrollSpeed = (speed[0] / 100) * 2; // Adjust base scroll speed
-      const scrollAmount = (deltaTime / 1000) * scrollSpeed * fontSize;
+      const scrollAmount = (deltaTime / 1000) * scrollSpeed * fontSize * playDirection;
       
       const container = contentRef.current;
       const newScrollTop = container.scrollTop + scrollAmount;
       
-      // Check if we've reached the end
-      if (newScrollTop >= container.scrollHeight - container.clientHeight) {
+      // Check bounds based on direction
+      if (playDirection > 0 && newScrollTop >= container.scrollHeight - container.clientHeight) {
         setIsPlaying(false);
         console.log("Reached end of content, stopping playback");
+        return;
+      }
+      if (playDirection < 0 && newScrollTop <= 0) {
+        container.scrollTop = 0;
+        setScrollPosition(0);
+        setIsPlaying(false);
+        console.log("Reached start of content, stopping reverse playback");
         return;
       }
       
@@ -166,7 +185,7 @@ export const Teleprompter = ({ isOpen, onClose, blocks, telejornal }: Teleprompt
         cancelAnimationFrame(animationFrameId);
       }
     };
-  }, [isPlaying, speed, fontSize, setScrollPosition, isNavigating]);
+  }, [isPlaying, speed, fontSize, setScrollPosition, isNavigating, playDirection]);
 
   // Debounced scroll synchronization - only when not auto-playing or navigating
   useEffect(() => {

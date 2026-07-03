@@ -15,6 +15,7 @@ interface UseTeleprompterKeyboardControlsProps {
   onSpeedChange?: (value: number[]) => void;
   onIncreaseFontSize?: () => void;
   onDecreaseFontSize?: () => void;
+  onReversePlayToggle?: () => void;
 }
 
 export const useTeleprompterKeyboardControls = ({
@@ -29,7 +30,8 @@ export const useTeleprompterKeyboardControls = ({
   speed,
   onSpeedChange,
   onIncreaseFontSize,
-  onDecreaseFontSize
+  onDecreaseFontSize,
+  onReversePlayToggle
 }: UseTeleprompterKeyboardControlsProps) => {
 
   const currentRetrancaIndex = useRef(0);
@@ -201,10 +203,10 @@ export const useTeleprompterKeyboardControls = ({
           onPlayPause();
           break;
         case 'ArrowUp':
-          if (onSpeedChange && speed) {
+          if (onReversePlayToggle) {
             event.preventDefault();
-            const next = Math.min(100, (speed[0] ?? 0) + 5);
-            onSpeedChange([next]);
+            console.log('Arrow Up pressed - toggling reverse play');
+            onReversePlayToggle();
           }
           break;
         case 'ArrowDown':
@@ -240,7 +242,7 @@ export const useTeleprompterKeyboardControls = ({
       console.log('Removing keyboard event listener for teleprompter');
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [blocks, isPlaying, onPlayPause, goToPreviousRetranca, goToNextRetranca, speed, onSpeedChange, onIncreaseFontSize, onDecreaseFontSize]);
+  }, [blocks, isPlaying, onPlayPause, goToPreviousRetranca, goToNextRetranca, speed, onSpeedChange, onIncreaseFontSize, onDecreaseFontSize, onReversePlayToggle]);
 
 
   // Reset current index when blocks change
