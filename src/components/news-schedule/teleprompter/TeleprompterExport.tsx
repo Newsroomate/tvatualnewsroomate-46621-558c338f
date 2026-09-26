@@ -1,9 +1,11 @@
 
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Materia, Telejornal, Bloco } from "@/types";
 import jsPDF from 'jspdf';
 import { getOrderedApprovedMaterias, getTelejornalName, createSafeFilename, hasApprovedContent } from "@/utils/teleprompter-utils";
+import { exportTeleprompterToWord } from "@/utils/word-export-utils";
 
 interface TeleprompterExportProps {
   blocks: (Bloco & { items: Materia[] })[];
