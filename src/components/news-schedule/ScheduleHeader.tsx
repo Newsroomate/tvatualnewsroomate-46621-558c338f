@@ -7,6 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel } from "@/components/ui/dropdown-menu";
 import { generateGCTextFile } from "@/utils/gc-txt-utils";
 import { exportPlayoutPDF } from "@/utils/playout-export-utils";
+import { exportPlayoutWord } from "@/utils/word-export-utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatDate, DATE_FORMATS } from "@/utils/date-utils";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
