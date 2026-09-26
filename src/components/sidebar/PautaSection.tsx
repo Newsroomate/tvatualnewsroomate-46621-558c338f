@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { deletePauta, updatePauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
 import { generatePautaPDF } from "@/utils/pdf-utils";
+import { generatePautaWord } from "@/utils/word-export-utils";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
