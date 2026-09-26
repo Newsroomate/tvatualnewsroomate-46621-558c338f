@@ -28,10 +28,24 @@ export const TeleprompterTab = ({ formData }: TeleprompterTabProps) => {
     <TabsContent value="teleprompter" className="p-4 space-y-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Visualização da Lauda</h3>
-        <Button onClick={handleExportLauda} className="flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          Exportar Lauda
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Exportar Lauda
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-popover z-50">
+            <DropdownMenuItem onClick={handleExportLauda}>
+              <FileText className="h-4 w-4 mr-2" />
+              Exportar como PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportLaudaWord}>
+              <FileText className="h-4 w-4 mr-2" />
+              Exportar como Word (.docx)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="space-y-6">
