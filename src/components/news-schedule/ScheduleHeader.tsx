@@ -320,16 +320,29 @@ export const ScheduleHeader = ({
                 Exportar GC
               </Button>
               
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={handleExportPlayout}
-                disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
-                className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
-              >
-                <FileText className="h-4 w-4 mr-2" />
-                Exportar PLAYOUT
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                    className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Exportar PLAYOUT
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="bg-popover z-50">
+                  <DropdownMenuItem onClick={handleExportPlayout}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Exportar como PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportPlayoutWord}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Exportar como Word (.docx)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             {/* Visualização */}
