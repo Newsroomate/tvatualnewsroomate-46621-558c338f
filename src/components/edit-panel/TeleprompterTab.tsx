@@ -4,23 +4,31 @@ import { Label } from "@/components/ui/label";
 import { FileText } from "lucide-react";
 import { Materia } from "@/types";
 import { exportLaudaToPDF } from "@/utils/lauda-export-utils";
+import { exportLaudaToWord } from "@/utils/word-export-utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface TeleprompterTabProps {
   formData: Partial<Materia>;
 }
 
 export const TeleprompterTab = ({ formData }: TeleprompterTabProps) => {
+  const buildFilename = () =>
+    formData.retranca
+      ? formData.retranca
+          .replace(/[^a-zA-Z0-9\s]/g, '')
+          .replace(/\s+/g, '_')
+          .trim()
+      : 'Lauda_Reporter';
+
   const handleExportLauda = () => {
     if (formData) {
-      // Use a retranca como nome do arquivo se disponível
-      const filename = formData.retranca 
-        ? formData.retranca
-            .replace(/[^a-zA-Z0-9\s]/g, '') // Remove caracteres especiais
-            .replace(/\s+/g, '_') // Substitui espaços por underscore
-            .trim()
-        : 'Lauda_Reporter';
-      
-      exportLaudaToPDF([formData as Materia], filename);
+      exportLaudaToPDF([formData as Materia], buildFilename());
+    }
+  };
+
+  const handleExportLaudaWord = () => {
+    if (formData) {
+      exportLaudaToWord([formData as Materia], buildFilename());
     }
   };
 
