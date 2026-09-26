@@ -60,6 +60,11 @@ export const ScheduleHeader = ({
     exportPlayoutPDF(blocks, currentTelejornal);
   };
 
+  const handleExportPlayoutWord = () => {
+    if (!checkPermission('export', 'playout')) return;
+    exportPlayoutWord(blocks, currentTelejornal);
+  };
+
   const handleViewLaudas = () => {
     if (!checkPermission('view', 'lauda')) return;
     onViewLaudas?.();
