@@ -4,23 +4,31 @@ import { Label } from "@/components/ui/label";
 import { FileText } from "lucide-react";
 import { Materia } from "@/types";
 import { exportLaudaToPDF } from "@/utils/lauda-export-utils";
+import { exportLaudaToWord } from "@/utils/word-export-utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface TeleprompterTabProps {
   formData: Partial<Materia>;
 }
 
 export const TeleprompterTab = ({ formData }: TeleprompterTabProps) => {
+  const buildFilename = () =>
+    formData.retranca
+      ? formData.retranca
+          .replace(/[^a-zA-Z0-9\s]/g, '')
+          .replace(/\s+/g, '_')
+          .trim()
+      : 'Lauda_Reporter';
+
   const handleExportLauda = () => {
     if (formData) {
-      // Use a retranca como nome do arquivo se disponível
-      const filename = formData.retranca 
-        ? formData.retranca
-            .replace(/[^a-zA-Z0-9\s]/g, '') // Remove caracteres especiais
-            .replace(/\s+/g, '_') // Substitui espaços por underscore
-            .trim()
-        : 'Lauda_Reporter';
-      
-      exportLaudaToPDF([formData as Materia], filename);
+      exportLaudaToPDF([formData as Materia], buildFilename());
+    }
+  };
+
+  const handleExportLaudaWord = () => {
+    if (formData) {
+      exportLaudaToWord([formData as Materia], buildFilename());
     }
   };
 
@@ -28,10 +36,24 @@ export const TeleprompterTab = ({ formData }: TeleprompterTabProps) => {
     <TabsContent value="teleprompter" className="p-4 space-y-6">
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold">Visualização da Lauda</h3>
-        <Button onClick={handleExportLauda} className="flex items-center gap-2">
-          <FileText className="h-4 w-4" />
-          Exportar Lauda
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button className="flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Exportar Lauda
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="bg-popover z-50">
+            <DropdownMenuItem onClick={handleExportLauda}>
+              <FileText className="h-4 w-4 mr-2" />
+              Exportar como PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleExportLaudaWord}>
+              <FileText className="h-4 w-4 mr-2" />
+              Exportar como Word (.docx)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="space-y-6">

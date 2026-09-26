@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, FileDown, User, Calendar, MapPin } from "lucide-react";
 import { Pauta } from "@/types";
 import { generatePautaPDF } from "@/utils/pdf-utils";
+import { generatePautaWord } from "@/utils/word-export-utils";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -31,6 +33,15 @@ export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: P
       generatePautaPDF(pauta);
     } catch (err) {
       console.error("Erro PDF:", err);
+    }
+  };
+
+  const handleWord = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      generatePautaWord(pauta);
+    } catch (err) {
+      console.error("Erro Word:", err);
     }
   };
 
@@ -74,9 +85,23 @@ export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: P
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onEdit(pauta)}>
           <Pencil className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handlePDF}>
-          <FileDown className="h-3.5 w-3.5" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e) => e.stopPropagation()}>
+              <FileDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+            <DropdownMenuItem onClick={(e) => handlePDF(e as any)}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Exportar como PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => handleWord(e as any)}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Exportar como Word (.docx)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button
           variant="ghost"
           size="sm"

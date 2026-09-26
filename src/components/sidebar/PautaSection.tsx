@@ -7,6 +7,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { deletePauta, updatePauta } from "@/services/pautas-api";
 import { useToast } from "@/hooks/use-toast";
 import { generatePautaPDF } from "@/utils/pdf-utils";
+import { generatePautaWord } from "@/utils/word-export-utils";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
@@ -72,6 +73,20 @@ export const PautaSection = ({
       toast({
         title: "Erro ao gerar PDF",
         description: "Ocorreu um erro ao gerar o PDF. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleExportPautaWord = (pauta: Pauta, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      generatePautaWord(pauta);
+    } catch (error) {
+      console.error("Erro ao gerar Word:", error);
+      toast({
+        title: "Erro ao gerar Word",
+        description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
         variant: "destructive",
       });
     }
@@ -326,15 +341,29 @@ export const PautaSection = ({
                                     <Edit2 className="h-3 w-3" />
                                     <span className="sr-only">Editar</span>
                                   </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 rounded-md hover:bg-primary/10 hover:text-primary transition-colors"
-                                    onClick={(e) => handlePrintPauta(pauta, e)}
-                                  >
-                                    <FileText className="h-3 w-3" />
-                                    <span className="sr-only">PDF</span>
-                                  </Button>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 rounded-md hover:bg-primary/10 hover:text-primary transition-colors"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <FileText className="h-3 w-3" />
+                                        <span className="sr-only">Exportar</span>
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className="w-56 bg-popover z-50">
+                                      <DropdownMenuItem onClick={(e) => handlePrintPauta(pauta, e as any)}>
+                                        <FileText className="h-4 w-4 mr-2" />
+                                        Exportar como PDF
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={(e) => handleExportPautaWord(pauta, e as any)}>
+                                        <FileText className="h-4 w-4 mr-2" />
+                                        Exportar como Word (.docx)
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                   <Button
                                     variant="ghost"
                                     size="icon"

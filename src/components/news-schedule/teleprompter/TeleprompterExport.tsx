@@ -1,9 +1,11 @@
 
 import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
+import { Download, FileText } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Materia, Telejornal, Bloco } from "@/types";
 import jsPDF from 'jspdf';
 import { getOrderedApprovedMaterias, getTelejornalName, createSafeFilename, hasApprovedContent } from "@/utils/teleprompter-utils";
+import { exportTeleprompterToWord } from "@/utils/word-export-utils";
 
 interface TeleprompterExportProps {
   blocks: (Bloco & { items: Materia[] })[];
@@ -166,15 +168,28 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
   const canExport = telejornalName && hasApprovedContent(blocks);
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={exportToPDF}
-      disabled={!canExport}
-      title={!canExport ? "Não há conteúdo para exportar" : "Exportar conteúdo do teleprompter em PDF"}
-    >
-      <Download className="h-4 w-4 mr-2" />
-      Exportar PDF
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!canExport}
+          title={!canExport ? "Não há conteúdo para exportar" : "Exportar conteúdo do teleprompter"}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Exportar
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-popover z-50">
+        <DropdownMenuItem onClick={exportToPDF}>
+          <FileText className="h-4 w-4 mr-2" />
+          Exportar como PDF
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => exportTeleprompterToWord(blocks, telejornal)}>
+          <FileText className="h-4 w-4 mr-2" />
+          Exportar como Word (.docx)
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
