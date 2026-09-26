@@ -77,6 +77,20 @@ export const PautaSection = ({
     }
   };
 
+  const handleExportPautaWord = (pauta: Pauta, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      generatePautaWord(pauta);
+    } catch (error) {
+      console.error("Erro ao gerar Word:", error);
+      toast({
+        title: "Erro ao gerar Word",
+        description: "Ocorreu um erro ao gerar o documento. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const confirmDeletePauta = async () => {
     if (!deletingPauta) return;
     
