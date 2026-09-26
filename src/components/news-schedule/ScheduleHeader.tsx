@@ -188,7 +188,15 @@ export const ScheduleHeader = ({
                   disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
                 >
                   <FileText className="h-4 w-4 mr-2" />
-                  Exportar PLAYOUT
+                  Exportar PLAYOUT (PDF)
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem 
+                  onClick={handleExportPlayoutWord}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Exportar PLAYOUT (Word)
                 </DropdownMenuItem>
                 
                 <DropdownMenuSeparator />
