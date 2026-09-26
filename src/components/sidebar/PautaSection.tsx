@@ -326,15 +326,29 @@ export const PautaSection = ({
                                     <Edit2 className="h-3 w-3" />
                                     <span className="sr-only">Editar</span>
                                   </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-6 w-6 rounded-md hover:bg-primary/10 hover:text-primary transition-colors"
-                                    onClick={(e) => handlePrintPauta(pauta, e)}
-                                  >
-                                    <FileText className="h-3 w-3" />
-                                    <span className="sr-only">PDF</span>
-                                  </Button>
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 rounded-md hover:bg-primary/10 hover:text-primary transition-colors"
+                                        onClick={(e) => e.stopPropagation()}
+                                      >
+                                        <FileText className="h-3 w-3" />
+                                        <span className="sr-only">Exportar</span>
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="start" className="w-56 bg-popover z-50">
+                                      <DropdownMenuItem onClick={(e) => handlePrintPauta(pauta, e as any)}>
+                                        <FileText className="h-4 w-4 mr-2" />
+                                        Exportar como PDF
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem onClick={(e) => handleExportPautaWord(pauta, e as any)}>
+                                        <FileText className="h-4 w-4 mr-2" />
+                                        Exportar como Word (.docx)
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                   <Button
                                     variant="ghost"
                                     size="icon"
