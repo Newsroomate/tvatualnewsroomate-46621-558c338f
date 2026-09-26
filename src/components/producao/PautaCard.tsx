@@ -34,6 +34,15 @@ export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: P
     }
   };
 
+  const handleWord = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      generatePautaWord(pauta);
+    } catch (err) {
+      console.error("Erro Word:", err);
+    }
+  };
+
   return (
     <Card
       draggable={draggable}
