@@ -74,9 +74,23 @@ export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: P
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onEdit(pauta)}>
           <Pencil className="h-3.5 w-3.5" />
         </Button>
-        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={handlePDF}>
-          <FileDown className="h-3.5 w-3.5" />
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={(e) => e.stopPropagation()}>
+              <FileDown className="h-3.5 w-3.5" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56 bg-popover z-50">
+            <DropdownMenuItem onClick={(e) => handlePDF(e as any)}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Exportar como PDF
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => handleWord(e as any)}>
+              <FileDown className="h-4 w-4 mr-2" />
+              Exportar como Word (.docx)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <Button
           variant="ghost"
           size="sm"
