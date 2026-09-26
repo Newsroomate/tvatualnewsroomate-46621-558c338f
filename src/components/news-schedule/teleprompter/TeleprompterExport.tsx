@@ -168,15 +168,28 @@ export const TeleprompterExport = ({ blocks, telejornal }: TeleprompterExportPro
   const canExport = telejornalName && hasApprovedContent(blocks);
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={exportToPDF}
-      disabled={!canExport}
-      title={!canExport ? "Não há conteúdo para exportar" : "Exportar conteúdo do teleprompter em PDF"}
-    >
-      <Download className="h-4 w-4 mr-2" />
-      Exportar PDF
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          disabled={!canExport}
+          title={!canExport ? "Não há conteúdo para exportar" : "Exportar conteúdo do teleprompter"}
+        >
+          <Download className="h-4 w-4 mr-2" />
+          Exportar
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="bg-popover z-50">
+        <DropdownMenuItem onClick={exportToPDF}>
+          <FileText className="h-4 w-4 mr-2" />
+          Exportar como PDF
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => exportTeleprompterToWord(blocks, telejornal)}>
+          <FileText className="h-4 w-4 mr-2" />
+          Exportar como Word (.docx)
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
