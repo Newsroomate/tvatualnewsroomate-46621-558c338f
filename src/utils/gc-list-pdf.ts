@@ -1,7 +1,8 @@
 
 import jsPDF from 'jspdf';
 import { drawPdfLogo } from '@/utils/pdf-logo';
-import { Bloco, Materia, Telejornal, GCEntry } from "@/types";
+import { Bloco, Materia, Telejornal } from "@/types";
+import { GCEntry } from "@/types/gc";
 
 const typeLabels: Record<string, string> = {
   credito: 'CRÉDITO',
