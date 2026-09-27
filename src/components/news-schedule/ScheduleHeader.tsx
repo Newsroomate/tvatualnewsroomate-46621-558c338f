@@ -29,6 +29,8 @@ interface ScheduleHeaderProps {
   onOpenPlayout?: () => void;
   onOpenGCLibrary?: () => void;
   onOpenPlaylist?: () => void;
+  onOpenDashboard?: () => void;
+  onOpenVmixSync?: () => void;
   materias?: Materia[];
   blocks?: (Bloco & { items: Materia[] })[];
 }
