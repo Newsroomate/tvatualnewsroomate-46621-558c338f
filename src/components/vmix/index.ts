@@ -10,3 +10,7 @@ export { OperationLog } from './OperationLog';
 export { PacoteGraficoTab } from './PacoteGraficoTab';
 export { GcBackgroundPreview } from './GcBackgroundPreview';
 export { GcLayoutEditor } from './GcLayoutEditor';
+export { VmixDiagnosticsPanel } from './VmixDiagnosticsPanel';
+export { VmixRundownLinkPanel } from './VmixRundownLinkPanel';
+export { VmixTriggerLogPanel } from './VmixTriggerLogPanel';
+export { VmixAlertsBanner } from './VmixAlertsBanner';
