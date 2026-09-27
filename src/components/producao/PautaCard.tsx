@@ -138,5 +138,8 @@ export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: P
         </Button>
       </div>
     </Card>
+
+    <EnviarPautaEspelhoDialog pauta={pauta} open={espelhoOpen} onOpenChange={setEspelhoOpen} />
+    </>
   );
 };
