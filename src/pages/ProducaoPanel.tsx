@@ -194,6 +194,9 @@ const ProducaoPanelInner = () => {
             <TabsTrigger value="agenda" className="gap-2">
               <Users className="h-4 w-4" /> Agenda de Contatos
             </TabsTrigger>
+            <TabsTrigger value="arquivadas" className="gap-2">
+              <Archive className="h-4 w-4" /> Arquivadas
+            </TabsTrigger>
           </TabsList>
         </div>
 
