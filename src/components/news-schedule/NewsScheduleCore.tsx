@@ -84,6 +84,9 @@ export const NewsScheduleCore = ({
   const [isPlayoutOpen, setIsPlayoutOpen] = useState(false);
   const [isGCLibraryOpen, setIsGCLibraryOpen] = useState(false);
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const [isVmixSyncOpen, setIsVmixSyncOpen] = useState(false);
+  const [historyMateria, setHistoryMateria] = useState<Materia | null>(null);
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
   
   // Flatten all materias from all blocks
