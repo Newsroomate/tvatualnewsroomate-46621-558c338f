@@ -114,3 +114,11 @@ export const deletePlayoutTrigger = async (id: string): Promise<void> => {
   const { error } = await supabase.from('playout_triggers').delete().eq('id', id);
   if (error) throw error;
 };
+
+export const takeMateria = async (telejornalId: string, materiaId: string): Promise<void> => {
+  await upsertPlayoutStatus(telejornalId, {
+    status: 'running',
+    current_materia_id: materiaId,
+    current_item_started_at: new Date().toISOString(),
+  });
+};

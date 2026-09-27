@@ -148,6 +148,7 @@ function parseGCs(materia: Materia): GCEntry[] {
     // Group every 2 lines as a GC entry
     for (let i = 0; i < lines.length; i += 2) {
       entries.push({
+        id: `legacy-${i}`,
         tipo: 'geral',
         linha1: lines[i] || '',
         linha2: lines[i + 1] || '',
