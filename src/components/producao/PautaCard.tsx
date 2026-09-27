@@ -83,9 +83,30 @@ export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: P
             <span className="truncate">{pauta.local}</span>
           </div>
         )}
+        {primeiroContato?.nome && (
+          <div className="flex items-center gap-1">
+            <Phone className="h-3 w-3" />
+            <span className="truncate">
+              {primeiroContato.nome}
+              {primeiroContato.telefone ? ` · ${primeiroContato.telefone}` : ""}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0"
+          title="Enviar para o espelho"
+          onClick={(e) => {
+            e.stopPropagation();
+            setEspelhoOpen(true);
+          }}
+        >
+          <Send className="h-3.5 w-3.5" />
+        </Button>
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onEdit(pauta)}>
           <Pencil className="h-3.5 w-3.5" />
         </Button>
