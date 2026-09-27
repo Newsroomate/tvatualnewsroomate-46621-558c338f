@@ -247,14 +247,14 @@ const ProducaoPanelInner = () => {
       <AlertDialog open={!!pautaToDelete} onOpenChange={(o) => !o && setPautaToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir pauta?</AlertDialogTitle>
+            <AlertDialogTitle>Arquivar pauta?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. A pauta "{pautaToDelete?.titulo}" será permanentemente removida.
+              A pauta "{pautaToDelete?.titulo}" sairá das listas ativas e ficará disponível na aba Arquivadas, onde pode ser restaurada.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>Excluir</AlertDialogAction>
+            <AlertDialogAction onClick={confirmDelete}>Arquivar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
