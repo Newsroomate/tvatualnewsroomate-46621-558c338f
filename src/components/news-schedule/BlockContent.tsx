@@ -10,6 +10,7 @@ interface BlockContentProps {
   onDeleteItem: (item: Materia) => void;
   onDuplicateItem: (item: Materia) => void;
   onFocusInTeleprompter?: (item: Materia) => void;
+  onViewHistory?: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModifyItems?: boolean;
   // Batch selection props
@@ -19,6 +20,8 @@ interface BlockContentProps {
   // Visual selection props
   selectedItemId?: string | null;
   onItemClick?: (materia: Materia) => void;
+  // Lock info
+  getLockInfo?: (materiaId: string) => string | null;
 }
 
 export const BlockContent = ({ 
@@ -28,6 +31,7 @@ export const BlockContent = ({
   onDeleteItem,
   onDuplicateItem,
   onFocusInTeleprompter,
+  onViewHistory,
   isEspelhoOpen,
   canModifyItems = true,
   // Batch selection props
@@ -36,7 +40,9 @@ export const BlockContent = ({
   onToggleSelection,
   // Visual selection props
   selectedItemId,
-  onItemClick
+  onItemClick,
+  // Lock info
+  getLockInfo
 }: BlockContentProps) => {
   const isMobile = useIsMobile();
 
@@ -88,6 +94,7 @@ export const BlockContent = ({
                           onDelete={onDeleteItem}
                           onDuplicate={onDuplicateItem}
                           onFocusInTeleprompter={onFocusInTeleprompter}
+                          onViewHistory={onViewHistory}
                           provided={provided}
                           snapshot={snapshot}
                           isEspelhoOpen={isEspelhoOpen}
@@ -99,6 +106,7 @@ export const BlockContent = ({
                           isVisuallySelected={selectedItemId === item.id}
                           onItemClick={onItemClick}
                           isMobile={isMobile}
+                          lockedByName={getLockInfo ? getLockInfo(item.id) : null}
                         />
                       )}
                     </Draggable>

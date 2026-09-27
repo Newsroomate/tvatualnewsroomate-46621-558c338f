@@ -15,6 +15,7 @@ interface NewsBlockProps {
   onDeleteItem: (item: Materia) => void;
   onDuplicateItem: (item: Materia) => void;
   onFocusInTeleprompter?: (item: Materia) => void;
+  onViewHistory?: (item: Materia) => void;
   isEspelhoOpen: boolean;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
@@ -23,6 +24,7 @@ interface NewsBlockProps {
   isDeleting?: boolean;
   selectedMateria?: Materia | null;
   onMateriaSelect?: (materia: Materia | null) => void;
+  getLockInfo?: (materiaId: string) => string | null;
 }
 
 export const NewsBlock = ({
@@ -33,6 +35,7 @@ export const NewsBlock = ({
   onDeleteItem,
   onDuplicateItem,
   onFocusInTeleprompter,
+  onViewHistory,
   isEspelhoOpen,
   onRenameBlock,
   onDeleteBlock,
@@ -40,7 +43,8 @@ export const NewsBlock = ({
   onBatchDeleteItems,
   isDeleting = false,
   selectedMateria,
-  onMateriaSelect
+  onMateriaSelect,
+  getLockInfo
 }: NewsBlockProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -139,6 +143,7 @@ export const NewsBlock = ({
         onDeleteItem={onDeleteItem}
         onDuplicateItem={onDuplicateItem}
         onFocusInTeleprompter={onFocusInTeleprompter}
+        onViewHistory={onViewHistory}
         isEspelhoOpen={isEspelhoOpen}
         canModifyItems={canModify}
         // Batch selection props
@@ -148,6 +153,7 @@ export const NewsBlock = ({
         // Visual selection props
         selectedItemId={currentSelectedItemId}
         onItemClick={handleItemClick}
+        getLockInfo={getLockInfo}
       />
     </div>
   );

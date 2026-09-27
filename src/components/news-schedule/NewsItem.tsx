@@ -8,6 +8,9 @@ import { NewsItemActions } from "./NewsItemActions";
 import { InlineEditCell } from "./InlineEditCell";
 import { updateMateria } from "@/services/materias-api";
 import { toast } from "@/hooks/use-toast";
+import { Lock } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface NewsItemProps {
   item: Materia;
@@ -15,6 +18,7 @@ interface NewsItemProps {
   onDelete: (item: Materia) => void;
   onDuplicate: (item: Materia) => void;
   onFocusInTeleprompter?: (item: Materia) => void;
+  onViewHistory?: (item: Materia) => void;
   provided: any;
   snapshot: any;
   isEspelhoOpen: boolean;
@@ -29,6 +33,8 @@ interface NewsItemProps {
   onItemClick?: (materia: Materia) => void;
   // Layout props
   isMobile?: boolean;
+  // Lock info
+  lockedByName?: string | null;
 }
 
 export const NewsItem = ({ 
@@ -37,6 +43,7 @@ export const NewsItem = ({
   onDelete,
   onDuplicate,
   onFocusInTeleprompter,
+  onViewHistory,
   provided, 
   snapshot,
   isEspelhoOpen,
@@ -50,8 +57,11 @@ export const NewsItem = ({
   isVisuallySelected = false,
   onItemClick,
   // Layout props
-  isMobile = false
+  isMobile = false,
+  // Lock info
+  lockedByName = null
   }: NewsItemProps) => {
+  const queryClient = useQueryClient();
   // Ensure we have valid data for display
   const displayRetranca = item.retranca || "Sem título";
   const displayStatus = item.status || "draft";
@@ -110,6 +120,8 @@ export const NewsItem = ({
       console.log(`Updating ${field} for materia ${item.id}:`, updateData);
       
       await updateMateria(item.id, updateData);
+      await queryClient.invalidateQueries({ queryKey: ['blocos'] });
+      await queryClient.refetchQueries({ queryKey: ['blocos'] });
       toast({
         title: "Campo atualizado",
         description: `${field === 'retranca' ? 'Retranca' : field === 'status' ? 'Status' : field === 'reporter' ? 'Repórter' : field === 'editor' ? 'Editor' : field} atualizado com sucesso.`,
@@ -130,6 +142,8 @@ export const NewsItem = ({
     
     if (snapshot.isDragging) {
       classes += " bg-blue-50";
+    } else if (lockedByName) {
+      classes += " bg-amber-50/60";
     } else if (isVisuallySelected && !isBatchMode) {
       classes += " bg-gray-100";
     } else if (isSelected && isBatchMode) {
@@ -166,12 +180,26 @@ export const NewsItem = ({
         <MaterialTypeBadge tipoMaterial={item.tipo_material} />
       </td>
       <td className={`py-1 px-2 font-medium ${isMobile ? 'text-xs' : ''}`} onClick={(e) => e.stopPropagation()}>
-        <InlineEditCell
-          value={displayRetranca}
-          onSave={(value) => handleInlineUpdate('retranca', value)}
-          disabled={!canModify || !isEspelhoOpen}
-          placeholder="Sem título"
-        />
+        <div className="flex items-center gap-1">
+          {lockedByName && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Lock className="h-3.5 w-3.5 text-amber-500 flex-shrink-0" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Em edição por {lockedByName}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+          <InlineEditCell
+            value={displayRetranca}
+            onSave={(value) => handleInlineUpdate('retranca', value)}
+            disabled={!canModify || !isEspelhoOpen}
+            placeholder="Sem título"
+          />
+        </div>
       </td>
       <td className={`py-1 px-2 ${isMobile ? 'text-xs' : ''}`} onClick={(e) => e.stopPropagation()}>
         <InlineEditCell
@@ -206,6 +234,7 @@ export const NewsItem = ({
           onDelete={onDelete}
           onDuplicate={onDuplicate}
           onFocusInTeleprompter={onFocusInTeleprompter}
+          onViewHistory={onViewHistory}
           isEspelhoOpen={isEspelhoOpen}
           canModify={canModify}
           isMobile={isMobile}
