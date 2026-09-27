@@ -1,5 +1,6 @@
 
 import jsPDF from 'jspdf';
+import { drawPdfLogo } from '@/utils/pdf-logo';
 import { Pauta } from '@/types';
 
 export const generatePautaPDF = (pauta: Pauta) => {
@@ -18,8 +19,9 @@ export const generatePautaPDF = (pauta: Pauta) => {
     }
   };
 
-  // Start directly with the table
-  yPosition = margin;
+  // Identidade institucional acima da tabela
+  yPosition = 12;
+  yPosition += drawPdfLogo(doc, margin, yPosition, 26) + 4;
 
   // Create adaptive header table
   const tableStartY = yPosition;

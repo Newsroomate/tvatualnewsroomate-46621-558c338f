@@ -509,7 +509,7 @@ const Layout = () => {
           <MobileDrawer
             isOpen={isMobileDrawerOpen}
             onClose={handleMobileDrawerClose}
-            title="Newsroomate"
+            title="TV Atual"
           >
             <LeftSidebar 
               selectedJournal={selectedJournal}

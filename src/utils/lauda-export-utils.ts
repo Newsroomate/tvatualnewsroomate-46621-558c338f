@@ -1,5 +1,6 @@
 
 import jsPDF from 'jspdf';
+import { drawPdfLogo } from '@/utils/pdf-logo';
 import { Materia } from '@/types';
 
 export const exportLaudaToPDF = (materias: Materia[], customFilename?: string) => {
@@ -61,6 +62,10 @@ export const exportLaudaToPDF = (materias: Materia[], customFilename?: string) =
     
     y += 8; // Espaço entre seções
   };
+
+  // Identidade institucional antes da lauda
+  const logoWidth = 30;
+  y += drawPdfLogo(doc, (pageWidth - logoWidth) / 2, y, logoWidth) + 4;
 
   // Título do documento
   doc.setFontSize(16);
