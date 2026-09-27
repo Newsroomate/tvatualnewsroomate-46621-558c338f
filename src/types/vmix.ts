@@ -93,4 +93,5 @@ export interface VmixDiagnosticsResult {
   input_found: boolean;
   overlay_available: boolean;
   private_host: boolean;
+  inputs?: string[];
 }

@@ -214,5 +214,6 @@ export const runVmixDiagnostics = async (
     input_found: inputFound,
     overlay_available: overlays.length === 0 ? overlayNumber >= 1 && overlayNumber <= 4 : overlays.includes(overlayNumber),
     private_host: privateHost,
+    inputs: (state.inputs || []).map((i) => i.title),
   };
 };

@@ -131,7 +131,7 @@ export const GCSendPanel = ({ telejornalId, onApplyTemplate, disabled }: GCSendP
                 <div key={cat}>
                   {gi > 0 && <Separator className="my-1" />}
                   <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                    {GC_TEMPLATE_CATEGORIES.find((c) => c.valor === cat)?.label || cat}
+                    {GC_TEMPLATE_CATEGORIES.find((c) => c.value === cat)?.label || cat}
                   </p>
                   {items.map((template) => (
                     <div
