@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
+import tvAtualLogo from "@/assets/tv-atual-logo.jpg.asset.json";
 
 export const AuthForm = () => {
   const { signIn, isLoading } = useAuth();
@@ -19,6 +20,7 @@ export const AuthForm = () => {
   return (
     <Card className="w-full max-w-md">
       <CardHeader className="text-center">
+        <img src={tvAtualLogo.url} alt="TV Atual" className="mx-auto h-24 w-24 object-contain mb-2" />
         <CardTitle className="text-2xl">Sistema de Redação</CardTitle>
         <CardDescription>
           Entre com sua conta
