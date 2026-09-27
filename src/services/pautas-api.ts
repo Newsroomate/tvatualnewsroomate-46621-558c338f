@@ -6,6 +6,7 @@ export const fetchPautas = async () => {
   const { data, error } = await supabase
     .from('pautas')
     .select('*')
+    .is('deleted_at', null)
     .order('created_at', { ascending: false });
 
   if (error) {
@@ -22,6 +23,7 @@ export const fetchPautas = async () => {
     local: row.local,
     horario: row.horario,
     entrevistado: row.entrevistado,
+    entrevistados_contatos: Array.isArray(row.entrevistados_contatos) ? row.entrevistados_contatos : [],
     produtor: row.produtor,
     status: row.status,
     created_at: row.created_at,
@@ -61,13 +63,14 @@ export const createPauta = async (pauta: PautaCreateInput, userId: string) => {
   }
 
   // Usar colunas existentes no DB
-  const row = {
+  const row: any = {
     titulo: pauta.titulo,
     descricao: pauta.descricao || null,
     data_cobertura: (pauta.data_cobertura || new Date().toISOString().slice(0, 10)),
     local: pauta.local || null,
     horario: pauta.horario || null,
     entrevistado: pauta.entrevistado || null,
+    entrevistados_contatos: pauta.entrevistados_contatos || [],
     produtor: pauta.produtor || null,
     status: pauta.status || 'pendente',
     user_id: userId,
@@ -105,6 +108,7 @@ export const createPauta = async (pauta: PautaCreateInput, userId: string) => {
     local: data.local,
     horario: data.horario,
     entrevistado: data.entrevistado,
+    entrevistados_contatos: Array.isArray((data as any).entrevistados_contatos) ? (data as any).entrevistados_contatos : [],
     produtor: data.produtor,
     status: data.status,
     created_at: data.created_at,
@@ -123,6 +127,7 @@ export const updatePauta = async (id: string, updates: Partial<{
   local?: string;
   horario?: string;
   entrevistado?: string;
+  entrevistados_contatos?: any;
   produtor?: string;
   data_cobertura?: string;
   status?: string;
@@ -142,6 +147,7 @@ export const updatePauta = async (id: string, updates: Partial<{
   if (updates.local !== undefined) row.local = updates.local || null;
   if (updates.horario !== undefined) row.horario = updates.horario || null;
   if (updates.entrevistado !== undefined) row.entrevistado = updates.entrevistado || null;
+  if (updates.entrevistados_contatos !== undefined) row.entrevistados_contatos = updates.entrevistados_contatos || [];
   if (updates.produtor !== undefined) row.produtor = updates.produtor || null;
   if (updates.status !== undefined) row.status = updates.status;
   if (updates.proposta !== undefined) row.proposta = updates.proposta || null;
@@ -175,6 +181,7 @@ export const updatePauta = async (id: string, updates: Partial<{
     local: data.local,
     horario: data.horario,
     entrevistado: data.entrevistado,
+    entrevistados_contatos: Array.isArray((data as any).entrevistados_contatos) ? (data as any).entrevistados_contatos : [],
     produtor: data.produtor,
     status: data.status,
     created_at: data.created_at,
@@ -188,14 +195,67 @@ export const updatePauta = async (id: string, updates: Partial<{
   } as Pauta;
 };
 
+const mapPautaRow = (row: any): Pauta => ({
+  id: row.id,
+  titulo: row.titulo,
+  descricao: row.descricao,
+  data_cobertura: row.data_cobertura,
+  local: row.local,
+  horario: row.horario,
+  entrevistado: row.entrevistado,
+  entrevistados_contatos: Array.isArray(row.entrevistados_contatos) ? row.entrevistados_contatos : [],
+  produtor: row.produtor,
+  status: row.status,
+  created_at: row.created_at,
+  updated_at: row.updated_at,
+  proposta: row.proposta,
+  encaminhamento: row.encaminhamento,
+  informacoes: row.informacoes,
+  programa: row.programa,
+  reporter: row.reporter,
+  deleted_at: row.deleted_at,
+} as Pauta);
+
+// Exclusão = arquivamento (soft delete), a pauta continua disponível para consulta
 export const deletePauta = async (id: string) => {
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { error } = await supabase
     .from('pautas')
-    .delete()
+    .update({ deleted_at: new Date().toISOString(), deleted_by: user?.id ?? null })
     .eq('id', id);
 
   if (error) {
-    console.error('Erro ao excluir pauta:', error);
+    console.error('Erro ao arquivar pauta:', error);
+    throw error;
+  }
+
+  return true;
+};
+
+export const fetchPautasArquivadas = async (): Promise<Pauta[]> => {
+  const { data, error } = await supabase
+    .from('pautas')
+    .select('*')
+    .not('deleted_at', 'is', null)
+    .order('deleted_at', { ascending: false });
+
+  if (error) {
+    console.error('Erro ao buscar pautas arquivadas:', error);
+    throw error;
+  }
+
+  return (data || []).map(mapPautaRow);
+};
+
+export const restorePauta = async (id: string) => {
+  const { error } = await supabase
+    .from('pautas')
+    .update({ deleted_at: null, deleted_by: null })
+    .eq('id', id);
+
+  if (error) {
+    console.error('Erro ao restaurar pauta:', error);
     throw error;
   }
 
