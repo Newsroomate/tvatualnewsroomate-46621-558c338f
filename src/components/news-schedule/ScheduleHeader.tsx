@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save, FolderOpen, Menu, BookOpen, Monitor, Type, Film } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save, FolderOpen, Menu, BookOpen, Monitor, Type, Film, Printer, BarChart3, Radio } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal, Materia, Bloco } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
