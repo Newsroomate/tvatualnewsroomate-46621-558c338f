@@ -87,6 +87,7 @@ export const NewsScheduleCore = ({
   const [isDashboardOpen, setIsDashboardOpen] = useState(false);
   const [isVmixSyncOpen, setIsVmixSyncOpen] = useState(false);
   const [historyMateria, setHistoryMateria] = useState<Materia | null>(null);
+  const { getLockInfo } = useActiveLocks(currentTelejornal?.id || null);
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
   
   // Flatten all materias from all blocks
