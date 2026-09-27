@@ -123,9 +123,10 @@ export const VmixSettingsModal = ({ isOpen, onClose, telejornalId }: VmixSetting
         </DialogHeader>
 
         <Tabs defaultValue="geral" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full">
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="geral">Geral</TabsTrigger>
             <TabsTrigger value="pacote">Pacote Gráfico</TabsTrigger>
+            <TabsTrigger value="registros">Registros vMix</TabsTrigger>
           </TabsList>
 
           <TabsContent value="geral" className="mt-4">
