@@ -9,9 +9,13 @@ import { createMateria } from "@/services/materias-create";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
-import { Pauta, Telejornal, MateriaCreateInput } from "@/types";
+import { Pauta, Telejornal, MateriaCreateInput, ContatoEntrevistado } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { FileOutput } from "lucide-react";
+import { EntrevistadosField } from "@/components/telejornal-content/EntrevistadosField";
+import { upsertContatos } from "@/services/contatos-entrevistados-api";
+import { useAutosave } from "@/hooks/useAutosave";
+
 
 interface PautaIndependenteModalProps {
   isOpen: boolean;
@@ -37,7 +41,7 @@ export const PautaIndependenteModal = ({
   const [reporter, setReporter] = useState("");
   const [imagens, setImagens] = useState("");
   const [roteiro1, setRoteiro1] = useState("");
-  const [entrevistados, setEntrevistados] = useState("");
+  const [contatos, setContatos] = useState<ContatoEntrevistado[]>([{ nome: "", telefone: "", email: "" }]);
   const [proposta, setProposta] = useState("");
   const [encaminhamento, setEncaminhamento] = useState("");
   const [informacoes, setInformacoes] = useState("");
@@ -62,7 +66,14 @@ export const PautaIndependenteModal = ({
       setReporter(pauta.reporter || "");
       setImagens(pauta.local || "");
       setRoteiro1(pauta.descricao || "");
-      setEntrevistados(pauta.entrevistado || "");
+      if (pauta.entrevistados_contatos && pauta.entrevistados_contatos.length > 0) {
+        setContatos(pauta.entrevistados_contatos);
+      } else if (pauta.entrevistado?.trim()) {
+        const nomes = pauta.entrevistado.split(/[,;\n]/).map(n => n.trim()).filter(Boolean);
+        setContatos(nomes.length > 0 ? nomes.map(n => ({ nome: n, telefone: "", email: "" })) : [{ nome: "", telefone: "", email: "" }]);
+      } else {
+        setContatos([{ nome: "", telefone: "", email: "" }]);
+      }
       setProposta(pauta.proposta || "");
       setEncaminhamento(pauta.encaminhamento || "");
       setInformacoes(pauta.informacoes || "");
@@ -75,7 +86,7 @@ export const PautaIndependenteModal = ({
       setReporter("");
       setImagens("");
       setRoteiro1("");
-      setEntrevistados("");
+      setContatos([{ nome: "", telefone: "", email: "" }]);
       setProposta("");
       setEncaminhamento("");
       setInformacoes("");
@@ -131,7 +142,7 @@ export const PautaIndependenteModal = ({
       const textoCompleto = [
         roteiro1 && `📝 ROTEIRO:\n${roteiro1}`,
         proposta && `📌 PROPOSTA:\n${proposta}`,
-        entrevistados && `🎤 ENTREVISTADOS:\n${entrevistados}`,
+        contatos.filter(c => c.nome?.trim()).length > 0 && `🎤 ENTREVISTADOS:\n${contatos.filter(c => c.nome?.trim()).map(c => [c.nome?.trim(), c.telefone?.trim(), c.email?.trim()].filter(Boolean).join(' · ')).join('\n')}`,
         encaminhamento && `➡️ ENCAMINHAMENTO:\n${encaminhamento}`,
         informacoes && `ℹ️ INFORMAÇÕES:\n${informacoes}`,
         produtor && `👤 PRODUTOR: ${produtor}`,
@@ -168,9 +179,51 @@ export const PautaIndependenteModal = ({
     setIsGeneratingMateria(false);
   };
 
+  const getCleanContatos = () =>
+    contatos
+      .map(c => ({
+        nome: c.nome?.trim() || "",
+        telefone: c.telefone?.trim() || "",
+        email: c.email?.trim() || "",
+      }))
+      .filter(c => c.nome);
+
+  const buildPautaData = () => {
+    const cleanContatos = getCleanContatos();
+    return {
+      titulo: retranca,
+      descricao: roteiro1,
+      local: imagens,
+      horario: data,
+      entrevistado: cleanContatos.map(c => c.nome).join(", "),
+      entrevistados_contatos: cleanContatos,
+      produtor,
+      proposta,
+      encaminhamento,
+      informacoes,
+      status: pauta?.status || "pendente",
+      data_cobertura: data,
+      programa,
+      reporter
+    };
+  };
+
+  const autosaveEnabled = isOpen && !!pauta?.id && !!retranca.trim() && !isSubmitting;
+
+  const { isAutosaving, lastSavedAt, markSaved } = useAutosave({
+    data: { retranca, roteiro1, imagens, data, contatos, produtor, proposta, encaminhamento, informacoes, programa, reporter },
+    enabled: autosaveEnabled,
+    onSave: async () => {
+      if (!pauta?.id) return;
+      await updatePauta(pauta.id, buildPautaData());
+      onPautaCreated();
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!retranca.trim()) return;
+
     
     console.log('[PautaIndependenteModal] user:', user);
     console.log('[PautaIndependenteModal] user.id:', user?.id);
@@ -189,22 +242,11 @@ export const PautaIndependenteModal = ({
     
     const actionType = pauta ? 'update' : 'create';
     
+    const cleanContatos = getCleanContatos();
+
     await guardAction(actionType, 'pauta', async () => {
-      const pautaData = {
-        titulo: retranca,
-        descricao: roteiro1,
-        local: imagens,
-        horario: data,
-        entrevistado: entrevistados,
-        produtor,
-        proposta,
-        encaminhamento,
-        informacoes,
-        status: pauta?.status || "pendente",
-        data_cobertura: data,
-        programa,
-        reporter
-      };
+      const pautaData = buildPautaData();
+
 
       if (pauta) {
         console.log('[PautaIndependenteModal] Atualizando pauta:', pauta.id, pautaData);
@@ -222,7 +264,14 @@ export const PautaIndependenteModal = ({
         });
       }
       
+      // Salva contatos na agenda da produção (não bloqueante)
+      upsertContatos(cleanContatos, user.id).catch(err =>
+        console.error('[PautaIndependenteModal] erro ao salvar contatos:', err)
+      );
+
+      markSaved();
       onPautaCreated();
+
       handleClose();
     }, pauta?.user_id);
     
@@ -237,7 +286,7 @@ export const PautaIndependenteModal = ({
     setReporter("");
     setImagens("");
     setRoteiro1("");
-    setEntrevistados("");
+    setContatos([{ nome: "", telefone: "", email: "" }]);
     setProposta("");
     setEncaminhamento("");
     setInformacoes("");
@@ -249,7 +298,17 @@ export const PautaIndependenteModal = ({
       <DialogContent className="sm:max-w-[600px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{pauta ? "Editar Pauta" : "Nova Pauta Independente"}</DialogTitle>
+          {autosaveEnabled && (
+            <p className="text-xs text-muted-foreground">
+              {isAutosaving
+                ? "Salvando..."
+                : lastSavedAt
+                  ? `Salvo automaticamente às ${lastSavedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                  : "Salvamento automático ativo"}
+            </p>
+          )}
         </DialogHeader>
+
         
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
@@ -292,8 +351,8 @@ export const PautaIndependenteModal = ({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="entrevistados">ENTREVISTADOS</Label>
-            <AutoTextarea id="entrevistados" value={entrevistados} onChange={e => setEntrevistados(e.target.value)} placeholder="Lista de entrevistados" />
+            <Label>ENTREVISTADOS</Label>
+            <EntrevistadosField value={contatos} onChange={setContatos} />
           </div>
 
           <div className="space-y-1">

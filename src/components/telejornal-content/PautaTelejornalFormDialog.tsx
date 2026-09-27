@@ -7,8 +7,10 @@ import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { useAuth } from "@/context/AuthContext";
 import { createPauta, updatePauta } from "@/services/api";
 import { linkPautaToTelejornal } from "@/services/pautas-telejornal-api";
-import { Pauta, PautaCreateInput } from "@/types";
+import { Pauta, PautaCreateInput, ContatoEntrevistado } from "@/types";
 import { toast } from "sonner";
+import { EntrevistadosField } from "./EntrevistadosField";
+import { upsertContatos } from "@/services/contatos-entrevistados-api";
 
 interface PautaTelejornalFormDialogProps {
   isOpen: boolean;
@@ -27,6 +29,7 @@ export const PautaTelejornalFormDialog = ({
 }: PautaTelejornalFormDialogProps) => {
   const { user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contatos, setContatos] = useState<ContatoEntrevistado[]>([{ nome: "", telefone: "", email: "" }]);
   const [formData, setFormData] = useState<PautaCreateInput>({
     titulo: "",
     descricao: "",
@@ -60,6 +63,15 @@ export const PautaTelejornalFormDialog = ({
         reporter: pauta.reporter || "",
         status: pauta.status || "pendente"
       });
+      // Carrega contatos estruturados; se não houver, faz fallback do texto legado
+      if (pauta.entrevistados_contatos && pauta.entrevistados_contatos.length > 0) {
+        setContatos(pauta.entrevistados_contatos);
+      } else if (pauta.entrevistado?.trim()) {
+        const nomes = pauta.entrevistado.split(/[,;\n]/).map(n => n.trim()).filter(Boolean);
+        setContatos(nomes.length > 0 ? nomes.map(n => ({ nome: n, telefone: "", email: "" })) : [{ nome: "", telefone: "", email: "" }]);
+      } else {
+        setContatos([{ nome: "", telefone: "", email: "" }]);
+      }
     } else {
       setFormData({
         titulo: "",
@@ -76,6 +88,7 @@ export const PautaTelejornalFormDialog = ({
         reporter: "",
         status: "pendente"
       });
+      setContatos([{ nome: "", telefone: "", email: "" }]);
     }
   }, [pauta, isOpen]);
 
@@ -95,25 +108,39 @@ export const PautaTelejornalFormDialog = ({
     setIsSubmitting(true);
 
     try {
+      // Limpa contatos vazios e prepara payload
+      const cleanContatos = contatos
+        .map(c => ({
+          nome: c.nome?.trim() || "",
+          telefone: c.telefone?.trim() || "",
+          email: c.email?.trim() || "",
+        }))
+        .filter(c => c.nome);
+
+      const entrevistadoLegado = cleanContatos.map(c => c.nome).join(", ");
+
+      const payload: PautaCreateInput = {
+        ...formData,
+        entrevistado: entrevistadoLegado,
+        entrevistados_contatos: cleanContatos,
+      };
+
       if (pauta) {
-        // Apenas atualizar a pauta existente
         console.log('[PautaTelejornalFormDialog] Atualizando pauta:', pauta.id);
-        await updatePauta(pauta.id, formData);
+        await updatePauta(pauta.id, payload);
         toast.success("Pauta atualizada com sucesso!");
       } else {
-        // Criar nova pauta E vincular ao telejornal
-        console.log('[PautaTelejornalFormDialog] Criando nova pauta:', formData);
-        console.log('[PautaTelejornalFormDialog] userId:', user.id);
-        console.log('[PautaTelejornalFormDialog] telejornalId:', telejornalId);
-        
-        const newPauta = await createPauta(formData, user.id);
-        console.log('[PautaTelejornalFormDialog] Pauta criada:', newPauta);
-        
+        console.log('[PautaTelejornalFormDialog] Criando nova pauta:', payload);
+        const newPauta = await createPauta(payload, user.id);
         await linkPautaToTelejornal(newPauta.id, telejornalId);
-        console.log('[PautaTelejornalFormDialog] Pauta vinculada ao telejornal');
-        
         toast.success("Pauta criada e vinculada ao telejornal!");
       }
+
+      // Salva contatos no diretório compartilhado (não bloqueante)
+      upsertContatos(cleanContatos, user.id).catch(err =>
+        console.error('[PautaTelejornalFormDialog] erro ao salvar contatos:', err)
+      );
+
       onSuccess();
       onClose();
     } catch (error) {
@@ -198,13 +225,8 @@ export const PautaTelejornalFormDialog = ({
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="entrevistado">Entrevistados</Label>
-            <AutoTextarea
-              id="entrevistado"
-              value={formData.entrevistado}
-              onChange={(e) => setFormData({ ...formData, entrevistado: e.target.value })}
-              placeholder="Lista de entrevistados"
-            />
+            <Label>Entrevistados</Label>
+            <EntrevistadosField value={contatos} onChange={setContatos} />
           </div>
 
           <div className="space-y-1">
