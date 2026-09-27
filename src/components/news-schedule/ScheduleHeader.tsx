@@ -72,6 +72,21 @@ export const ScheduleHeader = ({
     exportPlayoutWord(blocks, currentTelejornal);
   };
 
+  const handlePrintRundownGrid = () => {
+    if (!checkPermission('export', 'playout')) return;
+    exportRundownGridPDF(blocks, currentTelejornal);
+  };
+
+  const handlePrintStoryCompact = () => {
+    if (!checkPermission('export', 'playout')) return;
+    exportStoryCompactPDF(blocks, currentTelejornal);
+  };
+
+  const handleExportGCListPDF = () => {
+    if (!checkPermission('export', 'gc')) return;
+    exportGCListPDF(blocks, currentTelejornal);
+  };
+
   const handleViewLaudas = () => {
     if (!checkPermission('view', 'lauda')) return;
     onViewLaudas?.();
