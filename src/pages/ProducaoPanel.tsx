@@ -222,6 +222,10 @@ const ProducaoPanelInner = () => {
           <TabsContent value="agenda" className="h-full mt-0 data-[state=inactive]:hidden" forceMount>
             <AgendaContatos pautas={pautas} onEditPauta={handleEdit} />
           </TabsContent>
+
+          <TabsContent value="arquivadas" className="h-full mt-0 data-[state=inactive]:hidden" forceMount>
+            <PautasArquivadas onRestored={load} />
+          </TabsContent>
         </div>
       </Tabs>
 
