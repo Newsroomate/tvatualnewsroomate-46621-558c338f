@@ -123,6 +123,8 @@ export const NewsScheduleCore = ({
         onOpenPlayout={() => setIsPlayoutOpen(true)}
         onOpenGCLibrary={() => setIsGCLibraryOpen(true)}
         onOpenPlaylist={() => setIsPlaylistOpen(true)}
+        onOpenDashboard={() => setIsDashboardOpen(true)}
+        onOpenVmixSync={() => setIsVmixSyncOpen(true)}
         blocks={blocks}
       />
       
