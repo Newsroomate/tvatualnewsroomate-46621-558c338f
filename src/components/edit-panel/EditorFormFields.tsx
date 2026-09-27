@@ -95,7 +95,14 @@ export const EditorFormFields = ({
 
       {onGcsChange ? (
         <div className="space-y-1.5">
-          <Label>GCs (Geradores de Caracteres)</Label>
+          <div className="flex justify-between items-center gap-2">
+            <Label>GCs (Geradores de Caracteres)</Label>
+            <GCSendPanel
+              telejornalId={telejornalId}
+              onApplyTemplate={handleGCTextChange}
+              disabled={disabled}
+            />
+          </div>
           <GCListEditor
             formData={formData}
             gcs={Array.isArray(formData.gcs) ? (formData.gcs as GCEntry[]) : []}
