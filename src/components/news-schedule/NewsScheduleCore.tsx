@@ -185,6 +185,8 @@ export const NewsScheduleCore = ({
           isDeleting={isDeleting}
           selectedMateria={selectedMateria}
           onMateriaSelect={onMateriaSelect}
+          onViewHistory={(item) => setHistoryMateria(item)}
+          getLockInfo={getLockInfo}
         />
       </div>
 
