@@ -508,6 +508,26 @@ export const ScheduleHeader = ({
                 <Film className="h-4 w-4 mr-2" />
                 Playlist
               </Button>
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onOpenVmixSync}
+                disabled={!currentTelejornal}
+              >
+                <Radio className="h-4 w-4 mr-2" />
+                Espelho x vMix
+              </Button>
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onOpenDashboard}
+                disabled={!hasBlocks}
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Dashboard
+              </Button>
             </div>
           </div>
         </div>
