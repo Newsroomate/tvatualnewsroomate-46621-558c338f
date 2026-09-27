@@ -213,9 +213,12 @@ export type Database = {
           data: Json
           id: string
           notes: string | null
+          scope: string
           total_blocos: number
           total_espelhos: number
           total_materias: number
+          total_pautas: number
+          total_telejornais: number
         }
         Insert: {
           backup_type?: string
@@ -224,9 +227,12 @@ export type Database = {
           data: Json
           id?: string
           notes?: string | null
+          scope?: string
           total_blocos?: number
           total_espelhos?: number
           total_materias?: number
+          total_pautas?: number
+          total_telejornais?: number
         }
         Update: {
           backup_type?: string
@@ -235,9 +241,12 @@ export type Database = {
           data?: Json
           id?: string
           notes?: string | null
+          scope?: string
           total_blocos?: number
           total_espelhos?: number
           total_materias?: number
+          total_pautas?: number
+          total_telejornais?: number
         }
         Relationships: []
       }
