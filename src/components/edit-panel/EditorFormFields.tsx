@@ -22,7 +22,8 @@ export const EditorFormFields = ({
   formData,
   onInputChange,
   onGcsChange,
-  disabled = false
+  disabled = false,
+  telejornalId
 }: EditorFormFieldsProps) => {
   const gcTextareaRef = useRef<HTMLTextAreaElement>(null);
   const cabecaTextareaRef = useRef<HTMLTextAreaElement>(null);
