@@ -7,6 +7,7 @@ import { GCEntry } from "@/types/gc";
 import { AllCapsGCButton } from "./AllCapsGCButton";
 import { LinhaFinaButton } from "./LinhaFinaButton";
 import { GCListEditor } from "./GCListEditor";
+import { GCSendPanel } from "./GCSendPanel";
 import { useRef } from "react";
 
 interface EditorFormFieldsProps {
@@ -14,6 +15,7 @@ interface EditorFormFieldsProps {
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onGcsChange?: (gcs: GCEntry[]) => void;
   disabled?: boolean;
+  telejornalId?: string | null;
 }
 
 export const EditorFormFields = ({
