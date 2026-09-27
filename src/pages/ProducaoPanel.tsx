@@ -22,6 +22,7 @@ import { PautaIndependenteModal } from "@/components/PautaIndependenteModal";
 import { PautasKanban } from "@/components/producao/PautasKanban";
 import { PautasCalendar } from "@/components/producao/PautasCalendar";
 import { AgendaContatos } from "@/components/producao/AgendaContatos";
+import { PautasArquivadas } from "@/components/producao/PautasArquivadas";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
