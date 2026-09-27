@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { KanbanSquare, CalendarDays, Users, Plus, RefreshCw } from "lucide-react";
+import { KanbanSquare, CalendarDays, Users, Plus, RefreshCw, Archive } from "lucide-react";
 import { Pauta } from "@/types";
 import { fetchPautas, updatePauta, deletePauta } from "@/services/pautas-api";
 import { supabase } from "@/integrations/supabase/client";
