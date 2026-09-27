@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, FileDown, User, Calendar, MapPin } from "lucide-react";
+import { Pencil, Trash2, FileDown, User, Calendar, MapPin, Phone, Send } from "lucide-react";
 import { Pauta } from "@/types";
 import { generatePautaPDF } from "@/utils/pdf-utils";
 import { generatePautaWord } from "@/utils/word-export-utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { EnviarPautaEspelhoDialog } from "./EnviarPautaEspelhoDialog";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -18,6 +20,8 @@ interface PautaCardProps {
 }
 
 export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: PautaCardProps) => {
+  const [espelhoOpen, setEspelhoOpen] = useState(false);
+  const primeiroContato = pauta.entrevistados_contatos?.[0];
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return null;
     try {
