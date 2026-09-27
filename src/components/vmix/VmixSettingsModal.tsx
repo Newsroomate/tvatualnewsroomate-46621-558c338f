@@ -278,6 +278,10 @@ export const VmixSettingsModal = ({ isOpen, onClose, telejornalId }: VmixSetting
           <TabsContent value="pacote" className="mt-4">
             <PacoteGraficoTab telejornalId={telejornalId ?? null} />
           </TabsContent>
+
+          <TabsContent value="registros" className="mt-4">
+            <VmixTriggerLogPanel telejornalId={telejornalId ?? null} isActive={isOpen} />
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
