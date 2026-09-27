@@ -190,6 +190,27 @@ export const NewsScheduleCore = ({
 
       {/* Floating time bar at the bottom */}
       <FloatingTimeBar blocks={blocks} totalJournalTime={totalJournalTime} />
+
+      <DashboardModal
+        isOpen={isDashboardOpen}
+        onClose={() => setIsDashboardOpen(false)}
+        blocks={blocks}
+        totalJournalTime={totalJournalTime}
+        telejornalNome={currentTelejornal?.nome}
+      />
+
+      <VmixRundownLinkPanel
+        isOpen={isVmixSyncOpen}
+        onClose={() => setIsVmixSyncOpen(false)}
+        telejornal={currentTelejornal}
+        blocks={blocks}
+      />
+
+      <MateriaHistoryModal
+        isOpen={!!historyMateria}
+        onClose={() => setHistoryMateria(null)}
+        materia={historyMateria}
+      />
     </>
   );
 
