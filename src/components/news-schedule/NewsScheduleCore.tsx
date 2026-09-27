@@ -9,6 +9,9 @@ import { FloatingTimeBar } from "./FloatingTimeBar";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
 import { PlayoutDashboard, GCTemplateLibrary, PlaylistPanel } from "@/components/playout";
+import { DashboardModal } from "./DashboardModal";
+import { MateriaHistoryModal } from "./MateriaHistoryModal";
+import { VmixRundownLinkPanel } from "@/components/vmix/VmixRundownLinkPanel";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
