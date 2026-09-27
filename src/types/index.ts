@@ -55,6 +55,8 @@ export interface Materia {
   tempo_estimado?: number;
   apresentador?: string;
   link_vt?: string;
+  vmix_link_type?: string | null;
+  vmix_target?: string | null;
 }
 
 export interface MateriaCreateInput {

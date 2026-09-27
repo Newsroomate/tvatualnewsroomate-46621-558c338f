@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.log_materia_edit() FROM PUBLIC, anon, authenticated;

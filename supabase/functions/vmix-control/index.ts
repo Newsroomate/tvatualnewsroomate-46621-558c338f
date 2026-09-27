@@ -6,7 +6,8 @@ const corsHeaders = {
 }
 
 interface VmixCommand {
-  action: 'set_text' | 'set_image' | 'overlay_on' | 'overlay_off' | 'send_to_air' | 'remove_from_air' | 'test_connection'
+  action: 'set_text' | 'set_image' | 'overlay_on' | 'overlay_off' | 'send_to_air' | 'remove_from_air' | 'test_connection' | 'get_state' | 'trigger_link'
+  link_type?: 'input' | 'playlist' | 'preset'
   vmix_host?: string
   vmix_port?: number
   input_name?: string
@@ -230,6 +231,76 @@ Deno.serve(async (req) => {
             .update({ status: 'used' })
             .eq('id', command.message_id)
         }
+        break
+      }
+
+      case 'get_state': {
+        const startedAt = Date.now()
+        try {
+          const response = await fetch(`http://${vmixHost}:${vmixPort}/api/`, { method: 'GET' })
+          const latency = Date.now() - startedAt
+          if (!response.ok) {
+            return new Response(JSON.stringify({ reachable: false, message: 'vMix respondeu com erro', latency_ms: latency }), {
+              status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+            })
+          }
+          const xml = await response.text()
+          const version = xml.match(/<version>([^<]*)<\/version>/i)?.[1] ?? null
+          const edition = xml.match(/<edition>([^<]*)<\/edition>/i)?.[1] ?? null
+          const activeNumber = xml.match(/<active>(\d+)<\/active>/i)?.[1]
+          const previewNumber = xml.match(/<preview>(\d+)<\/preview>/i)?.[1]
+          const inputs: { number: number; title: string; key?: string; type?: string }[] = []
+          const inputRegex = /<input\s+([^>]*)>([\s\S]*?)<\/input>|<input\s+([^>]*)\/>/gi
+          let m: RegExpExecArray | null
+          while ((m = inputRegex.exec(xml)) !== null) {
+            const attrs = m[1] || m[3] || ''
+            const num = Number(attrs.match(/number="(\d+)"/i)?.[1] ?? '0')
+            const title = attrs.match(/title="([^"]*)"/i)?.[1] ?? ''
+            const key = attrs.match(/key="([^"]*)"/i)?.[1]
+            const type = attrs.match(/type="([^"]*)"/i)?.[1]
+            if (num) inputs.push({ number: num, title, key, type })
+          }
+          const overlays: number[] = []
+          const overlayRegex = /<overlay\s+number="(\d+)"/gi
+          let o: RegExpExecArray | null
+          while ((o = overlayRegex.exec(xml)) !== null) overlays.push(Number(o[1]))
+          const playlists = inputs.filter((i) => (i.type || '').toLowerCase() === 'videolist').map((i) => i.title)
+          const activeTitle = inputs.find((i) => i.number === Number(activeNumber))?.title ?? null
+          const previewTitle = inputs.find((i) => i.number === Number(previewNumber))?.title ?? null
+          return new Response(JSON.stringify({
+            reachable: true,
+            message: 'Conectado ao vMix',
+            latency_ms: latency,
+            version, edition,
+            active_title: activeTitle,
+            active_number: activeNumber ? Number(activeNumber) : null,
+            preview_title: previewTitle,
+            preview_number: previewNumber ? Number(previewNumber) : null,
+            inputs, playlists, overlays,
+          }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        } catch (e) {
+          return new Response(JSON.stringify({
+            reachable: false,
+            message: 'Não foi possível conectar ao vMix',
+            latency_ms: Date.now() - startedAt,
+            error: e instanceof Error ? e.message : String(e),
+          }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        }
+      }
+
+      case 'trigger_link': {
+        const target = command.value || ''
+        const linkType = command.link_type || 'input'
+        let query = ''
+        if (linkType === 'playlist') {
+          query = `Function=SelectPlayList&Value=${encodeURIComponent(target)}`
+        } else if (linkType === 'preset') {
+          query = `Function=Preset&Value=${encodeURIComponent(target)}`
+        } else {
+          query = `Function=Cut&Input=${encodeURIComponent(target)}`
+        }
+        success = await sendVmixCommand(vmixHost, vmixPort, query)
+        message = success ? 'Comando enviado ao vMix' : 'Falha ao acionar o vMix'
         break
       }
 

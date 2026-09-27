@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Type, Send, ChevronDown, Check } from "lucide-react";
-import { GCTemplate, GC_CATEGORIAS } from "@/types/gc-templates";
+import { GCTemplate, GC_TEMPLATE_CATEGORIES } from "@/types/gc-templates";
 import { fetchGCTemplates } from "@/services/gc-templates-api";
 import { fetchVmixSettings, updateVmixText } from "@/services/vmix-api";
 import { VmixSettings } from "@/types/vmix";
@@ -47,7 +47,7 @@ export const GCSendPanel = ({ telejornalId, onApplyTemplate, disabled }: GCSendP
   }, [loadData]);
 
   const handleApply = (template: GCTemplate) => {
-    const gcText = template.campos.map((c) => c.value).filter(Boolean).join("\n");
+    const gcText = template.campos.map((c) => c.valor).filter(Boolean).join("\n");
     onApplyTemplate(gcText);
     setAppliedId(template.id);
     setTimeout(() => setAppliedId(null), 2000);
@@ -63,7 +63,7 @@ export const GCSendPanel = ({ telejornalId, onApplyTemplate, disabled }: GCSendP
     setSendingId(template.id);
     try {
       for (const campo of template.campos) {
-        await updateVmixText(vmixSettings, campo.label, campo.value);
+        await updateVmixText(vmixSettings, campo.label, campo.valor);
       }
       toast.success(`GC "${template.nome}" enviado ao vMix`);
     } catch {
@@ -131,7 +131,7 @@ export const GCSendPanel = ({ telejornalId, onApplyTemplate, disabled }: GCSendP
                 <div key={cat}>
                   {gi > 0 && <Separator className="my-1" />}
                   <p className="px-3 py-1 text-[10px] uppercase tracking-wider text-muted-foreground font-medium">
-                    {GC_CATEGORIAS.find((c) => c.value === cat)?.label || cat}
+                    {GC_TEMPLATE_CATEGORIES.find((c) => c.value === cat)?.label || cat}
                   </p>
                   {items.map((template) => (
                     <div
@@ -151,7 +151,7 @@ export const GCSendPanel = ({ telejornalId, onApplyTemplate, disabled }: GCSendP
                           <span className="text-xs font-medium truncate">{template.nome}</span>
                         </div>
                         <p className="text-[10px] text-muted-foreground truncate pl-5">
-                          {template.campos.map((c) => c.value || "—").join(" · ")}
+                          {template.campos.map((c) => c.valor || "—").join(" · ")}
                         </p>
                       </div>
 

@@ -1,5 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { VmixCommand, VmixResponse, VmixSettings, ViewerMessage } from '@/types/vmix';
+import { VmixCommand, VmixResponse, VmixSettings, ViewerMessage, VmixStateResult, VmixDiagnosticsResult, VmixLinkType } from '@/types/vmix';
 
 const VMIX_FUNCTION_URL = 'https://rigluylhplrrlfkssrur.supabase.co/functions/v1/vmix-control';
 
@@ -166,4 +166,54 @@ export const updateVmixSettings = async (
   }
 
   return data as VmixSettings;
+};
+
+export const fetchVmixState = async (
+  host: string,
+  port: number
+): Promise<VmixStateResult> => {
+  return callVmixFunction({
+    action: 'get_state',
+    vmix_host: host,
+    vmix_port: port,
+  } as VmixCommand) as unknown as Promise<VmixStateResult>;
+};
+
+export const triggerVmixLink = async (
+  settings: VmixSettings,
+  linkType: VmixLinkType,
+  target: string
+): Promise<VmixResponse & { error?: string }> => {
+  return callVmixFunction({
+    action: 'trigger_link',
+    vmix_host: settings.vmix_host,
+    vmix_port: settings.vmix_port,
+    link_type: linkType,
+    value: target,
+  } as VmixCommand) as Promise<VmixResponse & { error?: string }>;
+};
+
+export const runVmixDiagnostics = async (
+  host: string,
+  port: number,
+  inputName: string,
+  overlayNumber: number
+): Promise<VmixDiagnosticsResult> => {
+  const state = await fetchVmixState(host, port);
+  const privateHost = /^(10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|127\.|localhost)/i.test(host.trim());
+  const inputFound = (state.inputs || []).some(
+    (i) => (i.title || '').trim().toLowerCase() === (inputName || '').trim().toLowerCase()
+  );
+  const overlays = state.overlays || [];
+  return {
+    reachable: !!state.reachable,
+    message: state.message,
+    latency_ms: state.latency_ms ?? null,
+    version: state.version ?? null,
+    edition: state.edition ?? null,
+    input_found: inputFound,
+    overlay_available: overlays.length === 0 ? overlayNumber >= 1 && overlayNumber <= 4 : overlays.includes(overlayNumber),
+    private_host: privateHost,
+    inputs: (state.inputs || []).map((i) => i.title),
+  };
 };

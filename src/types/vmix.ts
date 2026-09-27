@@ -34,7 +34,8 @@ export interface VmixSettings {
 }
 
 export interface VmixCommand {
-  action: 'set_text' | 'set_image' | 'overlay_on' | 'overlay_off' | 'send_to_air' | 'remove_from_air' | 'test_connection';
+  action: 'set_text' | 'set_image' | 'overlay_on' | 'overlay_off' | 'send_to_air' | 'remove_from_air' | 'test_connection' | 'get_state' | 'trigger_link';
+  link_type?: 'input' | 'playlist' | 'preset';
   vmix_host?: string;
   vmix_port?: number;
   input_name?: string;
@@ -57,4 +58,40 @@ export interface VmixCommand {
 export interface VmixResponse {
   success: boolean;
   message: string;
+}
+
+export type VmixLinkType = 'input' | 'playlist' | 'preset';
+
+export interface VmixInputInfo {
+  number: number;
+  title: string;
+  key?: string;
+  type?: string;
+}
+
+export interface VmixStateResult {
+  reachable: boolean;
+  message: string;
+  version?: string | null;
+  edition?: string | null;
+  active_title?: string | null;
+  active_number?: number | null;
+  preview_title?: string | null;
+  preview_number?: number | null;
+  inputs?: VmixInputInfo[];
+  playlists?: string[];
+  overlays?: number[];
+  latency_ms?: number | null;
+}
+
+export interface VmixDiagnosticsResult {
+  reachable: boolean;
+  message: string;
+  latency_ms?: number | null;
+  version?: string | null;
+  edition?: string | null;
+  input_found: boolean;
+  overlay_available: boolean;
+  private_host: boolean;
+  inputs?: string[];
 }
