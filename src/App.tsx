@@ -54,6 +54,7 @@ const AppContent = () => {
           <Route path="/teleprompter" element={<TeleprompterWindow />} />
           <Route path="/producao" element={<ProducaoPanel />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           
           <Route path="/" element={
             <div className="flex-1 overflow-hidden">
