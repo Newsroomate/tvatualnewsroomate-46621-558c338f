@@ -17,6 +17,7 @@ const Index = lazy(() => import("./pages/Index"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const TeleprompterWindow = lazy(() => import("./pages/TeleprompterWindow"));
 const ProducaoPanel = lazy(() => import("./pages/ProducaoPanel"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 
 
 const queryClient = new QueryClient({
