@@ -12,6 +12,7 @@ import { PlayoutDashboard, GCTemplateLibrary, PlaylistPanel } from "@/components
 import { DashboardModal } from "./DashboardModal";
 import { MateriaHistoryModal } from "./MateriaHistoryModal";
 import { VmixRundownLinkPanel } from "@/components/vmix/VmixRundownLinkPanel";
+import { useActiveLocks } from "@/hooks/useActiveLocks";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
