@@ -123,7 +123,7 @@ const ProducaoPanelInner = () => {
       trackLocal(pautaToDelete.id);
       await deletePauta(pautaToDelete.id);
       setPautas((prev) => prev.filter((p) => p.id !== pautaToDelete.id));
-      toast.success("Pauta excluída");
+      toast.success("Pauta arquivada — disponível na aba Arquivadas");
     } catch (e) {
       console.error(e);
       toast.error("Erro ao excluir pauta");
