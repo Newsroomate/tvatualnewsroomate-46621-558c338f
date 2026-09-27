@@ -235,6 +235,13 @@ export const VmixSettingsModal = ({ isOpen, onClose, telejornalId }: VmixSetting
               </div>
             </div>
 
+            <VmixDiagnosticsPanel
+              host={formData.vmix_host}
+              port={formData.vmix_port}
+              inputName={formData.title_input_name}
+              overlayNumber={formData.overlay_number}
+            />
+
             {/* Actions */}
             <div className="flex gap-2 pt-4">
               <Button
