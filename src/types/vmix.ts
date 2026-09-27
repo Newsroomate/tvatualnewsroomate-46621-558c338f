@@ -34,7 +34,8 @@ export interface VmixSettings {
 }
 
 export interface VmixCommand {
-  action: 'set_text' | 'set_image' | 'overlay_on' | 'overlay_off' | 'send_to_air' | 'remove_from_air' | 'test_connection';
+  action: 'set_text' | 'set_image' | 'overlay_on' | 'overlay_off' | 'send_to_air' | 'remove_from_air' | 'test_connection' | 'get_state' | 'trigger_link';
+  link_type?: 'input' | 'playlist' | 'preset';
   vmix_host?: string;
   vmix_port?: number;
   input_name?: string;
