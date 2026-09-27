@@ -116,6 +116,7 @@ export interface PautaCreateInput {
   local?: string;
   horario?: string;
   entrevistado?: string;
+  entrevistados_contatos?: ContatoEntrevistado[];
   produtor?: string;
   proposta?: string;
   encaminhamento?: string;
