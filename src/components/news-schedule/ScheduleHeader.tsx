@@ -8,6 +8,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { generateGCTextFile } from "@/utils/gc-txt-utils";
 import { exportPlayoutPDF } from "@/utils/playout-export-utils";
 import { exportPlayoutWord } from "@/utils/word-export-utils";
+import { exportRundownGridPDF } from "@/utils/rundown-grid-pdf";
+import { exportStoryCompactPDF } from "@/utils/story-compact-pdf";
+import { exportGCListPDF } from "@/utils/gc-list-pdf";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatDate, DATE_FORMATS } from "@/utils/date-utils";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
