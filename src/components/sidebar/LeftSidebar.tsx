@@ -255,7 +255,7 @@ export const LeftSidebar = ({
     <div className={`${isMobile ? 'w-full' : 'w-64'} bg-background h-full ${!isMobile ? 'border-r border-border' : ''} flex flex-col`}>
       {!isMobile && (
         <div className="p-4 bg-primary text-primary-foreground">
-          <h2 className="text-lg font-semibold tracking-tight">TV Atual</h2>
+          <h2 className="text-lg font-semibold tracking-tight">Newsroomate</h2>
         </div>
       )}
       
