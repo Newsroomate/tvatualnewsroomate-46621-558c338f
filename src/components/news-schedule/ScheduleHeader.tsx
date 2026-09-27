@@ -49,6 +49,8 @@ export const ScheduleHeader = ({
   onOpenPlayout,
   onOpenGCLibrary,
   onOpenPlaylist,
+  onOpenDashboard,
+  onOpenVmixSync,
   materias = [],
   blocks = []
 }: ScheduleHeaderProps) => {
