@@ -264,6 +264,52 @@ export const ScheduleHeader = ({
                   <Film className="h-4 w-4 mr-2" />
                   Playlist
                 </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={onOpenVmixSync}
+                  disabled={!currentTelejornal}
+                >
+                  <Radio className="h-4 w-4 mr-2" />
+                  Espelho x vMix
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuLabel>Imprimir Espelho</DropdownMenuLabel>
+
+                <DropdownMenuItem 
+                  onClick={handlePrintRundownGrid}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Espelho Grade
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={handlePrintStoryCompact}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Espelho Completo
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={handleExportGCListPDF}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Lista de GCs (PDF)
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem 
+                  onClick={onOpenDashboard}
+                  disabled={!hasBlocks}
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Dashboard
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
