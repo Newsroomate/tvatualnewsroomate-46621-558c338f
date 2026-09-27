@@ -50,6 +50,7 @@ export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: P
   };
 
   return (
+    <>
     <Card
       draggable={draggable}
       onDragStart={(e) => onDragStart?.(e, pauta)}
