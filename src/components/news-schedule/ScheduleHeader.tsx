@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save, FolderOpen, Menu, BookOpen, Monitor, Type, Film } from "lucide-react";
+import { ArrowDownUp, Lock, PlusCircle, Eye, FileText, Download, Save, FolderOpen, Menu, BookOpen, Monitor, Type, Film, Printer, BarChart3, Radio } from "lucide-react";
 import { formatTime } from "./utils";
 import { Telejornal, Materia, Bloco } from "@/types";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
@@ -8,6 +8,9 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { generateGCTextFile } from "@/utils/gc-txt-utils";
 import { exportPlayoutPDF } from "@/utils/playout-export-utils";
 import { exportPlayoutWord } from "@/utils/word-export-utils";
+import { exportRundownGridPDF } from "@/utils/rundown-grid-pdf";
+import { exportStoryCompactPDF } from "@/utils/story-compact-pdf";
+import { exportGCListPDF } from "@/utils/gc-list-pdf";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { formatDate, DATE_FORMATS } from "@/utils/date-utils";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
@@ -26,6 +29,8 @@ interface ScheduleHeaderProps {
   onOpenPlayout?: () => void;
   onOpenGCLibrary?: () => void;
   onOpenPlaylist?: () => void;
+  onOpenDashboard?: () => void;
+  onOpenVmixSync?: () => void;
   materias?: Materia[];
   blocks?: (Bloco & { items: Materia[] })[];
 }
@@ -44,6 +49,8 @@ export const ScheduleHeader = ({
   onOpenPlayout,
   onOpenGCLibrary,
   onOpenPlaylist,
+  onOpenDashboard,
+  onOpenVmixSync,
   materias = [],
   blocks = []
 }: ScheduleHeaderProps) => {
@@ -63,6 +70,21 @@ export const ScheduleHeader = ({
   const handleExportPlayoutWord = () => {
     if (!checkPermission('export', 'playout')) return;
     exportPlayoutWord(blocks, currentTelejornal);
+  };
+
+  const handlePrintRundownGrid = () => {
+    if (!checkPermission('export', 'playout')) return;
+    exportRundownGridPDF(blocks, currentTelejornal);
+  };
+
+  const handlePrintStoryCompact = () => {
+    if (!checkPermission('export', 'playout')) return;
+    exportStoryCompactPDF(blocks, currentTelejornal);
+  };
+
+  const handleExportGCListPDF = () => {
+    if (!checkPermission('export', 'gc')) return;
+    exportGCListPDF(blocks, currentTelejornal);
   };
 
   const handleViewLaudas = () => {
@@ -242,6 +264,52 @@ export const ScheduleHeader = ({
                   <Film className="h-4 w-4 mr-2" />
                   Playlist
                 </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={onOpenVmixSync}
+                  disabled={!currentTelejornal}
+                >
+                  <Radio className="h-4 w-4 mr-2" />
+                  Espelho x vMix
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuLabel>Imprimir Espelho</DropdownMenuLabel>
+
+                <DropdownMenuItem 
+                  onClick={handlePrintRundownGrid}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Espelho Grade
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={handlePrintStoryCompact}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <Printer className="h-4 w-4 mr-2" />
+                  Espelho Completo
+                </DropdownMenuItem>
+
+                <DropdownMenuItem 
+                  onClick={handleExportGCListPDF}
+                  disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                >
+                  <FileText className="h-4 w-4 mr-2" />
+                  Lista de GCs (PDF)
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem 
+                  onClick={onOpenDashboard}
+                  disabled={!hasBlocks}
+                >
+                  <BarChart3 className="h-4 w-4 mr-2" />
+                  Dashboard
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           )}
@@ -351,6 +419,34 @@ export const ScheduleHeader = ({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                    className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
+                  >
+                    <Printer className="h-4 w-4 mr-2" />
+                    Imprimir
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="bg-popover z-50">
+                  <DropdownMenuItem onClick={handlePrintRundownGrid}>
+                    <Printer className="h-4 w-4 mr-2" />
+                    Espelho Grade
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handlePrintStoryCompact}>
+                    <Printer className="h-4 w-4 mr-2" />
+                    Espelho Completo
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportGCListPDF}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Lista de GCs (PDF)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             {/* Visualização */}
@@ -411,6 +507,26 @@ export const ScheduleHeader = ({
               >
                 <Film className="h-4 w-4 mr-2" />
                 Playlist
+              </Button>
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onOpenVmixSync}
+                disabled={!currentTelejornal}
+              >
+                <Radio className="h-4 w-4 mr-2" />
+                Espelho x vMix
+              </Button>
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onOpenDashboard}
+                disabled={!hasBlocks}
+              >
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Dashboard
               </Button>
             </div>
           </div>

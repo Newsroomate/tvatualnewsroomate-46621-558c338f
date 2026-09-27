@@ -123,9 +123,10 @@ export const VmixSettingsModal = ({ isOpen, onClose, telejornalId }: VmixSetting
         </DialogHeader>
 
         <Tabs defaultValue="geral" className="w-full">
-          <TabsList className="grid grid-cols-2 w-full">
+          <TabsList className="grid grid-cols-3 w-full">
             <TabsTrigger value="geral">Geral</TabsTrigger>
             <TabsTrigger value="pacote">Pacote Gráfico</TabsTrigger>
+            <TabsTrigger value="registros">Registros vMix</TabsTrigger>
           </TabsList>
 
           <TabsContent value="geral" className="mt-4">
@@ -235,6 +236,13 @@ export const VmixSettingsModal = ({ isOpen, onClose, telejornalId }: VmixSetting
               </div>
             </div>
 
+            <VmixDiagnosticsPanel
+              host={formData.vmix_host}
+              port={formData.vmix_port}
+              inputName={formData.title_input_name}
+              overlayNumber={formData.overlay_number}
+            />
+
             {/* Actions */}
             <div className="flex gap-2 pt-4">
               <Button
@@ -269,6 +277,10 @@ export const VmixSettingsModal = ({ isOpen, onClose, telejornalId }: VmixSetting
 
           <TabsContent value="pacote" className="mt-4">
             <PacoteGraficoTab telejornalId={telejornalId ?? null} />
+          </TabsContent>
+
+          <TabsContent value="registros" className="mt-4">
+            <VmixTriggerLogPanel telejornalId={telejornalId ?? null} isActive={isOpen} />
           </TabsContent>
         </Tabs>
       </DialogContent>

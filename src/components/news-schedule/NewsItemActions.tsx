@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Trash2, Pencil, Copy, Target } from "lucide-react";
+import { Trash2, Pencil, Copy, Target, History } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -15,6 +15,7 @@ interface NewsItemActionsProps {
   onDelete: (item: Materia) => void;
   onDuplicate: (item: Materia) => void;
   onFocusInTeleprompter?: (item: Materia) => void;
+  onViewHistory?: (item: Materia) => void;
   isEspelhoOpen: boolean;
   canModify?: boolean;
   isMobile?: boolean;
@@ -26,6 +27,7 @@ export const NewsItemActions = ({
   onDelete,
   onDuplicate,
   onFocusInTeleprompter,
+  onViewHistory,
   isEspelhoOpen,
   canModify = true,
   isMobile = false
@@ -103,7 +105,26 @@ export const NewsItemActions = ({
           </Tooltip>
         </TooltipProvider>
       )}
-      
+
+      {onViewHistory && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button 
+                size="sm"
+                variant="ghost" 
+                onClick={() => onViewHistory(item)}
+                className={isMobile ? "h-7 w-7 p-0" : ""}
+              >
+                <History className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              Ver histórico de edições
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>

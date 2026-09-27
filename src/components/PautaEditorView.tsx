@@ -12,6 +12,8 @@ import { usePermissionGuard } from "@/hooks/usePermissionGuard";
 import { Pauta, Telejornal, MateriaCreateInput } from "@/types";
 import { supabase } from "@/integrations/supabase/client";
 import { ArrowLeft, FileOutput, Save } from "lucide-react";
+import { useAutosave } from "@/hooks/useAutosave";
+
 
 interface PautaEditorViewProps {
   pauta: Pauta | null;
@@ -41,6 +43,8 @@ export const PautaEditorView = ({
   const [informacoes, setInformacoes] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGeneratingMateria, setIsGeneratingMateria] = useState(false);
+  const [pautaId, setPautaId] = useState<string | null>(pauta?.id ?? null);
+
   
   const { toast } = useToast();
   const { user } = useAuth();
@@ -52,7 +56,9 @@ export const PautaEditorView = ({
 
   // Load pauta data when editing
   useEffect(() => {
+    setPautaId(pauta?.id ?? null);
     if (pauta) {
+
       setData(pauta.data_cobertura || "");
       setRetranca(pauta.titulo || "");
       setPrograma(pauta.programa || "");
@@ -166,6 +172,37 @@ export const PautaEditorView = ({
     setIsGeneratingMateria(false);
   };
 
+  const buildPautaData = () => ({
+    titulo: retranca,
+    descricao: roteiro1,
+    local: imagens,
+    horario: data,
+    entrevistado: entrevistados,
+    produtor,
+    proposta,
+    encaminhamento,
+    informacoes,
+    status: pauta?.status || "pendente",
+    data_cobertura: data,
+    programa,
+    reporter
+  });
+
+  const autosaveEnabled = !!pautaId && !!retranca.trim() && !isSubmitting;
+
+  const { isAutosaving, lastSavedAt, markSaved } = useAutosave({
+    data: {
+      retranca, roteiro1, imagens, data, entrevistados, produtor,
+      proposta, encaminhamento, informacoes, programa, reporter
+    },
+    enabled: autosaveEnabled,
+    onSave: async () => {
+      if (!pautaId) return;
+      await updatePauta(pautaId, buildPautaData());
+      onSave();
+    },
+  });
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!retranca.trim()) return;
@@ -181,45 +218,34 @@ export const PautaEditorView = ({
     
     setIsSubmitting(true);
     
-    const actionType = pauta ? 'update' : 'create';
+    const actionType = pautaId ? 'update' : 'create';
     
     await guardAction(actionType, 'pauta', async () => {
-      const pautaData = {
-        titulo: retranca,
-        descricao: roteiro1,
-        local: imagens,
-        horario: data,
-        entrevistado: entrevistados,
-        produtor,
-        proposta,
-        encaminhamento,
-        informacoes,
-        status: pauta?.status || "pendente",
-        data_cobertura: data,
-        programa,
-        reporter
-      };
+      const pautaData = buildPautaData();
 
-      if (pauta) {
-        await updatePauta(pauta.id, pautaData);
+      if (pautaId) {
+        await updatePauta(pautaId, pautaData);
         toast({
           title: "Sucesso!",
           description: "Pauta atualizada com sucesso.",
         });
       } else {
-        await createPauta(pautaData, user.id);
+        const created = await createPauta(pautaData, user.id);
+        setPautaId(created.id);
         toast({
           title: "Sucesso!",
           description: "Pauta criada com sucesso.",
         });
       }
-      
+
+      markSaved();
       onSave();
       onClose();
     }, pauta?.user_id);
     
     setIsSubmitting(false);
   };
+
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -236,7 +262,22 @@ export const PautaEditorView = ({
           </h1>
         </div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
+          {autosaveEnabled && (
+            <span className="text-xs text-muted-foreground">
+              {isAutosaving
+                ? "Salvando..."
+                : lastSavedAt
+                  ? `Salvo automaticamente às ${lastSavedAt.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}`
+                  : "Salvamento automático ativo"}
+            </span>
+          )}
+          {!pautaId && (
+            <span className="text-xs text-muted-foreground">
+              Informe a retranca e salve uma vez para ativar o salvamento automático
+            </span>
+          )}
+
           {canGenerateMateria && (
             <Button 
               variant="secondary"

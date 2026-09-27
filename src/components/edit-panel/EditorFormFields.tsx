@@ -7,6 +7,7 @@ import { GCEntry } from "@/types/gc";
 import { AllCapsGCButton } from "./AllCapsGCButton";
 import { LinhaFinaButton } from "./LinhaFinaButton";
 import { GCListEditor } from "./GCListEditor";
+import { GCSendPanel } from "./GCSendPanel";
 import { useRef } from "react";
 
 interface EditorFormFieldsProps {
@@ -14,13 +15,15 @@ interface EditorFormFieldsProps {
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onGcsChange?: (gcs: GCEntry[]) => void;
   disabled?: boolean;
+  telejornalId?: string | null;
 }
 
 export const EditorFormFields = ({
   formData,
   onInputChange,
   onGcsChange,
-  disabled = false
+  disabled = false,
+  telejornalId
 }: EditorFormFieldsProps) => {
   const gcTextareaRef = useRef<HTMLTextAreaElement>(null);
   const cabecaTextareaRef = useRef<HTMLTextAreaElement>(null);
@@ -92,7 +95,14 @@ export const EditorFormFields = ({
 
       {onGcsChange ? (
         <div className="space-y-1.5">
-          <Label>GCs (Geradores de Caracteres)</Label>
+          <div className="flex justify-between items-center gap-2">
+            <Label>GCs (Geradores de Caracteres)</Label>
+            <GCSendPanel
+              telejornalId={telejornalId}
+              onApplyTemplate={handleGCTextChange}
+              disabled={disabled}
+            />
+          </div>
           <GCListEditor
             formData={formData}
             gcs={Array.isArray(formData.gcs) ? (formData.gcs as GCEntry[]) : []}

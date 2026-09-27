@@ -9,6 +9,10 @@ import { FloatingTimeBar } from "./FloatingTimeBar";
 import { useScrollUtils } from "@/hooks/useScrollUtils";
 import { useEnhancedHandlers } from "@/hooks/useEnhancedHandlers";
 import { PlayoutDashboard, GCTemplateLibrary, PlaylistPanel } from "@/components/playout";
+import { DashboardModal } from "./DashboardModal";
+import { MateriaHistoryModal } from "./MateriaHistoryModal";
+import { VmixRundownLinkPanel } from "@/components/vmix/VmixRundownLinkPanel";
+import { useActiveLocks } from "@/hooks/useActiveLocks";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -81,6 +85,10 @@ export const NewsScheduleCore = ({
   const [isPlayoutOpen, setIsPlayoutOpen] = useState(false);
   const [isGCLibraryOpen, setIsGCLibraryOpen] = useState(false);
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(false);
+  const [isDashboardOpen, setIsDashboardOpen] = useState(false);
+  const [isVmixSyncOpen, setIsVmixSyncOpen] = useState(false);
+  const [historyMateria, setHistoryMateria] = useState<Materia | null>(null);
+  const { getLockInfo } = useActiveLocks(currentTelejornal?.id || null);
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
   
   // Flatten all materias from all blocks
@@ -117,6 +125,8 @@ export const NewsScheduleCore = ({
         onOpenPlayout={() => setIsPlayoutOpen(true)}
         onOpenGCLibrary={() => setIsGCLibraryOpen(true)}
         onOpenPlaylist={() => setIsPlaylistOpen(true)}
+        onOpenDashboard={() => setIsDashboardOpen(true)}
+        onOpenVmixSync={() => setIsVmixSyncOpen(true)}
         blocks={blocks}
       />
       
@@ -177,11 +187,34 @@ export const NewsScheduleCore = ({
           isDeleting={isDeleting}
           selectedMateria={selectedMateria}
           onMateriaSelect={onMateriaSelect}
+          onViewHistory={(item) => setHistoryMateria(item)}
+          getLockInfo={getLockInfo}
         />
       </div>
 
       {/* Floating time bar at the bottom */}
       <FloatingTimeBar blocks={blocks} totalJournalTime={totalJournalTime} />
+
+      <DashboardModal
+        isOpen={isDashboardOpen}
+        onClose={() => setIsDashboardOpen(false)}
+        blocks={blocks}
+        totalJournalTime={totalJournalTime}
+        telejornalNome={currentTelejornal?.nome}
+      />
+
+      <VmixRundownLinkPanel
+        isOpen={isVmixSyncOpen}
+        onClose={() => setIsVmixSyncOpen(false)}
+        telejornal={currentTelejornal}
+        blocks={blocks}
+      />
+
+      <MateriaHistoryModal
+        isOpen={!!historyMateria}
+        onClose={() => setHistoryMateria(null)}
+        materia={historyMateria}
+      />
     </>
   );
 

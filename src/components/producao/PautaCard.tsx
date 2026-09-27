@@ -1,11 +1,13 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, FileDown, User, Calendar, MapPin } from "lucide-react";
+import { Pencil, Trash2, FileDown, User, Calendar, MapPin, Phone, Send } from "lucide-react";
 import { Pauta } from "@/types";
 import { generatePautaPDF } from "@/utils/pdf-utils";
 import { generatePautaWord } from "@/utils/word-export-utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { EnviarPautaEspelhoDialog } from "./EnviarPautaEspelhoDialog";
 import { format, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -18,6 +20,8 @@ interface PautaCardProps {
 }
 
 export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: PautaCardProps) => {
+  const [espelhoOpen, setEspelhoOpen] = useState(false);
+  const primeiroContato = pauta.entrevistados_contatos?.[0];
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return null;
     try {
@@ -46,6 +50,7 @@ export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: P
   };
 
   return (
+    <>
     <Card
       draggable={draggable}
       onDragStart={(e) => onDragStart?.(e, pauta)}
@@ -79,9 +84,30 @@ export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: P
             <span className="truncate">{pauta.local}</span>
           </div>
         )}
+        {primeiroContato?.nome && (
+          <div className="flex items-center gap-1">
+            <Phone className="h-3 w-3" />
+            <span className="truncate">
+              {primeiroContato.nome}
+              {primeiroContato.telefone ? ` · ${primeiroContato.telefone}` : ""}
+            </span>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center justify-end gap-1 mt-2 pt-2 border-t">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="h-7 w-7 p-0"
+          title="Enviar para o espelho"
+          onClick={(e) => {
+            e.stopPropagation();
+            setEspelhoOpen(true);
+          }}
+        >
+          <Send className="h-3.5 w-3.5" />
+        </Button>
         <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => onEdit(pauta)}>
           <Pencil className="h-3.5 w-3.5" />
         </Button>
@@ -112,5 +138,8 @@ export const PautaCard = ({ pauta, onEdit, onDelete, draggable, onDragStart }: P
         </Button>
       </div>
     </Card>
+
+    <EnviarPautaEspelhoDialog pauta={pauta} open={espelhoOpen} onOpenChange={setEspelhoOpen} />
+    </>
   );
 };

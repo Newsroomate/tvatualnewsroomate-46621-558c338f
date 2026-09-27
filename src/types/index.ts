@@ -77,6 +77,15 @@ export interface MateriaCreateInput {
   local_gravacao?: string;
   tipo_material?: string;
   tags?: any;
+  vmix_link_type?: string | null;
+  vmix_target?: string | null;
+}
+
+export interface ContatoEntrevistado {
+  id?: string;
+  nome: string;
+  telefone?: string;
+  email?: string;
 }
 
 export interface Pauta {
@@ -87,6 +96,7 @@ export interface Pauta {
   local?: string;
   horario?: string;
   entrevistado?: string;
+  entrevistados_contatos?: ContatoEntrevistado[];
   produtor?: string;
   proposta?: string;
   programa?: string;
@@ -96,6 +106,8 @@ export interface Pauta {
   user_id?: string;
   data_cobertura?: string;
   status?: string;
+  updated_at?: string;
+  deleted_at?: string | null;
 }
 
 export interface PautaCreateInput {
@@ -104,6 +116,7 @@ export interface PautaCreateInput {
   local?: string;
   horario?: string;
   entrevistado?: string;
+  entrevistados_contatos?: ContatoEntrevistado[];
   produtor?: string;
   proposta?: string;
   encaminhamento?: string;

@@ -5,10 +5,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AutoTextarea } from "@/components/ui/auto-textarea";
 import { createPauta } from "@/services/pautas-api";
-import { PautaCreateInput } from "@/types";
+import { PautaCreateInput, ContatoEntrevistado } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/context/AuthContext";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
+import { EntrevistadosField } from "@/components/telejornal-content/EntrevistadosField";
+import { upsertContatos } from "@/services/contatos-entrevistados-api";
 
 interface NewPautaDialogProps {
   isOpen: boolean;
@@ -25,7 +27,7 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
   const [imagens, setImagens] = useState("");
   const [programas, setProgramas] = useState("");
   const [roteiro1, setRoteiro1] = useState("");
-  const [entrevistados, setEntrevistados] = useState("");
+  const [contatos, setContatos] = useState<ContatoEntrevistado[]>([{ nome: "", telefone: "", email: "" }]);
   const [proposta, setProposta] = useState("");
   const [encaminhamento, setEncaminhamento] = useState("");
   const [informacoes, setInformacoes] = useState("");
@@ -60,14 +62,24 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
     }
     
     setIsSubmitting(true);
-    
+
+    const cleanContatos = contatos
+      .map(c => ({
+        nome: c.nome?.trim() || "",
+        telefone: c.telefone?.trim() || "",
+        email: c.email?.trim() || "",
+      }))
+      .filter(c => c.nome);
+    const entrevistadoLegado = cleanContatos.map(c => c.nome).join(", ");
+
     await guardAction('create', 'pauta', async () => {
       const newPauta: PautaCreateInput = {
         titulo: retranca,
         descricao: roteiro1,
         local: imagens,
         horario: data,
-        entrevistado: entrevistados,
+        entrevistado: entrevistadoLegado,
+        entrevistados_contatos: cleanContatos,
         produtor: pauteiros,
         proposta,
         encaminhamento,
@@ -81,6 +93,11 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
       console.log('NewPautaDialog - Chamando createPauta com userId:', user.id);
 
       await createPauta(newPauta, user.id);
+
+      // Salva contatos no diretório compartilhado (não bloqueante)
+      upsertContatos(cleanContatos, user.id).catch(err =>
+        console.error('NewPautaDialog - erro ao salvar contatos:', err)
+      );
 
       toast({
         title: "Sucesso",
@@ -96,7 +113,7 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
       setImagens("");
       setProgramas("");
       setRoteiro1("");
-      setEntrevistados("");
+      setContatos([{ nome: "", telefone: "", email: "" }]);
       setProposta("");
       setEncaminhamento("");
       setInformacoes("");
@@ -193,13 +210,8 @@ export const NewPautaDialog = ({ isOpen, onClose, onPautaCreated }: NewPautaDial
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="entrevistados">ENTREVISTADOS</Label>
-            <AutoTextarea
-              id="entrevistados"
-              value={entrevistados}
-              onChange={(e) => setEntrevistados(e.target.value)}
-              placeholder="Lista de entrevistados"
-            />
+            <Label>ENTREVISTADOS</Label>
+            <EntrevistadosField value={contatos} onChange={setContatos} />
           </div>
 
           <div className="space-y-1">

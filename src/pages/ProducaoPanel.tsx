@@ -11,7 +11,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { KanbanSquare, CalendarDays, Users, Plus, RefreshCw } from "lucide-react";
+import { KanbanSquare, CalendarDays, Users, Plus, RefreshCw, Archive } from "lucide-react";
 import { Pauta } from "@/types";
 import { fetchPautas, updatePauta, deletePauta } from "@/services/pautas-api";
 import { supabase } from "@/integrations/supabase/client";
@@ -22,6 +22,7 @@ import { PautaIndependenteModal } from "@/components/PautaIndependenteModal";
 import { PautasKanban } from "@/components/producao/PautasKanban";
 import { PautasCalendar } from "@/components/producao/PautasCalendar";
 import { AgendaContatos } from "@/components/producao/AgendaContatos";
+import { PautasArquivadas } from "@/components/producao/PautasArquivadas";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -122,7 +123,7 @@ const ProducaoPanelInner = () => {
       trackLocal(pautaToDelete.id);
       await deletePauta(pautaToDelete.id);
       setPautas((prev) => prev.filter((p) => p.id !== pautaToDelete.id));
-      toast.success("Pauta excluída");
+      toast.success("Pauta arquivada — disponível na aba Arquivadas");
     } catch (e) {
       console.error(e);
       toast.error("Erro ao excluir pauta");
@@ -194,6 +195,9 @@ const ProducaoPanelInner = () => {
             <TabsTrigger value="agenda" className="gap-2">
               <Users className="h-4 w-4" /> Agenda de Contatos
             </TabsTrigger>
+            <TabsTrigger value="arquivadas" className="gap-2">
+              <Archive className="h-4 w-4" /> Arquivadas
+            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -219,6 +223,10 @@ const ProducaoPanelInner = () => {
           <TabsContent value="agenda" className="h-full mt-0 data-[state=inactive]:hidden" forceMount>
             <AgendaContatos pautas={pautas} onEditPauta={handleEdit} />
           </TabsContent>
+
+          <TabsContent value="arquivadas" className="h-full mt-0 data-[state=inactive]:hidden" forceMount>
+            <PautasArquivadas onRestored={load} />
+          </TabsContent>
         </div>
       </Tabs>
 
@@ -239,14 +247,14 @@ const ProducaoPanelInner = () => {
       <AlertDialog open={!!pautaToDelete} onOpenChange={(o) => !o && setPautaToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Excluir pauta?</AlertDialogTitle>
+            <AlertDialogTitle>Arquivar pauta?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta ação não pode ser desfeita. A pauta "{pautaToDelete?.titulo}" será permanentemente removida.
+              A pauta "{pautaToDelete?.titulo}" sairá das listas ativas e ficará disponível na aba Arquivadas, onde pode ser restaurada.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>Excluir</AlertDialogAction>
+            <AlertDialogAction onClick={confirmDelete}>Arquivar</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

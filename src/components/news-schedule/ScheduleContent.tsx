@@ -21,6 +21,7 @@ interface ScheduleContentProps {
   onDeleteItem: (item: Materia) => void;
   onDuplicateItem: (item: Materia) => void;
   onFocusInTeleprompter?: (item: Materia) => void;
+  onViewHistory?: (item: Materia) => void;
   onRenameBlock: (blockId: string, newName: string) => void;
   onDeleteBlock: (blockId: string) => void;
   journalPrefix?: string;
@@ -28,6 +29,7 @@ interface ScheduleContentProps {
   isDeleting?: boolean;
   selectedMateria?: Materia | null;
   onMateriaSelect?: (materia: Materia | null) => void;
+  getLockInfo?: (materiaId: string) => string | null;
 }
 
 export const ScheduleContent = ({
@@ -45,13 +47,15 @@ export const ScheduleContent = ({
   onDeleteItem,
   onDuplicateItem,
   onFocusInTeleprompter,
+  onViewHistory,
   onRenameBlock,
   onDeleteBlock,
   journalPrefix = "default",
   onBatchDeleteItems,
   isDeleting = false,
   selectedMateria,
-  onMateriaSelect
+  onMateriaSelect,
+  getLockInfo
 }: ScheduleContentProps) => {
   const { profile } = useAuth();
   const canModify = canModifyMaterias(profile);
@@ -117,6 +121,7 @@ export const ScheduleContent = ({
             onDeleteItem={onDeleteItem}
             onDuplicateItem={onDuplicateItem}
             onFocusInTeleprompter={onFocusInTeleprompter}
+            onViewHistory={onViewHistory}
             isEspelhoOpen={!!currentTelejornal?.espelho_aberto}
             onRenameBlock={onRenameBlock}
             onDeleteBlock={onDeleteBlock}
@@ -125,6 +130,7 @@ export const ScheduleContent = ({
             isDeleting={isDeleting}
             selectedMateria={selectedMateria}
             onMateriaSelect={onMateriaSelect}
+            getLockInfo={getLockInfo}
           />
           {/* Add extra spacing after the last block for better visibility */}
           {index === blocks.length - 1 && (

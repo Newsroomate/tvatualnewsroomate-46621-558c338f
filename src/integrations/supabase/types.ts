@@ -49,6 +49,36 @@ export type Database = {
           },
         ]
       }
+      contatos_entrevistados: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          nome: string
+          telefone: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          nome: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          nome?: string
+          telefone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       deleted_items_trash: {
         Row: {
           created_at: string
@@ -349,6 +379,30 @@ export type Database = {
         }
         Relationships: []
       }
+      materia_edit_history: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          materia_id: string
+          user_id: string
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          id?: string
+          materia_id: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          materia_id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       materias: {
         Row: {
           bloco_id: string | null
@@ -374,6 +428,8 @@ export type Database = {
           texto: string | null
           tipo_material: string | null
           updated_at: string | null
+          vmix_link_type: string | null
+          vmix_target: string | null
         }
         Insert: {
           bloco_id?: string | null
@@ -399,6 +455,8 @@ export type Database = {
           texto?: string | null
           tipo_material?: string | null
           updated_at?: string | null
+          vmix_link_type?: string | null
+          vmix_target?: string | null
         }
         Update: {
           bloco_id?: string | null
@@ -424,6 +482,8 @@ export type Database = {
           texto?: string | null
           tipo_material?: string | null
           updated_at?: string | null
+          vmix_link_type?: string | null
+          vmix_target?: string | null
         }
         Relationships: [
           {
@@ -489,6 +549,8 @@ export type Database = {
           texto: string | null
           tipo_material: string | null
           updated_at: string | null
+          vmix_link_type: string | null
+          vmix_target: string | null
         }
         Insert: {
           bloco_nome?: string | null
@@ -516,6 +578,8 @@ export type Database = {
           texto?: string | null
           tipo_material?: string | null
           updated_at?: string | null
+          vmix_link_type?: string | null
+          vmix_target?: string | null
         }
         Update: {
           bloco_nome?: string | null
@@ -543,6 +607,8 @@ export type Database = {
           texto?: string | null
           tipo_material?: string | null
           updated_at?: string | null
+          vmix_link_type?: string | null
+          vmix_target?: string | null
         }
         Relationships: []
       }
@@ -577,9 +643,12 @@ export type Database = {
         Row: {
           created_at: string | null
           data_cobertura: string | null
+          deleted_at: string | null
+          deleted_by: string | null
           descricao: string | null
           encaminhamento: string | null
           entrevistado: string | null
+          entrevistados_contatos: Json
           horario: string | null
           id: string
           informacoes: string | null
@@ -596,9 +665,12 @@ export type Database = {
         Insert: {
           created_at?: string | null
           data_cobertura?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           descricao?: string | null
           encaminhamento?: string | null
           entrevistado?: string | null
+          entrevistados_contatos?: Json
           horario?: string | null
           id?: string
           informacoes?: string | null
@@ -615,9 +687,12 @@ export type Database = {
         Update: {
           created_at?: string | null
           data_cobertura?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
           descricao?: string | null
           encaminhamento?: string | null
           entrevistado?: string | null
+          entrevistados_contatos?: Json
           horario?: string | null
           id?: string
           informacoes?: string | null
@@ -953,6 +1028,8 @@ export type Database = {
         Row: {
           created_at: string | null
           espelho_aberto: boolean | null
+          hora_fim: string | null
+          hora_inicio: string | null
           horario: string | null
           id: string
           nome: string
@@ -961,6 +1038,8 @@ export type Database = {
         Insert: {
           created_at?: string | null
           espelho_aberto?: boolean | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
           horario?: string | null
           id?: string
           nome: string
@@ -969,6 +1048,8 @@ export type Database = {
         Update: {
           created_at?: string | null
           espelho_aberto?: boolean | null
+          hora_fim?: string | null
+          hora_inicio?: string | null
           horario?: string | null
           id?: string
           nome?: string
@@ -1172,6 +1253,81 @@ export type Database = {
             foreignKeyName: "vmix_settings_telejornal_id_fkey"
             columns: ["telejornal_id"]
             isOneToOne: true
+            referencedRelation: "telejornais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vmix_trigger_logs: {
+        Row: {
+          action: string
+          created_at: string
+          duration_ms: number | null
+          error_detail: string | null
+          id: string
+          link_type: string | null
+          materia_id: string | null
+          materia_retranca: string | null
+          message: string | null
+          source: string
+          success: boolean
+          target: string | null
+          telejornal_id: string | null
+          user_id: string | null
+          user_name: string | null
+          vmix_host: string | null
+          vmix_port: number | null
+        }
+        Insert: {
+          action?: string
+          created_at?: string
+          duration_ms?: number | null
+          error_detail?: string | null
+          id?: string
+          link_type?: string | null
+          materia_id?: string | null
+          materia_retranca?: string | null
+          message?: string | null
+          source?: string
+          success?: boolean
+          target?: string | null
+          telejornal_id?: string | null
+          user_id?: string | null
+          user_name?: string | null
+          vmix_host?: string | null
+          vmix_port?: number | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          duration_ms?: number | null
+          error_detail?: string | null
+          id?: string
+          link_type?: string | null
+          materia_id?: string | null
+          materia_retranca?: string | null
+          message?: string | null
+          source?: string
+          success?: boolean
+          target?: string | null
+          telejornal_id?: string | null
+          user_id?: string | null
+          user_name?: string | null
+          vmix_host?: string | null
+          vmix_port?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vmix_trigger_logs_materia_id_fkey"
+            columns: ["materia_id"]
+            isOneToOne: false
+            referencedRelation: "materias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vmix_trigger_logs_telejornal_id_fkey"
+            columns: ["telejornal_id"]
+            isOneToOne: false
             referencedRelation: "telejornais"
             referencedColumns: ["id"]
           },
