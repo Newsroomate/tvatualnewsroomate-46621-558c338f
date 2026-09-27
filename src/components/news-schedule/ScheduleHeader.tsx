@@ -419,6 +419,34 @@ export const ScheduleHeader = ({
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    disabled={!currentTelejornal?.espelho_aberto || !hasBlocks}
+                    className={!currentTelejornal?.espelho_aberto ? "opacity-50 cursor-not-allowed" : ""}
+                  >
+                    <Printer className="h-4 w-4 mr-2" />
+                    Imprimir
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="bg-popover z-50">
+                  <DropdownMenuItem onClick={handlePrintRundownGrid}>
+                    <Printer className="h-4 w-4 mr-2" />
+                    Espelho Grade
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handlePrintStoryCompact}>
+                    <Printer className="h-4 w-4 mr-2" />
+                    Espelho Completo
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleExportGCListPDF}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Lista de GCs (PDF)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
             
             {/* Visualização */}
