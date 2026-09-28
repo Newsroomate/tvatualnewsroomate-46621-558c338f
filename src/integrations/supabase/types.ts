@@ -1361,6 +1361,10 @@ export type Database = {
       cleanup_expired_locks: { Args: never; Returns: undefined }
       cleanup_expired_trash: { Args: never; Returns: number }
       cleanup_old_backups: { Args: never; Returns: undefined }
+      create_full_backup: {
+        Args: { _created_by?: string; _notes?: string; _type?: string }
+        Returns: string
+      }
       enable_realtime: { Args: { table_name: string }; Returns: boolean }
       get_current_user_role: { Args: never; Returns: string }
       get_effective_telejornal_role: {
