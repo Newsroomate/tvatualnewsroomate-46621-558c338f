@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
     if (req.method === 'GET' && path === 'backup-espelhos') {
       const { data: backups, error } = await supabase
         .from('espelhos_backup')
-        .select('*')
+        .select('id, created_at, backup_type, scope, total_espelhos, total_materias, total_blocos, total_telejornais, total_pautas, created_by, notes')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -145,99 +145,43 @@ Deno.serve(async (req) => {
       });
     }
 
-    // POST /create - Create new backup
+    // POST /create - Create new full backup (telejornais, blocos, matérias, pautas, espelhos)
     if (req.method === 'POST' && path === 'backup-espelhos') {
-      const body = await req.json();
-      const backupType = body.type || 'manual';
+      const body = await req.json().catch(() => ({}));
+      const backupType = body.type === 'automatic' ? 'automatic' : 'manual';
 
-      console.log(`Creating ${backupType} backup by user ${userId}...`);
-
-      // Fetch all espelhos_salvos
-      const { data: espelhos, error: fetchError } = await supabase
-        .from('espelhos_salvos')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (fetchError) throw fetchError;
-
-      if (!espelhos || espelhos.length === 0) {
-        console.log('No espelhos to backup');
-        return new Response(
-          JSON.stringify({ message: 'No espelhos to backup', backupId: null }),
-          {
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          }
-        );
-      }
-
-      // Calculate statistics
-      let totalMaterias = 0;
-      let totalBlocos = 0;
-
-      espelhos.forEach((espelho: BackupData) => {
-        const estrutura = espelho.estrutura as any;
-        if (estrutura?.blocos) {
-          totalBlocos += estrutura.blocos.length;
-          estrutura.blocos.forEach((bloco: any) => {
-            if (bloco.items) {
-              totalMaterias += bloco.items.length;
-            }
-          });
-        }
+      const { data: backupId, error: rpcError } = await supabase.rpc('create_full_backup', {
+        _type: backupType,
+        _created_by: userId,
+        _notes: body.notes ?? null,
       });
+      if (rpcError) throw rpcError;
 
-      // Create backup record with authenticated user
-      const { data: backup, error: insertError } = await supabase
+      const { data: backup, error } = await supabase
         .from('espelhos_backup')
-        .insert({
-          backup_type: backupType,
-          total_espelhos: espelhos.length,
-          total_materias: totalMaterias,
-          total_blocos: totalBlocos,
-          data: espelhos,
-          created_by: userId,
-        })
-        .select()
-        .single();
-
-      if (insertError) throw insertError;
-
-      console.log(`Backup created successfully: ${backup.id}`);
-      console.log(`Total: ${espelhos.length} espelhos, ${totalBlocos} blocos, ${totalMaterias} matérias`);
-
-      // Cleanup old automatic backups (keep last 30 days)
-      if (backupType === 'automatic') {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-
-        await supabase
-          .from('espelhos_backup')
-          .delete()
-          .eq('backup_type', 'automatic')
-          .lt('created_at', thirtyDaysAgo.toISOString());
-      }
+        .select('id, created_at, backup_type, scope, total_espelhos, total_materias, total_blocos, total_telejornais, total_pautas, created_by, notes')
+        .eq('id', backupId)
+        .maybeSingle();
+      if (error) throw error;
 
       return new Response(JSON.stringify(backup), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // POST /restore/:id - Restore backup
+    // POST /restore/:id - Restore backup (never deletes current rows)
     if (req.method === 'POST' && url.pathname.includes('/restore/')) {
       const backupId = url.pathname.split('/').pop();
-      const body = await req.json();
-      const restoreType = body.restoreType || 'complete'; // complete, partial, merge
-      const selectedIds = body.selectedIds || []; // for partial restore
+      const body = await req.json().catch(() => ({}));
+      const mode: 'merge' | 'overwrite' = body.mode === 'overwrite' ? 'overwrite' : 'merge';
+      const scope: string = body.scope || 'all'; // all | pautas | telejornais | espelhos
+      const telejornalIds: string[] = Array.isArray(body.telejornalIds) ? body.telejornalIds : [];
 
-      console.log(`Restoring backup ${backupId} (type: ${restoreType}) by user ${userId}...`);
-
-      // Fetch backup
       const { data: backup, error: fetchError } = await supabase
         .from('espelhos_backup')
         .select('*')
         .eq('id', backupId)
-        .single();
-
+        .maybeSingle();
       if (fetchError) throw fetchError;
       if (!backup) {
         return new Response(JSON.stringify({ error: 'Backup not found' }), {
@@ -246,55 +190,64 @@ Deno.serve(async (req) => {
         });
       }
 
-      const backupData = backup.data as BackupData[];
-      let espelhosToRestore = backupData;
+      // Safety snapshot of current state before restoring
+      const { error: preErr } = await supabase.rpc('create_full_backup', {
+        _type: 'pre_restore',
+        _created_by: userId,
+        _notes: `Antes de restaurar backup ${backupId}`,
+      });
+      if (preErr) throw preErr;
 
-      // Filter for partial restore
-      if (restoreType === 'partial' && selectedIds.length > 0) {
-        espelhosToRestore = backupData.filter((e) => selectedIds.includes(e.id));
-      }
+      const raw = backup.data as any;
+      const d = Array.isArray(raw)
+        ? { telejornais: [], blocos: [], materias: [], pautas: [], pautas_telejornal: [], espelhos_salvos: raw }
+        : raw;
 
-      // For merge, exclude espelhos that already exist
-      if (restoreType === 'merge') {
-        const { data: existing } = await supabase
-          .from('espelhos_salvos')
-          .select('id');
-        
-        const existingIds = new Set(existing?.map((e) => e.id) || []);
-        espelhosToRestore = backupData.filter((e) => !existingIds.has(e.id));
-      }
-
-      // For complete restore, delete all existing espelhos first
-      if (restoreType === 'complete') {
-        const { error: deleteError } = await supabase
-          .from('espelhos_salvos')
-          .delete()
-          .neq('id', '00000000-0000-0000-0000-000000000000'); // Delete all
-        
-        if (deleteError) throw deleteError;
-      }
-
-      // Insert restored espelhos
-      const { data: restored, error: insertError } = await supabase
-        .from('espelhos_salvos')
-        .insert(espelhosToRestore)
-        .select();
-
-      if (insertError) throw insertError;
-
-      console.log(`Restored ${restored?.length || 0} espelhos successfully by user ${userId}`);
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          restored: restored?.length || 0,
-          type: restoreType,
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      const upsert = async (table: string, rows: any[]) => {
+        if (!rows || rows.length === 0) return 0;
+        let count = 0;
+        for (let i = 0; i < rows.length; i += 500) {
+          const chunk = rows.slice(i, i + 500);
+          const { error } = await supabase
+            .from(table)
+            .upsert(chunk, { onConflict: 'id', ignoreDuplicates: mode === 'merge' });
+          if (error) throw new Error(`${table}: ${error.message}`);
+          count += chunk.length;
         }
-      );
+        return count;
+      };
+
+      const filterTj = (rows: any[], key = 'telejornal_id') =>
+        telejornalIds.length ? rows.filter((r) => telejornalIds.includes(r[key])) : rows;
+
+      const result: Record<string, number> = {};
+      if (scope === 'all' || scope === 'telejornais') {
+        const tjs = telejornalIds.length
+          ? (d.telejornais || []).filter((t: any) => telejornalIds.includes(t.id))
+          : d.telejornais || [];
+        const blocos = filterTj(d.blocos || []);
+        const blocoIds = new Set(blocos.map((b: any) => b.id));
+        const materias = (d.materias || []).filter((m: any) => blocoIds.has(m.bloco_id));
+        result.telejornais = await upsert('telejornais', tjs);
+        result.blocos = await upsert('blocos', blocos);
+        result.materias = await upsert('materias', materias);
+      }
+      if (scope === 'all' || scope === 'pautas') {
+        result.pautas = await upsert('pautas', d.pautas || []);
+        result.pautas_telejornal = await upsert('pautas_telejornal', d.pautas_telejornal || []);
+      }
+      if (scope === 'all' || scope === 'espelhos') {
+        result.espelhos_salvos = await upsert('espelhos_salvos', filterTj(d.espelhos_salvos || []));
+      }
+
+      const restored = Object.values(result).reduce((a, b) => a + b, 0);
+      console.log(`Restore ${backupId} mode=${mode} scope=${scope} by ${userId}`, result);
+
+      return new Response(JSON.stringify({ success: true, restored, mode, scope, details: result }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
+
 
     // DELETE /:id - Delete backup
     if (req.method === 'DELETE') {
