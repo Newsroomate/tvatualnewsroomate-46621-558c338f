@@ -391,23 +391,44 @@ export type Database = {
       materia_edit_history: {
         Row: {
           action: string
+          bloco_id: string | null
+          changed_fields: string[] | null
           created_at: string
+          diff: Json | null
           id: string
           materia_id: string
+          restored_at: string | null
+          retranca: string | null
+          snapshot: Json | null
+          telejornal_id: string | null
           user_id: string
         }
         Insert: {
           action?: string
+          bloco_id?: string | null
+          changed_fields?: string[] | null
           created_at?: string
+          diff?: Json | null
           id?: string
           materia_id: string
+          restored_at?: string | null
+          retranca?: string | null
+          snapshot?: Json | null
+          telejornal_id?: string | null
           user_id: string
         }
         Update: {
           action?: string
+          bloco_id?: string | null
+          changed_fields?: string[] | null
           created_at?: string
+          diff?: Json | null
           id?: string
           materia_id?: string
+          restored_at?: string | null
+          retranca?: string | null
+          snapshot?: Json | null
+          telejornal_id?: string | null
           user_id?: string
         }
         Relationships: []
@@ -1358,9 +1379,11 @@ export type Database = {
         Args: { _telejornal_id: string; _user_id: string }
         Returns: boolean
       }
+      can_view_audit: { Args: { _user_id: string }; Returns: boolean }
       cleanup_expired_locks: { Args: never; Returns: undefined }
       cleanup_expired_trash: { Args: never; Returns: number }
       cleanup_old_backups: { Args: never; Returns: undefined }
+      cleanup_old_materia_history: { Args: never; Returns: number }
       create_full_backup: {
         Args: { _created_by?: string; _notes?: string; _type?: string }
         Returns: string
