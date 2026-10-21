@@ -9,7 +9,7 @@ export const useTeleprompterWindowState = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [speed, setSpeed] = useState([50]);
   const [scrollPosition, setScrollPosition] = useState(0);
-  const [fontSize, setFontSize] = useState(24);
+  const [fontSize, setFontSize] = useState(84);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [cabecaColor, setCabecaColor] = useState("#ffffff");
   const [retrancaColor, setRetrancaColor] = useState("#facc15");
