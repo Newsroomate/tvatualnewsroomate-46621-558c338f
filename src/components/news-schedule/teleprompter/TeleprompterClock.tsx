@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Clock, Timer, Hourglass, Play, Pause, RotateCcw, X } from "lucide-react";
+import { Clock, Timer, Hourglass, Play, Pause, RotateCcw, X, Minus, Plus } from "lucide-react";
+
+const SIZE_KEY = "teleprompter-clock-size";
+const MIN_SIZE = 0.5;
+const MAX_SIZE = 2.5;
+
+const clampSize = (s: number) => Math.min(MAX_SIZE, Math.max(MIN_SIZE, Math.round(s * 20) / 20));
 
 type Mode = "clock" | "stopwatch" | "countdown";
 
