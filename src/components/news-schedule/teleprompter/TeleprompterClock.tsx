@@ -208,6 +208,19 @@ export const TeleprompterClock = ({ isMirrored = false, onClose }: Props) => {
           />
         </div>
       )}
+
+      {/* Corner grip to resize by dragging */}
+      <div
+        title="Arraste para redimensionar"
+        onPointerDown={startCornerResize}
+        className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
+        style={{
+          clipPath: "polygon(100% 0, 100% 100%, 0 100%)",
+          background: "rgba(255,255,255,0.35)",
+          borderBottomRightRadius: 8,
+          touchAction: "none",
+        }}
+      />
     </div>
   );
 };
