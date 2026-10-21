@@ -1,5 +1,7 @@
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { Clock } from "lucide-react";
+import { TeleprompterClock } from "@/components/news-schedule/teleprompter/TeleprompterClock";
 import { TeleprompterContent } from "@/components/news-schedule/teleprompter/TeleprompterContent";
 import { TeleprompterWindowHeader } from "@/components/news-schedule/teleprompter/TeleprompterWindowHeader";
 import { TeleprompterWindowControls } from "@/components/news-schedule/teleprompter/TeleprompterWindowControls";
@@ -10,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const TeleprompterWindow = () => {
   const isMobile = useIsMobile();
+  const [showClock, setShowClock] = useState(true);
   const {
     // State
     blocks,
@@ -175,7 +178,19 @@ const TeleprompterWindow = () => {
       />
 
       {/* Teleprompter Content */}
-      <div className="flex-1 overflow-hidden" style={{ width: '100%', maxWidth: '100%' }}>
+      <div className="flex-1 overflow-hidden relative" style={{ width: '100%', maxWidth: '100%' }}>
+        {showClock ? (
+          <TeleprompterClock isMirrored={isMirrored} onClose={() => setShowClock(false)} />
+        ) : (
+          <button
+            onClick={() => setShowClock(true)}
+            title="Mostrar relógio"
+            className="absolute top-3 right-3 z-20 p-2 rounded-lg border border-white/20"
+            style={{ background: 'rgba(0,0,0,0.7)', color: '#fff' }}
+          >
+            <Clock className="h-5 w-5" />
+          </button>
+        )}
         <TeleprompterContent
           ref={contentRef}
           blocks={blocks}
