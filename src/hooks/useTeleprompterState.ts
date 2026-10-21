@@ -46,7 +46,7 @@ export const useTeleprompterState = () => {
   const [isNavigating, setIsNavigating] = useState(false);
   
   // Display state
-  const [fontSize, setFontSize] = useState(24);
+  const [fontSize, setFontSize] = useState(84);
   const [isFullscreen, setIsFullscreen] = useState(false);
   
   // Color state
