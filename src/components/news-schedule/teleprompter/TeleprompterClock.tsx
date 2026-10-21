@@ -1,5 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { Clock, Timer, Hourglass, Play, Pause, RotateCcw, X } from "lucide-react";
+import { Clock, Timer, Hourglass, Play, Pause, RotateCcw, X, Minus, Plus } from "lucide-react";
+
+const SIZE_KEY = "teleprompter-clock-size";
+const MIN_SIZE = 0.5;
+const MAX_SIZE = 2.5;
+
+const clampSize = (s: number) => Math.min(MAX_SIZE, Math.max(MIN_SIZE, Math.round(s * 20) / 20));
 
 type Mode = "clock" | "stopwatch" | "countdown";
 
@@ -25,6 +31,49 @@ export const TeleprompterClock = ({ isMirrored = false, onClose }: Props) => {
   const startRef = useRef<number | null>(null);
   const [cdTotal, setCdTotal] = useState(5 * 60 * 1000);
   const [customMin, setCustomMin] = useState("");
+  const [size, setSize] = useState(() => {
+    const stored = parseFloat(localStorage.getItem(SIZE_KEY) || "");
+    return isNaN(stored) ? 1 : clampSize(stored);
+  });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const resizeStateRef = useRef<{ startSize: number; startDist: number } | null>(null);
+
+  const applySize = (s: number) => {
+    const clamped = clampSize(s);
+    setSize(clamped);
+    localStorage.setItem(SIZE_KEY, String(clamped));
+  };
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const st = resizeStateRef.current;
+      const el = containerRef.current;
+      if (!st || !el) return;
+      const rect = el.getBoundingClientRect();
+      // Anchor: top-right corner of the panel
+      const dist = Math.max(40, Math.hypot(rect.right - e.clientX, rect.top - e.clientY));
+      applySize(st.startSize * (dist / st.startDist));
+    };
+    const onUp = () => {
+      resizeStateRef.current = null;
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
+  const startCornerResize = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const dist = Math.max(1, Math.hypot(rect.right - e.clientX, rect.top - e.clientY));
+    resizeStateRef.current = { startSize: size, startDist: dist };
+  };
 
   useEffect(() => {
     const id: ReturnType<typeof setInterval> = setInterval(() => setNow(Date.now()), 200);
@@ -77,8 +126,15 @@ export const TeleprompterClock = ({ isMirrored = false, onClose }: Props) => {
 
   return (
     <div
+      ref={containerRef}
       className="absolute top-3 right-3 z-20 rounded-lg border border-white/20 shadow-xl select-none"
-      style={{ background: "rgba(0,0,0,0.78)", color: "#fff", minWidth: 220 }}
+      style={{
+        background: "rgba(0,0,0,0.78)",
+        color: "#fff",
+        minWidth: 220,
+        transform: `scale(${size})`,
+        transformOrigin: "top right",
+      }}
     >
       <div className="flex items-center justify-between px-2 pt-1.5">
         <div className="flex gap-1">
@@ -92,11 +148,19 @@ export const TeleprompterClock = ({ isMirrored = false, onClose }: Props) => {
             <Hourglass className="h-4 w-4" />
           </button>
         </div>
-        {onClose && (
-          <button title="Ocultar" className={btn} onClick={onClose}>
-            <X className="h-4 w-4" />
+        <div className="flex gap-1">
+          <button title="Diminuir tamanho" className={btn} onClick={() => applySize(size - 0.1)}>
+            <Minus className="h-4 w-4" />
           </button>
-        )}
+          <button title="Aumentar tamanho" className={btn} onClick={() => applySize(size + 0.1)}>
+            <Plus className="h-4 w-4" />
+          </button>
+          {onClose && (
+            <button title="Ocultar" className={btn} onClick={onClose}>
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ transform: isMirrored ? "scaleX(-1)" : undefined }} className="px-3 text-center">
@@ -144,6 +208,19 @@ export const TeleprompterClock = ({ isMirrored = false, onClose }: Props) => {
           />
         </div>
       )}
+
+      {/* Corner grip to resize by dragging */}
+      <div
+        title="Arraste para redimensionar"
+        onPointerDown={startCornerResize}
+        className="absolute bottom-0 right-0 w-4 h-4 cursor-nwse-resize"
+        style={{
+          clipPath: "polygon(100% 0, 100% 100%, 0 100%)",
+          background: "rgba(255,255,255,0.35)",
+          borderBottomRightRadius: 8,
+          touchAction: "none",
+        }}
+      />
     </div>
   );
 };
