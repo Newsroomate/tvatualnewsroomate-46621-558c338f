@@ -31,6 +31,49 @@ export const TeleprompterClock = ({ isMirrored = false, onClose }: Props) => {
   const startRef = useRef<number | null>(null);
   const [cdTotal, setCdTotal] = useState(5 * 60 * 1000);
   const [customMin, setCustomMin] = useState("");
+  const [size, setSize] = useState(() => {
+    const stored = parseFloat(localStorage.getItem(SIZE_KEY) || "");
+    return isNaN(stored) ? 1 : clampSize(stored);
+  });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const resizeStateRef = useRef<{ startSize: number; startDist: number } | null>(null);
+
+  const applySize = (s: number) => {
+    const clamped = clampSize(s);
+    setSize(clamped);
+    localStorage.setItem(SIZE_KEY, String(clamped));
+  };
+
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const st = resizeStateRef.current;
+      const el = containerRef.current;
+      if (!st || !el) return;
+      const rect = el.getBoundingClientRect();
+      // Anchor: top-right corner of the panel
+      const dist = Math.max(40, Math.hypot(rect.right - e.clientX, rect.top - e.clientY));
+      applySize(st.startSize * (dist / st.startDist));
+    };
+    const onUp = () => {
+      resizeStateRef.current = null;
+    };
+    window.addEventListener("pointermove", onMove);
+    window.addEventListener("pointerup", onUp);
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, []);
+
+  const startCornerResize = (e: React.PointerEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const dist = Math.max(1, Math.hypot(rect.right - e.clientX, rect.top - e.clientY));
+    resizeStateRef.current = { startSize: size, startDist: dist };
+  };
 
   useEffect(() => {
     const id: ReturnType<typeof setInterval> = setInterval(() => setNow(Date.now()), 200);
