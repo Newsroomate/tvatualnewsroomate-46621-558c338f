@@ -126,8 +126,15 @@ export const TeleprompterClock = ({ isMirrored = false, onClose }: Props) => {
 
   return (
     <div
+      ref={containerRef}
       className="absolute top-3 right-3 z-20 rounded-lg border border-white/20 shadow-xl select-none"
-      style={{ background: "rgba(0,0,0,0.78)", color: "#fff", minWidth: 220 }}
+      style={{
+        background: "rgba(0,0,0,0.78)",
+        color: "#fff",
+        minWidth: 220,
+        transform: `scale(${size})`,
+        transformOrigin: "top right",
+      }}
     >
       <div className="flex items-center justify-between px-2 pt-1.5">
         <div className="flex gap-1">
@@ -141,11 +148,19 @@ export const TeleprompterClock = ({ isMirrored = false, onClose }: Props) => {
             <Hourglass className="h-4 w-4" />
           </button>
         </div>
-        {onClose && (
-          <button title="Ocultar" className={btn} onClick={onClose}>
-            <X className="h-4 w-4" />
+        <div className="flex gap-1">
+          <button title="Diminuir tamanho" className={btn} onClick={() => applySize(size - 0.1)}>
+            <Minus className="h-4 w-4" />
           </button>
-        )}
+          <button title="Aumentar tamanho" className={btn} onClick={() => applySize(size + 0.1)}>
+            <Plus className="h-4 w-4" />
+          </button>
+          {onClose && (
+            <button title="Ocultar" className={btn} onClick={onClose}>
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ transform: isMirrored ? "scaleX(-1)" : undefined }} className="px-3 text-center">
