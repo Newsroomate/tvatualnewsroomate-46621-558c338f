@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { PlusCircle, Pencil, Trash2, Check, X, CheckSquare } from "lucide-react";
-import { useState } from "react";
+import { PlusCircle, Pencil, Trash2, Check, X, CheckSquare, ClipboardPaste } from "lucide-react";
+import { useState, useEffect } from "react";
+import { loadFromStorage } from "@/hooks/unified-clipboard/storage";
 import { Input } from "@/components/ui/input";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -50,6 +51,16 @@ export const BlockHeader = ({
   onCancelBatch,
   isDeleting = false
 }: BlockHeaderProps) => {
+  const [hasCopiedMateria, setHasCopiedMateria] = useState(() => !!loadFromStorage()?.copiedMateria);
+  useEffect(() => {
+    const sync = () => setHasCopiedMateria(!!loadFromStorage()?.copiedMateria);
+    window.addEventListener('clipboard_state_change', sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('clipboard_state_change', sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
   const [isEditing, setIsEditing] = useState(false);
   const [editingName, setEditingName] = useState(blockName);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -172,6 +183,12 @@ export const BlockHeader = ({
                   </Tooltip>
                 </TooltipProvider>}
 
+              {hasCopiedMateria && isEspelhoOpen && canAddItem && (
+                <Button size="sm" variant="ghost" onClick={() => window.dispatchEvent(new CustomEvent('paste-materia-into-block', { detail: { blockId } }))} className={`${isMobile ? 'h-7 text-xs px-2' : ''}`} title="Colar matéria copiada no fim deste bloco">
+                  <ClipboardPaste className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} ${!isMobile ? 'mr-1' : ''}`} />
+                  {!isMobile && "Colar Matéria"}
+                </Button>
+              )}
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>

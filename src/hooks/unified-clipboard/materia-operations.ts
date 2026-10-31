@@ -75,6 +75,7 @@ export const buildCompleteMateriaDat = (
     texto: copiedMateria.texto || '',
     duracao: copiedMateria.duracao || 0,
     cabeca: copiedMateria.cabeca || '',
+    gcs: (copiedMateria as any).gcs ?? [],
     gc: copiedMateria.gc || '', // Using gc instead of lauda (database field)
     // Note: 'teleprompter' and 'observacoes' fields removed - don't exist in materias table (only in materias_snapshots)
     // Note: 'lauda' field also removed - use 'gc' instead (actual database field)

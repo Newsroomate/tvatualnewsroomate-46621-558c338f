@@ -153,7 +153,7 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
   };
 
   // Função para colar matéria
-  const pasteMateria = async (): Promise<PasteOperationResult> => {
+  const pasteMateria = async (targetBlockId?: string): Promise<PasteOperationResult> => {
     if (!checkPermission('create', 'materia')) {
       return {
         success: false,
@@ -185,7 +185,9 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
       freshMateria!,
       blocks,
       setBlocks,
-      selectedMateria || null,
+      (targetBlockId
+        ? ((blocks.find((b: any) => b.id === targetBlockId)?.items || []).slice(-1)[0] || selectedMateria || null)
+        : (selectedMateria || null)),
       markOptimisticUpdate
     );
 
