@@ -55,8 +55,19 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
     };
 
     loadStoredData();
-    const interval = setInterval(loadStoredData, 5000); // Verificar a cada 5 segundos
-    return () => clearInterval(interval);
+    const onStorage = (e: StorageEvent) => { if (e.key === 'unified_clipboard') sync(); };
+    const sync = () => {
+      const s = loadFromStorage();
+      setClipboardState(s || { type: null, copiedMateria: null, copiedBlock: null, timestamp: 0 });
+    };
+    window.addEventListener('clipboard_state_change', sync);
+    window.addEventListener('storage', onStorage);
+    const interval = setInterval(loadStoredData, 5000);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('clipboard_state_change', sync);
+      window.removeEventListener('storage', onStorage);
+    };
   }, []);
 
   // Função para copiar matéria
