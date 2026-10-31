@@ -160,7 +160,9 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
         message: "Sem permissão para colar matéria"
       };
     }
-    if (!validateMateriaForPaste(clipboardState.copiedMateria, blocks || [])) {
+    const fresh = loadFromStorage();
+    const freshMateria = fresh?.copiedMateria ?? clipboardState.copiedMateria;
+    if (!validateMateriaForPaste(freshMateria, blocks || [])) {
       return {
         success: false,
         message: "Validação falhou para colar matéria"
@@ -180,7 +182,7 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
     }
 
     const result = await executeMateriaImpast(
-      clipboardState.copiedMateria!,
+      freshMateria!,
       blocks,
       setBlocks,
       selectedMateria || null,

@@ -57,7 +57,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (error) {
         console.error('Error fetching user profile:', error);
@@ -74,7 +74,15 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           .maybeSingle();
 
         // If user has exception, use that role instead of global role
-        const effectiveRole = accessData?.role || data.role;
+        // Resolve múltiplos cargos em user_roles priorizando a maior hierarquia
+        const { data: rolesData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId);
+        const priority = ['editor_chefe', 'editor', 'reporter', 'produtor'];
+        const roleList = (rolesData || []).map((r: { role: string }) => r.role);
+        const topRole = priority.find((r) => roleList.includes(r) || data.role === r) || data.role;
+        const effectiveRole = accessData?.role || topRole;
         
         console.log('[AuthContext] Calculando permissões para usuário:', {
           userId,
