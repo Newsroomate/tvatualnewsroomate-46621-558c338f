@@ -5,7 +5,8 @@ const CLIPBOARD_EXPIRY_HOURS = 24;
 
 export const saveToStorage = (state: ClipboardState): void => {
   try {
-    sessionStorage.setItem(UNIFIED_CLIPBOARD_KEY, JSON.stringify(state));
+    localStorage.setItem(UNIFIED_CLIPBOARD_KEY, JSON.stringify(state));
+    window.dispatchEvent(new CustomEvent('clipboard_state_change'));
   } catch (error) {
     console.error('Erro ao salvar clipboard no storage:', error);
   }
@@ -13,7 +14,7 @@ export const saveToStorage = (state: ClipboardState): void => {
 
 export const loadFromStorage = (): ClipboardState | null => {
   try {
-    const stored = sessionStorage.getItem(UNIFIED_CLIPBOARD_KEY);
+    const stored = localStorage.getItem(UNIFIED_CLIPBOARD_KEY);
     if (!stored) return null;
 
     const state: ClipboardState = JSON.parse(stored);
@@ -37,7 +38,8 @@ export const loadFromStorage = (): ClipboardState | null => {
 
 export const clearStorage = (): void => {
   try {
-    sessionStorage.removeItem(UNIFIED_CLIPBOARD_KEY);
+    localStorage.removeItem(UNIFIED_CLIPBOARD_KEY);
+    window.dispatchEvent(new CustomEvent('clipboard_state_change'));
   } catch (error) {
     console.error('Erro ao limpar storage:', error);
   }

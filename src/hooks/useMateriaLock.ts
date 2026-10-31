@@ -73,7 +73,7 @@ export const useMateriaLock = ({ materiaId, isOpen, onClose }: UseMateriaLockPro
           materia_id: materiaIdToLock,
           user_id: user.user.id,
           // Define lock por 30 minutos
-          expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString()
+          expires_at: new Date(Date.now() + 2 * 60 * 1000).toISOString()
         });
 
       if (error) {
@@ -148,14 +148,14 @@ export const useMateriaLock = ({ materiaId, isOpen, onClose }: UseMateriaLockPro
         lockIntervalRef.current = setInterval(async () => {
           const { error } = await supabase
             .from('materias_locks')
-            .update({ expires_at: new Date(Date.now() + 30 * 60 * 1000).toISOString() })
+            .update({ expires_at: new Date(Date.now() + 2 * 60 * 1000).toISOString() })
             .eq('materia_id', materiaId)
             .eq('user_id', (await supabase.auth.getUser()).data.user?.id);
           
           if (error) {
             console.error('Erro ao renovar lock:', error);
           }
-        }, 15 * 60 * 1000); // 15 minutos
+        }, 30 * 1000); // renova a cada 30s
       } else {
         // Tentar verificar novamente se alguém criou o lock no meio tempo
         const newLockStatus = await checkLock(materiaId);

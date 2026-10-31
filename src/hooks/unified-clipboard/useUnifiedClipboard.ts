@@ -55,8 +55,19 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
     };
 
     loadStoredData();
-    const interval = setInterval(loadStoredData, 5000); // Verificar a cada 5 segundos
-    return () => clearInterval(interval);
+    const onStorage = (e: StorageEvent) => { if (e.key === 'unified_clipboard') sync(); };
+    const sync = () => {
+      const s = loadFromStorage();
+      setClipboardState(s || { type: null, copiedMateria: null, copiedBlock: null, timestamp: 0 });
+    };
+    window.addEventListener('clipboard_state_change', sync);
+    window.addEventListener('storage', onStorage);
+    const interval = setInterval(loadStoredData, 5000);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('clipboard_state_change', sync);
+      window.removeEventListener('storage', onStorage);
+    };
   }, []);
 
   // Função para copiar matéria
@@ -142,14 +153,16 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
   };
 
   // Função para colar matéria
-  const pasteMateria = async (): Promise<PasteOperationResult> => {
+  const pasteMateria = async (targetBlockId?: string): Promise<PasteOperationResult> => {
     if (!checkPermission('create', 'materia')) {
       return {
         success: false,
         message: "Sem permissão para colar matéria"
       };
     }
-    if (!validateMateriaForPaste(clipboardState.copiedMateria, blocks || [])) {
+    const fresh = loadFromStorage();
+    const freshMateria = fresh?.copiedMateria ?? clipboardState.copiedMateria;
+    if (!validateMateriaForPaste(freshMateria, blocks || [])) {
       return {
         success: false,
         message: "Validação falhou para colar matéria"
@@ -169,10 +182,12 @@ export const useUnifiedClipboard = (props: UseUnifiedClipboardProps = {}) => {
     }
 
     const result = await executeMateriaImpast(
-      clipboardState.copiedMateria!,
+      freshMateria!,
       blocks,
       setBlocks,
-      selectedMateria || null,
+      (targetBlockId
+        ? ((blocks.find((b: any) => b.id === targetBlockId)?.items || []).slice(-1)[0] || selectedMateria || null)
+        : (selectedMateria || null)),
       markOptimisticUpdate
     );
 
