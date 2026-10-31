@@ -1389,6 +1389,10 @@ export type Database = {
         Returns: string
       }
       enable_realtime: { Args: { table_name: string }; Returns: boolean }
+      force_release_materia_lock: {
+        Args: { p_materia_id: string }
+        Returns: boolean
+      }
       get_current_user_role: { Args: never; Returns: string }
       get_effective_telejornal_role: {
         Args: { _telejornal_id: string; _user_id: string }
