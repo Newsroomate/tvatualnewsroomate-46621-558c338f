@@ -112,7 +112,10 @@ export const useActiveLocks = (telejornalId: string | null) => {
       )
       .subscribe();
 
+    const onLocal = () => fetchLocks();
+    window.addEventListener('materia-locks-changed', onLocal);
     return () => {
+      window.removeEventListener('materia-locks-changed', onLocal);
       supabase.removeChannel(channel);
     };
   }, [telejornalId, fetchLocks]);

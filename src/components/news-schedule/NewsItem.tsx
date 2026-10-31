@@ -1,3 +1,4 @@
+import { ForceUnlockButton } from "./ForceUnlockButton";
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Materia } from "@/types";
@@ -193,6 +194,7 @@ export const NewsItem = ({
               </Tooltip>
             </TooltipProvider>
           )}
+          {lockedByName && <ForceUnlockButton materiaId={item.id} lockedByName={lockedByName} />}
           <InlineEditCell
             value={displayRetranca}
             onSave={(value) => handleInlineUpdate('retranca', value)}
