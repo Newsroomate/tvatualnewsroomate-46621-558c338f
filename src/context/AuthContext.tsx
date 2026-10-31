@@ -81,7 +81,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
           .eq('user_id', userId);
         const priority = ['editor_chefe', 'editor', 'reporter', 'produtor'];
         const roleList = (rolesData || []).map((r: { role: string }) => r.role);
-        const topRole = priority.find((r) => roleList.includes(r) || data.role === r) || data.role;
+        const topRole = (priority.find((r) => roleList.includes(r) || data.role === r) || data.role) as typeof data.role;
         const effectiveRole = accessData?.role || topRole;
         
         console.log('[AuthContext] Calculando permissões para usuário:', {
