@@ -4,6 +4,7 @@ import { Bloco, Materia } from "@/types";
 import { updateMateriasOrdem } from "@/services/api";
 import { calculateBlockTotalTime } from "@/components/news-schedule/utils";
 import { usePermissionGuard } from "@/hooks/usePermissionGuard";
+import { useIsMobile, useIsTouchDevice } from "@/hooks/use-mobile";
 
 interface UseDragAndDropProps {
   blocks: (Bloco & { items: Materia[], totalTime: number })[];
@@ -15,8 +16,14 @@ interface UseDragAndDropProps {
 export const useDragAndDrop = ({ blocks, setBlocks, isEspelhoAberto, isDualView = false }: UseDragAndDropProps) => {
   const { toast } = useToast();
   const { checkPermission } = usePermissionGuard();
+  const isMobile = useIsMobile();
+  const isTouch = useIsTouchDevice();
 
   const handleDragEnd = async (result: any) => {
+    // Safety net: touch/mobile must not reorder materias by dragging.
+    if (isMobile || isTouch) {
+      return;
+    }
     // Check permission first
     if (!checkPermission('update', 'materia')) {
       return;

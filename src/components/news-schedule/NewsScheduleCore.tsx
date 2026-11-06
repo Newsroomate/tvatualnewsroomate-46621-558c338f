@@ -13,6 +13,8 @@ import { DashboardModal } from "./DashboardModal";
 import { MateriaHistoryModal } from "./MateriaHistoryModal";
 import { VmixRundownLinkPanel } from "@/components/vmix/VmixRundownLinkPanel";
 import { useActiveLocks } from "@/hooks/useActiveLocks";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Info } from "lucide-react";
 
 type BlockWithItems = Bloco & { 
   items: Materia[];
@@ -90,6 +92,7 @@ export const NewsScheduleCore = ({
   const [historyMateria, setHistoryMateria] = useState<Materia | null>(null);
   const { getLockInfo } = useActiveLocks(currentTelejornal?.id || null);
   const { scrollContainerRef, scrollToBottom, scrollToBlock } = useScrollUtils();
+  const isMobile = useIsMobile();
   
   // Flatten all materias from all blocks
   const allMaterias = useMemo(() => {
@@ -165,6 +168,12 @@ export const NewsScheduleCore = ({
           paddingBottom: 'max(8rem, 20vh)'
         }}
       >
+        {isMobile && blocks.length > 0 && (
+          <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <Info className="h-3 w-3 flex-shrink-0" />
+            Reordenar matérias e blocos só no computador.
+          </p>
+        )}
         <ScheduleContent
           selectedJournal={selectedJournal}
           currentTelejornal={currentTelejornal}

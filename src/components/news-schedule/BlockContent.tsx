@@ -1,7 +1,7 @@
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 import { Materia } from "@/types";
 import { NewsItem } from "./NewsItem";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useIsMobile, useIsTouchDevice } from "@/hooks/use-mobile";
 
 interface BlockContentProps {
   blockId: string;
@@ -45,6 +45,9 @@ export const BlockContent = ({
   getLockInfo
 }: BlockContentProps) => {
   const isMobile = useIsMobile();
+  const isTouch = useIsTouchDevice();
+  // Touch screens must never reorder by dragging: a scroll flick can start a drag.
+  const canReorderByDrag = isEspelhoOpen && !isBatchMode && !isMobile && !isTouch;
 
   return (
     <div className="overflow-x-auto">
@@ -85,7 +88,7 @@ export const BlockContent = ({
                       key={item.id}
                       draggableId={item.id}
                       index={index}
-                      isDragDisabled={!isEspelhoOpen || isBatchMode}
+                      isDragDisabled={!canReorderByDrag}
                     >
                       {(provided, snapshot) => (
                         <NewsItem

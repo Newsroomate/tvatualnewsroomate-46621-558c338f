@@ -17,3 +17,24 @@ export function useIsMobile() {
 
   return !!isMobile
 }
+
+/**
+ * True when the device's primary input is touch (phone/tablet), even if the
+ * screen is wide. Used to disable drag-and-drop reordering on touch screens,
+ * where a scroll gesture can accidentally start a drag.
+ */
+export function useIsTouchDevice() {
+  const [isTouch, setIsTouch] = React.useState<boolean | undefined>(undefined)
+
+  React.useEffect(() => {
+    const mql = window.matchMedia("(pointer: coarse)")
+    const onChange = () => {
+      setIsTouch(mql.matches || (navigator.maxTouchPoints ?? 0) > 0)
+    }
+    mql.addEventListener("change", onChange)
+    onChange()
+    return () => mql.removeEventListener("change", onChange)
+  }, [])
+
+  return !!isTouch
+}
